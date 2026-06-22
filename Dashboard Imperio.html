@@ -4410,9 +4410,26 @@ function saveGasto() {
 
   sbPost('gastos', [sbData])
     .then(function(res) {
+      // ── Registro paralelo en movimientos (libro diario ERP) ──
+      var gastosId = (Array.isArray(res) && res[0]) ? res[0].id : null;
+      var isTC = ['p1','p2','p3','h1','h2','h3'].indexOf(ctaV) >= 0;
+      sbPost('movimientos', [{
+        fecha:            fStr,
+        tipo:             'gasto',
+        obra_id:          obra,
+        etapa:            etapaVal  || null,
+        categoria:        areaVal   || null,
+        proveedor:        nombre,
+        descripcion:      desc,
+        monto:            total,
+        cuenta_origen_id: (!isTC && metodo !== 'Externo') ? ctaV : null,
+        tarjeta_id:       isTC ? ctaV : null,
+        origen:           'plataforma',
+        ref_id_legacy:    gastosId ? String(gastosId) : null
+      }]).catch(function(e){ console.warn('movimientos write:', e); });
+
       // ── Deducir de billetera ──────────────────────────────
       if (metodo !== 'Externo') {
-        var isTC = ['p1','p2','p3','h1','h2','h3'].indexOf(ctaV) >= 0;
         if (isTC) {
           var tc = S.tcs.find(function(x){ return x.id === ctaV; });
           if (tc) tc.cupoUsado += total;
