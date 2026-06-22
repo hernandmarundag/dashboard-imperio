@@ -305,11 +305,11 @@ body{display:flex;min-height:100vh;padding-top:0!important}
 .sb-brand span{display:block;font-size:9px;color:rgba(255,255,255,.35);font-weight:500;letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
 .sb-nav{flex:1;padding:8px 6px}
 .sb-sect{font-size:9px;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 3px;font-weight:700}
-.ni{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:all .14s;color:rgba(255,255,255,.45);position:relative;margin-bottom:1px}
-.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
-.ni.on{background:rgba(99,102,241,.25);color:#C7D2FE}
-.ni-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
-.ni span:not(.ni-ico):not(.ni-b){font-size:12px;font-weight:500}
+.ni{display:flex!important;align-items:center!important;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:all .14s;color:rgba(255,255,255,.55)!important;position:relative;margin-bottom:1px;background:none!important;border:none!important;width:100%;text-align:left;font-family:inherit}
+.ni:hover{background:rgba(255,255,255,.07)!important;color:rgba(255,255,255,.85)!important}
+.ni.on{background:rgba(99,102,241,.25)!important;color:#C7D2FE!important}
+.ni-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0;display:inline-block!important}
+.ni span:not(.ni-ico):not(.ni-b){font-size:12px;font-weight:500;display:inline!important;color:inherit!important}
 .ni-b{position:absolute;right:8px;background:#EF4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center}
 .sb-foot-btn{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);color:#A5B4FC;font-size:12px;font-weight:700;cursor:pointer;text-align:center;flex-shrink:0}
 .sb-foot-btn:hover{background:rgba(99,102,241,.2)}
@@ -1117,9 +1117,9 @@ function pushToSheet(obra, entry) {
 
 const BASE = {
   // gastos = suma total del Google Sheet real (BASE_CAT) al 15-Jun-2026
-  weliving:{gastos:0, inversion:755690000},
-  robledo: {gastos:0, recibido:580000000, precio:740000000, porCobrar:160000000},
-  novaeva: {gastos:0,  abonos:80000000,  cartera:85000000},
+  weliving:{gastos:754717074, inversion:755690000},
+  robledo: {gastos:305389112, recibido:580000000, precio:740000000, porCobrar:160000000},
+  novaeva: {gastos:55779067,  abonos:80000000,  cartera:85000000},
 };
 
 const BASE_CAT = {
@@ -1420,7 +1420,11 @@ function sumSheet(o) { return 0; } // SHEET[] vacío — conservado por compatib
 function sumLive(o)  { return (LIVE[o]||[]).reduce(function(a,e){return a+(e.monto||0);},0); }
 // gastosT = snapshot histórico Sheet al 15-Jun (BASE) + nuevos del dashboard (hist)
 // LIVE es para el libro/ledger, no para el total (evita doble conteo con BASE)
-function gastosT(o)  { return sumLive(o) + sumHist(o); }
+function gastosT(o)  {
+  var live = sumLive(o) + sumHist(o);
+  // Mientras carga Supabase, usar BASE como fallback
+  return live > 0 ? live : BASE[o].gastos;
+}
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id){
   var c = S.cuentas.find(function(x){return x.id===id;});
