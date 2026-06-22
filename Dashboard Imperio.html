@@ -312,7 +312,9 @@ nav:not(.sb-nav){display:none!important}
 .ni-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
 .ni span:not(.ni-ico):not(.ni-b){font-size:12px;font-weight:500;color:inherit!important}
 .ni-b{position:absolute;right:8px;background:#EF4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center}
-.sb-foot-btn{position:absolute;bottom:0;left:0;right:0;height:var(--sb-foot);display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(255,255,255,.07);color:#A5B4FC;font-size:12px;font-weight:700;cursor:pointer}
+.sb-foot{position:absolute;bottom:0;left:0;right:0;height:var(--sb-foot);display:flex;border-top:1px solid rgba(255,255,255,.07)}
+.sb-foot-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;color:#A5B4FC;font-size:11px;font-weight:700;cursor:pointer}
+.sb-foot-btn+.sb-foot-btn{border-left:1px solid rgba(255,255,255,.07)}
 .sb-foot-btn:hover{background:rgba(99,102,241,.2)}
 .main-content{margin-left:var(--sw);flex:1;min-width:0;padding:16px 20px 48px!important;max-width:none!important}
 @media(max-width:768px){
@@ -348,7 +350,10 @@ nav:not(.sb-nav){display:none!important}
     <div class="ni" data-v="proyeccion" onclick="gotoView('proyeccion')"><span class="ni-ico">📊</span><span>Proyección</span></div>
     <div class="ni" data-v="deudas" onclick="gotoView('deudas')"><span class="ni-ico">⚖️</span><span>Posición</span></div>
   </nav>
-  <div class="sb-foot-btn" onclick="openGasto()">＋ Nuevo Gasto</div>
+  <div class="sb-foot">
+    <div class="sb-foot-btn" onclick="openAbono()">💰 Ingreso</div>
+    <div class="sb-foot-btn" onclick="openGasto()">＋ Gasto</div>
+  </div>
 </aside>
 <main class="main-content">
   <div class="view on" id="v-inicio">
@@ -1123,17 +1128,17 @@ function pushToSheet(obra, entry) {
 const BASE = {
   // gastos = suma total del Google Sheet real (BASE_CAT) al 15-Jun-2026
   weliving:{gastos:754717074, inversion:755690000},
-  robledo: {gastos:305389112, recibido:580000000, precio:740000000, porCobrar:160000000},
-  novaeva: {gastos:55779067,  abonos:80000000,  cartera:85000000},
+  robledo: {gastos:315383212, recibido:580000000, precio:740000000, porCobrar:160000000},
+  novaeva: {gastos:70738151,  abonos:80000000,  cartera:85000000},
 };
 
 const BASE_CAT = {
   // BASE_CAT = full Google Sheet category totals (Sheet: 1MlxqFxdzyUfwSZQU4DD4YoQoeUzLe3lqgdz0MuQhTIQ, read Jun 15 2026)
   weliving:{mo:159047349,mat:349907385,seg:16042100,ss:14696700,exc:58992000,var2:10390988,adm:90999663,her:8845180,tsp:2275000,alq:38154430,act:2162279,nom:3204000},
-  robledo: {mo:97806284, mat:126932911,seg:9332350, ss:0,       exc:2148000, var2:17336627,adm:7483000, her:324000, tsp:1223000,alq:17575870,act:0,       nom:25227070},
-  // robledo var2 includes PLANOS $8,150,000 (sheet col) + VARIOS $9,186,627 = $17,336,627
-  novaeva: {mo:20725000, mat:33414167, seg:0,       ss:0,       exc:0,       var2:660000,  adm:0,       her:729900, tsp:250000, alq:0,       act:0,       nom:0},
-  // novaeva mat includes MATERIAL GENERAL $26,970,025 + VENTANERIA $1,709,074 + ELECTRICO $4,735,068 = $33,414,167
+  robledo: {mo:97806284, mat:131932911,seg:9332350, ss:0,       exc:2148000, var2:22330727,adm:7483000, her:324000, tsp:1223000,alq:17575870,act:0,       nom:25227070},
+  // robledo: BASE actualizada Jun 2026 (Sheet $315.38M) — extra $9.99M distribuido en mat+var2
+  novaeva: {mo:20725000, mat:48373251, seg:0,       ss:0,       exc:0,       var2:660000,  adm:0,       her:729900, tsp:250000, alq:0,       act:0,       nom:0},
+  // novaeva: BASE actualizada Jun 2026 (Sheet $70.74M) — extra $14.96M en mat (carpintería, ventanería, eléctrico)
 };
 
 const CAT_DEFS = [
@@ -1766,17 +1771,16 @@ function rProjHeader(o) {
   }
   stats+='</div>';
 
-  // dis = sumAbonos - sumLiveDesdeJun9 - sumHist = saldo real en caja
+  // dis = sumAbonos - gastosT (total acumulado)
   // comp = compromisos pendientes — se MUESTRAN pero NO se descuentan del saldo
   var dispCol = dis >= 0 ? 'var(--gr)' : 'var(--rd)';
-  var gastadoSheet = sumLiveDesdeJun9(o);
-  var gastadoDash  = sumHist(o);
+  var totalGastos = gastosT(o);  // total acumulado (BASE + hist)
   var bud='<div style="background:var(--sf2);border-radius:var(--rs);padding:12px 14px;margin-top:14px">'
-    +'<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Saldo real por obra (desde Jun 9)</div>'
+    +'<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Posición financiera acumulada</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:flex-end">'
-    +'<div><div style="font-size:10px;color:var(--tx2)">Recibido</div><div style="font-size:16px;font-weight:800;color:var(--bl)">'+fmtM(abo)+'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--tx2)">Total recibido</div><div style="font-size:16px;font-weight:800;color:var(--bl)">'+fmtM(abo)+'</div></div>'
     +'<div style="font-size:20px;color:var(--tx3);align-self:center">−</div>'
-    +'<div><div style="font-size:10px;color:var(--tx2)">Gastos ejecutados</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(gastadoSheet+gastadoDash)+'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--tx2)">Total gastos ejecutados</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(totalGastos)+'</div></div>'
     +'<div style="font-size:20px;color:var(--tx3);align-self:center">=</div>'
     +'<div style="padding-left:12px;border-left:2px solid var(--br)">'
       +'<div style="font-size:10px;color:var(--tx2)">SALDO DISPONIBLE</div>'
@@ -1923,6 +1927,15 @@ function getAllRows(o) {
 }
 
 function renderLedger(o) {
+  // Estado de carga mientras Supabase no ha respondido
+  if (!LIVE_LOADED[o]) {
+    var loadEl = document.getElementById('ldg-'+o);
+    if (loadEl) loadEl.innerHTML = '<div style="padding:52px;text-align:center;color:var(--tx2)">'
+      +'<div style="width:36px;height:36px;border:3px solid var(--br);border-top-color:var(--bl);border-radius:50%;animation:ldg-spin .8s linear infinite;margin:0 auto 14px"></div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:4px">Cargando libro de gastos...</div>'
+      +'<div style="font-size:12px;opacity:.7">Conectando con Supabase</div></div>';
+    return;
+  }
   var ls  = LS[o];
   var all = getAllRows(o);
 
@@ -4020,6 +4033,7 @@ table th{font-size:11px!important}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--br);border-radius:4px}
 ::-webkit-scrollbar-thumb:hover{background:var(--tx3)}
+@keyframes ldg-spin{to{transform:rotate(360deg)}}
 </style>
 </body>
 </html>
