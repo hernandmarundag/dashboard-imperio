@@ -1146,7 +1146,6 @@ async function importarGastosFaltantes(obra) {
   var btn = document.getElementById('import-btn-'+obra);
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Verificando...'; }
 
-  // Gastos faltantes por obra (tomados de la hoja Google)
   var FALTANTES = {
     robledo: [
       {fecha:'2026-06-16',nombre:'ferrara, materiales, accesorios', descripcion:'materiales general',    area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:2830000,  material:'', cuenta:'bc-grupo'},
@@ -1163,50 +1162,49 @@ async function importarGastosFaltantes(obra) {
   };
 
   var pendientes = FALTANTES[obra];
-  if (!pendientes || !pendientes.length) { alert('No hay faltantes definidos para '+obra); if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
+  if (!pendientes) { if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
 
-  // Verificar cuáles ya existen en Supabase
-  if (btn) btn.textContent = '⏳ Consultando Supabase...';
+  // Consultar existentes en Supabase
   var existentes = [];
   try {
-    var r = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.'+obra+'&fecha=gte.2026-06-14&select=fecha,nombre,monto', {headers:SB_H});
-    existentes = await r.json();
-  } catch(e) { alert('Error al consultar Supabase: '+e); if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
+    var resp = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.'+obra+'&fecha=gte.2026-06-14&select=fecha,nombre,monto', {headers:SB_H});
+    if (!resp.ok) throw new Error('HTTP '+resp.status);
+    existentes = await resp.json();
+  } catch(e) {
+    if(btn){btn.disabled=false;btn.textContent='❌ Error — reintenta';}
+    return;
+  }
 
-  // Filtrar solo los que NO están en Supabase
+  // Solo los que no existen (por monto+fecha+nombre)
   var nuevos = pendientes.filter(function(p) {
-    return !existentes.some(function(e) {
-      return e.monto === p.monto
-        && e.fecha && e.fecha.startsWith(p.fecha)
-        && e.nombre && e.nombre.toLowerCase().trim() === p.nombre.toLowerCase().trim();
+    return !existentes.some(function(ex) {
+      return ex.monto == p.monto
+        && String(ex.fecha||'').slice(0,10) === p.fecha
+        && String(ex.nombre||'').toLowerCase().trim() === p.nombre.toLowerCase().trim();
     });
   });
 
   if (nuevos.length === 0) {
-    alert('✅ Todo ya estaba en Supabase. No hay nada que importar.');
     if(btn){btn.disabled=false;btn.textContent='✅ Ya está al día';}
     return;
   }
 
-  var sumNuevos = nuevos.reduce(function(a,x){return a+x.monto;},0);
-  var ok = confirm('Se van a insertar '+nuevos.length+' registros faltantes:\n\n'+
-    nuevos.map(function(x){return '• '+x.nombre+' — $'+x.monto.toLocaleString('es-CO');}).join('\n')+
-    '\n\nTotal a agregar: $'+sumNuevos.toLocaleString('es-CO')+
-    '\n\n¿Confirmar?');
-  if (!ok) { if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
-
-  // Insertar con obra
-  if (btn) btn.textContent = '⏳ Insertando...';
+  // Insertar directo sin confirmación
+  if(btn) btn.textContent = '⏳ Insertando '+nuevos.length+'...';
   var payload = nuevos.map(function(x){ return Object.assign({obra:obra}, x); });
   try {
-    await sbPost('gastos', payload);
+    var ins = await fetch(SB_URL+'/rest/v1/gastos', {
+      method:'POST',
+      headers: Object.assign({},SB_H,{'Prefer':'return=minimal'}),
+      body: JSON.stringify(payload)
+    });
+    if (!ins.ok) throw new Error('HTTP '+ins.status);
+    var sumNuevos = nuevos.reduce(function(a,x){return a+x.monto;},0);
     LIVE_LOADED[obra] = false;
     fetchLive(obra);
-    if(btn){btn.disabled=false;btn.textContent='✅ Importado — '+nuevos.length+' registros';}
-    alert('✅ Importación completa.\n'+nuevos.length+' registros insertados.\nTotal agregado: $'+sumNuevos.toLocaleString('es-CO'));
+    if(btn){btn.disabled=false;btn.textContent='✅ '+nuevos.length+' insertados — $'+Math.round(sumNuevos/1000000)+'M';}
   } catch(e) {
-    alert('❌ Error al insertar: '+e);
-    if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';}
+    if(btn){btn.disabled=false;btn.textContent='❌ Error — reintenta';}
   }
 }
 
