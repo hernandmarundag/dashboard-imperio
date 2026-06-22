@@ -1933,39 +1933,45 @@ function rWallets(id) {
       '<div class="w-bank">'+c.banco+'</div>' +
       '<div class="w-name">'+c.nm+'</div>' +
       '<div class="w-lbl">Saldo</div>' +
-      '<div class="w-amt" id="wamt-'+c.id+'" onclick="event.stopPropagation();editSaldoInline(\''+c.id+'\')" title="Toca para editar" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,0.4)">'+fmt(sal)+'</div>' +
+      '<div class="w-amt" onclick="event.stopPropagation();editSaldoInline(\''+c.id+'\',this)" title="Toca para editar" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,0.4)">'+fmt(sal)+'</div>' +
       '<div style="font-size:9px;opacity:0.5;margin-top:3px;text-align:right">✏️ editar</div>' +
       '</div>';
   }).join('');
 }
 
-function editSaldoInline(id) {
+function editSaldoInline(id, el) {
   var c = S.cuentas.find(function(x){return x.id===id;}); if(!c) return;
-  var el = document.getElementById('wamt-'+id); if(!el) return;
+  if (!el) return;
   var current = c.saldoReal !== undefined ? c.saldoReal : saldoCta(id);
   el.style.borderBottom = '2px solid rgba(255,255,255,0.9)';
-  el.innerHTML = '<input type="number" id="wamt-inp-'+id+'" '
+  el.innerHTML = '<input type="number" '
     +'style="width:100%;background:rgba(255,255,255,0.15);border:none;border-radius:6px;'
     +'padding:2px 6px;font-size:20px;font-weight:900;color:#fff;outline:none;text-align:right;'
     +'-moz-appearance:textfield;font-family:inherit" value="'+current+'" />';
-  var inp = document.getElementById('wamt-inp-'+id);
+  var inp = el.querySelector('input');
   if (!inp) return;
   inp.focus(); inp.select();
+  var saved = false;
   function save() {
+    if (saved) return; saved = true;
     var v = parseFloat(inp.value);
     if (!isNaN(v)) {
       c.saldoReal = v;
       c.snapFecha = new Date().toISOString().split('T')[0];
       saveS();
     }
-    rWallets('wallets-i');
+    if (document.getElementById('wallets-i')) rWallets('wallets-i');
     if (document.getElementById('wallets-c')) rWallets('wallets-c');
     rKpi();
   }
   inp.addEventListener('blur', save);
   inp.addEventListener('keydown', function(e){
     if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
-    if (e.key === 'Escape') { rWallets('wallets-i'); if(document.getElementById('wallets-c'))rWallets('wallets-c'); }
+    if (e.key === 'Escape') {
+      saved = true;
+      if (document.getElementById('wallets-i')) rWallets('wallets-i');
+      if (document.getElementById('wallets-c')) rWallets('wallets-c');
+    }
   });
 }
 
