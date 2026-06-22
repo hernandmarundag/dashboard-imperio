@@ -366,9 +366,33 @@ nav:not(.sb-nav){display:none!important}
   .proj-nm{font-size:15px}
   .sec{margin:16px 0 8px}
 }
+
+/* ── FAB — Floating Action Button ── */
+.fab{
+  display:none;
+  position:fixed;
+  right:18px;
+  bottom:calc(var(--bnav) + 14px);
+  width:54px;height:54px;
+  border-radius:27px;
+  background:linear-gradient(135deg,#007AFF,#0A84FF);
+  color:#fff;font-size:26px;line-height:54px;text-align:center;
+  box-shadow:0 4px 16px rgba(0,122,255,.45),0 1px 4px rgba(0,0,0,.2);
+  cursor:pointer;z-index:290;
+  border:none;
+  transition:transform .18s,box-shadow .18s;
+  -webkit-tap-highlight-color:transparent;
+  display:none;
+}
+.fab:active{transform:scale(.93);box-shadow:0 2px 8px rgba(0,122,255,.3)}
+@media(max-width:768px){
+  .fab{display:flex;align-items:center;justify-content:center}
+}
 </style>
 </head>
 <body>
+<!-- ── FAB Gasto ── -->
+<button class="fab" onclick="openGasto()" title="Nuevo gasto">＋</button>
 <!-- ── Bottom Navigation (mobile only) ── -->
 <div class="bottom-nav" id="bottom-nav">
   <button class="bn-item on" data-v="inicio" onclick="gotoViewMobile('inicio',this)">
