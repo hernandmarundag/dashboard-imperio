@@ -1559,7 +1559,7 @@ function rKpi() {
      +'<div class="fin-hero-item"><div class="fhi-l">🔴 Próximo</div><div class="fhi-v" style="font-size:12px;font-weight:600">'+nextTxt+'</div></div>'
      +'</div></div>';
   }
-  document.getElementById('kpi-row').innerHTML =
+  var kpiEl2 = document.getElementById('kpi-row'); if(kpiEl2) kpiEl2.innerHTML =
     kpiEl('💰 Caja total empresa','bl', fmtM(cajaTot)) +
     kpiEl('⚠️ Compromisos pendientes','or', fmtM(pp)) +
     kpiEl('✅ Caja libre', libre>=0?'gr':'rd', fmtM(libre)) +
@@ -1678,7 +1678,8 @@ function rTCs(id) {
 }
 
 function rProjCards() {
-  document.getElementById('proj-cards').innerHTML = ['weliving','robledo','novaeva'].map(function(o) {
+  var pcEl = document.getElementById('proj-cards'); if(!pcEl) return;
+  pcEl.innerHTML = ['weliving','robledo','novaeva'].map(function(o) {
     var c = PC[o], g = gastosT(o), kk = '';
     if (o==='weliving') {
       var sal = BASE.weliving.inversion - g;
