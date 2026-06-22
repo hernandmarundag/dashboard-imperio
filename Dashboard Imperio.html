@@ -3209,37 +3209,81 @@ function rTimelineHtml() {
 }
 
 function rFlujo() {
-  var fp = computeFlujoProy();
-  var ini = fp.initial;
-  var totalSaldo = obrasIds().reduce(function(s,id){return s+(ini[id]||0);},0);
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
 
-  /* ── 4 cards de saldo ── */
-  var obraCards = [
-    {id:'weliving', nm:'🏗 Weliving', saldo:ini.weliving, accent:'var(--bl)'},
-    {id:'robledo',  nm:'🏠 Robledo',  saldo:ini.robledo,  accent:'var(--or)'},
-    {id:'novaeva',  nm:'🏢 Novaeva',  saldo:ini.novaeva,  accent:'var(--gr)'},
+  /* ── Calcular proyección por obra ── */
+  function pagosObra(obraId, maxDias) {
+    return S.pagos.filter(function(p){
+      if (p.proy !== obraId) return false;
+      if (!maxDias) return true;
+      var d = p.fecha ? Math.round((new Date(p.fecha+'T12:00:00')-hoy)/86400000) : 999;
+      return d <= maxDias;
+    }).reduce(function(a,p){ return a+p.monto; }, 0);
+  }
+
+  var obras = [
+    {id:'weliving', nm:'🏗 Weliving', accent:'#3b82f6'},
+    {id:'robledo',  nm:'🏠 Robledo',  accent:'#f97316'},
+    {id:'novaeva',  nm:'🏢 Novaeva',  accent:'#22c55e'},
   ];
-  var cardsHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">';
-  obraCards.forEach(function(c){
-    var neg=c.saldo<0, warn=!neg&&c.saldo<20000000;
-    var col=neg?'var(--rd)':warn?'var(--or)':'var(--gr)';
-    var bg=neg?'#fee2e2':warn?'#fff7ed':'#f0fdf4';
-    cardsHtml+='<div style="background:'+bg+';border-radius:var(--r);padding:16px 18px;border-left:4px solid '+c.accent+'">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px">'+c.nm+'</div>'
-      +'<div style="font-size:24px;font-weight:900;color:'+col+';letter-spacing:-.5px">'+fmtM(c.saldo)+'</div>'
-      +'<div style="font-size:10px;color:var(--tx2);margin-top:4px">Caja disponible hoy</div>'
+
+  var periodos = [
+    {label:'Esta semana', dias:7},
+    {label:'Este mes',    dias:30},
+    {label:'60 días',     dias:60},
+    {label:'Total',       dias:0},
+  ];
+
+  /* totales generales por período */
+  var generales = periodos.map(function(per){
+    return S.pagos.filter(function(p){
+      if (!per.dias) return true;
+      var d = p.fecha ? Math.round((new Date(p.fecha+'T12:00:00')-hoy)/86400000) : 999;
+      return d <= per.dias;
+    }).reduce(function(a,p){ return a+p.monto; }, 0);
+  });
+
+  /* ── Card general ── */
+  var generalHtml = '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:16px">'
+    +'<div style="font-size:12px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">📊 Proyección general de gasto</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">';
+  periodos.forEach(function(per, i){
+    var neg = generales[i] > 0;
+    generalHtml += '<div style="background:var(--sf2);border-radius:10px;padding:12px 14px">'
+      +'<div style="font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:4px">'+per.label+'</div>'
+      +'<div style="font-size:20px;font-weight:900;color:var(--rd)">'+fmtM(generales[i])+'</div>'
       +'</div>';
   });
-  var tNeg=totalSaldo<0;
-  cardsHtml+='<div style="background:'+(tNeg?'#fee2e2':'#f8fafc')+';border-radius:var(--r);padding:16px 18px;border-left:4px solid #64748b">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px">📊 TOTAL GRUPO</div>'
-    +'<div style="font-size:24px;font-weight:900;color:'+(tNeg?'var(--rd)':'var(--tx)')+';letter-spacing:-.5px">'+fmtM(totalSaldo)+'</div>'
-    +'<div style="font-size:10px;color:var(--tx2);margin-top:4px">Consolidado 3 obras</div>'
-    +'</div></div>';
+  generalHtml += '</div></div>';
+
+  /* ── Cards por obra ── */
+  var obrasHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px">';
+  obras.forEach(function(o){
+    var saldo = saldoVirtualObra(o.id);
+    var saldoNeg = saldo < 0;
+    var saldoCol = saldoNeg ? 'var(--rd)' : saldo < 20000000 ? 'var(--or)' : 'var(--gr)';
+    obrasHtml += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;border-top:3px solid '+o.accent+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+      +'<span style="font-size:14px;font-weight:800">'+o.nm+'</span>'
+      +'<div style="text-align:right">'
+      +'<div style="font-size:10px;color:var(--tx2)">Caja hoy</div>'
+      +'<div style="font-size:16px;font-weight:900;color:'+saldoCol+'">'+fmtM(saldo)+'</div>'
+      +'</div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+    periodos.forEach(function(per){
+      var tot = pagosObra(o.id, per.dias);
+      obrasHtml += '<div style="background:var(--sf2);border-radius:8px;padding:8px 10px">'
+        +'<div style="font-size:10px;color:var(--tx2);font-weight:600">'+per.label+'</div>'
+        +'<div style="font-size:14px;font-weight:800;color:'+(tot>0?'var(--rd)':'var(--tx2)')+'">'+fmtM(tot)+'</div>'
+        +'</div>';
+    });
+    obrasHtml += '</div></div>';
+  });
+  obrasHtml += '</div>';
 
   /* ── Alertas top 5 ── */
   var allAlerts = rAlertsRaw();
-  var topAlerts = allAlerts.slice(0, 5);
+  var topAlerts = allAlerts.slice(0,5);
   var moreCount = allAlerts.length - topAlerts.length;
   var alertsInner = topAlerts.length
     ? topAlerts.map(function(a){
@@ -3248,192 +3292,20 @@ function rFlujo() {
         return '<div style="background:'+bg+';border-radius:10px;padding:10px 14px;font-size:12px;color:'+tc+';margin-bottom:6px">'+a.nivel+' '+a.msg+'</div>';
       }).join('')
     : '<div style="background:#f0fdf4;border-radius:10px;padding:12px 16px;color:#166534;font-size:13px;font-weight:600">✅ Sin alertas activas</div>';
-  if (moreCount > 0) {
-    alertsInner += '<div style="text-align:right;margin-top:4px"><a href="#" onclick="gotoView(\'pagos\');return false;" style="font-size:12px;color:var(--bl);font-weight:600">+ '+moreCount+' más → ver en Pagos</a></div>';
-  }
-  var alertsHtml='<div style="margin-bottom:16px">'
+  if (moreCount > 0) alertsInner += '<div style="text-align:right;margin-top:4px"><span style="font-size:12px;color:var(--tx2)">+ '+moreCount+' más abajo ↓</span></div>';
+  var alertsHtml = '<div style="margin-bottom:16px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">⚠ Alertas</div>'
     +alertsInner+'</div>';
-
-  /* ── Gráfica de proyección 30 días ── */
-  var chartHtml = '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px">'
-    +'<div style="font-size:13px;font-weight:800;margin-bottom:12px">📈 Proyección de caja — próximos 30 días</div>'
-    +'<div style="position:relative;height:260px"><canvas id="chart-flujo-proj"></canvas></div>'
-    +'</div>';
-
-  /* ── Tabla compacta próximos 7 días ── */
-  var hoy7 = new Date(); hoy7.setHours(0,0,0,0);
-  var lim7 = new Date(hoy7); lim7.setDate(lim7.getDate()+7);
-  var rowsProx = fp.rows.filter(function(r){
-    if (!r.fecha) return false;
-    var d = new Date(r.fecha+'T12:00:00');
-    return d <= lim7;
-  });
-  var allTableRows = fp.rows;
-
-  function buildTableRows(rows) {
-    if (!rows.length) return '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--tx2);font-size:13px">Sin compromisos en este período</td></tr>';
-    var pnm = {};
-    obrasIds().forEach(function(o){var r=obraReg(o);pnm[o]=r.ico+' '+r.nm;});
-    var html='';
-    rows.forEach(function(r){
-      var rowBg=r.isNeg?'background:#fff1f2':r.isVenc?'background:#fff7ed':'';
-      var salBg=r.isNeg?'color:var(--rd);font-weight:800':r.isWarn?'color:var(--or);font-weight:700':'color:var(--gr);font-weight:700';
-      var diasLabel='';
-      if(r.dias!==null){
-        if(r.dias<0) diasLabel='<br><span style="font-size:10px;color:var(--rd);font-weight:700">VENCIDO '+Math.abs(r.dias)+'d</span>';
-        else if(r.dias===0) diasLabel='<br><span style="font-size:10px;color:var(--rd);font-weight:700">HOY</span>';
-        else if(r.dias<=3) diasLabel='<br><span style="font-size:10px;color:var(--rd)">'+r.dias+'d</span>';
-        else if(r.dias<=7) diasLabel='<br><span style="font-size:10px;color:var(--or)">'+r.dias+'d</span>';
-        else diasLabel='<br><span style="font-size:10px;color:var(--tx2)">'+r.dias+'d</span>';
-      }
-      var obClsBadge=r.obra==='weliving'?'w':r.obra==='robledo'?'r':'n';
-      html+='<tr style="border-bottom:1px solid var(--br);'+rowBg+'">'
-        +'<td style="padding:8px 12px;font-size:11px;white-space:nowrap;color:var(--tx2)">'+r.fLabel+diasLabel+'</td>'
-        +'<td style="padding:8px 12px;font-size:12px;font-weight:600">'+r.desc+'</td>'
-        +'<td style="padding:8px 12px;font-size:11px"><span class="pb pb-'+obClsBadge+'">'+(pnm[r.obra]||r.obra)+'</span></td>'
-        +'<td style="padding:8px 12px;text-align:right;font-weight:700;color:var(--rd);white-space:nowrap">'+fmtM(r.monto)+'</td>'
-        +'<td style="padding:8px 12px;text-align:right;white-space:nowrap;'+salBg+'">'+fmtM(r.saldoObra)+'</td>'
-        +'</tr>';
-    });
-    return html;
-  }
-
-  var tableHtml = '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--br)">'
-    +'<span style="font-size:13px;font-weight:800">📋 Compromisos</span>'
-    +'<div style="display:flex;gap:6px">'
-    +'<button id="btn-fl-7" class="bsm on" onclick="flujoTabSwitch(7)" style="font-size:11px;padding:4px 10px">7 días</button>'
-    +'<button id="btn-fl-30" class="bsm" onclick="flujoTabSwitch(30)" style="font-size:11px;padding:4px 10px">30 días</button>'
-    +'<button id="btn-fl-all" class="bsm" onclick="flujoTabSwitch(0)" style="font-size:11px;padding:4px 10px">Todo</button>'
-    +'</div></div>'
-    +'<div id="flujo-table-body" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
-    +'<thead><tr style="background:var(--sf2)">'
-    +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tx2)">Fecha</th>'
-    +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tx2)">Compromiso</th>'
-    +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tx2)">Obra</th>'
-    +'<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--tx2)">Monto</th>'
-    +'<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--tx2)">Saldo obra</th>'
-    +'</tr></thead>'
-    +'<tbody id="flujo-table-rows">'+buildTableRows(rowsProx)+'</tbody>'
-    +'</table></div></div>';
 
   /* ── Render ── */
   var el = document.getElementById('flujo-grid');
   el.style.display = 'block';
-  el.innerHTML = cardsHtml + alertsHtml + chartHtml + rTimelineHtml() + tableHtml;
+  el.innerHTML = generalHtml + obrasHtml + alertsHtml;
   document.getElementById('fproy').innerHTML = '';
+
   rPagos();
-
-  /* ── Guardar rows en closure para el tab switch ── */
-  window._flujoAllRows = allTableRows;
-  window._flujoRowsProx = rowsProx;
-  window._buildFlujoTableRows = buildTableRows;
-
-  /* ── Dibujar gráfica Chart.js ── */
-  _renderFlujoProjChart(fp);
 }
 
-function flujoTabSwitch(n) {
-  ['7','30','all'].forEach(function(k){
-    var b=document.getElementById('btn-fl-'+k);
-    if(b) b.classList.remove('on');
-  });
-  var btn = document.getElementById('btn-fl-'+(n===0?'all':n));
-  if(btn) btn.classList.add('on');
-
-  var hoy=new Date(); hoy.setHours(0,0,0,0);
-  var rows;
-  if(n===0){ rows=window._flujoAllRows||[]; }
-  else {
-    var lim=new Date(hoy); lim.setDate(lim.getDate()+n);
-    rows=(window._flujoAllRows||[]).filter(function(r){
-      if(!r.fecha) return n===0;
-      return new Date(r.fecha+'T12:00:00')<=lim;
-    });
-  }
-  var tbody=document.getElementById('flujo-table-rows');
-  if(tbody && window._buildFlujoTableRows) tbody.innerHTML=window._buildFlujoTableRows(rows);
-}
-
-function _renderFlujoProjChart(fp) {
-  var canvas = document.getElementById('chart-flujo-proj');
-  if (!canvas) return;
-  if (window._flujoChart) { window._flujoChart.destroy(); window._flujoChart=null; }
-
-  var hoy = new Date(); hoy.setHours(0,0,0,0);
-  var dias = 31;
-  var labels = [];
-  var saldos = { weliving:[], robledo:[], novaeva:[], total:[] };
-  var bal = {
-    weliving: fp.initial.weliving || 0,
-    robledo:  fp.initial.robledo  || 0,
-    novaeva:  fp.initial.novaeva  || 0
-  };
-
-  /* agrupar pagos por fecha y obra */
-  var pagosByFecha = {};
-  fp.rows.forEach(function(r){
-    var k = r.fecha || null; if(!k) return;
-    if(!pagosByFecha[k]) pagosByFecha[k]={};
-    if(!pagosByFecha[k][r.obra]) pagosByFecha[k][r.obra]=0;
-    pagosByFecha[k][r.obra] += r.monto;
-  });
-
-  for (var i=0; i<dias; i++) {
-    var d = new Date(hoy); d.setDate(d.getDate()+i);
-    var iso = d.toISOString().split('T')[0];
-    var label = i===0?'Hoy': d.toLocaleDateString('es-CO',{day:'numeric',month:'short',weekday:'short'});
-    labels.push(label);
-
-    /* descontar pagos de ese día */
-    if (pagosByFecha[iso]) {
-      ['weliving','robledo','novaeva'].forEach(function(o){
-        if(pagosByFecha[iso][o]) bal[o] -= pagosByFecha[iso][o];
-      });
-    }
-
-    saldos.weliving.push( Math.round(bal.weliving/1000000*10)/10 );
-    saldos.robledo.push(  Math.round(bal.robledo/1000000*10)/10 );
-    saldos.novaeva.push(  Math.round(bal.novaeva/1000000*10)/10 );
-    saldos.total.push(    Math.round((bal.weliving+bal.robledo+bal.novaeva)/1000000*10)/10 );
-  }
-
-  window._flujoChart = new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        { label:'🏗 Weliving', data:saldos.weliving, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.08)', tension:.35, pointRadius:2, borderWidth:2 },
-        { label:'🏠 Robledo',  data:saldos.robledo,  borderColor:'#f97316', backgroundColor:'rgba(249,115,22,.08)',  tension:.35, pointRadius:2, borderWidth:2 },
-        { label:'🏢 Novaeva',  data:saldos.novaeva,  borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.08)',   tension:.35, pointRadius:2, borderWidth:2 },
-        { label:'📊 Total',    data:saldos.total,    borderColor:'#64748b', backgroundColor:'rgba(100,116,139,.05)', tension:.35, pointRadius:2, borderWidth:2.5, borderDash:[5,3] }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{position:'top',labels:{font:{size:11},boxWidth:14,padding:12}},
-        tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': $'+ctx.parsed.y+'M';}}}
-      },
-      scales:{
-        x:{ticks:{font:{size:10},maxTicksLimit:10},grid:{display:false}},
-        y:{ticks:{callback:function(v){return '$'+v+'M';},font:{size:10}},
-           grid:{color:'rgba(0,0,0,.05)'},
-           afterDataLimits:function(scale){scale.min=Math.min(scale.min,-5);}}
-      }
-    }
-  });
-}
-
-
-function resetPagosFromDef() {
-  if(!confirm('¿Recargar todos los compromisos desde la configuración base?\nSe perderán los pagos marcados como "Pagado" y los compromisos personalizados.')) return;
-  S.pagos     = JSON.parse(JSON.stringify(DEF.pagos));
-  S.pagosPaid = [];
-  saveS(); rPagos(); rKpi(); rBudgets();
-}
 
 function rPagos() {
   var el = document.getElementById('pagos-list');
