@@ -1319,9 +1319,9 @@ function fetchLive(obra) {
 
 const BASE_DEFAULT = {
   weliving:{gastos:754717074, inversion:755690000},
-  // BASE robledo = total hoja ($315.383.212) − entries plataforma Jun16-18 ($15.846.100) = $299.537.112
-  // Así gastosT('robledo') = 299537112 + sumLiveDesde(Jun16) = 315383212 ✓
-  robledo: {gastos:299537112, recibido:580000000, precio:740000000, porCobrar:160000000},
+  // BASE robledo = suma real sheet ($326.035.212) − entries plataforma Jun16-18 ($15.846.100) = $310.189.112
+  // Así gastosT('robledo') = 310189112 + sumLiveDesde(Jun16) = 326035212 ✓
+  robledo: {gastos:310189112, recibido:580000000, precio:740000000, porCobrar:160000000},
   novaeva: {gastos:70738151,  abonos:80000000,  cartera:85000000},
 };
 // BASE es mutable — el usuario puede corregir gastos histórico por obra
@@ -1604,8 +1604,8 @@ function loadS() {
   // El correcto es 299537112 = total hoja ($315.383.212) - entries plataforma Jun16-18 ($15.846.100)
   try {
     var _bov = JSON.parse(localStorage.getItem('imp_base_gastos')||'{}');
-    if (_bov.robledo === 315383212) {
-      _bov.robledo = 299537112;
+    if (_bov.robledo === 315383212 || _bov.robledo === 299537112) {
+      _bov.robledo = 310189112;
       localStorage.setItem('imp_base_gastos', JSON.stringify(_bov));
     }
   } catch(e){}
