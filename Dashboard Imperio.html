@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imperio ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#F1F5F9;--card:#fff;--border:#E2E8F0;--text:#0F172A;--muted:#64748B;--faint:#94A3B8;
+  --sidebar:#0B1120;--sw:230px;
+  --ind:#6366F1;--ind-d:#4F46E5;--ind-l:#EEF2FF;
+  --grn:#10B981;--grn-l:#ECFDF5;
+  --red:#EF4444;--red-l:#FEF2F2;
+  --amb:#F59E0B;--amb-l:#FFFBEB;
+  --blu:#3B82F6;--blu-l:#EFF6FF;
+  --r:10px;--r2:7px;--r3:14px;
+  --sh:0 1px 3px rgba(0,0,0,.06);--sh2:0 4px 12px rgba(0,0,0,.1);--sh3:0 20px 60px rgba(0,0,0,.18)
+}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+.sidebar{width:var(--sw);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb-logo{padding:20px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-icon{width:34px;height:34px;background:linear-gradient(135deg,#6366F1,#8B5CF6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sb-brand{color:#fff;font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1.2}
+.sb-brand span{display:block;font-size:10px;color:rgba(255,255,255,.4);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.sb-proj{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-lbl{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;font-weight:600}
+.sb-pills{display:flex;flex-direction:column;gap:3px}
+.pill{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;transition:all .14s}
+.pill:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.pill.on{background:rgba(99,102,241,.3);color:#A5B4FC}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.sb-sect{font-size:9px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 4px;font-weight:700}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .14s;color:rgba(255,255,255,.5);position:relative}
+.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+.ni.on{background:rgba(99,102,241,.2);color:#C7D2FE}
+.ni-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.ni span:not(.ni-ico):not(.ni-b){font-size:12px;font-weight:500}
+.ni-b{position:absolute;right:8px;background:#EF4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center}
+.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);font-size:10px;color:rgba(255,255,255,.2)}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;box-shadow:var(--sh)}
+.tb-ttl{font-size:15px;font-weight:800;color:var(--text);flex:1;letter-spacing:-.3px}
+.tb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.tb-acts{display:flex;gap:7px}
+.page{padding:22px 24px;flex:1;display:none;animation:fi .18s ease}
+.page.on{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.pt{font-size:20px;font-weight:900;letter-spacing:-.5px}
+.ps{font-size:12px;color:var(--muted);margin-top:3px}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border-radius:var(--r);padding:15px 17px;box-shadow:var(--sh);border:1px solid var(--border);position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.kpi.ci::after{background:linear-gradient(90deg,#6366F1,#818CF8)}
+.kpi.cg::after{background:linear-gradient(90deg,#10B981,#34D399)}
+.kpi.ca::after{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
+.kpi.cr::after{background:linear-gradient(90deg,#EF4444,#F87171)}
+.kpi.cb::after{background:linear-gradient(90deg,#3B82F6,#60A5FA)}
+.ki{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px}
+.kpi.ci .ki{background:var(--ind-l)}.kpi.cg .ki{background:var(--grn-l)}.kpi.ca .ki{background:var(--amb-l)}.kpi.cr .ki{background:var(--red-l)}.kpi.cb .ki{background:var(--blu-l)}
+.kl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.kv{font-size:19px;font-weight:900;margin-top:3px;letter-spacing:-.5px}
+.kh{font-size:11px;color:var(--faint);margin-top:4px}
+.cr2{display:grid;grid-template-columns:3fr 2fr;gap:12px;margin-bottom:18px}
+.cr3{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.cc{background:var(--card);border-radius:var(--r);padding:15px 17px;box-shadow:var(--sh);border:1px solid var(--border)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.ct{font-size:13px;font-weight:700}.cs{font-size:11px;color:var(--muted);margin-top:2px}
+canvas{max-height:200px}
+.tc{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden;margin-bottom:18px}
+.th{padding:12px 15px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.tt{font-size:13px;font-weight:700}
+.tf{padding:8px 15px;display:flex;gap:7px;border-bottom:1px solid var(--border);background:#FAFAFA;flex-wrap:wrap;align-items:center}
+.fi{padding:6px 9px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;font-family:inherit;background:#fff;color:var(--text);outline:none}
+.fi:focus{border-color:var(--ind)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#F8FAFC}
+th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 12px;font-size:12px;border-bottom:1px solid #F1F5F9}
+tbody tr:hover{background:#F8FAFC}
+tbody tr:last-child td{border-bottom:none}
+.te{padding:36px;text-align:center;color:var(--muted)}
+.ts{padding:9px 15px;background:#F8FAFC;border-top:2px solid var(--border);display:flex;justify-content:flex-end;gap:16px;font-size:12px}
+.pag{padding:9px 15px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
+.pi{font-size:11px;color:var(--muted)}
+.pb-wrap{display:flex;gap:3px}
+.pb{padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;cursor:pointer;background:#fff;color:var(--text);transition:all .14s;font-family:inherit}
+.pb:hover{background:var(--ind-l);border-color:var(--ind);color:var(--ind)}
+.pb.on{background:var(--ind);border-color:var(--ind);color:#fff}
+.pb:disabled{opacity:.4;cursor:default;pointer-events:none}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.bg-g{background:var(--grn-l);color:#065F46}.bg-r{background:var(--red-l);color:#991B1B}
+.bg-a{background:var(--amb-l);color:#92400E}.bg-b{background:var(--blu-l);color:#1E40AF}
+.bg-n{background:#F1F5F9;color:var(--muted)}.bg-i{background:var(--ind-l);color:var(--ind-d)}
+.pw{background:rgba(99,102,241,.12);color:#4F46E5}.pr{background:rgba(16,185,129,.12);color:#065F46}.pn{background:rgba(245,158,11,.12);color:#92400E}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .14s;font-family:inherit;white-space:nowrap}
+.bi{background:var(--ind);color:#fff}.bi:hover{background:var(--ind-d);box-shadow:0 4px 12px rgba(99,102,241,.3)}
+.bg-btn{background:var(--grn);color:#fff}.bg-btn:hover{background:#059669}
+.ba{background:var(--amb);color:#fff}.ba:hover{background:#D97706}
+.bs{background:#fff;color:var(--text);border:1px solid var(--border)}.bs:hover{background:var(--bg)}
+.sm{padding:4px 9px;font-size:11px}
+.ic-btn{width:26px;height:26px;padding:0;justify-content:center;border-radius:var(--r2);border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-size:11px;display:inline-flex;align-items:center;transition:all .14s}
+.ic-btn:hover{background:var(--red-l);color:var(--red);border-color:var(--red)}
+.ic-btn.ed:hover{background:var(--ind-l);color:var(--ind);border-color:var(--ind)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.overlay.on{display:flex}
+.modal{background:#fff;border-radius:var(--r3);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh3)}
+.mh{padding:15px 19px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt{font-size:15px;font-weight:800}
+.mx{cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:2px 4px;border-radius:4px;border:none;background:none;font-family:inherit}
+.mx:hover{background:var(--bg);color:var(--text)}
+.mb{padding:18px}
+.mf{padding:11px 19px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.fg label{font-size:11px;font-weight:600;color:var(--muted)}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:12px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border-color .14s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--ind);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.fg textarea{resize:vertical;min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.bcard{background:linear-gradient(135deg,#0B1120,#1E293B);color:#fff;border-radius:13px;padding:18px;position:relative;overflow:hidden;box-shadow:var(--sh2)}
+.bcard::before{content:"";position:absolute;top:-40%;right:-10%;width:150px;height:150px;border-radius:50%;background:rgba(99,102,241,.1)}
+.bk{font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.2px}
+.bb{font-size:21px;font-weight:900;margin:7px 0 2px;letter-spacing:-.5px}
+.ba2{font-size:10px;color:rgba(255,255,255,.3)}
+.bp{position:absolute;top:13px;right:13px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+.obra-tab{display:inline-flex;padding:5px 13px;border:1px solid var(--border);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);transition:all .14s;margin:0 3px 6px 0}
+.obra-tab:hover{border-color:var(--ind);color:var(--ind)}
+.obra-tab.on{background:var(--ind);border-color:var(--ind);color:#fff}
+.toasts{position:fixed;bottom:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:5px}
+.toast{display:flex;align-items:center;gap:9px;padding:10px 14px;background:#1E293B;color:#fff;border-radius:9px;font-size:12px;font-weight:500;box-shadow:var(--sh3);min-width:240px;animation:tIn .22s ease}
+.toast.g{background:#065F46;border-left:4px solid var(--grn)}.toast.r{background:#991B1B;border-left:4px solid var(--red)}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes tOut{from{transform:translateX(0);opacity:1}to{transform:translateX(110%);opacity:0}}
+.toast.out{animation:tOut .22s ease forwards}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sl{font-size:11px;color:var(--muted)}.sv{font-size:12px;font-weight:700}
+@media(max-width:768px){
+  .sidebar{width:50px}.sb-brand,.sb-proj,.sb-sect,.ni span:not(.ni-ico):not(.ni-b),.ni-b,.sb-foot{display:none}
+  .main{margin-left:50px}.cr2,.cr3,.row2{grid-template-columns:1fr}.kg{grid-template-columns:1fr 1fr}.page{padding:10px}
+}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:10px}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-icon">🏛</div>
+    <div class="sb-brand">Imperio ERP<span>Constructora</span></div>
+  </div>
+  <div class="sb-proj">
+    <div class="sb-lbl">Filtrar obra</div>
+    <div class="sb-pills">
+      <span class="pill on" data-p="todos">🏗 Todas</span>
+      <span class="pill" data-p="weliving">🏗 Weliving</span>
+      <span class="pill" data-p="robledo">🏠 Robledo</span>
+      <span class="pill" data-p="novaeva">🏢 Novaeva</span>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sect">Principal</div>
+    <div class="ni on" data-nav="dash" onclick="nav('dash')"><span class="ni-ico">📊</span><span>Dashboard</span></div>
+    <div class="sb-sect">Finanzas</div>
+    <div class="ni" data-nav="gastos" onclick="nav('gastos')"><span class="ni-ico">💸</span><span>Gastos</span></div>
+    <div class="ni" data-nav="ingresos" onclick="nav('ingresos')"><span class="ni-ico">💰</span><span>Ingresos</span></div>
+    <div class="ni" data-nav="pagos" onclick="nav('pagos')"><span class="ni-ico">📅</span><span>Pagos Programados</span><span class="ni-b" id="badge-pagos">0</span></div>
+    <div class="sb-sect">Tesorería</div>
+    <div class="ni" data-nav="cuentas" onclick="nav('cuentas')"><span class="ni-ico">🏦</span><span>Billeteras</span></div>
+    <div class="sb-sect">Análisis</div>
+    <div class="ni" data-nav="analisis" onclick="nav('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
+    <div class="sb-sect">Registrar</div>
+    <div class="ni" data-nav="registrar" onclick="nav('registrar')"><span class="ni-ico">✏️</span><span>Registrar</span></div>
+  </nav>
+  <div class="sb-foot" id="sb-date">-</div>
+</aside>
+<main class="main">
+  <header class="topbar">
+    <div style="flex:1"><div class="tb-ttl" id="tb-ttl">Dashboard</div><div class="tb-sub" id="tb-sub">Vista general financiera</div></div>
+    <div class="tb-acts">
+      <button class="btn bi sm" onclick="openM('gasto')">+ Gasto</button>
+      <button class="btn bg-btn sm" onclick="openM('ingreso')">+ Ingreso</button>
+      <button class="btn bs sm" onclick="loadAll()">↺ Actualizar</button>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <div class="page on" id="page-dash">
+    <div class="kg">
+      <div class="kpi cr"><div class="ki">💸</div><div class="kl">Gastos Este Mes</div><div class="kv" id="k-mes">--</div><div class="kh" id="k-mes-h">-</div></div>
+      <div class="kpi cg"><div class="ki">💰</div><div class="kl">Ingresos Este Mes</div><div class="kv" id="k-ing">--</div><div class="kh" id="k-ing-h">-</div></div>
+      <div class="kpi cb"><div class="ki">📋</div><div class="kl">Total Histórico</div><div class="kv" id="k-tot">--</div><div class="kh" id="k-tot-h">-</div></div>
+      <div class="kpi ca"><div class="ki">⚠️</div><div class="kl">Por Pagar</div><div class="kv" id="k-pagar">--</div><div class="kh">Pagos pendientes</div></div>
+      <div class="kpi ci"><div class="ki">🏦</div><div class="kl">Saldo Bancario</div><div class="kv" id="k-saldo">--</div><div class="kh">Total cuentas</div></div>
+    </div>
+    <div class="cr2">
+      <div class="cc"><div class="ch"><div><div class="ct">Gasto Mensual — Últimos 6 meses</div><div class="cs">Evolución por mes</div></div></div><canvas id="ch-flujo"></canvas></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Gastos por Obra</div><div class="cs">Distribución total</div></div></div><canvas id="ch-obras"></canvas></div>
+    </div>
+    <div class="cr3">
+      <div class="cc"><div class="ch"><div><div class="ct">Top Categorías</div></div></div><canvas id="ch-cats"></canvas></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Últimos Gastos</div></div></div><div id="dash-recent"></div></div>
+    </div>
+  </div>
+
+  <!-- GASTOS -->
+  <div class="page" id="page-gastos">
+    <div class="ph"><div><div class="pt">Gastos</div><div class="ps">Registro completo de egresos — <span id="g-count-h">-</span></div></div><button class="btn bi" onclick="openM('gasto')">+ Nuevo Gasto</button></div>
+    <div style="margin-bottom:12px">
+      <span class="obra-tab on" data-obra="">Todas</span>
+      <span class="obra-tab" data-obra="weliving">🏗 Weliving</span>
+      <span class="obra-tab" data-obra="robledo">🏠 Robledo</span>
+      <span class="obra-tab" data-obra="novaeva">🏢 Novaeva</span>
+    </div>
+    <div class="tc">
+      <div class="th"><span class="tt">Gastos Registrados</span><span id="g-count" style="font-size:11px;color:var(--muted)"></span></div>
+      <div class="tf">
+        <input class="fi" id="g-q" placeholder="🔍 Buscar nombre, desc..." oninput="rG()" style="min-width:175px">
+        <select class="fi" id="g-area" onchange="rG()">
+          <option value="">Todas las áreas</option>
+          <option>MO General</option><option>Materiales General</option><option>Nomina ADM</option><option>Nomina Empleados</option>
+          <option>Administracion</option><option>Alquiler Equipos</option><option>Seguros</option><option>Seguridad Social</option>
+          <option>Herramientas</option><option>Transporte</option><option>Excavacion</option><option>Varios</option><option>Planos</option>
+        </select>
+        <input class="fi" type="month" id="g-mes" onchange="rG()">
+        <button class="btn bs sm" onclick="clrG()">✕</button>
+      </div>
+      <table><thead><tr><th>Fecha</th><th>Nombre / Proveedor</th><th>Descripción / Material</th><th>Área</th><th>Obra</th><th>MP</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+      <tbody id="g-body"></tbody></table>
+      <div class="ts"><span style="color:var(--muted)">Total filtrado:</span><span style="font-weight:800" id="g-total">$0</span></div>
+      <div class="pag"><span class="pi" id="g-pi"></span><div class="pb-wrap" id="g-pb"></div></div>
+    </div>
+  </div>
+
+  <!-- INGRESOS -->
+  <div class="page" id="page-ingresos">
+    <div class="ph"><div><div class="pt">Ingresos</div><div class="ps">Entradas de capital por obra</div></div><button class="btn bg-btn" onclick="openM('ingreso')">+ Nuevo Ingreso</button></div>
+    <div class="tc">
+      <div class="th"><span class="tt">Ingresos Registrados</span><span id="i-count" style="font-size:11px;color:var(--muted)"></span></div>
+      <div class="tf">
+        <input class="fi" id="i-q" placeholder="🔍 Buscar..." oninput="rI()" style="min-width:175px">
+        <select class="fi" id="i-obra" onchange="rI()"><option value="">Todas las obras</option><option value="weliving">Weliving</option><option value="robledo">Robledo</option><option value="novaeva">Novaeva</option></select>
+        <input class="fi" type="month" id="i-mes" onchange="rI()">
+      </div>
+      <table><thead><tr><th>Fecha</th><th>Descripción / Origen</th><th>Obra</th><th>Cuenta</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+      <tbody id="i-body"></tbody></table>
+      <div class="ts"><span style="color:var(--muted)">Total:</span><span style="font-weight:800;color:var(--grn)" id="i-total">$0</span></div>
+      <div class="pag"><span class="pi" id="i-pi"></span><div class="pb-wrap" id="i-pb"></div></div>
+    </div>
+  </div>
+
+  <!-- PAGOS -->
+  <div class="page" id="page-pagos">
+    <div class="ph"><div><div class="pt">Pagos Programados</div><div class="ps">Compromisos y obligaciones futuras</div></div><button class="btn ba" onclick="openM('pago')">+ Nuevo Pago</button></div>
+    <div class="tc">
+      <div class="th"><span class="tt">Compromisos Pendientes</span></div>
+      <table><thead><tr><th>Vence</th><th>Descripción</th><th>Obra</th><th>Estado</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+      <tbody id="p-body"></tbody></table>
+      <div class="ts"><span style="color:var(--muted)">Total pendiente:</span><span style="font-weight:800;color:var(--amb)" id="p-total">$0</span></div>
+    </div>
+  </div>
+
+  <!-- BILLETERAS -->
+  <div class="page" id="page-cuentas">
+    <div class="ph"><div><div class="pt">Billeteras</div><div class="ps">Saldos bancarios actuales</div></div><button class="btn bi" onclick="openM('saldo')">+ Actualizar Saldo</button></div>
+    <div class="bk-grid" id="bk-cards"></div>
+    <div class="tc">
+      <div class="th"><span class="tt">Movimientos Recientes</span></div>
+      <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Cuenta</th><th>Obra</th><th>Tipo</th><th style="text-align:right">Monto</th></tr></thead>
+      <tbody id="m-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ANALISIS -->
+  <div class="page" id="page-analisis">
+    <div class="ph"><div><div class="pt">Análisis Financiero</div><div class="ps">Inteligencia sobre gastos por obra y categoría</div></div></div>
+    <div style="margin-bottom:12px" id="an-tabs">
+      <span class="obra-tab on" data-obra="">Todas</span>
+      <span class="obra-tab" data-obra="weliving">🏗 Weliving</span>
+      <span class="obra-tab" data-obra="robledo">🏠 Robledo</span>
+      <span class="obra-tab" data-obra="novaeva">🏢 Novaeva</span>
+    </div>
+    <div class="kg" id="an-kpis"></div>
+    <div class="cr3">
+      <div class="cc"><div class="ch"><div class="ct">Gastos por Área</div></div><canvas id="ch-ac"></canvas></div>
+      <div class="cc"><div class="ch"><div class="ct">Evolución Mensual</div></div><canvas id="ch-am"></canvas></div>
+    </div>
+    <div class="tc">
+      <div class="th"><span class="tt">Top Proveedores / Empleados</span></div>
+      <table><thead><tr><th>#</th><th>Nombre</th><th>Área</th><th>Registros</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody id="top-n"></tbody></table>
+    </div>
+  </div>
+
+  <!-- REGISTRAR -->
+  <div class="page" id="page-registrar">
+    <div class="ph"><div><div class="pt">Registrar</div><div class="ps">Agrega nuevos registros al sistema</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;max-width:650px">
+      <div class="cc" style="cursor:pointer;text-align:center;padding:26px 14px" onclick="openM('gasto')"><div style="font-size:30px;margin-bottom:9px">💸</div><div style="font-weight:800;margin-bottom:4px">Nuevo Gasto</div><div style="font-size:11px;color:var(--muted)">Egreso por obra</div></div>
+      <div class="cc" style="cursor:pointer;text-align:center;padding:26px 14px" onclick="openM('ingreso')"><div style="font-size:30px;margin-bottom:9px">💰</div><div style="font-weight:800;margin-bottom:4px">Nuevo Ingreso</div><div style="font-size:11px;color:var(--muted)">Entrada de capital</div></div>
+      <div class="cc" style="cursor:pointer;text-align:center;padding:26px 14px" onclick="openM('pago')"><div style="font-size:30px;margin-bottom:9px">📅</div><div style="font-weight:800;margin-bottom:4px">Pago Programado</div><div style="font-size:11px;color:var(--muted)">Compromiso futuro</div></div>
+      <div class="cc" style="cursor:pointer;text-align:center;padding:26px 14px" onclick="openM('saldo')"><div style="font-size:30px;margin-bottom:9px">🏦</div><div style="font-weight:800;margin-bottom:4px">Saldo Bancario</div><div style="font-size:11px;color:var(--muted)">Actualizar cuenta</div></div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL GASTO -->
+<div class="overlay" id="ov-gasto">
+<div class="modal">
+  <div class="mh"><span class="mt" id="mg-title">Nuevo Gasto</span><button class="mx" onclick="closeM('gasto')">×</button></div>
+  <div class="mb">
+    <input type="hidden" id="g-eid">
+    <div class="row2">
+      <div class="fg"><label>Fecha *</label><input type="date" id="gf-fecha"></div>
+      <div class="fg"><label>Obra *</label><select id="gf-obra"><option value="">Seleccionar...</option><option value="weliving">🏗 Weliving</option><option value="robledo">🏠 Robledo</option><option value="novaeva">🏢 Novaeva</option></select></div>
+    </div>
+    <div class="fg"><label>Nombre / Proveedor / Empleado *</label><input type="text" id="gf-nombre" placeholder="Ej: San Pío, Milton Herrera, Steckerl Aceros..."></div>
+    <div class="row2">
+      <div class="fg"><label>Área / Categoría *</label><select id="gf-area"><option value="">Seleccionar...</option><option>MO General</option><option>Materiales General</option><option>Nomina ADM</option><option>Nomina Empleados</option><option>Administracion</option><option>Alquiler Equipos</option><option>Seguros</option><option>Seguridad Social</option><option>Herramientas</option><option>Transporte</option><option>Excavacion</option><option>Varios</option><option>Planos</option></select></div>
+      <div class="fg"><label>Etapa</label><select id="gf-etapa"><option value="">General</option><option>Preliminar</option><option>Cimentación</option><option>Estructura</option><option>Mampostería</option><option>Acabados</option></select></div>
+    </div>
+    <div class="fg"><label>Material</label><input type="text" id="gf-mat" placeholder="Ej: Hierro, Concreto, Arena, No aplica..."></div>
+    <div class="fg"><label>Descripción</label><textarea id="gf-desc" rows="2" placeholder="Detalle del gasto..."></textarea></div>
+    <div class="row2">
+      <div class="fg"><label>Monto ($) *</label><input type="number" id="gf-monto" placeholder="0" min="0"></div>
+      <div class="fg"><label>Método de pago</label><select id="gf-mp"><option value="">Seleccionar...</option><option>Transferencia</option><option>Efectivo</option><option>TC Paulina</option><option>TC Hernán</option><option>Nequi</option></select></div>
+    </div>
+    <div class="fg"><label>Cuenta / Origen</label><select id="gf-cuenta"><option value="">Seleccionar...</option><option>Bancolombia Grupo</option><option>Davivienda</option><option>Banco Bogotá</option><option>Bancolombia Hernán</option><option>Bancolombia Paulina</option></select></div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeM('gasto')">Cancelar</button><button class="btn bi" onclick="saveG()">💾 Guardar Gasto</button></div>
+</div></div>
+
+<!-- MODAL INGRESO -->
+<div class="overlay" id="ov-ingreso">
+<div class="modal">
+  <div class="mh"><span class="mt">Nuevo Ingreso</span><button class="mx" onclick="closeM('ingreso')">×</button></div>
+  <div class="mb">
+    <div class="row2">
+      <div class="fg"><label>Fecha *</label><input type="date" id="if-fecha"></div>
+      <div class="fg"><label>Monto ($) *</label><input type="number" id="if-monto" placeholder="0"></div>
+    </div>
+    <div class="fg"><label>Descripción / Origen *</label><input type="text" id="if-desc" placeholder="Ej: Abono Yulied, Juan Campillo, Cliente..."></div>
+    <div class="row2">
+      <div class="fg"><label>Obra</label><select id="if-obra"><option value="">General</option><option value="weliving">Weliving</option><option value="robledo">Robledo</option><option value="novaeva">Novaeva</option></select></div>
+      <div class="fg"><label>Cuenta destino</label><select id="if-cta"><option value="">Seleccionar...</option><option>Bancolombia Grupo</option><option>Davivienda</option><option>Banco Bogotá</option><option>Bancolombia Hernán</option><option>Bancolombia Paulina</option></select></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeM('ingreso')">Cancelar</button><button class="btn bg-btn" onclick="saveI()">💰 Guardar Ingreso</button></div>
+</div></div>
+
+<!-- MODAL PAGO -->
+<div class="overlay" id="ov-pago">
+<div class="modal">
+  <div class="mh"><span class="mt">Pago Programado</span><button class="mx" onclick="closeM('pago')">×</button></div>
+  <div class="mb">
+    <div class="fg"><label>Descripción *</label><input type="text" id="pf-desc" placeholder="Ej: Nómina quincena, Concreto losa P4..."></div>
+    <div class="row2">
+      <div class="fg"><label>Fecha vence *</label><input type="date" id="pf-fecha"></div>
+      <div class="fg"><label>Monto ($) *</label><input type="number" id="pf-monto" placeholder="0"></div>
+    </div>
+    <div class="fg"><label>Obra</label><select id="pf-obra"><option value="">General</option><option value="weliving">Weliving</option><option value="robledo">Robledo</option><option value="novaeva">Novaeva</option></select></div>
+    <div class="fg"><label>Nota</label><textarea id="pf-nota" rows="2" placeholder="Observaciones..."></textarea></div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeM('pago')">Cancelar</button><button class="btn ba" onclick="saveP()">📅 Guardar</button></div>
+</div></div>
+
+<!-- MODAL SALDO -->
+<div class="overlay" id="ov-saldo">
+<div class="modal" style="max-width:400px">
+  <div class="mh"><span class="mt">Actualizar Saldo Bancario</span><button class="mx" onclick="closeM('saldo')">×</button></div>
+  <div class="mb">
+    <div class="fg"><label>Banco / Cuenta *</label><select id="sf-banco"><option>Bancolombia Grupo</option><option>Davivienda</option><option>Banco Bogotá</option><option>Bancolombia Hernán</option><option>Bancolombia Paulina</option><option>Nequi</option></select></div>
+    <div class="row2">
+      <div class="fg"><label>Saldo actual ($) *</label><input type="number" id="sf-saldo" placeholder="0"></div>
+      <div class="fg"><label>Fecha corte</label><input type="date" id="sf-fecha"></div>
+    </div>
+    <div class="fg"><label>Obra / Proyecto</label><select id="sf-proj"><option value="">General</option><option value="weliving">Weliving</option><option value="robledo">Robledo</option><option value="novaeva">Novaeva</option></select></div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeM('saldo')">Cancelar</button><button class="btn bi" onclick="saveS()">🏦 Guardar</button></div>
+</div></div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+const SB='https://dghmgaaprlzpfnpsqzav.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+const sbGet=(t,q)=>fetch(SB+'/rest/v1/'+t+'?'+(q||''),{headers:H}).then(r=>r.json());
+const sbPost=(t,d)=>fetch(SB+'/rest/v1/'+t,{method:'POST',headers:H,body:JSON.stringify(d)}).then(r=>r.json());
+const sbPatch=(t,id,d)=>fetch(SB+'/rest/v1/'+t+'?id=eq.'+id,{method:'PATCH',headers:H,body:JSON.stringify(d)}).then(r=>r.json());
+const sbDel=(t,id)=>fetch(SB+'/rest/v1/'+t+'?id=eq.'+id,{method:'DELETE',headers:{...H,'Prefer':'return=minimal'}}).then(r=>r.status);
+
+function fmt(n){var v=Math.abs(n||0);if(v>=1e9)return'$'+(v/1e9).toFixed(1)+'B';if(v>=1e6)return'$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(0)+'K';return'$'+Math.round(v).toLocaleString('es-CO');}
+function fmtF(n){return'$'+Math.round(n||0).toLocaleString('es-CO');}
+function fmtD(d){return d?new Date(d+'T12:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'2-digit'}):'-';}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function thisM(){return new Date().toISOString().slice(0,7);}
+function $(id){return document.getElementById(id);}
+
+var D={obra:'todos',page:'dash',gastos:[],ingresos:[],pagos:[],saldos:[],movs:[],gOb:'',anOb:'',gPg:1,iPg:1,PP:20,C:{}};
+var _gCb=null,_iCb=null;
+
+function obraClass(o){return o==='weliving'?'pw':o==='robledo'?'pr':o==='novaeva'?'pn':'bg-n';}
+function obraEmoji(o){return o==='weliving'?'🏗':o==='robledo'?'🏠':o==='novaeva'?'🏢':'';}
+
+async function loadAll(){
+  toast('Cargando...','');
+  try{
+    var res=await Promise.all([
+      sbGet('gastos','order=fecha.desc&limit=2000'),
+      sbGet('ingresos','order=fecha.desc&limit=500'),
+      sbGet('pagos_programados','order=fecha_vence.asc&limit=200'),
+      sbGet('saldos_bancarios','order=id.desc&limit=50'),
+      sbGet('movimientos','order=fecha.desc&limit=100')
+    ]);
+    D.gastos=Array.isArray(res[0])?res[0]:[];
+    D.ingresos=Array.isArray(res[1])?res[1]:[];
+    D.pagos=Array.isArray(res[2])?res[2]:[];
+    D.saldos=Array.isArray(res[3])?res[3]:[];
+    D.movs=Array.isArray(res[4])?res[4]:[];
+    renderAll();
+    toast('Actualizado ✓','g');
+  }catch(e){toast('Error de conexión','r');}
+}
+
+function renderAll(){
+  rDash();rG();rI();rP();rC();rA();
+  $('sb-date').textContent=new Date().toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'});
+  $('badge-pagos').textContent=D.pagos.filter(function(p){return p.estado!=='pagado';}).length;
+}
+
+function rDash(){
+  var m=thisM();
+  var gastos=D.obra==='todos'?D.gastos:D.gastos.filter(function(g){return g.obra===D.obra;});
+  var ingresos=D.obra==='todos'?D.ingresos:D.ingresos.filter(function(i){return i.obra===D.obra;});
+  var gm=gastos.filter(function(g){return(g.fecha||'').indexOf(m)===0;});
+  var im=ingresos.filter(function(i){return(i.fecha||'').indexOf(m)===0;});
+  var tgm=gm.reduce(function(a,g){return a+(g.monto||0);},0);
+  var tim=im.reduce(function(a,i){return a+(i.monto||0);},0);
+  var tg=gastos.reduce(function(a,g){return a+(g.monto||0);},0);
+  var tp=D.pagos.filter(function(p){return p.estado!=='pagado';}).reduce(function(a,p){return a+(p.monto||0);},0);
+  var ts=D.saldos.reduce(function(a,s){return a+(s.saldo||0);},0);
+  $('k-mes').textContent=fmt(tgm);$('k-mes-h').textContent=gm.length+' registros este mes';
+  $('k-ing').textContent=fmt(tim);$('k-ing-h').textContent=im.length+' ingresos este mes';
+  $('k-tot').textContent=fmt(tg);$('k-tot-h').textContent=D.gastos.length+' registros totales';
+  $('k-pagar').textContent=fmt(tp);$('k-saldo').textContent=fmt(ts);
+  bFlujo();bObras();bCats();bRecent();
+}
+
+function bFlujo(){
+  var ms=[],ds=[];
+  for(var i=5;i>=0;i--){var d=new Date();d.setMonth(d.getMonth()-i);var k=d.toISOString().slice(0,7);ms.push(d.toLocaleDateString('es-CO',{month:'short'}));ds.push(D.gastos.filter(function(g){return(g.fecha||'').indexOf(k)===0;}).reduce(function(a,g){return a+(g.monto||0);},0));}
+  var ctx=$('ch-flujo');if(D.C.f)D.C.f.destroy();
+  D.C.f=new Chart(ctx,{type:'bar',data:{labels:ms,datasets:[{label:'Gastos',data:ds,backgroundColor:'rgba(99,102,241,.7)',borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:function(v){return fmt(v);}},grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}});
+}
+function bObras(){
+  var obs=['weliving','robledo','novaeva'],lbs=['Weliving','Robledo','Novaeva'];
+  var ds=obs.map(function(o){return D.gastos.filter(function(g){return g.obra===o;}).reduce(function(a,g){return a+(g.monto||0);},0);});
+  var ctx=$('ch-obras');if(D.C.o)D.C.o.destroy();
+  D.C.o=new Chart(ctx,{type:'doughnut',data:{labels:lbs,datasets:[{data:ds,backgroundColor:['#6366F1','#10B981','#F59E0B'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+}
+function bCats(){
+  var cs={};D.gastos.forEach(function(g){var a=g.area||'Otros';cs[a]=(cs[a]||0)+(g.monto||0);});
+  var s=Object.entries(cs).sort(function(a,b){return b[1]-a[1];}).slice(0,7);
+  var ctx=$('ch-cats');if(D.C.c)D.C.c.destroy();
+  D.C.c=new Chart(ctx,{type:'bar',data:{labels:s.map(function(x){return x[0];}),datasets:[{data:s.map(function(x){return x[1];}),backgroundColor:['#6366F1','#10B981','#F59E0B','#EF4444','#3B82F6','#8B5CF6','#EC4899'],borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return fmt(v);}},grid:{color:'#F1F5F9'}},y:{grid:{display:false}}}}});
+}
+function bRecent(){
+  var el=$('dash-recent');var r=D.gastos.slice(0,7);
+  if(!r.length){el.innerHTML='<div class="te">Sin datos</div>';return;}
+  el.innerHTML=r.map(function(g){return'<div class="sr"><div><div style="font-size:12px;font-weight:600">'+( g.nombre||'-')+'</div><div style="font-size:10px;color:var(--muted)">'+fmtD(g.fecha)+' · '+(g.obra||'')+'</div></div><div style="font-weight:800;color:var(--red)">'+fmt(g.monto)+'</div></div>';}).join('');
+}
+
+function rG(){
+  var q=($('g-q').value||'').toLowerCase();
+  var ar=$('g-area').value||'';
+  var ms=$('g-mes').value||'';
+  var d=D.gastos.filter(function(g){
+    if(D.gOb&&g.obra!==D.gOb)return false;
+    if(ar&&g.area!==ar)return false;
+    if(ms&&(g.fecha||'').indexOf(ms)!==0)return false;
+    if(q&&(g.nombre+' '+(g.descripcion||'')+' '+(g.material||'')).toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  var tot=d.reduce(function(a,g){return a+(g.monto||0);},0);
+  $('g-total').textContent=fmtF(tot);$('g-count').textContent=d.length+' registros';$('g-count-h').textContent=d.length+' gastos';
+  var pg=Math.max(1,Math.ceil(d.length/D.PP));if(D.gPg>pg)D.gPg=1;
+  var sl=d.slice((D.gPg-1)*D.PP,D.gPg*D.PP);
+  var tb=$('g-body');
+  if(!sl.length){tb.innerHTML='<tr><td colspan="8" class="te">Sin registros</td></tr>';return;}
+  tb.innerHTML=sl.map(function(g){
+    return '<tr><td style="white-space:nowrap">'+fmtD(g.fecha)+'</td><td><div style="font-weight:600">'+(g.nombre||'-')+'</div></td>'
+      +'<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">'+(g.descripcion||g.material||'-')+'</td>'
+      +'<td><span class="badge bg-n">'+(g.area||'-')+'</span></td>'
+      +'<td><span class="badge '+obraClass(g.obra)+'">'+(g.obra||'-')+'</span></td>'
+      +'<td style="font-size:11px;color:var(--muted)">'+(g.mp||'-')+'</td>'
+      +'<td style="text-align:right;font-weight:700;color:var(--red);white-space:nowrap">'+fmtF(g.monto)+'</td>'
+      +'<td><button class="ic-btn ed" onclick="editG('+g.id+')">✏️</button></td></tr>';
+  }).join('');
+  _gCb=function(p){D.gPg=p;rG();};
+  bPag('g',pg,D.gPg,'_gCb');
+  $('g-pi').textContent='Pág '+D.gPg+'/'+pg+' · '+d.length+' reg';
+}
+function clrG(){$('g-q').value='';$('g-area').value='';$('g-mes').value='';D.gOb='';document.querySelectorAll('#page-gastos .obra-tab').forEach(function(t){t.classList.remove('on');});document.querySelector('#page-gastos .obra-tab[data-obra=""]').classList.add('on');rG();}
+
+function rI(){
+  var q=($('i-q').value||'').toLowerCase();
+  var ob=$('i-obra').value||'';var ms=$('i-mes').value||'';
+  var d=D.ingresos.filter(function(i){
+    if(ob&&i.obra!==ob)return false;
+    if(ms&&(i.fecha||'').indexOf(ms)!==0)return false;
+    if(q&&(i.descripcion||'').toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  var tot=d.reduce(function(a,i){return a+(i.monto||0);},0);
+  $('i-total').textContent=fmtF(tot);$('i-count').textContent=d.length+' registros';
+  var pg=Math.max(1,Math.ceil(d.length/D.PP));if(D.iPg>pg)D.iPg=1;
+  var sl=d.slice((D.iPg-1)*D.PP,D.iPg*D.PP);
+  var tb=$('i-body');
+  if(!sl.length){tb.innerHTML='<tr><td colspan="6" class="te">Sin ingresos.<br><button class="btn bg-btn sm" onclick="openM(\'ingreso\')" style="margin-top:7px">+ Registrar primer ingreso</button></td></tr>';return;}
+  tb.innerHTML=sl.map(function(i){
+    return '<tr><td style="white-space:nowrap">'+fmtD(i.fecha)+'</td>'
+      +'<td style="font-weight:600">'+(i.descripcion||i.origen||'-')+'</td>'
+      +'<td><span class="badge '+obraClass(i.obra)+'">'+(i.obra||'General')+'</span></td>'
+      +'<td style="font-size:11px;color:var(--muted)">'+(i.cuenta||'-')+'</td>'
+      +'<td style="text-align:right;font-weight:700;color:var(--grn);white-space:nowrap">'+fmtF(i.monto)+'</td>'
+      +'<td><button class="ic-btn" onclick="delI('+i.id+')">🗑</button></td></tr>';
+  }).join('');
+  _iCb=function(p){D.iPg=p;rI();};
+  bPag('i',pg,D.iPg,'_iCb');
+  $('i-pi').textContent=d.length+' registros';
+}
+
+function rP(){
+  var hoy=todayStr();var d=D.pagos;
+  var tot=d.filter(function(p){return p.estado!=='pagado';}).reduce(function(a,p){return a+(p.monto||0);},0);
+  $('p-total').textContent=fmtF(tot);
+  var tb=$('p-body');
+  if(!d.length){tb.innerHTML='<tr><td colspan="6" class="te">Sin pagos programados.<br><button class="btn ba sm" onclick="openM(\'pago\')" style="margin-top:7px">+ Agregar</button></td></tr>';return;}
+  tb.innerHTML=d.map(function(p){
+    var v=p.fecha_vence||p.fecha||'';
+    var vc=v&&v<hoy&&p.estado!=='pagado';
+    var editBtn=p.estado!=='pagado'?'<button class="ic-btn ed" onclick="markP('+p.id+')" title="Marcar pagado">✓</button>':'';
+    return '<tr><td style="white-space:nowrap;color:'+(vc?'var(--red)':'var(--text)')+';font-weight:'+(vc?'700':'400')+'">'+fmtD(v)+'</td>'
+      +'<td style="font-weight:600">'+(p.descripcion||'-')+'</td>'
+      +'<td><span class="badge '+obraClass(p.obra)+'">'+(p.obra||'General')+'</span></td>'
+      +'<td><span class="badge '+(vc?'bg-r':p.estado==='pagado'?'bg-g':'bg-a')+'">'+(vc?'⚠️ Vencido':p.estado==='pagado'?'✓ Pagado':'Pendiente')+'</span></td>'
+      +'<td style="text-align:right;font-weight:700;color:var(--amb);white-space:nowrap">'+fmtF(p.monto)+'</td>'
+      +'<td style="display:flex;gap:3px">'+editBtn+'<button class="ic-btn" onclick="delP('+p.id+')">🗑</button></td></tr>';
+  }).join('');
+}
+
+function rC(){
+  var el=$('bk-cards');
+  var tot=D.saldos.reduce(function(a,s){return a+(s.saldo||0);},0);
+  if(!D.saldos.length){
+    el.innerHTML='<div class="cc" style="text-align:center;padding:26px;grid-column:1/-1"><div style="font-size:28px;margin-bottom:7px">🏦</div><div style="font-weight:700;margin-bottom:4px">Sin saldos registrados</div><div style="font-size:11px;color:var(--muted);margin-bottom:10px">Registra el saldo actual de cada cuenta</div><button class="btn bi sm" onclick="openM(\'saldo\')">+ Registrar saldo</button></div>';
+  }else{
+    var cards='<div class="bcard" style="background:linear-gradient(135deg,#6366F1,#4F46E5)"><div class="bk">Total Disponible</div><div class="bb">'+fmt(tot)+'</div><div class="ba2">'+D.saldos.length+' cuentas</div></div>';
+    cards+=D.saldos.map(function(s){
+      var proj=s.proyecto?'<div class="bp">'+s.proyecto+'</div>':'';
+      var corte=s.actualizado?'<div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:12px">Corte: '+fmtD(s.actualizado)+'</div>':'';
+      return '<div class="bcard"><div class="bk">'+(s.banco||s.cuenta||'Cuenta')+'</div><div class="bb">'+fmt(s.saldo)+'</div><div class="ba2">'+(s.cuenta||'')+'</div>'+corte+proj+'</div>';
+    }).join('');
+    el.innerHTML=cards;
+  }
+  var mb=$('m-body');
+  if(!D.movs.length){mb.innerHTML='<tr><td colspan="6" class="te">Sin movimientos</td></tr>';return;}
+  mb.innerHTML=D.movs.slice(0,30).map(function(m){
+    var pos=(m.signo||1)>0;
+    return '<tr><td style="white-space:nowrap">'+fmtD(m.fecha)+'</td>'
+      +'<td style="font-weight:600">'+(m.descripcion||'-')+'</td>'
+      +'<td style="font-size:11px;color:var(--muted)">'+(m.cta_id||'-')+'</td>'
+      +'<td><span class="badge '+obraClass(m.obra)+'">'+(m.obra||'General')+'</span></td>'
+      +'<td><span class="badge '+(m.tipo==='ingreso'?'bg-g':'bg-r')+'">'+(m.tipo||'-')+'</span></td>'
+      +'<td style="text-align:right;font-weight:700;color:'+(pos?'var(--grn)':'var(--red)')+'">'+( pos?'+':'')+fmtF(m.monto)+'</td></tr>';
+  }).join('');
+}
+
+function rA(){
+  var ob=D.anOb;
+  var d=ob?D.gastos.filter(function(g){return g.obra===ob;}):D.gastos;
+  var tot=d.reduce(function(a,g){return a+(g.monto||0);},0);
+  var m=thisM();
+  var em=d.filter(function(g){return(g.fecha||'').indexOf(m)===0;}).reduce(function(a,g){return a+(g.monto||0);},0);
+  var oKpis=['weliving','robledo','novaeva'].map(function(o){
+    var dd=D.gastos.filter(function(g){return g.obra===o;});
+    return{o:o,t:dd.reduce(function(a,g){return a+(g.monto||0);},0),n:dd.length};
+  });
+  var kpiH='<div class="kpi cb"><div class="ki">📊</div><div class="kl">Total Gastos</div><div class="kv">'+fmt(tot)+'</div><div class="kh">'+d.length+' registros</div></div>'
+    +'<div class="kpi cr"><div class="ki">📅</div><div class="kl">Este Mes</div><div class="kv">'+fmt(em)+'</div><div class="kh">'+m+'</div></div>'
+    +oKpis.map(function(x){return'<div class="kpi ci"><div class="ki">'+obraEmoji(x.o)+'</div><div class="kl">'+x.o.charAt(0).toUpperCase()+x.o.slice(1)+'</div><div class="kv">'+fmt(x.t)+'</div><div class="kh">'+x.n+' reg</div></div>';}).join('');
+  $('an-kpis').innerHTML=kpiH;
+  var cs={};d.forEach(function(g){var a=g.area||'Otros';cs[a]=(cs[a]||0)+(g.monto||0);});
+  var s=Object.entries(cs).sort(function(a,b){return b[1]-a[1];}).slice(0,8);
+  var ctxC=$('ch-ac');if(D.C.ac)D.C.ac.destroy();
+  D.C.ac=new Chart(ctxC,{type:'bar',data:{labels:s.map(function(x){return x[0];}),datasets:[{data:s.map(function(x){return x[1];}),backgroundColor:'#6366F1',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return fmt(v);}},grid:{color:'#F1F5F9'}},y:{grid:{display:false}}}}});
+  var ms2=[],ds2=[];
+  for(var i2=5;i2>=0;i2--){var dd2=new Date();dd2.setMonth(dd2.getMonth()-i2);var k2=dd2.toISOString().slice(0,7);ms2.push(dd2.toLocaleDateString('es-CO',{month:'short'}));ds2.push(d.filter(function(g){return(g.fecha||'').indexOf(k2)===0;}).reduce(function(a,g){return a+(g.monto||0);},0));}
+  var ctxM=$('ch-am');if(D.C.am)D.C.am.destroy();
+  D.C.am=new Chart(ctxM,{type:'line',data:{labels:ms2,datasets:[{data:ds2,borderColor:'#6366F1',backgroundColor:'rgba(99,102,241,.1)',fill:true,tension:.3,pointBackgroundColor:'#6366F1'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:function(v){return fmt(v);}},grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}});
+  var ns={};d.forEach(function(g){var k=g.nombre||'Sin nombre';if(!ns[k])ns[k]={area:g.area||'-',t:0,n:0};ns[k].t+=(g.monto||0);ns[k].n++;});
+  var tn=Object.entries(ns).sort(function(a,b){return b[1].t-a[1].t;}).slice(0,15);
+  $('top-n').innerHTML=tn.map(function(x,i){return'<tr><td style="color:var(--muted);font-size:11px">'+(i+1)+'</td><td style="font-weight:600">'+x[0]+'</td><td><span class="badge bg-n">'+x[1].area+'</span></td><td style="color:var(--muted)">'+x[1].n+'</td><td style="text-align:right;font-weight:700;color:var(--red)">'+fmtF(x[1].t)+'</td></tr>';}).join('');
+}
+
+async function saveG(){
+  var id=$('g-eid').value;
+  var f=$('gf-fecha').value,o=$('gf-obra').value,n=$('gf-nombre').value.trim(),a=$('gf-area').value,m=parseFloat($('gf-monto').value)||0;
+  if(!f||!o||!n||!a||!m){toast('Completa campos obligatorios *','r');return;}
+  var data={fecha:f,obra:o,nombre:n,area:a,monto:m,etapa_gral:$('gf-etapa').value||null,material:$('gf-mat').value||null,descripcion:$('gf-desc').value||null,mp:$('gf-mp').value||null,cuenta:$('gf-cuenta').value||null};
+  try{
+    if(id)await sbPatch('gastos',id,data);else await sbPost('gastos',[data]);
+    toast(id?'Gasto actualizado ✓':'Gasto guardado ✓','g');closeM('gasto');await loadAll();
+  }catch(e){toast('Error al guardar','r');}
+}
+function editG(id){
+  var g=D.gastos.find(function(x){return x.id===id;});if(!g)return;
+  $('g-eid').value=id;$('mg-title').textContent='Editar Gasto';
+  $('gf-fecha').value=g.fecha||'';$('gf-obra').value=g.obra||'';$('gf-nombre').value=g.nombre||'';
+  $('gf-area').value=g.area||'';$('gf-etapa').value=g.etapa_gral||'';$('gf-mat').value=g.material||'';
+  $('gf-desc').value=g.descripcion||'';$('gf-monto').value=g.monto||'';$('gf-mp').value=g.mp||'';$('gf-cuenta').value=g.cuenta||'';
+  openM('gasto');
+}
+async function saveI(){
+  var f=$('if-fecha').value,m=parseFloat($('if-monto').value)||0,d=$('if-desc').value.trim();
+  if(!f||!m||!d){toast('Completa todos los campos','r');return;}
+  try{await sbPost('ingresos',[{fecha:f,monto:m,descripcion:d,obra:$('if-obra').value||null,cuenta:$('if-cta').value||null}]);toast('Ingreso guardado ✓','g');closeM('ingreso');await loadAll();}
+  catch(e){toast('Error al guardar','r');}
+}
+async function delI(id){if(!confirm('¿Eliminar?'))return;await sbDel('ingresos',id);toast('Eliminado','g');await loadAll();}
+async function saveP(){
+  var d=$('pf-desc').value.trim(),f=$('pf-fecha').value,m=parseFloat($('pf-monto').value)||0;
+  if(!d||!f||!m){toast('Completa todos los campos','r');return;}
+  try{await sbPost('pagos_programados',[{descripcion:d,fecha_vence:f,monto:m,obra:$('pf-obra').value||null,nota:$('pf-nota').value||null,estado:'pendiente'}]);toast('Pago guardado ✓','g');closeM('pago');await loadAll();}
+  catch(e){toast('Error al guardar','r');}
+}
+async function delP(id){if(!confirm('¿Eliminar?'))return;await sbDel('pagos_programados',id);toast('Eliminado','g');await loadAll();}
+async function markP(id){await sbPatch('pagos_programados',id,{estado:'pagado'});toast('Marcado pagado ✓','g');await loadAll();}
+async function saveS(){
+  var b=$('sf-banco').value,s=parseFloat($('sf-saldo').value)||0,f=$('sf-fecha').value||todayStr();
+  if(!s){toast('Ingresa el saldo','r');return;}
+  var ex=D.saldos.find(function(x){return x.banco===b;});
+  try{
+    if(ex)await sbPatch('saldos_bancarios',ex.id,{saldo:s,actualizado:f});
+    else await sbPost('saldos_bancarios',[{banco:b,saldo:s,actualizado:f,proyecto:$('sf-proj').value||null}]);
+    toast('Saldo actualizado ✓','g');closeM('saldo');await loadAll();
+  }catch(e){toast('Error al actualizar saldo','r');}
+}
+
+function openM(t){
+  if(t==='gasto'){$('gf-fecha').value=todayStr();$('g-eid').value='';$('mg-title').textContent='Nuevo Gasto';}
+  if(t==='ingreso')$('if-fecha').value=todayStr();
+  if(t==='saldo')$('sf-fecha').value=todayStr();
+  document.getElementById('ov-'+t).classList.add('on');
+}
+function closeM(t){document.getElementById('ov-'+t).classList.remove('on');}
+
+function bPag(px,pgs,cur,cbName){
+  var el=$(px+'-pb');if(!el)return;
+  var h='<button class="pb" '+(cur<=1?'disabled':'')+' onclick="window[\''+cbName+'\']('+( cur-1)+')">&#8249;</button>';
+  var r=[1,cur-1,cur,cur+1,pgs].filter(function(p,i,a){return p>=1&&p<=pgs&&a.indexOf(p)===i;}).sort(function(a,b){return a-b;});
+  var prev=-1;
+  r.forEach(function(p){
+    if(prev>=0&&p-prev>1)h+='<span style="padding:3px 2px;color:var(--muted)">…</span>';
+    h+='<button class="pb'+(p===cur?' on':'')+'" onclick="window[\''+cbName+'\']('+p+')">'+p+'</button>';
+    prev=p;
+  });
+  h+='<button class="pb" '+(cur>=pgs?'disabled':'')+' onclick="window[\''+cbName+'\']('+( cur+1)+')">&#8250;</button>';
+  el.innerHTML=h;
+}
+
+function nav(pg){
+  D.page=pg;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  var pp=document.getElementById('page-'+pg);if(pp)pp.classList.add('on');
+  var ni=document.querySelector('.ni[data-nav="'+pg+'"]');if(ni)ni.classList.add('on');
+  var T={dash:'Dashboard',gastos:'Gastos',ingresos:'Ingresos',pagos:'Pagos Programados',cuentas:'Billeteras',analisis:'Análisis',registrar:'Registrar'};
+  var SB={dash:'Vista general financiera',gastos:'Registro de egresos',ingresos:'Entradas de capital',pagos:'Compromisos futuros',cuentas:'Saldos bancarios y movimientos',analisis:'Inteligencia sobre gastos',registrar:'Agrega nuevos registros'};
+  $('tb-ttl').textContent=T[pg]||pg;$('tb-sub').textContent=SB[pg]||'';
+}
+
+function toast(msg,type){
+  var el=document.createElement('div');el.className='toast '+(type||'');el.innerHTML='<span>'+msg+'</span>';
+  $('toasts').appendChild(el);
+  setTimeout(function(){el.classList.add('out');setTimeout(function(){el.remove();},250);},2800);
+}
+
+document.querySelectorAll('.pill').forEach(function(p){p.addEventListener('click',function(){document.querySelectorAll('.pill').forEach(function(x){x.classList.remove('on');});p.classList.add('on');D.obra=p.dataset.p;renderAll();});});
+document.querySelectorAll('#page-gastos .obra-tab').forEach(function(t){t.addEventListener('click',function(){document.querySelectorAll('#page-gastos .obra-tab').forEach(function(x){x.classList.remove('on');});t.classList.add('on');D.gOb=t.dataset.obra;D.gPg=1;rG();});});
+document.querySelectorAll('#an-tabs .obra-tab').forEach(function(t){t.addEventListener('click',function(){document.querySelectorAll('#an-tabs .obra-tab').forEach(function(x){x.classList.remove('on');});t.classList.add('on');D.anOb=t.dataset.obra;rA();});});
+document.querySelectorAll('.overlay').forEach(function(ov){ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('on');});});
+
+loadAll();
+</script>
+</body>
+</html>
