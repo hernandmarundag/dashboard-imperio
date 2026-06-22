@@ -3314,45 +3314,52 @@ function pagoCategoria(p) {
   var o = p.proy;
 
   if (o === 'weliving') {
-    if (/acero|hierro/.test(d))                          return '🔩 Acero';
-    if (/concreto|vaciado/.test(d))                      return '🪨 Concreto';
-    if (/formaleta/.test(d))                             return '🪵 Formaleta';
-    if (/mano de obra|mo losa|mo col|mo cubierta/.test(d)) return '👷 Mano de obra';
-    if (/bomba/.test(d))                                 return '💧 Bomba concreto';
-    if (/grúa|andamio|equipo|alquiler/.test(d))          return '🏗 Equipos';
-    if (/nómina|nomina|admin nómina|admin nomina/.test(d)) return '💰 Nómina';
-    if (/pila|planilla|seguridad social/.test(d))        return '🏥 Seg. social';
+    /* losa: lo que empieza o tiene como elemento principal la losa */
+    if (/^(acero losa|concreto losa|formaleta losa|mo losa|alquiler bomba|formaleta cubierta|mo losa cubierta|concreto losa cubierta|alquiler bomba cubierta|acero losa cubierta|formaleta cubierta)/.test(d)) return '🏗 Losa';
+    if (/losa/.test(d) && d.indexOf('losa') < d.indexOf('col')) return '🏗 Losa';
+    if (/losa|vaciado/.test(d) && !/col/.test(d))         return '🏗 Losa';
+    if (/cubierta/.test(d) && !/col/.test(d))              return '🏗 Losa';
+    /* columnas: acero col, concreto col, columnas finales */
+    if (/\bcol\b|colum/.test(d))                           return '🏛 Columnas';
+    /* nómina admin y obreros */
+    if (/nómina|nomina|admin/.test(d))                     return '💰 Nómina';
+    /* seguridad social / PILA */
+    if (/pila|planilla|seg.*social/.test(d))               return '🏥 Seg. social / PILA';
+    /* equipos alquilados */
+    if (/grúa|gru|andamio|equipo|alquiler/.test(d))        return '🔧 Equipos';
     return '📦 Otros Weliving';
   }
+
   if (o === 'robledo') {
-    if (/bloque|mampostería|mamposteria|pega|mortero/.test(d)) return '🧱 Mampostería';
-    if (/drywall|cielo raso|muros dry/.test(d))          return '🪟 Drywall / Cielo';
-    if (/pañete|pañete|enchape|porcelanato/.test(d))     return '🏠 Enchapes y pañetes';
-    if (/hidráulica|hidraulica|agua|desagüe/.test(d))    return '🔧 Hidráulica';
-    if (/eléctrica|electrica|red eléctrica/.test(d))     return '⚡ Eléctrica';
-    if (/carpintería|carpinteria|puertas|marcos/.test(d)) return '🚪 Carpintería';
-    if (/pintura/.test(d))                               return '🎨 Pintura';
-    if (/liquidaci|nómina|nomina/.test(d))               return '💰 Nómina / Liquidaciones';
-    if (/pila|planilla|seguridad social/.test(d))        return '🏥 Seg. social';
+    if (/bloque|mampost|pega|mortero|pañete|panet/.test(d)) return '🧱 Mampostería y pañetes';
+    if (/drywall|cielo|dry/.test(d))                        return '🪟 Drywall / Cielo raso';
+    if (/enchape|porcelanato/.test(d))                      return '🏠 Enchapes';
+    if (/hidráulica|hidraulica|agua|desagüe|eléctrica|electrica/.test(d)) return '⚡ Instalaciones';
+    if (/carpintería|carpinteria|puertas/.test(d))          return '🚪 Carpintería';
+    if (/pintura/.test(d))                                  return '🎨 Pintura';
+    if (/liquidaci|nómina|nomina/.test(d))                  return '💰 Nómina / Liquidaciones';
+    if (/pila|planilla/.test(d))                            return '🏥 Seg. social / PILA';
     return '📦 Otros Robledo';
   }
+
   if (o === 'novaeva') {
-    if (/carpintería|carpinteria/.test(d))               return '🚪 Carpintería';
-    if (/vidrio/.test(d))                                return '🪟 Vidrio';
-    if (/nómina|nomina/.test(d))                         return '💰 Nómina';
-    if (/materiales|acabados/.test(d))                   return '🧱 Materiales';
-    if (/mo final|mano de obra/.test(d))                 return '👷 Mano de obra';
+    if (/carpintería|carpinteria/.test(d))  return '🚪 Carpintería';
+    if (/vidrio/.test(d))                   return '🪟 Vidrio';
+    if (/nómina|nomina/.test(d))            return '💰 Nómina';
+    if (/materiales|acabados/.test(d))      return '🧱 Materiales';
+    if (/mo final|mano de obra/.test(d))    return '👷 Mano de obra';
     return '📦 Cierre Novaeva';
   }
-  if (/prima/.test(d))                                   return '🎁 Prima';
+
+  if (/prima/.test(d))                      return '🎁 Prima';
   if (/préstamo|prestamo|devolución|devolucion/.test(d)) return '🏦 Préstamos';
   return '📦 Empresa';
 }
 
 /* orden de categorías por obra */
 var CAT_ORDER = {
-  weliving: ['🔩 Acero','🪨 Concreto','🪵 Formaleta','👷 Mano de obra','💧 Bomba concreto','🏗 Equipos','💰 Nómina','🏥 Seg. social','📦 Otros Weliving'],
-  robledo:  ['🧱 Mampostería','🪟 Drywall / Cielo','🏠 Enchapes y pañetes','🔧 Hidráulica','⚡ Eléctrica','🚪 Carpintería','🎨 Pintura','💰 Nómina / Liquidaciones','🏥 Seg. social','📦 Otros Robledo'],
+  weliving: ['🏗 Losa','🏛 Columnas','💰 Nómina','🏥 Seg. social / PILA','🔧 Equipos','📦 Otros Weliving'],
+  robledo:  ['🧱 Mampostería y pañetes','🪟 Drywall / Cielo raso','🏠 Enchapes','⚡ Instalaciones','🚪 Carpintería','🎨 Pintura','💰 Nómina / Liquidaciones','🏥 Seg. social / PILA','📦 Otros Robledo'],
   novaeva:  ['🚪 Carpintería','🪟 Vidrio','🧱 Materiales','👷 Mano de obra','💰 Nómina','📦 Cierre Novaeva'],
   empresa:  ['🎁 Prima','🏦 Préstamos','📦 Empresa'],
 };
