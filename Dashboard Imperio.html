@@ -1447,12 +1447,17 @@ function sumLiveDesdeJun9(o){
   }).reduce(function(a,e){return a+(e.monto||0);},0);
 }
 function saldoVirtualObra(o){
-  // Saldo = dinero recibido desde Jun 9 − gastos desde Jun 9 (Sheet real + dashboard)
-  return sumAbonos(o) - sumLiveDesdeJun9(o) - sumHist(o);
+  // Saldo real = total recibido de socios/cliente − total gastado ejecutado
+  return sumAbonos(o) - gastosT(o);
 }
 function cajaT() { var t=0; S.cuentas.forEach(function(c){t+=saldoCta(c.id);}); return t; }
 
-function pagosXObra(o){return S.pagos.filter(function(p){return p.proy===o;}).reduce(function(a,p){return a+p.monto;},0);}
+function pagosXObra(o){
+  var paid = S.pagosPaid || [];
+  return S.pagos.filter(function(p){
+    return p.proy===o && paid.indexOf(p.id)===-1;
+  }).reduce(function(a,p){return a+p.monto;},0);
+}
 function budgetDisp(o){
   if(o==='weliving') return BASE.weliving.inversion - gastosT('weliving') - pagosXObra('weliving');
   if(o==='robledo')  return BASE.robledo.recibido   - gastosT('robledo')  - pagosXObra('robledo');
