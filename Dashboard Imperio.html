@@ -109,6 +109,17 @@ tr:hover td{background:#fafafa}
 .del-btn{color:var(--rd);cursor:pointer;opacity:.4;font-size:12px;padding:0 4px;border:none;background:none}
 .del-btn:hover{opacity:1}
 
+/* CHARTS */
+.chart-card{background:var(--sf);border-radius:var(--r);padding:20px 20px 14px;box-shadow:var(--sh)}
+.cat-chart-wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin:12px 0}
+.cat-chart-canvas{width:180px!important;height:180px!important;flex-shrink:0}
+.cat-chart-list{flex:1;min-width:200px}
+.cat-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--br)}
+.cat-row:last-child{border-bottom:none}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cat-nm{flex:1;font-size:12px;font-weight:500;color:var(--tx)}
+.cat-pct{font-size:11px;color:var(--tx2);min-width:32px;text-align:right}
+.cat-amt{font-size:12px;font-weight:700;min-width:90px;text-align:right}
 /* BUDGET PER PROJECT */
 .bud-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:4px}
 .bud-card{background:var(--sf);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border-left:4px solid var(--bl)}
@@ -360,6 +371,11 @@ nav:not(.sb-nav){display:none!important}
     <div class="sec">📊 Resumen ejecutivo · 16 Jun 2026</div>
     <div id="fin-hero" style="margin-bottom:16px"></div>
     <div class="kpi-grid" id="kpi-row"></div>
+
+    <div class="sec">📊 Comparativo financiero — Recibido vs Gastado</div>
+    <div class="chart-card" style="margin-bottom:16px">
+      <canvas id="chart-obras" style="max-height:200px"></canvas>
+    </div>
 
     <div class="sec">🏗 Estado por obra</div>
     <div id="obras-resumen"></div>
@@ -1046,6 +1062,7 @@ nav:not(.sb-nav){display:none!important}
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    DATA
@@ -1103,7 +1120,7 @@ function fetchLive(obra) {
         if (tot > 0) try { localStorage.setItem('imp_wl_live', tot); } catch(e){}
       }
       if (curV === obra) rProjView(obra);
-      if (curV === 'inicio') { rKpi(); rBudgets(); rObrasResumen(); }
+      if (curV === 'inicio') { rKpi(); rObrasChart(); rBudgets(); rObrasResumen(); }
     })
     .catch(function(e){ console.warn('fetchLive supabase ' + obra + ':', e); });
 }
@@ -1518,7 +1535,7 @@ function gotoView(v) {
 }
 
 function renderView(v) {
-  if (v === 'inicio')  { rKpi(); rObrasResumen(); rPosFinanciera(); rWallets('wallets-i'); rTCs('tcs-i'); }
+  if (v === 'inicio')  { rKpi(); rObrasChart(); rObrasResumen(); rPosFinanciera(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (v === 'weliving' || v === 'robledo' || v === 'novaeva') { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
@@ -1808,47 +1825,133 @@ function rProjHeader(o) {
 /* ═══════════════════════════════════════════════════
    CATEGORIES
 ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   CHART INSTANCES — tracked for proper destroy/recreate
+═══════════════════════════════════════════════════ */
+var _charts = {};
+function _destroyChart(id) {
+  if (_charts[id]) { try { _charts[id].destroy(); } catch(e){} delete _charts[id]; }
+}
+
+function _mapAreaKey(area){
+  area=(area||'Varios').toLowerCase();
+  if(area.indexOf('mo ')==0||area==='mo general') return 'mo';
+  if(area.indexOf('mat')===0) return 'mat';
+  if(area.indexOf('adm')===0) return 'adm';
+  if(area.indexOf('exc')===0) return 'exc';
+  if(area.indexOf('alq')===0) return 'alq';
+  if(area.indexOf('seg')===0&&area.indexOf('social')<0) return 'seg';
+  if(area.indexOf('seguridad')==0||area.indexOf('ss')==0) return 'ss';
+  if(area.indexOf('her')===0) return 'her';
+  if(area.indexOf('tran')===0||area.indexOf('tsp')===0) return 'tsp';
+  if(area.indexOf('nom')===0) return 'nom';
+  if(area.indexOf('act')===0) return 'act';
+  return 'var2';
+}
+
 function rCategories(o) {
   var el = document.getElementById('cat-'+o); if(!el) return;
   var cats = BASE_CAT[o];
   var total = gastosT(o);
-  // Add new hist entries + SHEET entries to category totals
   var extraByCat = {};
-  function mapAreaToKey(area){
-    area = (area||'Varios').toLowerCase();
-    if(area.indexOf('mo ')==0||area==='mo general') return 'mo';
-    if(area.indexOf('mat')===0) return 'mat';
-    if(area.indexOf('adm')===0) return 'adm';
-    if(area.indexOf('exc')===0) return 'exc';
-    if(area.indexOf('alq')===0) return 'alq';
-    if(area.indexOf('seg')===0 && area.indexOf('social')<0) return 'seg';
-    if(area.indexOf('seguridad')==0||area.indexOf('ss')==0) return 'ss';
-    if(area.indexOf('her')===0) return 'her';
-    if(area.indexOf('tran')===0||area.indexOf('tsp')===0) return 'tsp';
-    if(area.indexOf('nom')===0) return 'nom';
-    if(area.indexOf('act')===0) return 'act';
-    return 'var2';
+  S.hist[o].forEach(function(e){ var k=_mapAreaKey(e.area); extraByCat[k]=(extraByCat[k]||0)+e.monto; });
+
+  // Build sorted category data
+  var catData = CAT_DEFS.map(function(cd){
+    var v=(cats[cd.k]||0)+(extraByCat[cd.k]||0); return {l:cd.l,v:v,c:cd.c,k:cd.k};
+  }).filter(function(d){return d.v>0;}).sort(function(a,b){return b.v-a.v;});
+
+  var chartId = 'chart-cat-'+o;
+  _destroyChart(chartId);
+
+  el.innerHTML = '<div class="cat-chart-wrap">'
+    +'<div style="position:relative;width:180px;height:180px;flex-shrink:0">'
+      +'<canvas id="'+chartId+'" width="180" height="180"></canvas>'
+      +'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">'
+        +'<div style="font-size:11px;color:var(--tx2);font-weight:600">TOTAL</div>'
+        +'<div style="font-size:15px;font-weight:900;color:var(--tx)">'+fmtM(total)+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="cat-chart-list">'
+    + catData.map(function(d){
+        var pct=total>0?Math.round(d.v/total*100):0;
+        return '<div class="cat-row">'
+          +'<div class="cat-dot" style="background:'+d.c+'"></div>'
+          +'<div class="cat-nm">'+d.l+'</div>'
+          +'<div class="cat-pct">'+pct+'%</div>'
+          +'<div class="cat-amt">'+fmtM(d.v)+'</div>'
+          +'</div>';
+      }).join('')
+    +'</div></div>';
+
+  if (typeof Chart !== 'undefined') {
+    var ctx = document.getElementById(chartId);
+    if (ctx) {
+      _charts[chartId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: catData.map(function(d){return d.l;}),
+          datasets: [{
+            data: catData.map(function(d){return Math.round(d.v/1e6*100)/100;}),
+            backgroundColor: catData.map(function(d){return d.c;}),
+            borderWidth: 3, borderColor: 'var(--sf)',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          cutout: '66%', responsive: false,
+          plugins: {
+            legend: {display:false},
+            tooltip: {callbacks:{label:function(ctx){return ' '+ctx.label+': $'+ctx.raw+'M';}}}
+          }
+        }
+      });
+    }
   }
-  S.hist[o].forEach(function(e){
-    var k = mapAreaToKey(e.area);
-    extraByCat[k] = (extraByCat[k]||0) + e.monto;
+}
+
+/* ═══════════════════════════════════════════════════
+   OBRAS COMPARISON CHART — Recibido vs Gastado
+═══════════════════════════════════════════════════ */
+function rObrasChart() {
+  _destroyChart('obras-main');
+  if (typeof Chart === 'undefined') return;
+  var ctx = document.getElementById('chart-obras'); if(!ctx) return;
+  var labels = ['🏗 Weliving','🏠 Robledo','🏢 Novaeva'];
+  var rec = [sumAbonos('weliving'), sumAbonos('robledo'), sumAbonos('novaeva')];
+  var gas = [gastosT('weliving'),   gastosT('robledo'),   gastosT('novaeva')];
+  var sal = [saldoVirtualObra('weliving'), saldoVirtualObra('robledo'), saldoVirtualObra('novaeva')];
+  function toM(v){return Math.round(v/1e6*10)/10;}
+  _charts['obras-main'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {label:'Recibido', data:rec.map(toM), backgroundColor:'rgba(59,130,246,.75)', borderColor:'#3b82f6', borderWidth:2, borderRadius:6},
+        {label:'Gastado',  data:gas.map(toM), backgroundColor:'rgba(239,68,68,.7)',   borderColor:'#ef4444', borderWidth:2, borderRadius:6},
+        {label:'Saldo',    data:sal.map(function(v){return toM(Math.abs(v));}),
+          backgroundColor: sal.map(function(v){return v>=0?'rgba(16,185,129,.7)':'rgba(239,68,68,.35)';}),
+          borderColor: sal.map(function(v){return v>=0?'#10b981':'#ef4444';}),
+          borderWidth:2, borderRadius:6
+        }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#475569',font:{size:12,weight:'600'},boxWidth:12,boxHeight:12,padding:16}},
+        tooltip:{callbacks:{label:function(ctx){
+          var sal_v=sal[ctx.dataIndex];
+          if(ctx.datasetIndex===2) return ' Saldo: '+(sal_v>=0?'+':'−')+'$'+ctx.raw+'M';
+          return ' '+ctx.dataset.label+': $'+ctx.raw+'M';
+        }}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#64748b',font:{weight:'700',size:13}}},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#94a3b8',callback:function(v){return '$'+v+'M';}},beginAtZero:true}
+      }
+    }
   });
-  var html='<div class="cat-grid">';
-  var maxV = Math.max.apply(null, CAT_DEFS.map(function(cd){return (cats[cd.k]||0)+(extraByCat[cd.k]||0);}));
-  CAT_DEFS.forEach(function(cd){
-    var v = (cats[cd.k]||0) + (extraByCat[cd.k]||0);
-    if(!v) return;
-    var pct = total>0 ? Math.round(v/total*100) : 0;
-    var barW = maxV>0 ? Math.round(v/maxV*80) : 0;
-    html+='<div class="cat-it">'
-      +'<div class="cat-bar" style="width:'+barW+'%;background:'+cd.c+'22"></div>'
-      +'<div class="cat-l">'+cd.l+'</div>'
-      +'<div class="cat-v">'+fmtM(v)+'</div>'
-      +'<div class="cat-p">'+pct+'%</div>'
-      +'</div>';
-  });
-  html+='</div>';
-  el.innerHTML = html;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -4034,6 +4137,19 @@ table th{font-size:11px!important}
 ::-webkit-scrollbar-thumb{background:var(--br);border-radius:4px}
 ::-webkit-scrollbar-thumb:hover{background:var(--tx3)}
 @keyframes ldg-spin{to{transform:rotate(360deg)}}
+/* ── Charts premium ── */
+.chart-card{border-radius:16px!important;box-shadow:var(--sh)!important;padding:22px 24px 18px!important}
+.cat-row{transition:background .1s}
+.cat-row:hover{background:var(--sf2)}
+/* ── Obra cards enhanced ── */
+.obra-card{border-top-width:3px!important;border-top-style:solid!important}
+.obra-saldo-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-top:10px}
+.obra-snm{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.obra-sv2{font-size:18px;font-weight:900}
+.obra-warn{font-size:11px;color:var(--or);padding:6px 10px;background:rgba(217,119,6,.07);border-radius:8px;margin-top:8px;border-left:3px solid var(--or)}
+.obra-stat{padding:7px 0}
+.obra-sl{font-size:11px;color:var(--tx2);margin-bottom:2px}
+.obra-sv{font-size:14px;font-weight:800}
 </style>
 </body>
 </html>
