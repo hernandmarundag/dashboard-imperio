@@ -2841,8 +2841,8 @@ function renderLedger(o) {
 
   /* Totals */
   var filtSum = filtered.reduce(function(a,e){return a+e.monto;},0);
-  var footH = '<tr class="rtot"><td colspan="5" style="padding:10px 12px;font-size:12px;color:var(--tx2)">'+(hasF?'Subtotal filtrado — '+tot+' registros':'TOTAL en libro — '+tot+' registros')+'</td>'
-    +'<td class="monto" style="color:var(--rd);font-size:14px;font-weight:900;padding:10px 12px">'+fmt(hasF?filtSum:filtSum)+'</td><td></td></tr>';
+  var footH = '<tr class="rtot"><td colspan="5" style="padding:10px 12px;font-size:12px;color:var(--tx2)">'+(hasF?'Subtotal filtrado — '+tot+' registros':'Total registros en plataforma — '+tot)+'</td>'
+    +'<td class="monto" style="color:var(--rd);font-size:14px;font-weight:900;padding:10px 12px">'+fmt(filtSum)+'</td><td></td></tr>';
 
   /* PAGINATION CONTROLS */
   var pgH = '';
@@ -2877,17 +2877,20 @@ function renderLedger(o) {
   var dashSum = sumHist(o);
   var liveSum = sumLive(o);
   var liveCount = (LIVE[o]||[]).length;
-  var totalReal = gastosT(o);
-  var titleTxt='Total: <strong style="color:var(--rd)">'+fmtM(totalReal)+'</strong>'
-    +'&nbsp;·&nbsp;🗄 Supabase <strong style="color:var(--bl)">'+fmtM(liveSum)+'&nbsp;('+liveCount+' reg.)</strong>'
-    +(dashSum?'&nbsp;·&nbsp;✏️ Manual <strong style="color:var(--gr)">'+fmtM(dashSum)+'</strong>':'')
-    +'&nbsp;·&nbsp;<span style="color:var(--bl);font-weight:800">'+tot+' mostrados</span>';
+  // El libro muestra exactamente lo que está en la tabla (liveSum)
+  // El total del proyecto (BASE + plataforma) se muestra en el header, NO aquí
+  var libroSum = LIVE_LOADED[o] ? liveSum : (dashSum || 0);
+  var proyTotal = gastosT(o); // BASE + plataforma — para referencia
+  // Nota del histórico solo si hay BASE y los datos son plataforma-only (robledo/novaeva)
+  var baseGastos = (o !== 'weliving') ? BASE[o].gastos : 0;
+  var historicNote = (o !== 'weliving' && baseGastos > 0)
+    ? '<span style="font-size:11px;color:var(--tx2)">📌 + '+fmtM(baseGastos)+' histórico = <strong>'+fmtM(proyTotal)+'</strong> total proyecto</span>'
+    : '';
 
   /* ── NUEVA TOOLBAR: búsqueda + chips de área + filtros avanzados ── */
   var activeFilters = (ls.area?1:0)+(ls.etapa?1:0)+(ls.mp?1:0)+(ls.src?1:0);
   var showAdv = ls.advOpen || activeFilters > 0;
 
-  // Chips de área: las 6 categorías más usadas
   var AREA_CHIPS = [
     {k:'',    l:'Todos'},
     {k:'mo',  l:'MO'},
@@ -2904,19 +2907,18 @@ function renderLedger(o) {
       return '<button type="button" class="area-chip'+(on?' on':'')+'" onclick="LS[\''+o+'\'].area=\''+c.k+'\';LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+c.l+'</button>';
     }).join('');
 
-  // Alerta si datos pueden tener inconsistencias (Robledo/Novaeva)
-  var dataWarn = (o!=='weliving')
-    ? '<div class="ldg-data-warn">⚠️ Supabase de esta obra tiene registros duplicados — el libro muestra datos deduplicados. Total oficial: <strong>'+fmtM(gastosT(o))+'</strong></div>'
-    : '';
+  // Sin warning de duplicados — ya se limpian automáticamente
+  var dataWarn = '';
 
   var wrap=document.getElementById('ldg-'+o);
   wrap.innerHTML=
-    // ── STAT BAR ──
+    // ── STAT BAR — muestra la suma real de lo que está en la tabla ──
     '<div class="ldg-stat-bar">'
-      +'<span class="ldg-stat-total">'+fmtM(totalReal)+'</span>'
+      +'<span class="ldg-stat-total">'+fmtM(libroSum)+'</span>'
       +'<span class="ldg-stat-sep">·</span>'
       +'<span class="ldg-stat-count">'+tot+' registros</span>'
       +(dashSum?'<span class="ldg-stat-sep">·</span><span style="color:var(--gr);font-weight:700">+'+fmtM(dashSum)+' manual</span>':'')
+      +(historicNote?'<span class="ldg-stat-sep">·</span>'+historicNote:'')
       +(hasF?'<button type="button" class="ldg-clear-btn" onclick="clearLF(\''+o+'\')">✕ Limpiar filtros</button>':'')
     +'</div>'
     // ── BARRA BÚSQUEDA + FILTROS BTN ──
