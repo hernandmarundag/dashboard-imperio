@@ -409,7 +409,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="flujo-grid" id="flujo-grid"></div>
     <div id="fproy"></div>
     <!-- ── Pagos integrado ── -->
-    <div id="pag-summary-bar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:16px 0 12px"></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px">
       <div style="display:flex;gap:4px;flex:1;flex-wrap:wrap">
         <button id="pag-tab-venc"    class="bsm on" onclick="pagosTabSwitch('vencido')"  style="font-size:11px">🔴 Vencidos</button>
@@ -3438,7 +3437,6 @@ function resetPagosFromDef() {
 
 function rPagos() {
   var el = document.getElementById('pagos-list');
-  var sb = document.getElementById('pag-summary-bar');
   if (!el) return;
   var hoy = new Date(); hoy.setHours(0,0,0,0);
   var filObra = (document.getElementById('pag-fil-obra')||{}).value||'';
@@ -3467,26 +3465,28 @@ function rPagos() {
   });
   if (filObra) all = all.filter(function(p){ return p.proy===filObra; });
 
-  /* ── summary bar ── */
+  /* ── actualizar totales en tabs ── */
   var buckets = {vencido:0, urgente:0, proximo:0, futuro:0};
+  var counts  = {vencido:0, urgente:0, proximo:0, futuro:0};
   all.forEach(function(p){
     var b=urgBucket(dias(p.fecha));
     buckets[b] = (buckets[b]||0) + p.monto;
+    counts[b]  = (counts[b]||0)  + 1;
   });
-  if (sb) {
-    var sbItems = [
-      {label:'🔴 Vencidos',      monto:buckets.vencido, col:'#991b1b', bg:'#fee2e2', tab:'vencido'},
-      {label:'⚡ Esta semana',   monto:buckets.urgente, col:'#c2410c', bg:'#fff7ed', tab:'urgente'},
-      {label:'📅 Próximos 30D', monto:buckets.proximo, col:'#92400e', bg:'#fefce8', tab:'proximo'},
-      {label:'📋 Futuros',       monto:buckets.futuro,  col:'var(--tx2)', bg:'var(--sf2)', tab:'futuro'},
-    ];
-    sb.innerHTML = sbItems.map(function(s){
-      return '<div onclick="pagosTabSwitch(\''+s.tab+'\')" style="background:'+s.bg+';border-radius:var(--r);padding:10px 14px;cursor:pointer">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:3px">'+s.label+'</div>'
-        +'<div style="font-size:18px;font-weight:900;color:'+s.col+'">'+fmtM(s.monto)+'</div>'
-        +'</div>';
-    }).join('');
-  }
+  var tabDefs = [
+    {key:'venc',    bucket:'vencido', label:'🔴 Vencidos'},
+    {key:'urgente', bucket:'urgente', label:'⚡ Esta semana'},
+    {key:'proximo', bucket:'proximo', label:'📅 30 días'},
+    {key:'futuro',  bucket:'futuro',  label:'📋 Futuros'},
+    {key:'all',     bucket:null,      label:'Todo'},
+  ];
+  tabDefs.forEach(function(t){
+    var btn = document.getElementById('pag-tab-'+t.key);
+    if (!btn) return;
+    var tot = t.bucket ? buckets[t.bucket] : Object.values ? Object.values(buckets).reduce(function(a,b){return a+b;},0) : buckets.vencido+buckets.urgente+buckets.proximo+buckets.futuro;
+    var cnt = t.bucket ? counts[t.bucket]  : counts.vencido+counts.urgente+counts.proximo+counts.futuro;
+    btn.innerHTML = t.label + (cnt?' <span style="opacity:.75;font-size:10px">'+fmtM(tot)+'</span>':'');
+  });
 
   /* ── tab activo ── */
   var tab = window._pagosTab || 'vencido';
@@ -3563,17 +3563,17 @@ function pagosTabSwitch(tab) {
 
 
 function marcarPagado(id) {
-  var pidx = S.pagos.findIndex(function(p){return p.id===id;});
-  if (pidx < 0) return;
+  var pidx = -1;
+  for (var i=0;i<S.pagos.length;i++){ if(S.pagos[i].id===id){pidx=i;break;} }
+  if (pidx < 0) { console.warn('marcarPagado: id no encontrado', id); return; }
   var p = S.pagos[pidx];
-  if (!confirm('¿Marcar como pagado?\n' + p.desc + '\n' + fmtM(p.monto))) return;
-  /* remover de pending y agregar a paid para que no reaparezca al recargar */
+  if (!confirm('Marcar como pagado:\n' + p.desc + '\n' + fmtM(p.monto))) return;
   S.pagos.splice(pidx, 1);
   if (!S.pagosPaid) S.pagosPaid = [];
   if (S.pagosPaid.indexOf(id) === -1) S.pagosPaid.push(id);
   saveS();
   updateBadgePagos();
-  rFlujo();
+  rPagos();
 }
 
 function toggleMes(id){
