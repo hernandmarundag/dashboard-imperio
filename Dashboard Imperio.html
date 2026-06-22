@@ -1317,12 +1317,28 @@ function fetchLive(obra) {
 }
 
 
-const BASE = {
-  // gastos = totales históricos verificados por obra al 15-Jun-2026
+const BASE_DEFAULT = {
   weliving:{gastos:754717074, inversion:755690000},
   robledo: {gastos:315383212, recibido:580000000, precio:740000000, porCobrar:160000000},
   novaeva: {gastos:70738151,  abonos:80000000,  cartera:85000000},
 };
+// BASE es mutable — el usuario puede corregir gastos histórico por obra
+// Se guarda en localStorage bajo 'imp_base_gastos'
+var BASE = JSON.parse(JSON.stringify(BASE_DEFAULT));
+(function(){
+  try {
+    var ov = JSON.parse(localStorage.getItem('imp_base_gastos')||'{}');
+    Object.keys(ov).forEach(function(o){ if(BASE[o]) BASE[o].gastos = ov[o]; });
+  } catch(e){}
+})();
+function setBaseGastos(obra, valor) {
+  BASE[obra].gastos = valor;
+  try {
+    var ov = JSON.parse(localStorage.getItem('imp_base_gastos')||'{}');
+    ov[obra] = valor;
+    localStorage.setItem('imp_base_gastos', JSON.stringify(ov));
+  } catch(e){}
+}
 
 const BASE_CAT = {
   // BASE_CAT = totales históricos por categoría — snapshot Supabase Jun 15 2026
@@ -1676,7 +1692,7 @@ var ROBLEDO_PLAT = [
   {obra:'robledo',fecha:'2026-06-18',nombre:'wilmar garcia',                  descripcion:'prestamo empleado',    area:'no aplica',          etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:150000,  material:'',cuenta:'bc-grupo'},
 ];
 
-var _roblLimpioKey = 'imp_robledo_limpio_v1';
+var _roblLimpioKey = 'imp_robledo_limpio_v3';
 var _limpiezaEnCurso = false;
 
 async function _autoLimpiarRobledo() {
@@ -2121,6 +2137,16 @@ function k2(l,c,v) { return '<div class="k2"><div class="k2l">'+l+'</div><div cl
 /* ═══════════════════════════════════════════════════
    PROJECT HEADER — financial summary + budget
 ═══════════════════════════════════════════════════ */
+function editBaseGastos(obra, iconEl) {
+  var actual = BASE[obra].gastos;
+  var nuevo = prompt('Total histórico gastado en '+obra.toUpperCase()+' (hasta Jun 15):\nValor actual: $'+Math.round(actual).toLocaleString('es-CO')+'\n\nIngresa el valor correcto (sin puntos ni $):', Math.round(actual));
+  if (nuevo === null) return;
+  var v = parseFloat(nuevo.replace(/[^0-9.]/g,''));
+  if (isNaN(v) || v <= 0) { alert('Valor inválido'); return; }
+  setBaseGastos(obra, v);
+  rProjHeader(obra);
+}
+
 function rProjHeader(o) {
   var pc = PC[o]; var el = document.getElementById('pph-'+o); if(!el) return;
   var g     = gastosT(o);
@@ -2183,7 +2209,7 @@ function rProjHeader(o) {
       +'<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;width:100%">📊 Posición total del proyecto</div>'
       +'<div><div style="font-size:9px;color:var(--tx2)">'+presNm+'</div><div style="font-size:14px;font-weight:800;color:var(--bl)">'+fmtM(presupuesto)+'</div></div>'
       +'<div style="font-size:14px;color:var(--tx3)">−</div>'
-      +'<div><div style="font-size:9px;color:var(--tx2)">Total gastado (histórico)</div><div style="font-size:14px;font-weight:800;color:var(--rd)">'+fmtM(g)+'</div></div>'
+      +'<div id="base-gastos-el-'+o+'"><div style="font-size:9px;color:var(--tx2)">Total gastado <span style="color:var(--bl);cursor:pointer" onclick="editBaseGastos(\''+o+'\',this)" title="Click para corregir el total histórico">✏️</span></div><div style="font-size:14px;font-weight:800;color:var(--rd)">'+fmtM(g)+'</div></div>'
       +'<div style="font-size:14px;color:var(--tx3)">=</div>'
       +'<div style="padding-left:10px;border-left:2px solid var(--br)"><div style="font-size:9px;color:var(--tx2)">Margen presupuestal</div><div style="font-size:15px;font-weight:900;color:'+posTotCol+'">'+fmtM(posTotal)+'</div></div>'
     +'</div>'
