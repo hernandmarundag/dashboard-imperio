@@ -1093,7 +1093,7 @@ function fetchLive(obra) {
       });
       LIVE_LOADED[obra] = true;
       if (curV === obra) rProjView(obra);
-      if (curV === 'inicio') { rKpi(); rBudgets(); rProjCards(); }
+      if (curV === 'inicio') { rKpi(); rBudgets(); rObrasResumen(); }
     })
     .catch(function(e){ console.warn('fetchLive supabase ' + obra + ':', e); });
 }
