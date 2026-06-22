@@ -303,7 +303,7 @@ body{display:flex;min-height:100vh;padding-top:0!important}
 .sb-icon{width:32px;height:32px;background:linear-gradient(135deg,#6366F1,#8B5CF6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .sb-brand{color:#fff;font-size:13px;font-weight:800;letter-spacing:-.3px;line-height:1.2}
 .sb-brand span{display:block;font-size:9px;color:rgba(255,255,255,.35);font-weight:500;letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
-.sb-nav{flex:1;padding:8px 6px}
+.sb-nav{flex:1 1 auto;padding:8px 6px;min-height:0}
 .sb-sect{font-size:9px;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 3px;font-weight:700}
 .ni{display:flex!important;align-items:center!important;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:all .14s;color:rgba(255,255,255,.55)!important;position:relative;margin-bottom:1px;background:none!important;border:none!important;width:100%;text-align:left;font-family:inherit}
 .ni:hover{background:rgba(255,255,255,.07)!important;color:rgba(255,255,255,.85)!important}
@@ -315,7 +315,8 @@ body{display:flex;min-height:100vh;padding-top:0!important}
 .sb-foot-btn:hover{background:rgba(99,102,241,.2)}
 .main-content{margin-left:var(--sw);flex:1;min-width:0;padding:calc(0px + 16px) 20px 48px!important;max-width:none!important}
 nav:not(.sb-nav){display:none!important}
-.sb-nav{display:flex!important;flex-direction:column;flex:1;overflow-y:auto;padding:4px 8px}
+.sb-nav{display:flex!important;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;padding:4px 8px}
+.ni{display:flex!important;visibility:visible!important;opacity:1!important;min-height:28px!important}
 @media(max-width:768px){
   .sidebar{width:48px}
   .sb-brand,.sb-sect,.ni span:not(.ni-ico):not(.ni-b),.ni-b,.sb-foot-btn{display:none}
@@ -1093,6 +1094,11 @@ function fetchLive(obra) {
         };
       });
       LIVE_LOADED[obra] = true;
+      // Cachear total weliving en localStorage para fallback en file://
+      if (obra === 'weliving') {
+        var tot = sumLive('weliving');
+        if (tot > 0) try { localStorage.setItem('imp_wl_live', tot); } catch(e){}
+      }
       if (curV === obra) rProjView(obra);
       if (curV === 'inicio') { rKpi(); rBudgets(); rObrasResumen(); }
     })
@@ -1429,7 +1435,9 @@ function gastosT(o)  {
   // weliving: Supabase está limpio y actualizado — usar LIVE
   if (o === 'weliving') {
     var liveW = sumLive('weliving');
-    return (liveW > 0 ? liveW : BASE.weliving.gastos) + sumHist('weliving');
+    var cachedW = 0;
+    try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
+    return (liveW > 0 ? liveW : (cachedW > 0 ? cachedW : BASE.weliving.gastos)) + sumHist('weliving');
   }
   // robledo y novaeva: Supabase tiene registros duplicados ("Histórico" x2, "san pio" x3)
   // Usar snapshot verificado del Google Sheet (BASE) + entradas manuales (S.hist)
