@@ -345,9 +345,8 @@ nav:not(.sb-nav){display:none!important}
     <div class="sb-sect">Principal</div>
     <div class="ni on" data-v="inicio" onclick="gotoView('inicio')"><span class="ni-ico">🏠</span><span>Inicio</span></div>
     <div class="sb-sect">Obras</div>
-    <div class="ni" data-v="weliving" onclick="gotoView('weliving')"><span class="ni-ico">🏗</span><span>Weliving</span></div>
-    <div class="ni" data-v="robledo" onclick="gotoView('robledo')"><span class="ni-ico">🏠</span><span>Robledo</span></div>
-    <div class="ni" data-v="novaeva" onclick="gotoView('novaeva')"><span class="ni-ico">🏢</span><span>Novaeva</span></div>
+    <div id="obras-nav"></div>
+    <div class="ni" style="cursor:pointer;color:var(--bl);font-size:12px;padding:6px 12px" onclick="openNuevaObra()">+ Nueva obra</div>
     <div class="sb-sect">Finanzas</div>
     <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
     <div class="ni" data-v="flujo" onclick="gotoView('flujo')"><span class="ni-ico">📊</span><span>Flujo 30D</span></div>
@@ -394,47 +393,7 @@ nav:not(.sb-nav){display:none!important}
     <div class="sec">💳 Tarjetas de crédito</div>
     <div class="hscroll" id="tcs-i"></div>
   </div>
-  <div class="view" id="v-weliving">
-    <div class="pp-hd" id="pph-weliving"></div>
-    <div class="sec" id="catsec-weliving" style="margin-top:16px">Distribución del gasto</div>
-    <div id="cat-weliving"></div>
-    <div class="sec" style="margin-top:12px">📈 Quema mensual — Weliving</div>
-    <div class="burn-card" id="burn-weliving">
-      <canvas id="chart-burn-weliving" style="max-height:170px"></canvas>
-    </div>
-    <div class="sec">Libro de gastos</div>
-    <div class="ldg-wrap" id="ldg-weliving"></div>
-  </div>
-  <div class="view" id="v-robledo">
-    <div class="pp-hd" id="pph-robledo"></div>
-    <div class="sec" id="catsec-robledo" style="margin-top:16px">Distribución del gasto</div>
-    <div id="cat-robledo"></div>
-    <div class="sec" style="margin-top:12px">📈 Quema mensual — Robledo</div>
-    <div class="burn-card" id="burn-robledo">
-      <canvas id="chart-burn-robledo" style="max-height:170px"></canvas>
-    </div>
-    <div class="sec">Libro de gastos</div>
-    <div id="dedup-bar-robledo" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">
-      <button id="dedup-btn-robledo" onclick="runDedup('robledo')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">🗑 Limpiar duplicados Supabase</button>
-      <span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos históricos</span>
-    </div>
-    <div class="ldg-wrap" id="ldg-robledo"></div>
-  </div>
-  <div class="view" id="v-novaeva">
-    <div class="pp-hd" id="pph-novaeva"></div>
-    <div class="sec" id="catsec-novaeva" style="margin-top:16px">Distribución del gasto</div>
-    <div id="cat-novaeva"></div>
-    <div class="sec" style="margin-top:12px">📈 Quema mensual — Novaeva</div>
-    <div class="burn-card" id="burn-novaeva">
-      <canvas id="chart-burn-novaeva" style="max-height:170px"></canvas>
-    </div>
-    <div class="sec">Libro de gastos</div>
-    <div id="dedup-bar-novaeva" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">
-      <button id="dedup-btn-novaeva" onclick="runDedup('novaeva')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">🗑 Limpiar duplicados Supabase</button>
-      <span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos históricos</span>
-    </div>
-    <div class="ldg-wrap" id="ldg-novaeva"></div>
-  </div>
+  <div id="obras-views-container"></div>
   <div class="view" id="v-cuentas">
     <div class="sec">Cuentas bancarias</div>
     <div class="hscroll" id="wallets-c"></div>
@@ -452,9 +411,6 @@ nav:not(.sb-nav){display:none!important}
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px">
       <select id="pag-fil-obra" class="fsel" onchange="rPagos()" style="flex:1;min-width:120px">
         <option value="">Todas las obras</option>
-        <option value="weliving">🏗 Weliving</option>
-        <option value="robledo">🏠 Robledo</option>
-        <option value="novaeva">🏢 Novaeva</option>
       </select>
       <select id="pag-fil-urg" class="fsel" onchange="rPagos()" style="flex:1;min-width:130px">
         <option value="">Todos los vencimientos</option>
@@ -950,7 +906,7 @@ nav:not(.sb-nav){display:none!important}
       <div class="fg"><label>Descripción *</label><input type="text" id="ab-desc" placeholder="Ej: Abono Yulied, Inversión Steven..."></div>
       <div class="frow2">
         <div class="fg"><label>Proyecto / Obra</label>
-          <select id="ab-obra"><option value="weliving">🏗 Weliving</option><option value="robledo">🏠 Robledo</option><option value="novaeva">🏢 Novaeva</option><option value="personal">Personal</option><option value="pool">Caja general</option></select>
+          <select id="ab-obra"><option value="personal">Personal</option><option value="pool">Caja general</option></select>
         </div>
         <div class="fg"><label>Cuenta destino</label>
           <select id="ab-cta"><option value="bc-grupo">Bancolombia — Grupo</option><option value="dv-lib">Davivienda</option><option value="bb-lib">Banco Bogotá</option><option value="bc-hernan">Bancolombia Hernán</option><option value="bc-paulina">Bancolombia Paulina</option></select>
@@ -1063,7 +1019,7 @@ nav:not(.sb-nav){display:none!important}
     <div class="mbody">
       <div class="fg"><label>Descripción *</label><input type="text" id="pf-desc" placeholder="Qué hay que pagar..."></div>
       <div class="fg"><label>Proyecto</label>
-        <select id="pf-proy"><option value="weliving">Weliving</option><option value="robledo">Robledo</option><option value="novaeva">Novaeva</option><option value="personal">Personal</option></select>
+        <select id="pf-proy"><option value="personal">Personal</option></select>
       </div>
       <div class="fg"><label>Monto *</label><input type="number" id="pf-monto" placeholder="0"></div>
       <div class="fg"><label>Nota</label><input type="text" id="pf-nota" placeholder="Observaciones..."></div>
@@ -1166,6 +1122,23 @@ async function runDedup(obra) {
 
   if (btn) { btn.disabled = false; btn.textContent = '✅ Listo — '+toDelete.length+' eliminados'; }
   alert('✅ Limpieza completa.\nEliminados: '+toDelete.length+'\nQuedan: '+(all.length-toDelete.length)+' registros únicos.\nTotal: $'+Math.round(sumDespues).toLocaleString('es-CO'));
+}
+
+// ═══════════════════════════════════════════════
+// OBRAS_REG — Registro maestro de obras (dinámico)
+// ═══════════════════════════════════════════════
+var OBRAS_REG = {
+  weliving: {id:'weliving', nm:'Weliving',  ico:'🏗', col:'#007AFF', badge:'En estructura', bcls:'ba', prog:38, etapa:'Losa P3 → P4', nota:'Nómina Jun 1-15 pagada. Total socios: $755.69M.'},
+  robledo:  {id:'robledo',  nm:'Robledo',   ico:'🏠', col:'#FF9500', badge:'En ejecución',  bcls:'bn', prog:55, etapa:'Mampostería',   nota:'Losa entrepiso ejecutada.'},
+  novaeva:  {id:'novaeva',  nm:'Novaeva',   ico:'🏢', col:'#34C759', badge:'Acabados',      bcls:'bv', prog:75, etapa:'Acabados finales', nota:'Etapa final.'},
+};
+function obrasIds() { return (typeof S !== 'undefined' && S && S.obras && S.obras.length) ? S.obras : ['weliving','robledo','novaeva']; }
+function obraReg(id) { return OBRAS_REG[id] || {id:id, nm:id, ico:'🏗', col:'#6366f1', badge:'En obra', bcls:'ba', prog:0, etapa:'', nota:''}; }
+function ensureObraState(o) {
+  if (!LIVE[o])        { LIVE[o] = []; }
+  if (!LIVE_LOADED[o]) { LIVE_LOADED[o] = false; }
+  if (!LS[o])          { LS[o] = {p:1,sz:80,q:'',area:'',etapa:'',mp:'',src:'',sortCol:'fecha',sortDir:-1}; }
+  if (!S.hist[o])      { S.hist[o] = []; }
 }
 
 // Datos en vivo de Supabase — única fuente de verdad
@@ -1448,12 +1421,11 @@ var S; // persisted state
 function loadS() {
   try { var r = localStorage.getItem(KEY); S = r ? JSON.parse(r) : JSON.parse(JSON.stringify(DEF)); }
   catch(e) { S = JSON.parse(JSON.stringify(DEF)); }
-  if (!S.hist)      S.hist = {weliving:[],robledo:[],novaeva:[]};
-  if (!S.hist.weliving) S.hist.weliving = [];
-  if (!S.hist.robledo)  S.hist.robledo  = [];
-  if (!S.hist.novaeva)  S.hist.novaeva  = [];
+  if (!S.hist) { S.hist = {}; }
+  obrasIds().forEach(function(o){ if (!S.hist[o]) S.hist[o] = []; });
   if (!S.abonos || S.abonos.length < DEF.abonos.length) S.abonos = JSON.parse(JSON.stringify(DEF.abonos));
   if (!S.traspasos) S.traspasos = [];
+  if (!S.obras)     S.obras     = ['weliving', 'robledo', 'novaeva'];
   if (!S.pagos)     S.pagos     = JSON.parse(JSON.stringify(DEF.pagos));
   if (!S.pagosPaid) S.pagosPaid = [];
   // Auto-marcar devolución préstamos como ya pagada (ocurrió el 9 Jun)
@@ -1572,7 +1544,7 @@ function saldoCta(id){
   if (c && c.saldoReal !== undefined) return c.saldoReal;
   var base = c ? (c.saldoBase||0) : 0;
   var ent = S.abonos.filter(function(x){return x.ctaId===id;}).reduce(function(a,x){return a+x.monto;},0);
-  var sal = 0; ['weliving','robledo','novaeva'].forEach(function(o){
+  var sal = 0; obrasIds().forEach(function(o){
     S.hist[o].forEach(function(e){ if(e.ctaId===id) sal+=e.monto; });
   });
   var trp = S.traspasos.filter(function(x){return x.de===id;}).reduce(function(a,x){return a+x.monto;},0);
@@ -1655,7 +1627,7 @@ function gotoView(v) {
 
 function renderView(v) {
   if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rPosFinanciera(); rWallets('wallets-i'); rTCs('tcs-i'); }
-  else if (v === 'weliving' || v === 'robledo' || v === 'novaeva') { rProjView(v); }
+  else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
   else if (v === 'pagos')   { rPagos(); }
@@ -1852,7 +1824,7 @@ function rTCs(id) {
 
 function rProjCards() {
   var pcEl = document.getElementById('proj-cards'); if(!pcEl) return;
-  pcEl.innerHTML = ['weliving','robledo','novaeva'].map(function(o) {
+  pcEl.innerHTML = obrasIds().map(function(o) {
     var c = PC[o], g = gastosT(o), kk = '';
     if (o==='weliving') {
       var sal = BASE.weliving.inversion - g;
@@ -2080,9 +2052,9 @@ function rObrasChart() {
   if (typeof Chart === 'undefined') return;
   var ctx = document.getElementById('chart-obras'); if(!ctx) return;
   var labels = ['🏗 Weliving','🏠 Robledo','🏢 Novaeva'];
-  var rec = [sumAbonos('weliving'), sumAbonos('robledo'), sumAbonos('novaeva')];
-  var gas = [gastosT('weliving'),   gastosT('robledo'),   gastosT('novaeva')];
-  var sal = [saldoVirtualObra('weliving'), saldoVirtualObra('robledo'), saldoVirtualObra('novaeva')];
+  var rec = obrasIds().map(function(o){return sumAbonos(o);});
+  var gas = obrasIds().map(function(o){return gastosT(o);});
+  var sal = obrasIds().map(function(o){return saldoVirtualObra(o);});
   function toM(v){return Math.round(v/1e6*10)/10;}
   _charts['obras-main'] = new Chart(ctx, {
     type: 'bar',
@@ -2123,7 +2095,7 @@ function rCajaJun9Chart() {
   if (typeof Chart === 'undefined') return;
   _destroyChart('caja-jun9');
   var ctx = document.getElementById('chart-caja-jun9'); if (!ctx) return;
-  var obras = ['weliving', 'robledo', 'novaeva'];
+  var obras = obrasIds();
   var labels = ['🏗 Weliving', '🏠 Robledo', '🏢 Novaeva'];
   var rec = obras.map(function(o){ return Math.round(sumAbonos(o)/1e6*10)/10; });
   var gj9 = obras.map(function(o){ return Math.round((sumLiveDesdeJun9(o)+sumHist(o))/1e6*10)/10; });
@@ -2205,8 +2177,8 @@ function rBurnRate(o) {
   var barData = keys.map(function(k) { return Math.round(monthly[k] / 1e6 * 10) / 10; });
 
   // Colores según obra
-  var col = o === 'weliving' ? '#3b82f6' : o === 'robledo' ? '#f59e0b' : '#10b981';
-  var colFill = o === 'weliving' ? 'rgba(59,130,246,.15)' : o === 'robledo' ? 'rgba(245,158,11,.15)' : 'rgba(16,185,129,.15)';
+  var col = obraReg(o).col || '#3b82f6';
+  var colFill = 'rgba(99,102,241,.15)';
 
   var lbls = keys.map(function(k) {
     var p = k.split('-');
@@ -2633,7 +2605,7 @@ function rMovsLedger() {
   S.abonos.forEach(function(a){
     all.push({f:a.f,fecha:a.fecha||'',tipo:'abono',cta:a.ctaId,obra:a.obra,desc:a.desc,monto:a.monto});
   });
-  ['weliving','robledo','novaeva'].forEach(function(o){
+  obrasIds().forEach(function(o){
     S.hist[o].forEach(function(e){
       if(e.ctaId&&e.metodoPago!=='Externo') all.push({f:e.f,fecha:e.fecha||'',tipo:'cargo',cta:e.ctaId,obra:o,desc:e.desc||e.a,monto:e.monto});
     });
@@ -2644,7 +2616,7 @@ function rMovsLedger() {
   all.sort(function(a,b){return (b.fecha||b.f||'').localeCompare(a.fecha||a.f||'');});
   if(!all.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx2)">Sin movimientos registrados. Agrega un abono para comenzar.</div>';return;}
   var ctaNm={'bc-grupo':'Bancolombia Grupo','dv-lib':'Davivienda','bb-lib':'Banco Bogotá','bc-hernan':'BCol Hernán','bc-paulina':'BCol Paulina'};
-  var obraNm={'weliving':'🏗 Weliving','robledo':'🏠 Robledo','novaeva':'🏢 Novaeva','personal':'Personal','pool':'General','TC':'Tarjeta'};
+  var obraNm=(function(){var m={'personal':'Personal','pool':'General','TC':'Tarjeta'};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.ico+' '+r.nm;});return m;})();
   // Compute running balance
   var runBal = 0; var rows = all.slice().reverse();
   var balances = []; var running = 0;
@@ -2702,7 +2674,7 @@ function computeFlujoProy() {
     robledo:  saldoVirtualObra('robledo'),
     novaeva:  saldoVirtualObra('novaeva')
   };
-  var ini = {weliving:bal.weliving, robledo:bal.robledo, novaeva:bal.novaeva};
+  var ini = (function(){var o={};obrasIds().forEach(function(id){o[id]=bal[id]||0;});return o;})();
   var sorted = S.pagos.slice().sort(function(a,b){
     return (a.fecha||'9999').localeCompare(b.fecha||'9999');
   });
@@ -2718,15 +2690,13 @@ function computeFlujoProy() {
       fLabel: pd ? pd.toLocaleDateString('es-CO',{day:'numeric',month:'short',weekday:'short'}) : 'Sin fecha',
       dias:dias, desc:p.desc, nota:p.nota||'', obra:o, monto:p.monto,
       saldoObra:bal[o],
-      sW:bal.weliving, sR:bal.robledo, sN:bal.novaeva,
-      total:bal.weliving+bal.robledo+bal.novaeva,
+      total:obrasIds().reduce(function(s,id){return s+(bal[id]||0);},0),
       isNeg:bal[o]<0, isWarn:bal[o]>=0&&bal[o]<20000000,
       isVenc:dias!==null&&dias<0
     });
   });
   return {rows:rows, initial:ini,
-    final:{weliving:bal.weliving, robledo:bal.robledo, novaeva:bal.novaeva,
-      total:bal.weliving+bal.robledo+bal.novaeva}};
+    final:(function(){var o={};obrasIds().forEach(function(id){o[id]=bal[id]||0;});o.total=obrasIds().reduce(function(s,id){return s+(bal[id]||0);},0);return o;})()};
 }
 
 function rAlertsHtml() {
@@ -2738,8 +2708,8 @@ function rAlertsHtml() {
     var dias = Math.round((pd-hoy)/86400000);
     if (dias < 0) alerts.push({nivel:'🔴',msg:'<b>'+p.desc+'</b> — VENCIDO hace '+Math.abs(dias)+' días ('+fmtM(p.monto)+')',tipo:'venc'});
   });
-  var names = {weliving:'Weliving',robledo:'Robledo',novaeva:'Novaeva'};
-  ['weliving','robledo','novaeva'].forEach(function(o){
+  var names = (function(){var m={};obrasIds().forEach(function(o){m[o]=obraReg(o).nm;});return m;})();
+  obrasIds().forEach(function(o){
     var s = saldoVirtualObra(o);
     if (s < 0) alerts.push({nivel:'🔴',msg:'<b>'+names[o]+'</b> — Saldo NEGATIVO: '+fmtM(s),tipo:'neg'});
     else if (s < 20000000) alerts.push({nivel:'🟡',msg:'<b>'+names[o]+'</b> — Caja crítica: solo '+fmtM(s)+' disponible',tipo:'warn'});
@@ -2793,8 +2763,8 @@ function rTimelineHtml() {
 function rFlujo() {
   var fp = computeFlujoProy();
   var ini = fp.initial;
-  var pnm = {weliving:'🏗 Weliving',robledo:'🏠 Robledo',novaeva:'🏢 Novaeva',personal:'Personal'};
-  var totalSaldo = ini.weliving + ini.robledo + ini.novaeva;
+  var pnm = (function(){var m={'personal':'Personal'};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.ico+' '+r.nm;});return m;})();
+  var totalSaldo = obrasIds().reduce(function(s,id){return s+(ini[id]||0);},0);
 
   /* ── 4 cards de saldo ── */
   var obraCards = [
@@ -2934,7 +2904,7 @@ function rPagos() {
     return;
   }
 
-  var pnm = {weliving:'🏗 Weliving',robledo:'🏠 Robledo',novaeva:'🏢 Novaeva',personal:'👤 Personal'};
+  var pnm = (function(){var m={personal:'👤 Personal'};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.ico+' '+r.nm;});return m;})();
 
   /* agrupar por obra → mes */
   var byObra = {};
@@ -2946,7 +2916,7 @@ function rPagos() {
   var html='';
   var totalFiltrado=0;
 
-  ['weliving','robledo','novaeva','personal'].forEach(function(obra){
+  obrasIds().concat(['personal']).forEach(function(obra){
     var ps=byObra[obra]; if(!ps||!ps.length) return;
     var obraTotal=ps.reduce(function(a,p){return a+p.monto;},0);
     totalFiltrado+=obraTotal;
@@ -3426,9 +3396,9 @@ function rProyeccion(){
 
   // ── Badge helper ─────────────────────────────────────────────────────
   function badge(p){
-    var map={weliving:'bw',robledo:'br_',novaeva:'bn',empresa:'be'};
+    var map=(function(){var m={empresa:'be'};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.bcls||'ba';});return m;})();
     var cls=map[p]||'be';
-    var nm={weliving:'WL',robledo:'RB',novaeva:'NV',empresa:'EMP'};
+    var nm=(function(){var m={empresa:'EMP'};obrasIds().forEach(function(o){m[o]=(obraReg(o).nm||o).substring(0,2).toUpperCase();});return m;})();
     return '<span class="'+cls+'">'+( nm[p]||p.substring(0,3).toUpperCase())+'</span>';
   }
 
@@ -3536,7 +3506,7 @@ function rProyeccion(){
   h+='<div class="sf-hdr"><span class="sf-hdr-title">🏗 Cronograma de Hitos — Jun→Oct 2026</span></div>';
   h+='<div style="padding:0 18px 12px">';
   var today2=new Date('2026-06-16');
-  var PCOLS={weliving:'#2563eb',robledo:'#d97706',novaeva:'#16a34a',empresa:'#7c3aed'};
+  var PCOLS=(function(){var m={empresa:'#7c3aed'};obrasIds().forEach(function(o){m[o]=obraReg(o).col||'#6366f1';});return m;})();
   HITOS.forEach(function(hit){
     var d=new Date(hit.fecha);
     var diff=Math.round((d-today2)/(86400000));
@@ -3626,7 +3596,7 @@ function rDeudas() {
   var totalDebemos = deudaMama + deudaSUFI;
   var costoMes     = totalDebemos * 0.02;
   var totalEntro   = totalSocios + totalDebemos;
-  var totalGastos  = BASE.weliving.gastos + BASE.robledo.gastos + BASE.novaeva.gastos;
+  var totalGastos  = obrasIds().reduce(function(s,o){return s+(BASE[o]?BASE[o].gastos:0);},0);
   var diferencia   = totalEntro - totalGastos;
   var cajaReal     = saldoCta('bc-grupo') + ((S.tcs.find(function(t){return t.id==='h2';}) || {}).saldoFavor || 0);
   var retirosH     = diferencia - cajaReal;
@@ -3733,7 +3703,7 @@ function rAnalisis() {
 
   // ── filtro de obra activo
   var obraFil = (window._anObraFil) || 'todas';
-  var obras = obraFil === 'todas' ? ['weliving','robledo','novaeva'] : [obraFil];
+  var obras = obraFil === 'todas' ? obrasIds() : [obraFil];
 
   // ── recolectar TODAS las filas relevantes (LIVE + hist)
   var rows = [];
@@ -3797,8 +3767,8 @@ function rAnalisis() {
   var areas       = agrupar(function(e){return e.area;});
   var obrasDist   = agrupar(function(e){return e.obra;});
 
-  var OBRA_NAMES = {weliving:'🏗 Weliving', robledo:'🏠 Robledo', novaeva:'🏢 Novaeva'};
-  var OBRA_COLS  = {weliving:'#007AFF', robledo:'#FF9500', novaeva:'#34C759'};
+  var OBRA_NAMES = (function(){var m={};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.ico+' '+r.nm;});return m;})();
+  var OBRA_COLS  = (function(){var m={};obrasIds().forEach(function(o){m[o]=obraReg(o).col||'#6366f1';});return m;})();
 
   // ── sección card
   function secCard(title, content, icon) {
@@ -4193,7 +4163,7 @@ function editCuenta(id) {
 function ctaMovs(id) {
   var movs = [];
   S.abonos.forEach(function(a){ if(a.ctaId===id) movs.push({f:a.f,desc:a.desc+' ('+a.obra+')',monto:a.monto,tipo:'abono',fecha:a.fecha||''}); });
-  ['weliving','robledo','novaeva'].forEach(function(o){
+  obrasIds().forEach(function(o){
     S.hist[o].forEach(function(e){ if(e.ctaId===id) movs.push({f:e.f,desc:e.desc||e.a,monto:e.monto,tipo:'cargo',fecha:e.fecha||''}); });
   });
   S.traspasos.forEach(function(t){ if(t.de===id) movs.push({f:t.f,desc:'Pago TC — '+t.para,monto:t.monto,tipo:'cargo',fecha:t.fecha||''}); });
@@ -4226,7 +4196,7 @@ function _refreshNombresDatalist() {
   if (!dl) return;
   var nombres = {};
   // Recopilar nombres desde Supabase (LIVE) y entradas locales del session
-  ['weliving','robledo','novaeva'].forEach(function(o){
+  obrasIds().forEach(function(o){
     (LIVE[o]||[]).forEach(function(e){ if(e.a) nombres[e.a]=1; });
     (S.hist[o]||[]).forEach(function(e){ if(e.a) nombres[e.a]=1; });
   });
@@ -4467,10 +4437,80 @@ document.querySelectorAll('.ov').forEach(function(ov) {
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
+
+/* =================================================
+   OBRAS DINAMICAS - Nav, Views, Selects
+================================================= */
+function renderObrasNav() {
+  var el = document.getElementById('obras-nav');
+  if (!el) return;
+  el.innerHTML = obrasIds().map(function(id) {
+    var r = obraReg(id);
+    return '<div class="ni" data-v="'+id+'" onclick="gotoView(\'' +id+ '\')">'  
+      + '<span class="ni-ico">'+r.ico+'</span>'
+      + '<span>'+r.nm+'</span></div>';
+  }).join('');
+}
+
+function initObrasViews() {
+  var container = document.getElementById('obras-views-container');
+  if (!container) return;
+  var ICO_DEDUP = '🗑';
+  var ICO_BURN  = '📈';
+  container.innerHTML = obrasIds().map(function(id) {
+    var r = obraReg(id);
+    var dedupBar = id === 'weliving' ? '' :
+      '<div id="dedup-bar-'+id+'" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">'
+      + '<button id="dedup-btn-'+id+'" onclick="runDedup(\'' +id+ '\')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">'+ICO_DEDUP+' Limpiar duplicados Supabase</button>'
+      + '<span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos historicos</span>'
+      + '</div>';
+    return '<div class="view" id="v-'+id+'">'
+      + '<div class="pp-hd" id="pph-'+id+'"></div>'
+      + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribucion del gasto</div>'
+      + '<div id="cat-'+id+'"></div>'
+      + '<div class="sec" style="margin-top:12px">'+ICO_BURN+' Quema mensual - '+r.nm+'</div>'
+      + '<div class="burn-card" id="burn-'+id+'">'
+      + '<canvas id="chart-burn-'+id+'" style="max-height:170px"></canvas>'
+      + '</div>'
+      + '<div class="sec">Libro de gastos</div>'
+      + dedupBar
+      + '<div class="ldg-wrap" id="ldg-'+id+'"></div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderObraSelects() {
+  var abObra = document.getElementById('ab-obra');
+  if (abObra) abObra.innerHTML = obrasIds().map(function(id){var r=obraReg(id);return '<option value="'+id+'">'+r.ico+' '+r.nm+'</option>';}).join('')+'<option value="personal">Personal</option><option value="pool">Caja general</option>';
+  var pfProy = document.getElementById('pf-proy');
+  if (pfProy) pfProy.innerHTML = obrasIds().map(function(id){var r=obraReg(id);return '<option value="'+id+'">'+r.nm+'</option>';}).join('')+'<option value="personal">Personal</option>';
+  var pagFil = document.getElementById('pag-fil-obra');
+  if (pagFil) pagFil.innerHTML = '<option value="">Todas las obras</option>'+obrasIds().map(function(id){var r=obraReg(id);return '<option value="'+id+'">'+r.ico+' '+r.nm+'</option>';}).join('');
+}
+
+function openNuevaObra() { document.getElementById('ov-nueva-obra').classList.add('on'); }
+function saveNuevaObra() {
+  var nm=(document.getElementById('no-nombre').value||'').trim();
+  var ico=(document.getElementById('no-ico').value||'🏗').trim();
+  var col=(document.getElementById('no-col').value||'#6366f1').trim();
+  if(!nm){alert('Escribe un nombre para la obra');return;}
+  var id=nm.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  if(!id){alert('Nombre invalido');return;}
+  if(OBRAS_REG[id]){alert('Ya existe una obra con ese nombre');return;}
+  OBRAS_REG[id]={id:id,nm:nm,ico:ico,col:col,badge:'En obra',bcls:'ba',prog:0,etapa:'',nota:''};
+  if(S.obras.indexOf(id)===-1) S.obras.push(id);
+  LIVE[id]=[]; LIVE_LOADED[id]=false;
+  saveS(); initObrasViews(); renderObrasNav(); renderObraSelects();
+  closeOv('ov-nueva-obra'); fetchLive(id); gotoView(id);
+}
+
 loadS();
+initObrasViews();
+renderObrasNav();
+renderObraSelects();
 renderView('inicio');
 // Cargar datos de Supabase al iniciar
-['weliving','robledo','novaeva'].forEach(function(o){ fetchLive(o); });
+obrasIds().forEach(function(o){ fetchLive(o); });
 </script>
 <style>
 /* ══════════════════════════════════════════════════════
@@ -4601,5 +4641,21 @@ table th{font-size:11px!important}
 .obra-sl{font-size:11px;color:var(--tx2);margin-bottom:2px}
 .obra-sv{font-size:14px;font-weight:800}
 </style>
+
+<!-- Modal: Nueva Obra -->
+<div class="ov" id="ov-nueva-obra">
+  <div class="ov-box" style="max-width:380px">
+    <div class="ov-hd">Nueva Obra <span class="ov-x" onclick="closeOv('ov-nueva-obra')">&#x2715;</span></div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <label style="font-size:12px;color:var(--tx2)">Nombre de la obra *</label>
+      <input id="no-nombre" type="text" placeholder="Ej: Torre Norte" style="border:1px solid var(--br);border-radius:8px;padding:8px 12px;font-size:14px;outline:none">
+      <label style="font-size:12px;color:var(--tx2)">Emoji / icono</label>
+      <input id="no-ico" type="text" placeholder="🏗" maxlength="4" style="border:1px solid var(--br);border-radius:8px;padding:8px 12px;font-size:18px;outline:none;width:60px">
+      <label style="font-size:12px;color:var(--tx2)">Color</label>
+      <input id="no-col" type="color" value="#6366f1" style="border:none;border-radius:8px;height:36px;width:80px;cursor:pointer">
+      <button onclick="saveNuevaObra()" style="margin-top:8px;padding:10px;border-radius:10px;background:#2563eb;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer">Crear obra</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
