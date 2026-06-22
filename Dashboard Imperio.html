@@ -1600,26 +1600,22 @@ function dedupLive(rows) {
   return result;
 }
 
-// gastosT:
-// - weliving: Supabase limpio → usa sumLive
-// - robledo/novaeva: Supabase corrompido con duplicados → usa BASE verificado (real ~$320M Robledo)
-// El LIBRO muestra LIVE deduplicado (para reducir ruido visual), pero el TOTAL usa BASE para ser exacto
+// gastosT: total real de gastos — usa LIVE deduplicado siempre que esté disponible
 function gastosT(o) {
-  var liveV = sumLive(o);
   if (o === 'weliving') {
-    // Weliving está limpio en Supabase → usar directo
-    if (liveV > 0) return liveV;
+    var liveW = sumLive(o);
+    if (liveW > 0) return liveW;
     var cachedW = 0;
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
     return cachedW > 0 ? cachedW : 790055442;
   }
-  // Robledo/Novaeva: usar Supabase si ya está limpio (liveV ≈ BASE), si no usar BASE
-  // "Limpio" = diferencia < 5% entre live y BASE (duplicados inflan al doble, ~100%)
-  if (liveV > 0 && LIVE_LOADED[o]) {
-    var ratio = liveV / BASE[o].gastos;
-    if (ratio < 1.15) return liveV; // Supabase está limpio → usarlo
+  // Todas las demás obras: suma deduplicada de Supabase
+  if (LIVE_LOADED[o] && (LIVE[o]||[]).length > 0) {
+    var deduped = dedupLive(LIVE[o]);
+    return deduped.reduce(function(a,e){ return a+(e.monto||0); }, 0);
   }
-  return BASE[o].gastos + sumHist(o); // Fallback BASE mientras hay duplicados
+  // Fallback mientras carga Supabase
+  return (BASE[o] ? BASE[o].gastos : 0) + sumHist(o);
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id){
