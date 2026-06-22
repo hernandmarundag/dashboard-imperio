@@ -414,6 +414,10 @@ nav:not(.sb-nav){display:none!important}
       <canvas id="chart-burn-robledo" style="max-height:170px"></canvas>
     </div>
     <div class="sec">Libro de gastos</div>
+    <div id="dedup-bar-robledo" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">
+      <button id="dedup-btn-robledo" onclick="runDedup('robledo')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">🗑 Limpiar duplicados Supabase</button>
+      <span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos históricos</span>
+    </div>
     <div class="ldg-wrap" id="ldg-robledo"></div>
   </div>
   <div class="view" id="v-novaeva">
@@ -425,6 +429,10 @@ nav:not(.sb-nav){display:none!important}
       <canvas id="chart-burn-novaeva" style="max-height:170px"></canvas>
     </div>
     <div class="sec">Libro de gastos</div>
+    <div id="dedup-bar-novaeva" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">
+      <button id="dedup-btn-novaeva" onclick="runDedup('novaeva')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">🗑 Limpiar duplicados Supabase</button>
+      <span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos históricos</span>
+    </div>
     <div class="ldg-wrap" id="ldg-novaeva"></div>
   </div>
   <div class="view" id="v-cuentas">
@@ -1097,6 +1105,68 @@ function sbFetch(table, query) {
 function sbPost(table, data) {
   return fetch(SB_URL+'/rest/v1/'+table, {method:'POST',headers:SB_H,body:JSON.stringify(data)}).then(function(r){return r.json();});
 }
+function sbDelete(table, query) {
+  return fetch(SB_URL+'/rest/v1/'+table+'?'+query, {method:'DELETE',headers:SB_H}).then(function(r){return r.status;});
+}
+
+// ── LIMPIEZA DE DUPLICADOS ─────────────────────────────────────────
+// Detecta y elimina registros duplicados en Supabase por (nombre, monto, fecha)
+// Solo para Robledo/Novaeva donde ocurrió la importación doble
+async function runDedup(obra) {
+  var btn = document.getElementById('dedup-btn-'+obra);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
+
+  // Paginar para traer todos (>1000 registros)
+  var all = [], offset = 0, limit = 1000;
+  while (true) {
+    var rows = await sbFetch('gastos', 'obra=eq.'+obra+'&order=id.asc&limit='+limit+'&offset='+offset);
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    all = all.concat(rows);
+    if (rows.length < limit) break;
+    offset += limit;
+  }
+
+  if (btn) btn.textContent = '⏳ Detectando dups...';
+
+  // Detectar duplicados
+  var seen = {}, toDelete = [];
+  all.forEach(function(g) {
+    var ts = parseFecha(g.fecha || '');
+    var dk = ts > 0 ? new Date(ts).toISOString().split('T')[0] : (g.fecha||'').toLowerCase();
+    var key = (g.nombre||'').trim().toLowerCase() + '|' + (g.monto||0) + '|' + dk;
+    if (!seen[key]) { seen[key] = g.id; }
+    else { toDelete.push(g.id); }
+  });
+
+  if (toDelete.length === 0) {
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Sin duplicados'; }
+    alert(obra + ': No se encontraron duplicados. Total: ' + all.length + ' registros.');
+    return;
+  }
+
+  var sumAntes = all.reduce(function(a,g){return a+(g.monto||0);},0);
+  var sumDespues = all.filter(function(g){return toDelete.indexOf(g.id)<0;}).reduce(function(a,g){return a+(g.monto||0);},0);
+  var ok = confirm(obra.toUpperCase()+': Se encontraron '+toDelete.length+' duplicados.\n'
+    +'Total actual: $'+Math.round(sumAntes).toLocaleString('es-CO')+'\n'
+    +'Total limpio: $'+Math.round(sumDespues).toLocaleString('es-CO')+'\n\n'
+    +'¿Eliminar los duplicados?');
+  if (!ok) { if(btn){btn.disabled=false;btn.textContent='🗑 Limpiar duplicados';} return; }
+
+  if (btn) btn.textContent = '⏳ Eliminando...';
+
+  // Borrar en lotes de 50
+  for (var i = 0; i < toDelete.length; i += 50) {
+    var batch = toDelete.slice(i, i+50);
+    await sbDelete('gastos', 'id=in.('+batch.join(',')+')');
+  }
+
+  // Recargar LIVE y actualizar BASE dinámicamente
+  LIVE_LOADED[obra] = false;
+  fetchLive(obra);
+
+  if (btn) { btn.disabled = false; btn.textContent = '✅ Listo — '+toDelete.length+' eliminados'; }
+  alert('✅ Limpieza completa.\nEliminados: '+toDelete.length+'\nQuedan: '+(all.length-toDelete.length)+' registros únicos.\nTotal: $'+Math.round(sumDespues).toLocaleString('es-CO'));
+}
 
 // Datos en vivo de Supabase — única fuente de verdad
 var LIVE = {weliving:[], robledo:[], novaeva:[]};
@@ -1479,16 +1549,21 @@ function dedupLive(rows) {
 // - robledo/novaeva: Supabase corrompido con duplicados → usa BASE verificado (real ~$320M Robledo)
 // El LIBRO muestra LIVE deduplicado (para reducir ruido visual), pero el TOTAL usa BASE para ser exacto
 function gastosT(o) {
+  var liveV = sumLive(o);
   if (o === 'weliving') {
-    var liveW = sumLive('weliving');
-    // Si Supabase está cargado, usarlo SOLO (no sumar hist para evitar doble conteo)
-    if (liveW > 0) return liveW;
+    // Weliving está limpio en Supabase → usar directo
+    if (liveV > 0) return liveV;
     var cachedW = 0;
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
     return cachedW > 0 ? cachedW : 790055442;
   }
-  // Robledo/Novaeva: BASE histórico verificado + nuevos del dashboard
-  return BASE[o].gastos + sumHist(o);
+  // Robledo/Novaeva: usar Supabase si ya está limpio (liveV ≈ BASE), si no usar BASE
+  // "Limpio" = diferencia < 5% entre live y BASE (duplicados inflan al doble, ~100%)
+  if (liveV > 0 && LIVE_LOADED[o]) {
+    var ratio = liveV / BASE[o].gastos;
+    if (ratio < 1.15) return liveV; // Supabase está limpio → usarlo
+  }
+  return BASE[o].gastos + sumHist(o); // Fallback BASE mientras hay duplicados
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id){
