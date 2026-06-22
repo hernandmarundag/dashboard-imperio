@@ -1295,15 +1295,16 @@ function fetchLive(obra) {
           monto: g.monto || 0
         };
       });
-      // Deduplicar en cliente (robledo/novaeva pueden tener duplicados en Supabase)
-      var rawCount = LIVE[obra].length;
+      // Deduplicar en cliente
       if (obra !== 'weliving') {
         LIVE[obra] = dedupLive(LIVE[obra]);
-        // Si hay duplicados reales en Supabase → limpiar en background (silencioso, sin interacción)
-        var dupCount = rawCount - LIVE[obra].length;
-        if (dupCount > 0) { _autoDedup(obra); }
       }
       LIVE_LOADED[obra] = true;
+      // Robledo: si Supabase sigue inflado (>50 registros = histórico sin limpiar)
+      // → ejecutar limpieza automática que borra todo y re-inserta solo Jun 16-18
+      if (obra === 'robledo' && LIVE[obra].length > 50) {
+        _autoLimpiarRobledo();
+      }
       // Cachear total weliving en localStorage para fallback en file://
       if (obra === 'weliving') {
         var tot = sumLive('weliving');
@@ -1638,13 +1639,14 @@ function dedupLive(rows) {
   return result;
 }
 
-// Corte: primer día de entradas en plataforma por obra
-// Supabase histórico (pre-corte) está inflado con duplicados → usar BASE para ese período
-// Solo las entradas DESDE el corte son confiables → sumarlas encima del BASE
+// ── gastosT ──────────────────────────────────────────────────────────
+// weliving: datos completos en Supabase → confiar en sumLive
+// robledo/novaeva: Supabase histórico tiene duplicados
+//   → BASE (verificado manualmente) + solo entradas de plataforma (Jun 16+)
+//   Cuando Supabase tenga <50 registros (ya limpio), sumLive() es correcto → BASE + sumLive
 var ROBLEDO_CUTOFF_TS = new Date('2026-06-16T00:00:00').getTime();
 var NOVAEVA_CUTOFF_TS = new Date('2026-06-10T00:00:00').getTime();
 
-// gastosT: total real de gastos por obra
 function gastosT(o) {
   if (o === 'weliving') {
     var liveW = sumLive(o);
@@ -1653,14 +1655,56 @@ function gastosT(o) {
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
     return cachedW > 0 ? cachedW : 790055442;
   }
-  // robledo / novaeva: Supabase histórico tiene duplicados
-  // → BASE (validado manualmente) + entradas nuevas de plataforma (limpias)
   var base = BASE[o] ? BASE[o].gastos : 0;
+  if (!LIVE_LOADED[o]) return base + sumHist(o);
   var cutTs = o === 'robledo' ? ROBLEDO_CUTOFF_TS : NOVAEVA_CUTOFF_TS;
-  if (LIVE_LOADED[o]) {
-    return base + sumLiveDesde(o, cutTs);
-  }
-  return base + sumHist(o);
+  return base + sumLiveDesde(o, cutTs);
+}
+
+// ── Auto-limpieza Supabase Robledo ───────────────────────────────────
+// Gastos verificados de plataforma (Jun 16-18) que deben estar en Supabase
+var ROBLEDO_PLAT = [
+  {obra:'robledo',fecha:'2026-06-16',nombre:'ferrara, materiales, accesorios',descripcion:'materiales general',   area:'materiales general',etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:2830000, material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-16',nombre:'seguridad social',               descripcion:'seguridad social losa',area:'seguridad social',  etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:5852000, material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-17',nombre:'jhon hernan usuga',              descripcion:'vaciado concreto',     area:'concreto',           etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:1000000, material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'carmen cecilia m',               descripcion:'porones',              area:'no aplica',          etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:3050000, material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'cristian camilo galeano',        descripcion:'re diseño arquitectura',area:'no aplica',         etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:500000,  material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'deposito los botero',            descripcion:'icopor, arena, cemento',area:'materiales general',etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:836100,  material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'zakoo',                          descripcion:'algamsa polimerica',   area:'materiales general', etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:1428000, material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'german rueda',                   descripcion:'prestamo empleado',    area:'no aplica',          etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:100000,  material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'Jesus Danobis Castro',           descripcion:'prestamo empleado',    area:'no aplica',          etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:100000,  material:'',cuenta:'bc-grupo'},
+  {obra:'robledo',fecha:'2026-06-18',nombre:'wilmar garcia',                  descripcion:'prestamo empleado',    area:'no aplica',          etapa_gral:'Mampostería',mp:'Transferencia — Grupo Imperio',monto:150000,  material:'',cuenta:'bc-grupo'},
+];
+
+var _roblLimpioKey = 'imp_robledo_limpio_v1';
+var _limpiezaEnCurso = false;
+
+async function _autoLimpiarRobledo() {
+  if (_limpiezaEnCurso) return;
+  if (localStorage.getItem(_roblLimpioKey) === '1') return; // ya limpio
+  _limpiezaEnCurso = true;
+  try {
+    // Borrar TODOS los registros históricos de Robledo (vienen duplicados)
+    var offset = 0, limit = 1000;
+    while (true) {
+      var r = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.robledo&order=id.asc&limit='+limit+'&offset='+offset, {headers:SB_H});
+      var chunk = await r.json();
+      if (!Array.isArray(chunk) || chunk.length === 0) break;
+      var ids = chunk.map(function(g){return g.id;});
+      await fetch(SB_URL+'/rest/v1/gastos?id=in.('+ids.join(',')+')',{method:'DELETE',headers:Object.assign({},SB_H,{'Prefer':'return=minimal'})});
+      if (chunk.length < limit) break;
+      offset += limit;
+    }
+    // Re-insertar solo las 10 entradas verificadas de Jun 16-18
+    await fetch(SB_URL+'/rest/v1/gastos',{method:'POST',headers:Object.assign({},SB_H,{'Prefer':'return=minimal'}),body:JSON.stringify(ROBLEDO_PLAT)});
+    // Marcar como limpio para no volver a correr
+    localStorage.setItem(_roblLimpioKey, '1');
+    // Recargar datos
+    LIVE_LOADED['robledo'] = false;
+    LIVE['robledo'] = [];
+    fetchLive('robledo');
+  } catch(e) { console.warn('_autoLimpiarRobledo:', e); }
+  _limpiezaEnCurso = false;
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id){
