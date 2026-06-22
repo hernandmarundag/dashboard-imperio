@@ -1385,7 +1385,7 @@ const FGAS = [
 
 const DEF = {
   cuentas:[
-    {id:'bc-grupo',  nm:'Grupo Imperio',    banco:'Bancolombia',    saldoBase:0, saldoReal:143500000, snapFecha:'2026-06-16'},
+    {id:'bc-grupo',  nm:'Grupo Imperio',    banco:'Bancolombia',    saldoBase:0},
     {id:'dv-lib',    nm:'Imp. Libertad',    banco:'Davivienda',     saldoBase:0},
     {id:'bb-lib',    nm:'Imp. Libertad',    banco:'Banco Bogotá',   saldoBase:0},
     {id:'bc-hernan', nm:'Hernán 5583',       banco:'Bancolombia',    saldoBase:0},
@@ -1572,9 +1572,9 @@ function loadS() {
   S.cuentas.forEach(function(c){
     if (c.saldo !== undefined && c.saldoBase === undefined) { c.saldoBase = 0; delete c.saldo; }
     if (c.saldoBase === undefined) c.saldoBase = 0;
-    // Sync saldoReal y snapFecha desde DEF si DEF los define
-    var def = DEF.cuentas.find(function(d){return d.id===c.id;});
-    if (def && def.saldoReal !== undefined) { c.saldoReal = def.saldoReal; c.snapFecha = def.snapFecha; }
+    // Migración: limpiar saldoReal hardcodeado anterior (143.5M de bc-grupo)
+    // Solo aplica una vez — si el valor aún es el viejo hardcodeado, lo borra
+    if (c.saldoReal === 143500000) { delete c.saldoReal; }
   });
   // Sync TCs desde DEF — cupoTotal, cupoUsado, saldoFavor (datos hardcoded del snapshot)
   if (S.tcs) S.tcs.forEach(function(t){
@@ -1929,27 +1929,31 @@ function rWallets(id) {
   document.getElementById(id).innerHTML = S.cuentas.map(function(c) {
     var g = WG[c.id] || 'linear-gradient(135deg,#374151,#6b7280)';
     var sal = saldoCta(c.id);
-    return '<div class="wallet" style="background:'+g+'" onclick="editCuenta(\''+c.id+'\')">' +
+    return '<div class="wallet" style="background:'+g+';cursor:pointer" onclick="editSaldoInline(\''+c.id+'\',this)">' +
       '<div class="w-bank">'+c.banco+'</div>' +
       '<div class="w-name">'+c.nm+'</div>' +
-      '<div class="w-lbl">Saldo</div>' +
-      '<div class="w-amt" onclick="event.stopPropagation();editSaldoInline(\''+c.id+'\',this)" title="Toca para editar" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,0.4)">'+fmt(sal)+'</div>' +
-      '<div style="font-size:9px;opacity:0.5;margin-top:3px;text-align:right">✏️ editar</div>' +
+      '<div class="w-lbl">Saldo ✏️</div>' +
+      '<div class="w-amt w-amt-'+c.id+'">'+fmt(sal)+'</div>' +
       '</div>';
   }).join('');
 }
 
-function editSaldoInline(id, el) {
+function editSaldoInline(id, cardEl) {
   var c = S.cuentas.find(function(x){return x.id===id;}); if(!c) return;
-  if (!el) return;
+  // Encontrar el div del monto dentro de la tarjeta
+  var amtEl = cardEl.querySelector('.w-amt-'+id);
+  if (!amtEl) return;
+  // Si ya hay un input activo, no duplicar
+  if (amtEl.querySelector('input')) return;
   var current = c.saldoReal !== undefined ? c.saldoReal : saldoCta(id);
-  el.style.borderBottom = '2px solid rgba(255,255,255,0.9)';
-  el.innerHTML = '<input type="number" '
-    +'style="width:100%;background:rgba(255,255,255,0.15);border:none;border-radius:6px;'
-    +'padding:2px 6px;font-size:20px;font-weight:900;color:#fff;outline:none;text-align:right;'
-    +'-moz-appearance:textfield;font-family:inherit" value="'+current+'" />';
-  var inp = el.querySelector('input');
-  if (!inp) return;
+  amtEl.textContent = '';
+  var inp = document.createElement('input');
+  inp.type = 'number';
+  inp.value = current;
+  inp.style.cssText = 'width:100%;background:rgba(255,255,255,0.2);border:2px solid #fff;'
+    +'border-radius:8px;padding:4px 8px;font-size:22px;font-weight:900;color:#fff;'
+    +'outline:none;text-align:right;-moz-appearance:textfield;font-family:inherit;box-sizing:border-box';
+  amtEl.appendChild(inp);
   inp.focus(); inp.select();
   var saved = false;
   function save() {
