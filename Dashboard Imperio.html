@@ -353,8 +353,7 @@ nav:not(.sb-nav){display:none!important}
     <div class="ni" style="cursor:pointer;color:var(--bl);font-size:12px;padding:6px 12px" onclick="openNuevaObra()">+ Nueva obra</div>
     <div class="sb-sect">Finanzas</div>
     <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
-    <div class="ni" data-v="flujo" onclick="gotoView('flujo')"><span class="ni-ico">📊</span><span>Flujo 30D</span></div>
-    <div class="ni" data-v="pagos" onclick="gotoView('pagos')"><span class="ni-ico">⚠️</span><span>Pagos</span><span class="ni-b" id="badge-pagos"></span></div>
+    <div class="ni" data-v="flujo" onclick="gotoView('flujo')"><span class="ni-ico">💸</span><span>Flujo & Pagos</span><span class="ni-b" id="badge-pagos"></span></div>
     <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobrar</span></div>
     <div class="sb-sect">Análisis</div>
     <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
@@ -409,17 +408,14 @@ nav:not(.sb-nav){display:none!important}
   <div class="view" id="v-flujo">
     <div class="flujo-grid" id="flujo-grid"></div>
     <div id="fproy"></div>
-  </div>
-  <div class="view" id="v-pagos">
-    <!-- resumen bar -->
-    <div id="pag-summary-bar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px"></div>
-    <!-- tabs + acciones -->
+    <!-- ── Pagos integrado ── -->
+    <div id="pag-summary-bar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:16px 0 12px"></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px">
       <div style="display:flex;gap:4px;flex:1;flex-wrap:wrap">
         <button id="pag-tab-venc"    class="bsm on" onclick="pagosTabSwitch('vencido')"  style="font-size:11px">🔴 Vencidos</button>
         <button id="pag-tab-urgente" class="bsm"    onclick="pagosTabSwitch('urgente')"  style="font-size:11px">⚡ Esta semana</button>
         <button id="pag-tab-proximo" class="bsm"    onclick="pagosTabSwitch('proximo')"  style="font-size:11px">📅 30 días</button>
-        <button id="pag-tab-futuro"  class="bsm"    onclick="pagosTabSwitch('futuro')"   style="font-size:11px">📋 Sin fecha / Futuros</button>
+        <button id="pag-tab-futuro"  class="bsm"    onclick="pagosTabSwitch('futuro')"   style="font-size:11px">📋 Futuros</button>
         <button id="pag-tab-all"     class="bsm"    onclick="pagosTabSwitch('all')"      style="font-size:11px">Todo</button>
       </div>
       <div style="display:flex;gap:6px">
@@ -432,6 +428,7 @@ nav:not(.sb-nav){display:none!important}
     </div>
     <div id="pagos-list"></div>
   </div>
+  
   <div class="view" id="v-plan">
     <div id="plan-content"></div>
   </div>
@@ -3327,6 +3324,7 @@ function rFlujo() {
   el.style.display = 'block';
   el.innerHTML = cardsHtml + alertsHtml + chartHtml + rTimelineHtml() + tableHtml;
   document.getElementById('fproy').innerHTML = '';
+  rPagos();
 
   /* ── Guardar rows en closure para el tab switch ── */
   window._flujoAllRows = allTableRows;
@@ -3565,14 +3563,17 @@ function pagosTabSwitch(tab) {
 
 
 function marcarPagado(id) {
-  var idx = S.pagos.findIndex(function(p){return p.id===id;});
-  if (idx < 0) return;
-  var p = S.pagos[idx];
-  if (!confirm('¿Marcar como pagado?\n'+p.desc+'\n'+fmtM(p.monto))) return;
-  S.pagos.splice(idx, 1);
-  try { localStorage.setItem('imp_pagos', JSON.stringify(S.pagos)); } catch(e){}
+  var pidx = S.pagos.findIndex(function(p){return p.id===id;});
+  if (pidx < 0) return;
+  var p = S.pagos[pidx];
+  if (!confirm('¿Marcar como pagado?\n' + p.desc + '\n' + fmtM(p.monto))) return;
+  /* remover de pending y agregar a paid para que no reaparezca al recargar */
+  S.pagos.splice(pidx, 1);
+  if (!S.pagosPaid) S.pagosPaid = [];
+  if (S.pagosPaid.indexOf(id) === -1) S.pagosPaid.push(id);
+  saveS();
   updateBadgePagos();
-  rPagos();
+  rFlujo();
 }
 
 function toggleMes(id){
