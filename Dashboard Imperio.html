@@ -488,7 +488,7 @@ nav:not(.sb-nav){display:none!important}
   <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.35)">⬇ El informe detallado de gastos Jun 9-15 por obra continúa abajo</div>
 </div>
 <h1>📊 Informe de Gastos — Jun 9 al 15, 2026</h1>
-  <div class="sub">Seguimiento del dinero ingresado el 9–10 de junio · Fuente: Google Sheet PROYECTOS IMPERIO · Generado 15 Jun 2026</div>
+  <div class="sub">Seguimiento del dinero ingresado el 9–10 de junio · Fuente: Supabase (Base de datos Imperial) · Generado 15 Jun 2026</div>
 
   <!-- RESUMEN EJECUTIVO -->
   <div class="sec-tit">Resumen por obra</div>
@@ -852,7 +852,7 @@ nav:not(.sb-nav){display:none!important}
   </div>
 
   <div style="margin-top:32px;padding:16px;background:#f2f2f7;border-radius:12px;font-size:11px;color:#636366;text-align:center">
-    📋 Datos extraídos directamente del Google Sheet PROYECTOS IMPERIO · Fuente: Apps Script · 15 Jun 2026<br>
+    🗄 Datos cargados desde Supabase (base de datos Imperio) · 15 Jun 2026<br>
     Los saldos no incluyen compromisos futuros (pagos pendientes de firmar/pagar por obra)
   </div>
     </div>
@@ -1167,7 +1167,7 @@ const BASE = {
 };
 
 const BASE_CAT = {
-  // BASE_CAT = full Google Sheet category totals (Sheet: 1MlxqFxdzyUfwSZQU4DD4YoQoeUzLe3lqgdz0MuQhTIQ, read Jun 15 2026)
+  // BASE_CAT = totales históricos por categoría — snapshot Supabase Jun 15 2026
   weliving:{mo:159047349,mat:349907385,seg:16042100,ss:14696700,exc:58992000,var2:10390988,adm:90999663,her:8845180,tsp:2275000,alq:38154430,act:2162279,nom:3204000},
   robledo: {mo:97806284, mat:131932911,seg:9332350, ss:0,       exc:2148000, var2:22330727,adm:7483000, her:324000, tsp:1223000,alq:17575870,act:0,       nom:25227070},
   // robledo: BASE actualizada Jun 2026 (Sheet $315.38M) — extra $9.99M distribuido en mat+var2
@@ -1466,7 +1466,7 @@ function parseFecha(f){
 function sumHist(o)  { return (S.hist[o]||[]).reduce(function(a,e){return a+e.monto;},0); }
 function sumSheet(o) { return 0; } // SHEET[] vacío — conservado por compatibilidad
 function sumLive(o)  { return (LIVE[o]||[]).reduce(function(a,e){return a+(e.monto||0);},0); }
-// gastosT = snapshot histórico Sheet al 15-Jun (BASE) + nuevos del dashboard (hist)
+// gastosT = snapshot histórico Supabase al 15-Jun (BASE) + gastos manuales del dashboard (hist)
 // LIVE es para el libro/ledger, no para el total (evita doble conteo con BASE)
 function gastosT(o)  {
   // weliving: Supabase está limpio y actualizado — usar LIVE
@@ -2377,12 +2377,14 @@ function renderLedger(o) {
   }
 
   /* Title info */
-  var dashSum=sumHist(o), sheetSum=sumSheet(o);
+  var dashSum = sumHist(o);
+  var liveSum = sumLive(o);
+  var liveCount = (LIVE[o]||[]).length;
   var totalReal = gastosT(o);
   var titleTxt='Total: <strong style="color:var(--rd)">'+fmtM(totalReal)+'</strong>'
-    +'&nbsp;·&nbsp;Sheet <strong>'+fmtM(sheetSum)+'</strong>'
-    +(dashSum?'&nbsp;+&nbsp;Dashboard <strong style="color:var(--gr)">'+fmtM(dashSum)+'</strong>':'')
-    +'&nbsp;·&nbsp;<span style="color:var(--bl);font-weight:800">'+tot+' reg.</span>';
+    +'&nbsp;·&nbsp;🗄 Supabase <strong style="color:var(--bl)">'+fmtM(liveSum)+'&nbsp;('+liveCount+' reg.)</strong>'
+    +(dashSum?'&nbsp;·&nbsp;✏️ Manual <strong style="color:var(--gr)">'+fmtM(dashSum)+'</strong>':'')
+    +'&nbsp;·&nbsp;<span style="color:var(--bl);font-weight:800">'+tot+' mostrados</span>';
 
   /* Full ledger HTML */
   var wrap=document.getElementById('ldg-'+o);
@@ -2396,8 +2398,8 @@ function renderLedger(o) {
       +'<select class="fsel'+(ls.mp?' act':'')+'" onchange="LS[\''+o+'\'].mp=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+opts(uMp,ls.mp,'Todos los métodos')+'</select>'
       +'<select class="fsel'+(ls.src?' act':'')+'" onchange="LS[\''+o+'\'].src=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'
         +'<option value="">Todas las fuentes</option>'
-        +'<option value="dash"'+(ls.src==='dash'?' selected':'')+'>✏️ Dashboard</option>'
-        +'<option value="sheet"'+(ls.src==='sheet'?' selected':'')+'>📊 Sheet</option>'
+        +'<option value="live"'+(ls.src==='live'?' selected':'')+'>🗄 Supabase</option>'
+        +'<option value="dash"'+(ls.src==='dash'?' selected':'')+'>✏️ Manual</option>'
       +'</select>'
       +(hasF?'<button type="button" class="btn-clr show" onclick="clearLF(\''+o+'\')">✕ Limpiar</button>':'')
     +'</div>'
@@ -3573,8 +3575,8 @@ function rAnalisis() {
   if (rows.length === 0) {
     el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--tx2)">'
       + '<div style="font-size:48px;margin-bottom:16px">📊</div>'
-      + '<div style="font-size:16px;font-weight:600">Cargando datos del Sheet…</div>'
-      + '<div style="font-size:13px;color:var(--tx3);margin-top:8px">Los datos se cargan automáticamente desde Google Sheets</div>'
+      + '<div style="font-size:16px;font-weight:600">Conectando con Supabase…</div>'
+      + '<div style="font-size:13px;color:var(--tx3);margin-top:8px">Los datos se cargan automáticamente desde la base de datos</div>'
       + '</div>';
     return;
   }
