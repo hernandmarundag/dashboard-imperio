@@ -1492,10 +1492,13 @@ function dedupLive(rows) {
 function gastosT(o) {
   if (o === 'weliving') {
     var liveW = sumLive('weliving');
+    // Si Supabase está cargado, usarlo SOLO (no sumar hist para evitar doble conteo)
+    if (liveW > 0) return liveW;
     var cachedW = 0;
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
-    return (liveW > 0 ? liveW : (cachedW > 0 ? cachedW : 790055442)) + sumHist('weliving');
+    return cachedW > 0 ? cachedW : 790055442;
   }
+  // Robledo/Novaeva: BASE histórico verificado + nuevos del dashboard
   return BASE[o].gastos + sumHist(o);
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
@@ -4177,31 +4180,61 @@ function saveGasto() {
   var ctaV   = document.getElementById('gf-cta').value;
   var ctaLbl = document.getElementById('gf-cta').selectedOptions[0] ? document.getElementById('gf-cta').selectedOptions[0].text : ctaV;
   var fStr   = document.getElementById('gf-fecha').value;
-  var d      = new Date(fStr+'T12:00:00');
-  var fFmt   = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
-  var entry  = {
-    id:Date.now().toString(), f:fFmt, fecha:fStr,
-    a:nombre, etapa:document.getElementById('gf-etapa').value,
-    noCot:document.getElementById('gf-cotiz').value,
-    factRev:document.getElementById('gf-facrev').checked,
-    mat:document.getElementById('gf-mat').value,
-    cant:document.getElementById('gf-cant').value,
-    area:document.getElementById('gf-area').value,
-    etapaObra:document.getElementById('gf-eobra').value,
-    desc:desc, iva:parseFloat(document.getElementById('gf-iva').value)||0,
-    monto:total, mp:metodo+' — '+ctaLbl,
-    metodoPago:metodo, ctaId:ctaV,
+  var areaVal   = document.getElementById('gf-area')  ? document.getElementById('gf-area').value  : '';
+  var etapaVal  = document.getElementById('gf-etapa') ? document.getElementById('gf-etapa').value : '';
+  var matVal    = document.getElementById('gf-mat')   ? document.getElementById('gf-mat').value   : '';
+
+  // Payload directo a Supabase (fuente única de verdad)
+  var sbData = {
+    obra:        _selObra,
+    fecha:       fStr,
+    nombre:      nombre,
+    descripcion: desc,
+    area:        areaVal,
+    etapa_gral:  etapaVal,
+    mp:          metodo + ' — ' + ctaLbl,
+    monto:       total,
+    material:    matVal,
+    cuenta:      ctaV
   };
-  S.hist[_selObra].push(entry);
-  if (metodo !== 'Externo') {
-    var isTC = ['p1','p2','p3','h1','h2','h3'].indexOf(ctaV) >= 0;
-    if (isTC) { var t=S.tcs.find(function(x){return x.id===ctaV;}); if(t) t.cupoUsado+=total; }
-  }
-  saveS();
-  // Enviar al Google Sheet en segundo plano
-  pushToSheet(_selObra, entry);
-  closeOv('ov-gasto');
-  gotoView(_selObra);
+
+  // Estado de carga — deshabilitar botón
+  var btn = document.querySelector('#ov-gasto .bsv');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+
+  var obra = _selObra;
+
+  sbPost('gastos', [sbData])
+    .then(function(res) {
+      // ── Deducir de billetera ──────────────────────────────
+      if (metodo !== 'Externo') {
+        var isTC = ['p1','p2','p3','h1','h2','h3'].indexOf(ctaV) >= 0;
+        if (isTC) {
+          var tc = S.tcs.find(function(x){ return x.id === ctaV; });
+          if (tc) tc.cupoUsado += total;
+        } else {
+          // Cuenta bancaria: bajar saldo directamente
+          var cta = S.cuentas.find(function(x){ return x.id === ctaV; });
+          if (cta) {
+            var salActual = cta.saldoReal !== undefined ? cta.saldoReal : saldoCta(ctaV);
+            cta.saldoReal = salActual - total;
+          }
+        }
+        saveS();
+      }
+      // ── Recargar LIVE para que aparezca en el libro ───────
+      LIVE_LOADED[obra] = false;
+      fetchLive(obra);
+      // ── Cerrar modal y navegar ────────────────────────────
+      if (btn) { btn.disabled = false; btn.textContent = '✓ Guardar gasto'; }
+      closeOv('ov-gasto');
+      gotoView(obra);
+    })
+    .catch(function(e) {
+      console.warn('saveGasto Supabase error:', e);
+      alert('❌ Error guardando en Supabase. Verifica tu conexión e intenta de nuevo.');
+      if (btn) { btn.disabled = false; btn.textContent = '✓ Guardar gasto'; }
+    });
 }
 
 /* ═══════════════════════════════════════════════════
