@@ -1394,9 +1394,9 @@ const DEF = {
   tcs:[
     {id:'p1',nm:'LIFE 7625',     tit:'Paulina',banco:'Bancolombia',cupoTotal:10000000, cupoUsado:0},
     {id:'p2',nm:'VISA 6614',     tit:'Paulina',banco:'Visa',       cupoTotal:10000000, cupoUsado:0},
-    {id:'p3',nm:'MASTER 3625',   tit:'Paulina',banco:'Mastercard', cupoTotal:50000000, cupoUsado:28170150},
+    {id:'p3',nm:'MASTER 3625',   tit:'Paulina',banco:'Mastercard', cupoTotal:50000000, cupoUsado:0},
     {id:'h1',nm:'Falabella 8283',tit:'Hernán', banco:'Falabella',  cupoTotal:20000000, cupoUsado:0},
-    {id:'h2',nm:'Scotia 4531',   tit:'Hernán', banco:'Scotiabank', cupoTotal:10000000, cupoUsado:0,  saldoFavor:5000000, snapFecha:'2026-06-15'},
+    {id:'h2',nm:'Scotia 4531',   tit:'Hernán', banco:'Scotiabank', cupoTotal:10000000, cupoUsado:0},
     {id:'h3',nm:'MASTER 2656',   tit:'Hernán', banco:'Mastercard', cupoTotal:15000000, cupoUsado:0},
   ],
   pagos:[
@@ -1576,14 +1576,10 @@ function loadS() {
     // Solo aplica una vez — si el valor aún es el viejo hardcodeado, lo borra
     if (c.saldoReal === 143500000) { delete c.saldoReal; }
   });
-  // Sync TCs desde DEF — cupoTotal, cupoUsado, saldoFavor (datos hardcoded del snapshot)
+  // Migración: limpiar valores hardcodeados anteriores de TCs
   if (S.tcs) S.tcs.forEach(function(t){
-    var def = DEF.tcs.find(function(d){return d.id===t.id;});
-    if (!def) return;
-    if (def.cupoTotal  !== undefined) t.cupoTotal  = def.cupoTotal;
-    if (def.cupoUsado  !== undefined) t.cupoUsado  = def.cupoUsado;
-    if (def.saldoFavor !== undefined) t.saldoFavor = def.saldoFavor;
-    if (def.snapFecha  !== undefined) t.snapFecha  = def.snapFecha;
+    if (t.cupoUsado === 28170150) t.cupoUsado = 0; // MASTER 3625 viejo
+    if (t.saldoFavor === 5000000 && t.id === 'h2') delete t.saldoFavor; // Scotia viejo
   });
 }
 function saveS() { localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -1642,6 +1638,12 @@ function dedupLive(rows) {
   return result;
 }
 
+// Corte: primer día de entradas en plataforma por obra
+// Supabase histórico (pre-corte) está inflado con duplicados → usar BASE para ese período
+// Solo las entradas DESDE el corte son confiables → sumarlas encima del BASE
+var ROBLEDO_CUTOFF_TS = new Date('2026-06-16T00:00:00').getTime();
+var NOVAEVA_CUTOFF_TS = new Date('2026-06-10T00:00:00').getTime();
+
 // gastosT: total real de gastos por obra
 function gastosT(o) {
   if (o === 'weliving') {
@@ -1651,16 +1653,14 @@ function gastosT(o) {
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
     return cachedW > 0 ? cachedW : 790055442;
   }
-  if (LIVE_LOADED[o] && (LIVE[o]||[]).length > 0) {
-    // Suma de registros ya deduplicados en fetchLive
-    var liveSum = sumLive(o);
-    var base = BASE[o] ? BASE[o].gastos : 0;
-    // Si Supabase está dentro del rango esperado (±30% del BASE), confiar en él
-    // Si está más alto (datos inflados/corruptos), usar BASE como cifra conservadora segura
-    if (base === 0 || liveSum <= base * 1.30) return liveSum;
-    return base + sumHist(o);
+  // robledo / novaeva: Supabase histórico tiene duplicados
+  // → BASE (validado manualmente) + entradas nuevas de plataforma (limpias)
+  var base = BASE[o] ? BASE[o].gastos : 0;
+  var cutTs = o === 'robledo' ? ROBLEDO_CUTOFF_TS : NOVAEVA_CUTOFF_TS;
+  if (LIVE_LOADED[o]) {
+    return base + sumLiveDesde(o, cutTs);
   }
-  return (BASE[o] ? BASE[o].gastos : 0) + sumHist(o);
+  return base + sumHist(o);
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id){
@@ -1747,6 +1747,7 @@ function gotoView(v) {
   var el = document.getElementById('v-' + v);
   if (el) el.classList.add('on');
   curV = v;
+  try { localStorage.setItem('imp_curv', v); } catch(e){}
   renderView(v);
 }
 
@@ -1984,13 +1985,16 @@ function rTCs(id) {
     var pct = Math.min(100, (t.cupoUsado/t.cupoTotal)*100) || 0;
     var bc = pct>80 ? 'var(--rd)' : pct>50 ? 'var(--or)' : 'var(--bl)';
     var disponible = t.cupoTotal - t.cupoUsado + (t.saldoFavor||0);
-    return '<div class="tc-card">'+
+    return '<div class="tc-card" style="cursor:pointer" onclick="editTCInline(\''+t.id+'\',this)">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
         '<div>'+
           '<div class="tc-nm">'+t.nm+'</div>'+
           '<div class="tc-sb">'+t.tit+' — '+t.banco+'</div>'+
         '</div>'+
-        '<button onclick="openAbonarTC(\''+t.id+'\')" style="padding:4px 10px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Abonar</button>'+
+        '<div style="display:flex;gap:6px;align-items:center">'+
+          '<span style="font-size:9px;color:var(--tx3)">✏️</span>'+
+          '<button onclick="event.stopPropagation();openAbonarTC(\''+t.id+'\')" style="padding:4px 10px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Abonar</button>'+
+        '</div>'+
       '</div>'+
       '<div class="bar-bg" style="margin-top:10px"><div class="bar-f" style="width:'+pct+'%;background:'+bc+'"></div></div>'+
       '<div class="tc-inf">'+
@@ -1999,8 +2003,49 @@ function rTCs(id) {
       '</div>'+
       (t.cupoUsado>0 ? '<div class="tc-dbt" style="margin-top:6px">Deuda: '+fmt(t.cupoUsado)+'</div>' : '')+
       (t.saldoFavor>0 ? '<div style="font-size:11px;color:var(--gr);font-weight:700;margin-top:3px">✓ Saldo a favor: '+fmt(t.saldoFavor)+'</div>' : '')+
+      '<div class="tc-ea-'+t.id+'"></div>'+
       '</div>';
   }).join('');
+}
+
+var _tcEC = 0;
+function editTCInline(id, cardEl) {
+  var t = S.tcs.find(function(x){return x.id===id;}); if(!t) return;
+  var ea = cardEl.querySelector('.tc-ea-'+id); if(!ea) return;
+  if (ea.querySelector('input')) {
+    // Ya abierto → cerrar
+    if(document.getElementById('tcs-i')) rTCs('tcs-i');
+    if(document.getElementById('tcs-c')) rTCs('tcs-c');
+    return;
+  }
+  var pfx = 'tce'+(++_tcEC);
+  ea.innerHTML =
+    '<div onclick="event.stopPropagation()" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--br)">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">'+
+      '<div><div style="font-size:10px;color:var(--tx2);margin-bottom:3px">Cupo total</div>'+
+        '<input id="'+pfx+'t" type="number" value="'+t.cupoTotal+'" style="width:100%;padding:5px 6px;border-radius:6px;border:1px solid var(--br);font-size:12px;background:var(--sf);color:var(--tx);box-sizing:border-box"></div>'+
+      '<div><div style="font-size:10px;color:var(--tx2);margin-bottom:3px">Cupo usado</div>'+
+        '<input id="'+pfx+'u" type="number" value="'+t.cupoUsado+'" style="width:100%;padding:5px 6px;border-radius:6px;border:1px solid var(--br);font-size:12px;background:var(--sf);color:var(--tx);box-sizing:border-box"></div>'+
+      '<div><div style="font-size:10px;color:var(--tx2);margin-bottom:3px">Saldo favor</div>'+
+        '<input id="'+pfx+'s" type="number" value="'+(t.saldoFavor||0)+'" style="width:100%;padding:5px 6px;border-radius:6px;border:1px solid var(--br);font-size:12px;background:var(--sf);color:var(--tx);box-sizing:border-box"></div>'+
+    '</div>'+
+    '<button onclick="saveTCInline(\''+id+'\',\''+pfx+'\')" style="width:100%;padding:7px;border-radius:7px;border:none;background:var(--bl);color:#fff;font-size:12px;font-weight:700;cursor:pointer">✓ Guardar</button>'+
+    '</div>';
+  ea.querySelector('input').focus();
+}
+
+function saveTCInline(id, pfx) {
+  var t = S.tcs.find(function(x){return x.id===id;}); if(!t) return;
+  var vt = document.getElementById(pfx+'t');
+  var vu = document.getElementById(pfx+'u');
+  var vs = document.getElementById(pfx+'s');
+  if(vt) t.cupoTotal  = parseFloat(vt.value)||0;
+  if(vu) t.cupoUsado  = parseFloat(vu.value)||0;
+  if(vs) t.saldoFavor = parseFloat(vs.value)||0;
+  saveS();
+  if(document.getElementById('tcs-i')) rTCs('tcs-i');
+  if(document.getElementById('tcs-c')) rTCs('tcs-c');
+  rKpi();
 }
 
 function rProjCards() {
@@ -4809,7 +4854,9 @@ loadS();
 initObrasViews();
 renderObrasNav();
 renderObraSelects();
-renderView('inicio');
+var _lastV = 'inicio';
+try { _lastV = localStorage.getItem('imp_curv') || 'inicio'; } catch(e){}
+gotoView(_lastV);
 // Cargar datos de Supabase al iniciar
 obrasIds().forEach(function(o){ fetchLive(o); });
 </script>
