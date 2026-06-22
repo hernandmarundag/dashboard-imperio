@@ -3435,17 +3435,6 @@ function pagosTabSwitch(tab) {
 
 
 function marcarPagado(id, btn) {
-  /* primer clic: pedir confirmación visual sin dialog */
-  if (btn && !btn.dataset.conf) {
-    btn.dataset.conf = '1';
-    btn.style.background = '#fef9c3';
-    btn.style.borderColor = '#fde047';
-    btn.style.color = '#854d0e';
-    btn.textContent = '¿Sí?';
-    setTimeout(function(){ if(btn.dataset.conf){btn.dataset.conf='';btn.style.background='#f0fdf4';btn.style.borderColor='#bbf7d0';btn.style.color='#15803d';btn.textContent='✅';} }, 3000);
-    return;
-  }
-  /* segundo clic: eliminar */
   var pidx = -1;
   for (var i=0;i<S.pagos.length;i++){ if(S.pagos[i].id===id){pidx=i;break;} }
   if (pidx < 0) return;
@@ -3454,15 +3443,12 @@ function marcarPagado(id, btn) {
   if (S.pagosPaid.indexOf(id) === -1) S.pagosPaid.push(id);
   saveS();
   updateBadgePagos();
-  /* eliminar fila del DOM directamente */
   var row = btn ? btn.closest('[data-pago-id]') : null;
   if (row) {
-    row.style.transition = 'opacity .2s';
+    row.style.transition = 'opacity .15s';
     row.style.opacity = '0';
-    setTimeout(function(){ row.remove(); rPagos(); }, 220);
-  } else {
-    rPagos();
-  }
+    setTimeout(function(){ row.remove(); rPagos(); }, 160);
+  } else { rPagos(); }
 }
 
 function toggleMes(id){
