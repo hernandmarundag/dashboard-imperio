@@ -1084,9 +1084,9 @@ function pushToSheet(obra, entry) {
 
 const BASE = {
   // gastos = suma total del Google Sheet real (BASE_CAT) al 15-Jun-2026
-  weliving:{gastos:754717074, inversion:755690000},
-  robledo: {gastos:305389112, recibido:580000000, precio:740000000, porCobrar:160000000},
-  novaeva: {gastos:55779067,  abonos:80000000,  cartera:85000000},
+  weliving:{gastos:0, inversion:755690000},
+  robledo: {gastos:0, recibido:580000000, precio:740000000, porCobrar:160000000},
+  novaeva: {gastos:0,  abonos:80000000,  cartera:85000000},
 };
 
 const BASE_CAT = {
@@ -1387,7 +1387,7 @@ function sumSheet(o) { return 0; } // SHEET[] vacío — conservado por compatib
 function sumLive(o)  { return (LIVE[o]||[]).reduce(function(a,e){return a+(e.monto||0);},0); }
 // gastosT = snapshot histórico Sheet al 15-Jun (BASE) + nuevos del dashboard (hist)
 // LIVE es para el libro/ledger, no para el total (evita doble conteo con BASE)
-function gastosT(o)  { return BASE[o].gastos + sumHist(o); }
+function gastosT(o)  { return sumLive(o) + sumHist(o); }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id){
   var c = S.cuentas.find(function(x){return x.id===id;});
