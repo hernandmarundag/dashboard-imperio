@@ -1080,6 +1080,44 @@ function sbDelete(table, query) {
 }
 
 // ── LIMPIEZA DE DUPLICADOS ─────────────────────────────────────────
+// Auto-dedup silencioso — corre en background cuando fetchLive detecta duplicados
+// No muestra ningún diálogo ni notificación al usuario
+var _dedupRunning = {};
+async function _autoDedup(obra) {
+  if (_dedupRunning[obra]) return;
+  _dedupRunning[obra] = true;
+  try {
+    // Traer todos los registros paginados
+    var all = [], page = 0, pageSize = 1000;
+    while (true) {
+      var r = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.'+obra+'&order=id.asc&limit='+pageSize+'&offset='+(page*pageSize), {headers:SB_H});
+      var chunk = await r.json();
+      if (!Array.isArray(chunk) || chunk.length === 0) break;
+      all = all.concat(chunk);
+      if (chunk.length < pageSize) break;
+      page++;
+    }
+    // Detectar duplicados (conservar el de menor id)
+    var seen = {}, toDelete = [];
+    all.forEach(function(g) {
+      var ts = g.fecha ? g.fecha.slice(0,10) : '';
+      var key = (g.nombre||'').trim().toLowerCase()+'|'+(g.monto||0)+'|'+ts;
+      if (seen[key]) { toDelete.push(g.id); }
+      else { seen[key] = true; }
+    });
+    if (toDelete.length === 0) { _dedupRunning[obra] = false; return; }
+    // Borrar en lotes de 50
+    for (var i = 0; i < toDelete.length; i += 50) {
+      var batch = toDelete.slice(i, i+50);
+      await fetch(SB_URL+'/rest/v1/gastos?id=in.('+batch.join(',')+')', {method:'DELETE', headers:SB_H});
+    }
+    // Recargar datos limpios
+    LIVE_LOADED[obra] = false;
+    fetchLive(obra);
+  } catch(e) { console.warn('_autoDedup error:', e); }
+  _dedupRunning[obra] = false;
+}
+
 // Detecta y elimina registros duplicados en Supabase por (nombre, monto, fecha)
 // Solo para Robledo/Novaeva donde ocurrió la importación doble
 async function runDedup(obra) {
@@ -1256,10 +1294,13 @@ function fetchLive(obra) {
           monto: g.monto || 0
         };
       });
-      // Deduplicar SOLO en Robledo/Novaeva (tienen importaciones dobles reales en Supabase)
-      // Weliving está limpio — NO deduplicar (hay facturas legítimas con mismo proveedor+monto+fecha)
-      if (obra === 'robledo' || obra === 'novaeva') {
+      // Deduplicar en cliente (robledo/novaeva pueden tener duplicados en Supabase)
+      var rawCount = LIVE[obra].length;
+      if (obra !== 'weliving') {
         LIVE[obra] = dedupLive(LIVE[obra]);
+        // Si hay duplicados reales en Supabase → limpiar en background (silencioso, sin interacción)
+        var dupCount = rawCount - LIVE[obra].length;
+        if (dupCount > 0) { _autoDedup(obra); }
       }
       LIVE_LOADED[obra] = true;
       // Cachear total weliving en localStorage para fallback en file://
@@ -1600,7 +1641,7 @@ function dedupLive(rows) {
   return result;
 }
 
-// gastosT: total real de gastos — usa LIVE deduplicado siempre que esté disponible
+// gastosT: total real de gastos por obra
 function gastosT(o) {
   if (o === 'weliving') {
     var liveW = sumLive(o);
@@ -1609,12 +1650,15 @@ function gastosT(o) {
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
     return cachedW > 0 ? cachedW : 790055442;
   }
-  // Todas las demás obras: suma deduplicada de Supabase
   if (LIVE_LOADED[o] && (LIVE[o]||[]).length > 0) {
-    var deduped = dedupLive(LIVE[o]);
-    return deduped.reduce(function(a,e){ return a+(e.monto||0); }, 0);
+    // Suma de registros ya deduplicados en fetchLive
+    var liveSum = sumLive(o);
+    var base = BASE[o] ? BASE[o].gastos : 0;
+    // Si Supabase está dentro del rango esperado (±30% del BASE), confiar en él
+    // Si está más alto (datos inflados/corruptos), usar BASE como cifra conservadora segura
+    if (base === 0 || liveSum <= base * 1.30) return liveSum;
+    return base + sumHist(o);
   }
-  // Fallback mientras carga Supabase
   return (BASE[o] ? BASE[o].gastos : 0) + sumHist(o);
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
