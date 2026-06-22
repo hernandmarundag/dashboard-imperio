@@ -314,7 +314,8 @@ body{display:flex;min-height:100vh;padding-top:0!important}
 .sb-foot-btn{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);color:#A5B4FC;font-size:12px;font-weight:700;cursor:pointer;text-align:center;flex-shrink:0}
 .sb-foot-btn:hover{background:rgba(99,102,241,.2)}
 .main-content{margin-left:var(--sw);flex:1;min-width:0;padding:calc(0px + 16px) 20px 48px!important;max-width:none!important}
-nav{display:none!important}
+nav:not(.sb-nav){display:none!important}
+.sb-nav{display:flex!important;flex-direction:column;flex:1;overflow-y:auto;padding:4px 8px}
 @media(max-width:768px){
   .sidebar{width:48px}
   .sb-brand,.sb-sect,.ni span:not(.ni-ico):not(.ni-b),.ni-b,.sb-foot-btn{display:none}
