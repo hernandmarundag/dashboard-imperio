@@ -377,6 +377,11 @@ nav:not(.sb-nav){display:none!important}
       <canvas id="chart-obras" style="max-height:200px"></canvas>
     </div>
 
+    <div class="sec">💰 Caja disponible desde Jun 9 (por obra)</div>
+    <div class="chart-card" style="margin-bottom:16px">
+      <canvas id="chart-caja-jun9" style="max-height:180px"></canvas>
+    </div>
+
     <div class="sec">🏗 Estado por obra</div>
     <div id="obras-resumen"></div>
 
@@ -393,6 +398,10 @@ nav:not(.sb-nav){display:none!important}
     <div class="pp-hd" id="pph-weliving"></div>
     <div class="sec" id="catsec-weliving" style="margin-top:16px">Distribución del gasto</div>
     <div id="cat-weliving"></div>
+    <div class="sec" style="margin-top:12px">📈 Quema mensual — Weliving</div>
+    <div class="burn-card" id="burn-weliving">
+      <canvas id="chart-burn-weliving" style="max-height:170px"></canvas>
+    </div>
     <div class="sec">Libro de gastos</div>
     <div class="ldg-wrap" id="ldg-weliving"></div>
   </div>
@@ -400,6 +409,10 @@ nav:not(.sb-nav){display:none!important}
     <div class="pp-hd" id="pph-robledo"></div>
     <div class="sec" id="catsec-robledo" style="margin-top:16px">Distribución del gasto</div>
     <div id="cat-robledo"></div>
+    <div class="sec" style="margin-top:12px">📈 Quema mensual — Robledo</div>
+    <div class="burn-card" id="burn-robledo">
+      <canvas id="chart-burn-robledo" style="max-height:170px"></canvas>
+    </div>
     <div class="sec">Libro de gastos</div>
     <div class="ldg-wrap" id="ldg-robledo"></div>
   </div>
@@ -407,6 +420,10 @@ nav:not(.sb-nav){display:none!important}
     <div class="pp-hd" id="pph-novaeva"></div>
     <div class="sec" id="catsec-novaeva" style="margin-top:16px">Distribución del gasto</div>
     <div id="cat-novaeva"></div>
+    <div class="sec" style="margin-top:12px">📈 Quema mensual — Novaeva</div>
+    <div class="burn-card" id="burn-novaeva">
+      <canvas id="chart-burn-novaeva" style="max-height:170px"></canvas>
+    </div>
     <div class="sec">Libro de gastos</div>
     <div class="ldg-wrap" id="ldg-novaeva"></div>
   </div>
@@ -1120,7 +1137,7 @@ function fetchLive(obra) {
         if (tot > 0) try { localStorage.setItem('imp_wl_live', tot); } catch(e){}
       }
       if (curV === obra) rProjView(obra);
-      if (curV === 'inicio') { rKpi(); rObrasChart(); rBudgets(); rObrasResumen(); }
+      if (curV === 'inicio') { rKpi(); rObrasChart(); rCajaJun9Chart(); rBudgets(); rObrasResumen(); }
     })
     .catch(function(e){ console.warn('fetchLive supabase ' + obra + ':', e); });
 }
@@ -1535,7 +1552,7 @@ function gotoView(v) {
 }
 
 function renderView(v) {
-  if (v === 'inicio')  { rKpi(); rObrasChart(); rObrasResumen(); rPosFinanciera(); rWallets('wallets-i'); rTCs('tcs-i'); }
+  if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rPosFinanciera(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (v === 'weliving' || v === 'robledo' || v === 'novaeva') { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
@@ -1762,55 +1779,76 @@ function k2(l,c,v) { return '<div class="k2"><div class="k2l">'+l+'</div><div cl
 ═══════════════════════════════════════════════════ */
 function rProjHeader(o) {
   var pc = PC[o]; var el = document.getElementById('pph-'+o); if(!el) return;
-  var g   = gastosT(o);
-  var abo = sumAbonos(o);
-  var dis = saldoVirtualObra(o);
-  var comp= pagosXObra(o);
+  var g     = gastosT(o);
+  var abo   = sumAbonos(o);  // depósitos Jun 9 registrados
+  var comp  = pagosXObra(o);
+
+  // ── CAJA OPERACIONAL (Jun 9+): lo recibido en Jun 9 vs lo gastado DESDE Jun 9
+  var gastosJun9 = sumLiveDesdeJun9(o) + sumHist(o);
+  var cajaDisp   = abo - gastosJun9;
+  var cajaCol    = cajaDisp >= 0 ? 'var(--gr)' : 'var(--rd)';
+  var cajaIcon   = cajaDisp >= 5000000 ? '✅' : cajaDisp >= 0 ? '⚠️' : '🔴';
+
+  // ── POSICIÓN TOTAL PROYECTO: presupuesto vs ejecución histórica
+  var presupuesto, presNm;
+  if (o==='weliving') { presupuesto=BASE.weliving.inversion; presNm='Inversión socios'; }
+  else if (o==='robledo') { presupuesto=BASE.robledo.precio; presNm='Precio venta'; }
+  else { presupuesto=BASE.novaeva.cartera; presNm='Cartera total'; }
+  var posTotal  = presupuesto - g;
+  var posTotCol = posTotal >= 0 ? 'var(--bl)' : 'var(--rd)';
 
   function sb(l,c,v){ return '<div class="k2"><div class="k2l">'+l+'</div><div class="k2v c-'+c+'">'+v+'</div></div>'; }
 
   var stats='<div class="k2g">';
   if(o==='weliving'){
-    stats+=sb('Inversión total','bl',fmtM(BASE.weliving.inversion));
+    stats+=sb('Inversión total socios','bl',fmtM(BASE.weliving.inversion));
     stats+=sb('Recibido Jun 9','gr',fmtM(abo));
-    stats+=sb('Gastos ejecutados','rd',fmtM(g));
+    stats+=sb('Gastado desde Jun 9','rd',fmtM(gastosJun9));
     stats+=sb('Inversionistas','gy','3 socios');
   } else if(o==='robledo'){
     stats+=sb('Precio venta','bl',fmtM(BASE.robledo.precio));
     stats+=sb('Recibido Jun 9','gr',fmtM(abo));
-    stats+=sb('Gastos ejecutados','rd',fmtM(g));
+    stats+=sb('Gastado desde Jun 9','rd',fmtM(gastosJun9));
     stats+=sb('Por cobrar','or',fmtM(BASE.robledo.porCobrar));
   } else {
     stats+=sb('Cartera total','bl',fmtM(BASE.novaeva.cartera));
-    stats+=sb('Abonos recibidos','gr',fmtM(abo));
-    stats+=sb('Gastos ejecutados','rd',fmtM(g));
+    stats+=sb('Abono Jun 10','gr',fmtM(abo));
+    stats+=sb('Gastado desde Jun 9','rd',fmtM(gastosJun9));
     stats+=sb('Por cobrar','or',fmtM(BASE.novaeva.cartera - BASE.novaeva.abonos));
   }
   stats+='</div>';
 
-  // dis = sumAbonos - gastosT (total acumulado)
-  // comp = compromisos pendientes — se MUESTRAN pero NO se descuentan del saldo
-  var dispCol = dis >= 0 ? 'var(--gr)' : 'var(--rd)';
-  var totalGastos = gastosT(o);  // total acumulado (BASE + hist)
-  var bud='<div style="background:var(--sf2);border-radius:var(--rs);padding:12px 14px;margin-top:14px">'
-    +'<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Posición financiera acumulada</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:flex-end">'
-    +'<div><div style="font-size:10px;color:var(--tx2)">Total recibido</div><div style="font-size:16px;font-weight:800;color:var(--bl)">'+fmtM(abo)+'</div></div>'
-    +'<div style="font-size:20px;color:var(--tx3);align-self:center">−</div>'
-    +'<div><div style="font-size:10px;color:var(--tx2)">Total gastos ejecutados</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(totalGastos)+'</div></div>'
-    +'<div style="font-size:20px;color:var(--tx3);align-self:center">=</div>'
-    +'<div style="padding-left:12px;border-left:2px solid var(--br)">'
-      +'<div style="font-size:10px;color:var(--tx2)">SALDO DISPONIBLE</div>'
-      +'<div style="font-size:22px;font-weight:900;color:'+dispCol+'">'+fmtM(dis)+'</div>'
+  // ── Panel financiero doble: CAJA OPERACIONAL (primaria) + posición proyecto (secundaria)
+  var bud=''
+    // ── CAJA OPERACIONAL — número GRANDE que el usuario necesita
+    +'<div style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(59,130,246,.06));border:1px solid '+(cajaDisp>=0?'rgba(16,185,129,.25)':'rgba(239,68,68,.25)')+';border-radius:14px;padding:14px 16px;margin-top:14px">'
+      +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">💰 Caja operacional — desde Jun 9</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end">'
+        +'<div><div style="font-size:10px;color:var(--tx2)">Recibido Jun 9</div><div style="font-size:16px;font-weight:800;color:var(--gr)">+'+fmtM(abo)+'</div></div>'
+        +'<div style="font-size:18px;color:var(--tx3);align-self:center">−</div>'
+        +'<div><div style="font-size:10px;color:var(--tx2)">Gastado desde Jun 9</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(gastosJun9)+'</div></div>'
+        +'<div style="font-size:18px;color:var(--tx3);align-self:center">=</div>'
+        +'<div style="padding-left:12px;border-left:2px solid '+(cajaDisp>=0?'rgba(16,185,129,.4)':'rgba(239,68,68,.4)')+'">'+
+          '<div style="font-size:10px;color:var(--tx2)">CAJA DISPONIBLE</div>'
+          +'<div style="font-size:26px;font-weight:900;color:'+cajaCol+'">'+cajaIcon+' '+fmtM(cajaDisp)+'</div>'
+        +'</div>'
+      +'</div>'
     +'</div>'
+    // ── POSICIÓN TOTAL PROYECTO — contexto presupuestal
+    +'<div style="background:var(--sf2);border-radius:var(--rs);padding:10px 14px;margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;width:100%">📊 Posición total del proyecto</div>'
+      +'<div><div style="font-size:9px;color:var(--tx2)">'+presNm+'</div><div style="font-size:14px;font-weight:800;color:var(--bl)">'+fmtM(presupuesto)+'</div></div>'
+      +'<div style="font-size:14px;color:var(--tx3)">−</div>'
+      +'<div><div style="font-size:9px;color:var(--tx2)">Total gastado (histórico)</div><div style="font-size:14px;font-weight:800;color:var(--rd)">'+fmtM(g)+'</div></div>'
+      +'<div style="font-size:14px;color:var(--tx3)">=</div>'
+      +'<div style="padding-left:10px;border-left:2px solid var(--br)"><div style="font-size:9px;color:var(--tx2)">Margen presupuestal</div><div style="font-size:15px;font-weight:900;color:'+posTotCol+'">'+fmtM(posTotal)+'</div></div>'
     +'</div>'
     +(comp>0
-      ?'<div style="font-size:11px;color:var(--or);margin-top:10px;padding:8px 10px;background:rgba(255,149,0,0.08);border-radius:8px;border-left:3px solid var(--or)">'
-        +'<strong>⚠️ Compromisos pendientes (aún no ejecutados): '+fmt(comp)+'</strong>'
+      ?'<div style="font-size:11px;color:var(--or);margin-top:8px;padding:8px 10px;background:rgba(255,149,0,0.08);border-radius:8px;border-left:3px solid var(--or)">'
+        +'<strong>⚠️ Compromisos pendientes (no ejecutados aún): '+fmt(comp)+'</strong>'
         +'<br><span style="font-size:10px;color:var(--tx2)">No descontados del saldo — se actualizan al marcar pagado</span>'
       +'</div>'
-      :'')
-    +'</div>';
+      :'');
 
   el.innerHTML='<div class="proj-hd">'
     +'<div class="proj-nm">'+pc.nm+'</div>'
@@ -1955,6 +1993,167 @@ function rObrasChart() {
 }
 
 /* ═══════════════════════════════════════════════════
+   CAJA JUN9 CHART — inicio view: cash disponible por obra
+═══════════════════════════════════════════════════ */
+function rCajaJun9Chart() {
+  if (typeof Chart === 'undefined') return;
+  _destroyChart('caja-jun9');
+  var ctx = document.getElementById('chart-caja-jun9'); if (!ctx) return;
+  var obras = ['weliving', 'robledo', 'novaeva'];
+  var labels = ['🏗 Weliving', '🏠 Robledo', '🏢 Novaeva'];
+  var rec = obras.map(function(o){ return Math.round(sumAbonos(o)/1e6*10)/10; });
+  var gj9 = obras.map(function(o){ return Math.round((sumLiveDesdeJun9(o)+sumHist(o))/1e6*10)/10; });
+  var caj = obras.map(function(o){
+    var v = sumAbonos(o) - sumLiveDesdeJun9(o) - sumHist(o);
+    return Math.round(v/1e6*10)/10;
+  });
+  var cajColors = caj.map(function(v){ return v>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.75)'; });
+  var cajBorder = caj.map(function(v){ return v>=0?'#10b981':'#ef4444'; });
+
+  _charts['caja-jun9'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label:'Recibido Jun 9', data:rec, backgroundColor:'rgba(99,102,241,.6)', borderColor:'#6366f1', borderWidth:2, borderRadius:6 },
+        { label:'Gastado desde Jun 9', data:gj9, backgroundColor:'rgba(239,68,68,.55)', borderColor:'#ef4444', borderWidth:2, borderRadius:6 },
+        { label:'CAJA DISPONIBLE', data:caj.map(Math.abs),
+          backgroundColor:cajColors, borderColor:cajBorder, borderWidth:2, borderRadius:6 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend:{labels:{color:'#475569',font:{size:11,weight:'600'},boxWidth:11,boxHeight:11,padding:14}},
+        tooltip:{callbacks:{label:function(ctx){
+          var v=caj[ctx.dataIndex];
+          if(ctx.datasetIndex===2) return ' Caja: '+(v>=0?'+':'−')+'$'+ctx.raw+'M '+(v>=0?'✅':'🔴');
+          return ' '+ctx.dataset.label+': $'+ctx.raw+'M';
+        }}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.03)'},ticks:{color:'#64748b',font:{weight:'700',size:13}}},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#94a3b8',callback:function(v){return '$'+v+'M';}},beginAtZero:true}
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   BURN RATE CHART — quema mensual por obra
+═══════════════════════════════════════════════════ */
+function rBurnRate(o) {
+  if (typeof Chart === 'undefined') return;
+  var burnId  = 'chart-burn-' + o;
+  var wrapEl  = document.getElementById('burn-' + o);
+  if (!wrapEl) return;
+  _destroyChart(burnId);
+
+  // Agrupar LIVE[o] por mes
+  var monthly = {};
+  (LIVE[o] || []).forEach(function(e) {
+    var ts = parseFecha(e.f || '');
+    if (!ts) return;
+    var d = new Date(ts);
+    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    monthly[key] = (monthly[key] || 0) + (e.monto || 0);
+  });
+  // También agregar hist
+  (S.hist[o] || []).forEach(function(e) {
+    var ts = parseFecha(e.f || '');
+    if (!ts) return;
+    var d = new Date(ts);
+    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    monthly[key] = (monthly[key] || 0) + (e.monto || 0);
+  });
+
+  var keys = Object.keys(monthly).sort();
+  if (keys.length === 0) {
+    wrapEl.style.display = 'none';
+    return;
+  }
+  wrapEl.style.display = '';
+
+  var cumulative = 0;
+  var cumData = keys.map(function(k) {
+    cumulative += monthly[k]; return Math.round(cumulative / 1e6 * 10) / 10;
+  });
+  var barData = keys.map(function(k) { return Math.round(monthly[k] / 1e6 * 10) / 10; });
+
+  // Colores según obra
+  var col = o === 'weliving' ? '#3b82f6' : o === 'robledo' ? '#f59e0b' : '#10b981';
+  var colFill = o === 'weliving' ? 'rgba(59,130,246,.15)' : o === 'robledo' ? 'rgba(245,158,11,.15)' : 'rgba(16,185,129,.15)';
+
+  var lbls = keys.map(function(k) {
+    var p = k.split('-');
+    var meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return meses[parseInt(p[1])] + ' ' + p[0].slice(2);
+  });
+
+  var ctx = document.getElementById(burnId);
+  if (!ctx) return;
+  _charts[burnId] = new Chart(ctx, {
+    data: {
+      labels: lbls,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Gasto mensual',
+          data: barData,
+          backgroundColor: colFill.replace('.15', '.5'),
+          borderColor: col,
+          borderWidth: 1,
+          borderRadius: 5,
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: 'Acumulado',
+          data: cumData,
+          borderColor: col,
+          backgroundColor: colFill,
+          borderWidth: 2.5,
+          pointRadius: 3,
+          pointBackgroundColor: col,
+          tension: 0.35,
+          fill: true,
+          yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#64748b', font: { size: 11, weight: '600' }, boxWidth: 10, padding: 14 } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ' ' + ctx.dataset.label + ': $' + ctx.raw + 'M';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+        y: {
+          position: 'left',
+          grid: { color: 'rgba(0,0,0,.04)' },
+          ticks: { color: '#94a3b8', callback: function(v) { return '$' + v + 'M'; }, font: { size: 10 } },
+          beginAtZero: true
+        },
+        y2: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: col, callback: function(v) { return '$' + v + 'M'; }, font: { size: 10 } },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════
    ABONO + TRASPASO FUNCTIONS
 ═══════════════════════════════════════════════════ */
 function openAbono() {
@@ -2000,6 +2199,7 @@ function saveTraspaso() {
 function rProjView(o) {
   rProjHeader(o);
   rCategories(o);
+  rBurnRate(o);
   renderLedger(o);
 }
 
@@ -2036,7 +2236,15 @@ function renderLedger(o) {
     if (loadEl) loadEl.innerHTML = '<div style="padding:52px;text-align:center;color:var(--tx2)">'
       +'<div style="width:36px;height:36px;border:3px solid var(--br);border-top-color:var(--bl);border-radius:50%;animation:ldg-spin .8s linear infinite;margin:0 auto 14px"></div>'
       +'<div style="font-size:14px;font-weight:700;margin-bottom:4px">Cargando libro de gastos...</div>'
-      +'<div style="font-size:12px;opacity:.7">Conectando con Supabase</div></div>';
+      +'<div style="font-size:12px;opacity:.7">Conectando con Supabase</div>'
+      +'<div style="margin-top:14px"><button onclick="LIVE_LOADED[\''+o+'\']=true;renderLedger(\''+o+'\')" style="padding:7px 16px;border-radius:8px;border:1px solid var(--br);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">↻ Cargar de todos modos</button></div></div>';
+    // Fallback automático en 8 segundos
+    setTimeout(function(){
+      if (!LIVE_LOADED[o]) {
+        LIVE_LOADED[o] = true;
+        if (document.getElementById('ldg-'+o)) renderLedger(o);
+      }
+    }, 8000);
     return;
   }
   var ls  = LS[o];
@@ -4138,7 +4346,8 @@ table th{font-size:11px!important}
 ::-webkit-scrollbar-thumb:hover{background:var(--tx3)}
 @keyframes ldg-spin{to{transform:rotate(360deg)}}
 /* ── Charts premium ── */
-.chart-card{border-radius:16px!important;box-shadow:var(--sh)!important;padding:22px 24px 18px!important}
+.chart-card{border-radius:16px!important;box-shadow:var(--sh)!important;padding:22px 24px 18px!important;background:var(--sf)}
+.burn-card{background:var(--sf);border-radius:16px;box-shadow:var(--sh);padding:18px 20px 14px;margin-bottom:14px}
 .cat-row{transition:background .1s}
 .cat-row:hover{background:var(--sf2)}
 /* ── Obra cards enhanced ── */
