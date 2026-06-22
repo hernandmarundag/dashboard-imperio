@@ -1130,8 +1130,11 @@ function fetchLive(obra) {
           monto: g.monto || 0
         };
       });
-      // Deduplicar antes de guardar (elimina registros importados doble en Supabase)
-      LIVE[obra] = dedupLive(LIVE[obra]);
+      // Deduplicar SOLO en Robledo/Novaeva (tienen importaciones dobles reales en Supabase)
+      // Weliving está limpio — NO deduplicar (hay facturas legítimas con mismo proveedor+monto+fecha)
+      if (obra === 'robledo' || obra === 'novaeva') {
+        LIVE[obra] = dedupLive(LIVE[obra]);
+      }
       LIVE_LOADED[obra] = true;
       // Cachear total weliving en localStorage para fallback en file://
       if (obra === 'weliving') {
