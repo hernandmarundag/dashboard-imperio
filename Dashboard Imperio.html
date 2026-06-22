@@ -920,26 +920,40 @@ nav:not(.sb-nav){display:none!important}
   </div>
 </div>
 
-<!-- MODAL TRASPASO cuenta→TC -->
+<!-- MODAL ABONAR A TC -->
 <div class="ov" id="ov-traspaso">
   <div class="modal" style="max-width:400px">
-    <div class="mhd"><div class="mtit">↔️ Pago Tarjeta de Crédito</div><button class="mclose" onclick="closeOv('ov-traspaso')">✕</button></div>
+    <div class="mhd"><div class="mtit">💳 Abonar a Tarjeta</div><button class="mclose" onclick="closeOv('ov-traspaso')">✕</button></div>
     <div class="mbody">
-      <div style="background:#fff7ed;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:12px">Registra cuando pagas una TC con dinero de una cuenta bancaria. Se libera el cupo de la tarjeta.</div>
-      <div class="fg"><label>Fecha</label><input type="date" id="trsp-fecha"></div>
-      <div class="fg"><label>Monto a pagar *</label><input type="number" id="trsp-monto" placeholder="0" style="font-size:20px;font-weight:800"></div>
-      <div class="frow2">
-        <div class="fg"><label>Pagar desde</label>
-          <select id="trsp-de"><option value="bc-grupo">Bancolombia — Grupo</option><option value="dv-lib">Davivienda</option><option value="bb-lib">Banco Bogotá</option><option value="bc-hernan">Bancolombia Hernán</option><option value="bc-paulina">Bancolombia Paulina</option></select>
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:12px;color:#166534;margin-bottom:12px">
+        💡 Sale dinero del banco → se libera cupo de la tarjeta
+      </div>
+      <!-- TC destino con info en tiempo real -->
+      <div class="fg">
+        <label>Tarjeta a pagar</label>
+        <select id="trsp-para" onchange="updateTCInfo()"></select>
+      </div>
+      <div id="tc-info-panel" style="background:var(--sf2);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:var(--tx2)">Deuda actual</span>
+          <span id="tc-info-deuda" style="font-weight:700;color:var(--rd)"></span>
         </div>
-        <div class="fg"><label>Tarjeta a pagar</label>
-          <select id="trsp-para"><option value="p1">LIFE 7625 (Paulina)</option><option value="p2">VISA 6614 (Paulina)</option><option value="p3">MASTER 3625 (Paulina)</option><option value="h1">Falabella 8283 (Hernán)</option><option value="h2">Scotia 4531 (Hernán)</option><option value="h3">MASTER 2656 (Hernán)</option></select>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--tx2)">Cupo disponible</span>
+          <span id="tc-info-libre" style="font-weight:700;color:var(--gr)"></span>
         </div>
       </div>
+      <div class="fg"><label>Monto del abono *</label><input type="number" id="trsp-monto" placeholder="0" style="font-size:20px;font-weight:800" oninput="updateTraspasoPreview()"></div>
+      <div id="trsp-preview" style="display:none;background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:12px;color:#166534;margin-bottom:4px"></div>
+      <div class="fg"><label>Pagar desde (cuenta bancaria)</label>
+        <select id="trsp-de"></select>
+        <div id="trsp-saldo-cta" style="font-size:11px;color:var(--tx2);margin-top:4px"></div>
+      </div>
+      <div class="fg"><label>Fecha</label><input type="date" id="trsp-fecha"></div>
     </div>
     <div class="mfoot">
       <button class="bcn" onclick="closeOv('ov-traspaso')">Cancelar</button>
-      <button class="bsv" onclick="saveTraspaso()">✓ Registrar pago</button>
+      <button class="bsv" id="btn-save-traspaso" onclick="saveTraspaso()">✓ Registrar abono</button>
     </div>
   </div>
 </div>
@@ -1813,11 +1827,22 @@ function rTCs(id) {
   document.getElementById(id).innerHTML = S.tcs.map(function(t) {
     var pct = Math.min(100, (t.cupoUsado/t.cupoTotal)*100) || 0;
     var bc = pct>80 ? 'var(--rd)' : pct>50 ? 'var(--or)' : 'var(--bl)';
-    return '<div class="tc-card" onclick="editTC(\''+t.id+'\')">'+
-      '<div class="tc-nm">'+t.nm+'</div><div class="tc-sb">'+t.tit+' — '+t.banco+'</div>'+
-      '<div class="bar-bg"><div class="bar-f" style="width:'+pct+'%;background:'+bc+'"></div></div>'+
-      '<div class="tc-inf"><span>Usado: '+fmtM(t.cupoUsado)+'</span><span>Libre: '+fmtM(t.cupoTotal-t.cupoUsado)+'</span></div>'+
-      (t.cupoUsado>0 ? '<div class="tc-dbt">Deuda: '+fmt(t.cupoUsado)+'</div>' : '')+
+    var disponible = t.cupoTotal - t.cupoUsado + (t.saldoFavor||0);
+    return '<div class="tc-card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div>'+
+          '<div class="tc-nm">'+t.nm+'</div>'+
+          '<div class="tc-sb">'+t.tit+' — '+t.banco+'</div>'+
+        '</div>'+
+        '<button onclick="openAbonarTC(\''+t.id+'\')" style="padding:4px 10px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Abonar</button>'+
+      '</div>'+
+      '<div class="bar-bg" style="margin-top:10px"><div class="bar-f" style="width:'+pct+'%;background:'+bc+'"></div></div>'+
+      '<div class="tc-inf">'+
+        '<span>Usado: '+fmtM(t.cupoUsado)+'</span>'+
+        '<span style="color:var(--gr);font-weight:700">Disponible: '+fmtM(disponible)+'</span>'+
+      '</div>'+
+      (t.cupoUsado>0 ? '<div class="tc-dbt" style="margin-top:6px">Deuda: '+fmt(t.cupoUsado)+'</div>' : '')+
+      (t.saldoFavor>0 ? '<div style="font-size:11px;color:var(--gr);font-weight:700;margin-top:3px">✓ Saldo a favor: '+fmt(t.saldoFavor)+'</div>' : '')+
       '</div>';
   }).join('');
 }
@@ -2270,11 +2295,77 @@ function saveAbono() {
   S.abonos.push({id:'ab'+Date.now(),f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
   saveS(); closeOv('ov-abono'); rKpi(); rBudgets(); rWallets('wallets-i'); rWallets('wallets-c'); renderView(curV);
 }
-function openTraspaso() {
+function _poblarSelectsTraspaso() {
+  // Cuentas bancarias → select origen
+  var optsCtas = S.cuentas.map(function(c){
+    return '<option value="'+c.id+'">'+c.nm+' — '+c.banco+' ('+fmtM(saldoCta(c.id))+')</option>';
+  }).join('');
+  var elDe = document.getElementById('trsp-de');
+  if (elDe) elDe.innerHTML = optsCtas;
+  // TCs → select destino
+  var optsTCs = S.tcs.map(function(t){
+    return '<option value="'+t.id+'">'+t.nm+' ('+t.tit+') — Deuda: '+fmtM(t.cupoUsado)+'</option>';
+  }).join('');
+  var elPara = document.getElementById('trsp-para');
+  if (elPara) elPara.innerHTML = optsTCs;
+}
+
+function openTraspaso(preselTcId) {
+  _poblarSelectsTraspaso();
   document.getElementById('trsp-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('trsp-monto').value = '';
+  document.getElementById('trsp-preview').style.display = 'none';
+  if (preselTcId) {
+    var el = document.getElementById('trsp-para');
+    if (el) el.value = preselTcId;
+  }
+  updateTCInfo();
   openOv('ov-traspaso');
 }
+
+function openAbonarTC(tcId) { openTraspaso(tcId); }
+
+function updateTCInfo() {
+  var tcId = document.getElementById('trsp-para').value;
+  var tc = S.tcs.find(function(x){ return x.id === tcId; });
+  var panel = document.getElementById('tc-info-panel');
+  if (!tc || !panel) return;
+  panel.style.display = 'block';
+  document.getElementById('tc-info-deuda').textContent = fmt(tc.cupoUsado);
+  document.getElementById('tc-info-libre').textContent = fmt(tc.cupoTotal - tc.cupoUsado + (tc.saldoFavor||0));
+  updateTraspasoPreview();
+}
+
+function updateTraspasoPreview() {
+  var monto = parseFloat(document.getElementById('trsp-monto').value)||0;
+  var tcId  = document.getElementById('trsp-para').value;
+  var ctaId = document.getElementById('trsp-de').value;
+  var preview = document.getElementById('trsp-preview');
+  if (!monto || !tcId || !preview) { if(preview) preview.style.display='none'; return; }
+  var tc  = S.tcs.find(function(x){ return x.id===tcId; });
+  var cta = S.cuentas.find(function(x){ return x.id===ctaId; });
+  var saldoCuentaActual = cta ? saldoCta(cta.id) : 0;
+  var nuevaDeudaTC  = tc  ? Math.max(0, tc.cupoUsado - monto) : 0;
+  var nuevoSaldoCta = saldoCuentaActual - monto;
+  preview.style.display = 'block';
+  preview.innerHTML =
+    '<div style="font-weight:700;margin-bottom:6px">Después del abono:</div>'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'+
+      '<span>Deuda TC → </span><span style="font-weight:700">'+fmt(nuevaDeudaTC)+'</span>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between">'+
+      '<span>Saldo banco → </span>'+
+      '<span style="font-weight:700;color:'+(nuevoSaldoCta<0?'var(--rd)':'inherit')+'">'+fmt(nuevoSaldoCta)+'</span>'+
+    '</div>';
+  // Advertencia si saldo insuficiente
+  if (nuevoSaldoCta < 0) {
+    preview.style.background = '#fff1f2'; preview.style.color = '#991b1b';
+    preview.innerHTML += '<div style="margin-top:6px;font-weight:700">⚠️ Saldo insuficiente en esa cuenta</div>';
+  } else {
+    preview.style.background = '#f0fdf4'; preview.style.color = '#166534';
+  }
+}
+
 function saveTraspaso() {
   var monto = parseFloat(document.getElementById('trsp-monto').value)||0;
   if (!monto) { alert('Ingresa el monto'); return; }
@@ -2283,10 +2374,39 @@ function saveTraspaso() {
   var fStr = document.getElementById('trsp-fecha').value;
   var d = new Date(fStr+'T12:00:00');
   var fFmt = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
+
+  // 1. Liberar cupo TC
   var tc = S.tcs.find(function(x){return x.id===para;});
-  if (tc) tc.cupoUsado = Math.max(0, tc.cupoUsado - monto);
-  S.traspasos.push({id:'tr'+Date.now(),f:fFmt,fecha:fStr,monto:monto,de:de,para:para});
-  saveS(); closeOv('ov-traspaso'); rWallets('wallets-i'); rWallets('wallets-c'); rTCs('tcs-i'); rTCs('tcs-c'); renderView(curV);
+  if (tc) tc.cupoUsado = Math.max(0, (tc.cupoUsado||0) - monto);
+
+  // 2. Descontar del saldo bancario
+  var cta = S.cuentas.find(function(x){return x.id===de;});
+  if (cta) {
+    var salActual = cta.saldoReal !== undefined ? cta.saldoReal : saldoCta(de);
+    cta.saldoReal = salActual - monto;
+  }
+
+  // 3. Guardar traspaso en historial local
+  S.traspasos.push({id:'tr'+Date.now(), f:fFmt, fecha:fStr, monto:monto, de:de, para:para});
+  saveS();
+
+  // 4. Registrar en Supabase movimientos (tipo pago_tc)
+  var tcNm  = tc  ? tc.nm  : para;
+  var ctaNm = cta ? cta.nm : de;
+  sbPost('movimientos', [{
+    fecha: fStr,
+    tipo: 'pago_tc',
+    descripcion: 'Abono a ' + tcNm + ' desde ' + ctaNm,
+    monto: monto,
+    cuenta_origen_id: de,
+    tarjeta_id: para,
+    origen: 'plataforma'
+  }]).catch(function(e){ console.warn('movimientos pago_tc:', e); });
+
+  closeOv('ov-traspaso');
+  rWallets('wallets-i'); rWallets('wallets-c');
+  rTCs('tcs-i'); rTCs('tcs-c');
+  renderView(curV);
 }
 
 /* ═══════════════════════════════════════════════════
