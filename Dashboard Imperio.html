@@ -1139,6 +1139,78 @@ async function runDedup(obra) {
 }
 
 // ═══════════════════════════════════════════════
+// IMPORTAR GASTOS FALTANTES DESDE HOJA
+// Corre en el navegador → inserta directo a Supabase
+// ═══════════════════════════════════════════════
+async function importarGastosFaltantes(obra) {
+  var btn = document.getElementById('import-btn-'+obra);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Verificando...'; }
+
+  // Gastos faltantes por obra (tomados de la hoja Google)
+  var FALTANTES = {
+    robledo: [
+      {fecha:'2026-06-16',nombre:'ferrara, materiales, accesorios', descripcion:'materiales general',    area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:2830000,  material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-16',nombre:'seguridad social',                 descripcion:'seguridad social losa', area:'seguridad social',   etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:5852000,  material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-17',nombre:'jhon hernan usuga',                descripcion:'vaciado concreto',      area:'concreto',           etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:1000000,  material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'carmen cecilia m',                 descripcion:'porones',               area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:3050000,  material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'cristian camilo galeano',          descripcion:'re diseño arquitectura',area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:500000,   material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'deposito los botero',              descripcion:'icopor, arena, cemento',area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:836100,   material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'zakoo',                            descripcion:'algamsa polimerica',    area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:1428000,  material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'german rueda',                     descripcion:'prestamo empleado',     area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:100000,   material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'Jesus Danobis Castro',             descripcion:'prestamo empleado',     area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:100000,   material:'', cuenta:'bc-grupo'},
+      {fecha:'2026-06-18',nombre:'wilmar garcia',                    descripcion:'prestamo empleado',     area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:150000,   material:'', cuenta:'bc-grupo'},
+    ]
+  };
+
+  var pendientes = FALTANTES[obra];
+  if (!pendientes || !pendientes.length) { alert('No hay faltantes definidos para '+obra); if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
+
+  // Verificar cuáles ya existen en Supabase
+  if (btn) btn.textContent = '⏳ Consultando Supabase...';
+  var existentes = [];
+  try {
+    var r = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.'+obra+'&fecha=gte.2026-06-14&select=fecha,nombre,monto', {headers:SB_H});
+    existentes = await r.json();
+  } catch(e) { alert('Error al consultar Supabase: '+e); if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
+
+  // Filtrar solo los que NO están en Supabase
+  var nuevos = pendientes.filter(function(p) {
+    return !existentes.some(function(e) {
+      return e.monto === p.monto
+        && e.fecha && e.fecha.startsWith(p.fecha)
+        && e.nombre && e.nombre.toLowerCase().trim() === p.nombre.toLowerCase().trim();
+    });
+  });
+
+  if (nuevos.length === 0) {
+    alert('✅ Todo ya estaba en Supabase. No hay nada que importar.');
+    if(btn){btn.disabled=false;btn.textContent='✅ Ya está al día';}
+    return;
+  }
+
+  var sumNuevos = nuevos.reduce(function(a,x){return a+x.monto;},0);
+  var ok = confirm('Se van a insertar '+nuevos.length+' registros faltantes:\n\n'+
+    nuevos.map(function(x){return '• '+x.nombre+' — $'+x.monto.toLocaleString('es-CO');}).join('\n')+
+    '\n\nTotal a agregar: $'+sumNuevos.toLocaleString('es-CO')+
+    '\n\n¿Confirmar?');
+  if (!ok) { if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
+
+  // Insertar con obra
+  if (btn) btn.textContent = '⏳ Insertando...';
+  var payload = nuevos.map(function(x){ return Object.assign({obra:obra}, x); });
+  try {
+    await sbPost('gastos', payload);
+    LIVE_LOADED[obra] = false;
+    fetchLive(obra);
+    if(btn){btn.disabled=false;btn.textContent='✅ Importado — '+nuevos.length+' registros';}
+    alert('✅ Importación completa.\n'+nuevos.length+' registros insertados.\nTotal agregado: $'+sumNuevos.toLocaleString('es-CO'));
+  } catch(e) {
+    alert('❌ Error al insertar: '+e);
+    if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';}
+  }
+}
+
+// ═══════════════════════════════════════════════
 // OBRAS_REG — Registro maestro de obras (dinámico)
 // ═══════════════════════════════════════════════
 var OBRAS_REG = {
@@ -4596,11 +4668,19 @@ function initObrasViews() {
   var ICO_BURN  = '📈';
   container.innerHTML = obrasIds().map(function(id) {
     var r = obraReg(id);
+    // Botón importar faltantes (solo robledo por ahora)
+    var importBar = id === 'robledo'
+      ? '<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'
+        + '<button id="import-btn-'+id+'" onclick="importarGastosFaltantes(\''+id+'\')" style="padding:6px 14px;border-radius:8px;border:1px solid #6366f1;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700;cursor:pointer">📥 Importar gastos faltantes (Jun 16-18)</button>'
+        + '<span style="font-size:11px;color:var(--tx3)">Detecta y agrega solo lo que falta en Supabase</span>'
+        + '</div>'
+      : '';
     var dedupBar = id === 'weliving' ? '' :
       '<div id="dedup-bar-'+id+'" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">'
       + '<button id="dedup-btn-'+id+'" onclick="runDedup(\'' +id+ '\')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">'+ICO_DEDUP+' Limpiar duplicados Supabase</button>'
       + '<span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos historicos</span>'
-      + '</div>';
+      + '</div>'
+      + importBar;
     return '<div class="view" id="v-'+id+'">'
       + '<div class="pp-hd" id="pph-'+id+'"></div>'
       + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribucion del gasto</div>'
