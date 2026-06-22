@@ -1130,6 +1130,8 @@ function fetchLive(obra) {
           monto: g.monto || 0
         };
       });
+      // Deduplicar antes de guardar (elimina registros importados doble en Supabase)
+      LIVE[obra] = dedupLive(LIVE[obra]);
       LIVE_LOADED[obra] = true;
       // Cachear total weliving en localStorage para fallback en file://
       if (obra === 'weliving') {
@@ -1464,21 +1466,33 @@ function parseFecha(f){
   return new Date(year,m,d).getTime();
 }
 function sumHist(o)  { return (S.hist[o]||[]).reduce(function(a,e){return a+e.monto;},0); }
-function sumSheet(o) { return 0; } // SHEET[] vacío — conservado por compatibilidad
+function sumSheet(o) { return 0; } // conservado por compatibilidad
 function sumLive(o)  { return (LIVE[o]||[]).reduce(function(a,e){return a+(e.monto||0);},0); }
-// gastosT = snapshot histórico Supabase al 15-Jun (BASE) + gastos manuales del dashboard (hist)
-// LIVE es para el libro/ledger, no para el total (evita doble conteo con BASE)
-function gastosT(o)  {
-  // weliving: Supabase está limpio y actualizado — usar LIVE
+
+// Deduplicar LIVE por (nombre normalizado, monto, fecha ISO) — elimina importaciones dobles en Supabase
+function dedupLive(rows) {
+  var seen = {};
+  var result = [];
+  rows.forEach(function(e) {
+    var ts = parseFecha(e.f || '');
+    var dk = ts > 0 ? new Date(ts).toISOString().split('T')[0] : (e.f || '').toLowerCase();
+    var key = (e.a || '').trim().toLowerCase() + '|' + (e.monto || 0) + '|' + dk;
+    if (!seen[key]) { seen[key] = true; result.push(e); }
+  });
+  return result;
+}
+
+// gastosT:
+// - weliving: Supabase limpio → usa sumLive
+// - robledo/novaeva: Supabase corrompido con duplicados → usa BASE verificado (real ~$320M Robledo)
+// El LIBRO muestra LIVE deduplicado (para reducir ruido visual), pero el TOTAL usa BASE para ser exacto
+function gastosT(o) {
   if (o === 'weliving') {
     var liveW = sumLive('weliving');
     var cachedW = 0;
     try { cachedW = parseFloat(localStorage.getItem('imp_wl_live')||'0'); } catch(e){}
-    // fallback 1: localStorage cache, fallback 2: última suma real Supabase verificada Jun 2026
     return (liveW > 0 ? liveW : (cachedW > 0 ? cachedW : 790055442)) + sumHist('weliving');
   }
-  // robledo y novaeva: Supabase tiene registros duplicados ("Histórico" x2, "san pio" x3)
-  // Usar snapshot verificado del Google Sheet (BASE) + entradas manuales (S.hist)
   return BASE[o].gastos + sumHist(o);
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
@@ -2318,34 +2332,34 @@ function renderLedger(o) {
 
   var rowsH = '';
   if (!page.length) {
-    rowsH = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--tx2)">'+(hasF?'Sin resultados para ese filtro':'Sin registros')+'</td></tr>';
+    rowsH = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx2)">'+(hasF?'Sin resultados para ese filtro':'Sin registros')+'</td></tr>';
   } else {
     var startN = (p-1)*sz;
     page.forEach(function(e, i){
       var isDash = e.src==='dash';
       var clr = catColor(e.area);
-      var areaShort = (e.area||'').replace(' general','').replace(' equipos','eq.');
+      var areaShort = (e.area||'var2').replace(' general','').replace(' equipos','eq.');
       var editBtn = '<button type="button" class="del-btn" title="Editar" style="background:var(--bl);color:#fff;border-color:var(--bl)" '
         +'onclick="openEditGasto(\''+o+'\','+(isDash?('\''+e.id+'\''):('null'))+','+isDash+','+(startN+i)+')">✏</button>';
       var delBtn = isDash ? '<button type="button" class="del-btn" onclick="delGasto(\''+o+'\',\''+e.id+'\')">✕</button>' : '';
+      // Descripción compacta: desc o material
+      var descTxt = (e.desc||e.mat||'').substring(0,50);
       rowsH += '<tr class="'+(isDash?'rd':'rs')+'" style="border-left:3px solid '+clr+'">'
-        +'<td style="color:var(--tx3);font-size:11px;padding-left:8px">'+(startN+i+1)+'</td>'
-        +'<td style="white-space:nowrap;font-size:12px;font-weight:600">'+e.f+'</td>'
-        +'<td style="font-weight:700;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+e.a+'">'+e.a+'</td>'
-        +'<td style="font-size:12px;color:var(--tx2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+e.desc+'">'+e.desc+'</td>'
-        +'<td style="font-size:11px"><span style="background:'+clr+'22;color:'+clr+';border:1px solid '+clr+'44;border-radius:6px;padding:2px 7px;white-space:nowrap;font-weight:600">'+areaShort+'</span></td>'
-        +'<td style="font-size:11px;color:var(--tx2)">'+e.etapa+'</td>'
-        +'<td style="font-size:11px;color:var(--tx2)">'+e.mp+'</td>'
-        +'<td class="monto" style="font-weight:700">'+fmt(e.monto)+'</td>'
-        +'<td style="display:flex;gap:4px;padding:6px 4px">'+editBtn+delBtn+'</td>'
+        +'<td style="color:var(--tx3);font-size:10px;padding-left:8px;text-align:center">'+(startN+i+1)+'</td>'
+        +'<td style="white-space:nowrap;font-size:12px;font-weight:600;padding:7px 10px">'+e.f+'</td>'
+        +'<td style="font-weight:700;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+e.a+'">'+e.a+'</td>'
+        +'<td style="font-size:11px;color:var(--tx2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+(e.desc||'')+'">'+descTxt+'</td>'
+        +'<td style="padding:7px 10px"><span style="background:'+clr+'20;color:'+clr+';border:1px solid '+clr+'40;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">'+areaShort.toUpperCase()+'</span></td>'
+        +'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
+        +'<td style="padding:5px 6px"><div style="display:flex;gap:3px">'+editBtn+delBtn+'</div></td>'
         +'</tr>';
     });
   }
 
   /* Totals */
   var filtSum = filtered.reduce(function(a,e){return a+e.monto;},0);
-  var footH = '<tr class="rtot"><td colspan="7">'+(hasF?'Subtotal filtrado ('+tot+' reg.)':'TOTAL ACUMULADO ('+tot+' reg.)')+' · Sheet+Dashboard</td>'
-    +'<td class="monto" style="color:var(--rd)">'+fmt(hasF?filtSum:gastosT(o))+'</td><td></td></tr>';
+  var footH = '<tr class="rtot"><td colspan="5" style="padding:10px 12px;font-size:12px;color:var(--tx2)">'+(hasF?'Subtotal filtrado — '+tot+' registros':'TOTAL en libro — '+tot+' registros')+'</td>'
+    +'<td class="monto" style="color:var(--rd);font-size:14px;font-weight:900;padding:10px 12px">'+fmt(hasF?filtSum:filtSum)+'</td><td></td></tr>';
 
   /* PAGINATION CONTROLS */
   var pgH = '';
@@ -2386,34 +2400,76 @@ function renderLedger(o) {
     +(dashSum?'&nbsp;·&nbsp;✏️ Manual <strong style="color:var(--gr)">'+fmtM(dashSum)+'</strong>':'')
     +'&nbsp;·&nbsp;<span style="color:var(--bl);font-weight:800">'+tot+' mostrados</span>';
 
-  /* Full ledger HTML */
+  /* ── NUEVA TOOLBAR: búsqueda + chips de área + filtros avanzados ── */
+  var activeFilters = (ls.area?1:0)+(ls.etapa?1:0)+(ls.mp?1:0)+(ls.src?1:0);
+  var showAdv = ls.advOpen || activeFilters > 0;
+
+  // Chips de área: las 6 categorías más usadas
+  var AREA_CHIPS = [
+    {k:'',    l:'Todos'},
+    {k:'mo',  l:'MO'},
+    {k:'mat', l:'Materiales'},
+    {k:'adm', l:'Adm'},
+    {k:'exc', l:'Excavación'},
+    {k:'alq', l:'Alquiler'},
+    {k:'nom', l:'Nómina'},
+    {k:'var2',l:'Varios'},
+  ];
+  var chips = AREA_CHIPS.filter(function(c){ return c.k==='' || uArea.indexOf(c.k)>=0; })
+    .map(function(c){
+      var on = ls.area === c.k;
+      return '<button type="button" class="area-chip'+(on?' on':'')+'" onclick="LS[\''+o+'\'].area=\''+c.k+'\';LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+c.l+'</button>';
+    }).join('');
+
+  // Alerta si datos pueden tener inconsistencias (Robledo/Novaeva)
+  var dataWarn = (o!=='weliving')
+    ? '<div class="ldg-data-warn">⚠️ Supabase de esta obra tiene registros duplicados — el libro muestra datos deduplicados. Total oficial: <strong>'+fmtM(gastosT(o))+'</strong></div>'
+    : '';
+
   var wrap=document.getElementById('ldg-'+o);
   wrap.innerHTML=
-    '<div class="ldg-toolbar">'
-      +'<span class="ldg-title">'+titleTxt+'</span>'
-      +'<input class="ldg-search" id="lq-'+o+'" type="text" placeholder="🔍 Buscar..." value="'+(ls.q||'')+'"'
-        +' oninput="LS[\''+o+'\'].q=this.value;LS[\''+o+'\'].p=1;var pos=this.selectionStart;renderLedger(\''+o+'\');var el=document.getElementById(\'lq-'+o+'\');if(el){el.focus();el.setSelectionRange(pos,pos);}">'
-      +'<select class="fsel'+(ls.area?' act':'')+'" onchange="LS[\''+o+'\'].area=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+opts(uArea,ls.area,'Todas las áreas')+'</select>'
-      +'<select class="fsel'+(ls.etapa?' act':'')+'" onchange="LS[\''+o+'\'].etapa=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+opts(uEtapa,ls.etapa,'Todas las etapas')+'</select>'
-      +'<select class="fsel'+(ls.mp?' act':'')+'" onchange="LS[\''+o+'\'].mp=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+opts(uMp,ls.mp,'Todos los métodos')+'</select>'
-      +'<select class="fsel'+(ls.src?' act':'')+'" onchange="LS[\''+o+'\'].src=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'
-        +'<option value="">Todas las fuentes</option>'
-        +'<option value="live"'+(ls.src==='live'?' selected':'')+'>🗄 Supabase</option>'
-        +'<option value="dash"'+(ls.src==='dash'?' selected':'')+'>✏️ Manual</option>'
-      +'</select>'
-      +(hasF?'<button type="button" class="btn-clr show" onclick="clearLF(\''+o+'\')">✕ Limpiar</button>':'')
+    // ── STAT BAR ──
+    '<div class="ldg-stat-bar">'
+      +'<span class="ldg-stat-total">'+fmtM(totalReal)+'</span>'
+      +'<span class="ldg-stat-sep">·</span>'
+      +'<span class="ldg-stat-count">'+tot+' registros</span>'
+      +(dashSum?'<span class="ldg-stat-sep">·</span><span style="color:var(--gr);font-weight:700">+'+fmtM(dashSum)+' manual</span>':'')
+      +(hasF?'<button type="button" class="ldg-clear-btn" onclick="clearLF(\''+o+'\')">✕ Limpiar filtros</button>':'')
     +'</div>'
+    // ── BARRA BÚSQUEDA + FILTROS BTN ──
+    +'<div class="ldg-search-row">'
+      +'<input class="ldg-search-big" id="lq-'+o+'" type="text" placeholder="🔍 Buscar por nombre, descripción, área..." value="'+(ls.q||'')+'"'
+        +' oninput="LS[\''+o+'\'].q=this.value;LS[\''+o+'\'].p=1;var pos=this.selectionStart;renderLedger(\''+o+'\');var el=document.getElementById(\'lq-'+o+'\');if(el){el.focus();el.setSelectionRange(pos,pos);}">'
+      +'<button type="button" class="ldg-adv-btn'+(activeFilters?' has-f':'')+'" onclick="LS[\''+o+'\'].advOpen=!LS[\''+o+'\'].advOpen;renderLedger(\''+o+'\')">'
+        +(activeFilters?'⚡ Filtros ('+activeFilters+')':(showAdv?'▴ Filtros':'▾ Filtros'))
+      +'</button>'
+    +'</div>'
+    // ── CHIPS DE ÁREA ──
+    +'<div class="ldg-chips-row">'+chips+'</div>'
+    // ── FILTROS AVANZADOS (colapsable) ──
+    +(showAdv
+      ?'<div class="ldg-adv-panel">'
+          +'<select class="fsel'+(ls.etapa?' act':'')+'" onchange="LS[\''+o+'\'].etapa=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+opts(uEtapa,ls.etapa,'Todas las etapas')+'</select>'
+          +'<select class="fsel'+(ls.mp?' act':'')+'" onchange="LS[\''+o+'\'].mp=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'+opts(uMp,ls.mp,'Todos los métodos')+'</select>'
+          +'<select class="fsel'+(ls.src?' act':'')+'" onchange="LS[\''+o+'\'].src=this.value;LS[\''+o+'\'].p=1;renderLedger(\''+o+'\')">'
+            +'<option value="">Todas las fuentes</option>'
+            +'<option value="live"'+(ls.src==='live'?' selected':'')+'>🗄 Supabase</option>'
+            +'<option value="dash"'+(ls.src==='dash'?' selected':'')+'>✏️ Manual</option>'
+          +'</select>'
+        +'</div>'
+      :'')
+    + dataWarn
+    // ── TABLA ──
     +'<div style="overflow-x:auto">'
-      +'<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px">'
+      +'<table class="ldg-tbl">'
         +'<thead><tr>'
-          +'<th style="width:36px">#</th>'
-          +'<th style="cursor:pointer;white-space:nowrap" onclick="sortL(\''+o+'\',\'fecha\')">Fecha '+(col==='fecha'?(dir>0?'▲':'▼'):'⇅')+'</th>'
-          +'<th style="cursor:pointer" onclick="sortL(\''+o+'\',\'a\')">Pagado a '+(col==='a'?(dir>0?'▲':'▼'):'⇅')+'</th>'
-          +'<th>Descripción / Material</th>'
-          +'<th style="cursor:pointer" onclick="sortL(\''+o+'\',\'area\')">Área '+(col==='area'?(dir>0?'▲':'▼'):'⇅')+'</th>'
-          +'<th>Etapa</th><th>Método</th>'
-          +'<th style="text-align:right;cursor:pointer" onclick="sortL(\''+o+'\',\'monto\')">Valor '+(col==='monto'?(dir>0?'▲':'▼'):'⇅')+'</th>'
-          +'<th></th>'
+          +'<th style="width:28px">#</th>'
+          +'<th class="sortable" onclick="sortL(\''+o+'\',\'fecha\')">Fecha '+(col==='fecha'?(dir>0?'▲':'▼'):'⇅')+'</th>'
+          +'<th class="sortable" onclick="sortL(\''+o+'\',\'a\')">Pagado a '+(col==='a'?(dir>0?'▲':'▼'):'⇅')+'</th>'
+          +'<th>Descripción</th>'
+          +'<th class="sortable" onclick="sortL(\''+o+'\',\'area\')">Área '+(col==='area'?(dir>0?'▲':'▼'):'⇅')+'</th>'
+          +'<th class="sortable th-right" onclick="sortL(\''+o+'\',\'monto\')">Valor '+(col==='monto'?(dir>0?'▲':'▼'):'⇅')+'</th>'
+          +'<th style="width:32px"></th>'
         +'</tr></thead>'
         +'<tbody>'+rowsH+'</tbody>'
         +'<tfoot>'+footH+'</tfoot>'
@@ -2427,7 +2483,7 @@ function pgPrev(o){ LS[o].p = Math.max(1, (LS[o].p||1)-1); renderLedger(o); }
 function pgNext(o){ LS[o].p = (LS[o].p||1)+1; renderLedger(o); }
 function pgSet(o,n){ LS[o].p = n; renderLedger(o); }
 function clearLF(o){
-  LS[o].q='';LS[o].area='';LS[o].etapa='';LS[o].mp='';LS[o].src='';
+  LS[o].q='';LS[o].area='';LS[o].etapa='';LS[o].mp='';LS[o].src='';LS[o].advOpen=false;
   renderLedger(o);
 }
 function sortL(o,col){
@@ -4352,6 +4408,32 @@ table th{font-size:11px!important}
 .burn-card{background:var(--sf);border-radius:16px;box-shadow:var(--sh);padding:18px 20px 14px;margin-bottom:14px}
 .cat-row{transition:background .1s}
 .cat-row:hover{background:var(--sf2)}
+/* ── Libro de gastos — nuevo diseño ── */
+.ldg-stat-bar{display:flex;align-items:center;gap:8px;padding:10px 14px 8px;font-size:12px;color:var(--tx2);border-bottom:1px solid var(--br);flex-wrap:wrap}
+.ldg-stat-total{font-size:15px;font-weight:900;color:var(--rd)}
+.ldg-stat-sep{color:var(--br);font-size:16px}
+.ldg-stat-count{color:var(--bl);font-weight:700}
+.ldg-clear-btn{margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--tx2);font-size:11px;cursor:pointer}
+.ldg-clear-btn:hover{background:rgba(239,68,68,.1);color:var(--rd)}
+.ldg-search-row{display:flex;gap:8px;padding:10px 12px 6px;align-items:center}
+.ldg-search-big{flex:1;padding:9px 14px;border-radius:10px;border:1.5px solid var(--br);background:var(--sf2);color:var(--tx);font-size:13px;outline:none}
+.ldg-search-big:focus{border-color:var(--bl)}
+.ldg-adv-btn{padding:8px 14px;border-radius:10px;border:1.5px solid var(--br);background:var(--sf2);color:var(--tx2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ldg-adv-btn.has-f{border-color:var(--bl);background:rgba(99,102,241,.1);color:var(--bl)}
+.ldg-adv-btn:hover{border-color:var(--bl)}
+.ldg-chips-row{display:flex;flex-wrap:wrap;gap:6px;padding:4px 12px 10px}
+.area-chip{padding:4px 12px;border-radius:20px;border:1.5px solid var(--br);background:var(--sf2);color:var(--tx2);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.area-chip:hover{border-color:var(--bl);color:var(--bl)}
+.area-chip.on{background:var(--bl);border-color:var(--bl);color:#fff}
+.ldg-adv-panel{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px 10px;background:var(--sf2);border-top:1px solid var(--br)}
+.ldg-data-warn{margin:8px 12px;padding:8px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:11px;color:var(--or)}
+.ldg-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+.ldg-tbl thead th{padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--br);background:var(--sf2)}
+.ldg-tbl .sortable{cursor:pointer}
+.ldg-tbl .sortable:hover{color:var(--bl)}
+.ldg-tbl .th-right{text-align:right}
+.ldg-tbl tbody tr{border-bottom:1px solid var(--br);transition:background .1s}
+.ldg-tbl tbody tr:hover{background:var(--sf2)}
 /* ── Obra cards enhanced ── */
 .obra-card{border-top-width:3px!important;border-top-style:solid!important}
 .obra-saldo-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-top:10px}
