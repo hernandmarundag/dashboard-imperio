@@ -44,6 +44,7 @@ main{padding:calc(var(--nh) + 16px) 16px 48px;max-width:1100px;margin:0 auto}
 .w-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:14px}
 .w-lbl{font-size:10px;color:rgba(255,255,255,.6);margin-bottom:2px}
 .w-amt{font-size:18px;font-weight:800;color:#fff}
+.w-amt input[type=number]::-webkit-inner-spin-button,.w-amt input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 /* TC */
 .tc-card{min-width:170px;background:var(--sf);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);cursor:pointer;transition:transform .15s;flex-shrink:0}
 .tc-card:hover{transform:translateY(-2px)}
@@ -1927,10 +1928,45 @@ function rPosFinanciera() {
 function rWallets(id) {
   document.getElementById(id).innerHTML = S.cuentas.map(function(c) {
     var g = WG[c.id] || 'linear-gradient(135deg,#374151,#6b7280)';
+    var sal = saldoCta(c.id);
     return '<div class="wallet" style="background:'+g+'" onclick="editCuenta(\''+c.id+'\')">' +
-      '<div class="w-bank">'+c.banco+'</div><div class="w-name">'+c.nm+'</div>' +
-      '<div class="w-lbl">Saldo</div><div class="w-amt">'+fmt(saldoCta(c.id))+'</div></div>';
+      '<div class="w-bank">'+c.banco+'</div>' +
+      '<div class="w-name">'+c.nm+'</div>' +
+      '<div class="w-lbl">Saldo</div>' +
+      '<div class="w-amt" id="wamt-'+c.id+'" onclick="event.stopPropagation();editSaldoInline(\''+c.id+'\')" title="Toca para editar" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,0.4)">'+fmt(sal)+'</div>' +
+      '<div style="font-size:9px;opacity:0.5;margin-top:3px;text-align:right">✏️ editar</div>' +
+      '</div>';
   }).join('');
+}
+
+function editSaldoInline(id) {
+  var c = S.cuentas.find(function(x){return x.id===id;}); if(!c) return;
+  var el = document.getElementById('wamt-'+id); if(!el) return;
+  var current = c.saldoReal !== undefined ? c.saldoReal : saldoCta(id);
+  el.style.borderBottom = '2px solid rgba(255,255,255,0.9)';
+  el.innerHTML = '<input type="number" id="wamt-inp-'+id+'" '
+    +'style="width:100%;background:rgba(255,255,255,0.15);border:none;border-radius:6px;'
+    +'padding:2px 6px;font-size:20px;font-weight:900;color:#fff;outline:none;text-align:right;'
+    +'-moz-appearance:textfield;font-family:inherit" value="'+current+'" />';
+  var inp = document.getElementById('wamt-inp-'+id);
+  if (!inp) return;
+  inp.focus(); inp.select();
+  function save() {
+    var v = parseFloat(inp.value);
+    if (!isNaN(v)) {
+      c.saldoReal = v;
+      c.snapFecha = new Date().toISOString().split('T')[0];
+      saveS();
+    }
+    rWallets('wallets-i');
+    if (document.getElementById('wallets-c')) rWallets('wallets-c');
+    rKpi();
+  }
+  inp.addEventListener('blur', save);
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+    if (e.key === 'Escape') { rWallets('wallets-i'); if(document.getElementById('wallets-c'))rWallets('wallets-c'); }
+  });
 }
 
 function rTCs(id) {
