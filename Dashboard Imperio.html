@@ -1086,7 +1086,6 @@ nav:not(.sb-nav){display:none!important}
 ═══════════════════════════════════════════════════ */
 const KEY = 'imperio_v9';
 
-// ── Google Apps Script Web App (backend → PROYECTOS IMPERIO Sheet) ──
 // ── SUPABASE CONFIG ──────────────────────────────────────────────────
 var SB_URL = 'https://dghmgaaprlzpfnpsqzav.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
@@ -1099,7 +1098,7 @@ function sbPost(table, data) {
   return fetch(SB_URL+'/rest/v1/'+table, {method:'POST',headers:SB_H,body:JSON.stringify(data)}).then(function(r){return r.json();});
 }
 
-// Datos en vivo de Supabase (reemplaza Google Sheets)
+// Datos en vivo de Supabase — única fuente de verdad
 var LIVE = {weliving:[], robledo:[], novaeva:[]};
 var LIVE_LOADED = {weliving:false, robledo:false, novaeva:false};
 
@@ -1147,25 +1146,9 @@ function fetchLive(obra) {
     .catch(function(e){ console.warn('fetchLive supabase ' + obra + ':', e); });
 }
 
-function pushToSheet(obra, entry) {
-  // Guardar nuevo gasto en Supabase
-  var data = {
-    obra: obra,
-    fecha: entry.f || '',
-    nombre: entry.a || '',
-    descripcion: entry.desc || '',
-    area: entry.areaLabel || entry.area || '',
-    etapa_gral: entry.etapa || '',
-    mp: entry.mp || '',
-    monto: entry.monto || 0,
-    material: entry.mat || '',
-    cuenta: entry.ctaId || ''
-  };
-  sbPost('gastos', [data]).catch(function(e){ console.warn('pushToSheet supabase error:', e); });
-}
 
 const BASE = {
-  // gastos = suma total del Google Sheet real (BASE_CAT) al 15-Jun-2026
+  // gastos = totales históricos verificados por obra al 15-Jun-2026
   weliving:{gastos:754717074, inversion:755690000},
   robledo: {gastos:315383212, recibido:580000000, precio:740000000, porCobrar:160000000},
   novaeva: {gastos:70738151,  abonos:80000000,  cartera:85000000},
@@ -1175,9 +1158,9 @@ const BASE_CAT = {
   // BASE_CAT = totales históricos por categoría — snapshot Supabase Jun 15 2026
   weliving:{mo:159047349,mat:349907385,seg:16042100,ss:14696700,exc:58992000,var2:10390988,adm:90999663,her:8845180,tsp:2275000,alq:38154430,act:2162279,nom:3204000},
   robledo: {mo:97806284, mat:131932911,seg:9332350, ss:0,       exc:2148000, var2:22330727,adm:7483000, her:324000, tsp:1223000,alq:17575870,act:0,       nom:25227070},
-  // robledo: BASE actualizada Jun 2026 (Sheet $315.38M) — extra $9.99M distribuido en mat+var2
+  // robledo: BASE verificado Jun 2026 $315.38M
   novaeva: {mo:20725000, mat:48373251, seg:0,       ss:0,       exc:0,       var2:660000,  adm:0,       her:729900, tsp:250000, alq:0,       act:0,       nom:0},
-  // novaeva: BASE actualizada Jun 2026 (Sheet $70.74M) — extra $14.96M en mat (carpintería, ventanería, eléctrico)
+  // novaeva: BASE verificado Jun 2026 $70.74M
 };
 
 const CAT_DEFS = [
@@ -1195,8 +1178,6 @@ const CAT_DEFS = [
   {k:'nom',  l:'Nómina Emp.',    c:'#32ADE6'},
 ];
 
-// SHEET[] vacío — datos vienen de Supabase via LIVE (fetchLive)
-const SHEET = {weliving:[], robledo:[], novaeva:[]};
 
 
 const PC = {
@@ -1478,7 +1459,6 @@ function fmtFecha(f){
   return f;
 }
 function sumHist(o)  { return (S.hist[o]||[]).reduce(function(a,e){return a+e.monto;},0); }
-function sumSheet(o) { return 0; } // conservado por compatibilidad
 function sumLive(o)  { return (LIVE[o]||[]).reduce(function(a,e){return a+(e.monto||0);},0); }
 
 // Deduplicar LIVE por (nombre normalizado, monto, fecha ISO) — elimina importaciones dobles en Supabase
@@ -4117,7 +4097,7 @@ function _refreshNombresDatalist() {
   var dl = document.getElementById('dl-nombres');
   if (!dl) return;
   var nombres = {};
-  // Collect from all data sources (LIVE = Sheet real, hist = nuevos del dashboard)
+  // Recopilar nombres desde Supabase (LIVE) y entradas locales del session
   ['weliving','robledo','novaeva'].forEach(function(o){
     (LIVE[o]||[]).forEach(function(e){ if(e.a) nombres[e.a]=1; });
     (S.hist[o]||[]).forEach(function(e){ if(e.a) nombres[e.a]=1; });
@@ -4246,55 +4226,47 @@ function saveGasto() {
 /* ═══════════════════════════════════════════════════
    EDIT GASTO
 ═══════════════════════════════════════════════════ */
-var _editObra=null, _editId=null, _editSheetIdx=null;
+var _editObra=null, _editId=null, _editSupabaseId=null;
 
 function openEditGasto(obra, idOrNull, isDash, renderedIdx) {
   _editObra = obra;
-  _editId = isDash ? idOrNull : null;
-  _editSheetIdx = null;
+  _editId = null;
+  _editSupabaseId = null;
   var entry = null;
   if (isDash) {
+    // Entrada legacy de S.hist (localStorage)
+    _editId = idOrNull;
     entry = (S.hist[obra]||[]).find(function(e){return e.id===idOrNull;});
   } else {
-    // renderedIdx = startN+i = position in the sorted+filtered list as rendered
-    // getAllRows returns dash rows first (reversed), then sheet rows
-    // But renderLedger sorts the combined list. We need to find the entry at renderedIdx in that sorted order.
+    // Entrada de Supabase — buscar por posición en el libro renderizado
     var ls = LS[obra];
     var all = getAllRows(obra);
-    var srchArea = ls && ls.area;
-    var srchEtapa = ls && ls.etapa;
-    var srchMp = ls && ls.mp;
-    var srchQ = ls && (ls.q||'').toLowerCase();
+    var q = (ls.q||'').toLowerCase();
     var filtered = all.filter(function(e){
-      if(srchArea && e.area!==srchArea) return false;
-      if(srchEtapa && e.etapa!==srchEtapa) return false;
-      if(srchMp && e.mp!==srchMp) return false;
-      if(srchQ && (e.a||'').toLowerCase().indexOf(srchQ)<0 && (e.desc||'').toLowerCase().indexOf(srchQ)<0) return false;
+      if(q && !((e.a||'').toLowerCase().includes(q)||(e.desc||'').toLowerCase().includes(q))) return false;
+      if(ls.area && e.area !== ls.area) return false;
+      if(ls.etapa && e.etapa !== ls.etapa) return false;
       return true;
     });
     var col = (ls&&ls.sortCol)||'fecha', dir = (ls&&ls.sortDir!=null?ls.sortDir:-1);
     filtered.sort(function(a,b){
       if(col==='monto') return dir*((a.monto||0)-(b.monto||0));
-      if(col==='fecha'||col==='f'){
-        var ta=parseFecha(a.f||a.fecha), tb=parseFecha(b.f||b.fecha);
-        if(ta!==tb) return dir*(ta-tb);
-        return dir*((a.a||'')<(b.a||'')?-1:1);
-      }
-      var av=(a[col]||'').toString(), bv=(b[col]||'').toString();
-      return dir*(av<bv?-1:av>bv?1:0);
+      var ta=parseFecha(a.f||''), tb=parseFecha(b.f||'');
+      if(ta!==tb) return dir*(ta-tb);
+      return dir*((a.a||'')<(b.a||'')?-1:1);
     });
     entry = filtered[renderedIdx];
-    if(entry) _editSheetIdx = entry._si != null ? entry._si : null;
+    if(entry) _editSupabaseId = entry.id || null;
   }
   if(!entry) return;
   document.getElementById('eg-fecha').value = entry.fecha || entry.f || '';
   document.getElementById('eg-nombre').value = entry.a || '';
   document.getElementById('eg-desc').value = entry.desc || '';
-  document.getElementById('eg-area').value = entry.area || '';
+  document.getElementById('eg-area').value = entry.areaLabel || entry.area || '';
   document.getElementById('eg-etapa').value = entry.etapa || '';
   document.getElementById('eg-mp').value = entry.mp || '';
   document.getElementById('eg-monto').value = entry.monto || '';
-  document.getElementById('eg-titulo').textContent = isDash ? '✏️ Editar gasto (Dashboard)' : '✏️ Editar gasto (Sheet)';
+  document.getElementById('eg-titulo').textContent = '✏️ Editar gasto';
   _refreshNombresDatalist();
   openOv('ov-edit-gasto');
 }
@@ -4309,19 +4281,34 @@ function saveEditGasto() {
   var fecha  = document.getElementById('eg-fecha').value.trim();
   if(!nombre||!monto) { alert('Nombre y monto requeridos'); return; }
 
+  var btn = document.querySelector('#ov-edit-gasto .bsv');
+  if(btn){ btn.disabled=true; btn.textContent='Guardando...'; }
+  var obra = _editObra;
+
   if(_editId) {
-    // Edit S.hist entry
-    var e = S.hist[_editObra].find(function(x){return x.id===_editId;});
+    // Entrada legacy S.hist → editar localmente
+    var e = S.hist[obra].find(function(x){return x.id===_editId;});
     if(e){ e.a=nombre; e.desc=desc; e.area=area; e.etapa=etapa; e.mp=mp; e.monto=monto; e.f=fecha; }
-  } else {
-    // SHEET entry: save override in S.sheetEdits
-    if(!S.sheetEdits) S.sheetEdits={};
-    if(!S.sheetEdits[_editObra]) S.sheetEdits[_editObra]={};
-    S.sheetEdits[_editObra][_editSheetIdx] = {a:nombre,desc:desc,area:area,etapa:etapa,mp:mp,monto:monto,f:fecha,src:'sheet'};
+    saveS();
+    if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
+    closeOv('ov-edit-gasto');
+    rProjView(obra);
+  } else if(_editSupabaseId) {
+    // Entrada Supabase → PATCH directo
+    var sbData = {nombre:nombre,descripcion:desc,area:area,etapa_gral:etapa,mp:mp,monto:monto,fecha:fecha};
+    fetch(SB_URL+'/rest/v1/gastos?id=eq.'+_editSupabaseId, {
+      method:'PATCH', headers:Object.assign({},SB_H,{'Prefer':'return=minimal'}),
+      body:JSON.stringify(sbData)
+    }).then(function(){
+      LIVE_LOADED[obra]=false; fetchLive(obra);
+      if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
+      closeOv('ov-edit-gasto');
+    }).catch(function(e){
+      console.warn('saveEditGasto error:', e);
+      alert('Error actualizando en Supabase');
+      if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
+    });
   }
-  saveS();
-  closeOv('ov-edit-gasto');
-  rProjView(_editObra);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -4354,7 +4341,7 @@ document.querySelectorAll('.ov').forEach(function(ov) {
 ═══════════════════════════════════════════════════ */
 loadS();
 renderView('inicio');
-// Cargar datos en vivo del Sheet en segundo plano
+// Cargar datos de Supabase al iniciar
 ['weliving','robledo','novaeva'].forEach(function(o){ fetchLive(o); });
 </script>
 <style>
