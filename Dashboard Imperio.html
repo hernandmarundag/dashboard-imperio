@@ -1379,10 +1379,14 @@ function loadS() {
     var def = DEF.cuentas.find(function(d){return d.id===c.id;});
     if (def && def.saldoReal !== undefined) { c.saldoReal = def.saldoReal; c.snapFecha = def.snapFecha; }
   });
-  // Sync saldoFavor en TCs desde DEF
+  // Sync TCs desde DEF — cupoTotal, cupoUsado, saldoFavor (datos hardcoded del snapshot)
   if (S.tcs) S.tcs.forEach(function(t){
     var def = DEF.tcs.find(function(d){return d.id===t.id;});
-    if (def && def.saldoFavor !== undefined) { t.saldoFavor = def.saldoFavor; t.snapFecha = def.snapFecha; }
+    if (!def) return;
+    if (def.cupoTotal  !== undefined) t.cupoTotal  = def.cupoTotal;
+    if (def.cupoUsado  !== undefined) t.cupoUsado  = def.cupoUsado;
+    if (def.saldoFavor !== undefined) t.saldoFavor = def.saldoFavor;
+    if (def.snapFecha  !== undefined) t.snapFecha  = def.snapFecha;
   });
 }
 function saveS() { localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -1455,6 +1459,16 @@ function sumLiveDesdeJun9(o){
 function saldoVirtualObra(o){
   // Saldo real = total recibido de socios/cliente − total gastado ejecutado
   return sumAbonos(o) - gastosT(o);
+}
+// Compromisos inmediatos = vencidos + próximos N días (para KPI de caja)
+function pagosUrgentes(dias) {
+  var paid = S.pagosPaid || [];
+  var hoy = new Date();
+  var lim = new Date(hoy.getTime() + (dias||30)*86400000);
+  return S.pagos.filter(function(p){
+    if (paid.indexOf(p.id) !== -1) return false;
+    var f = new Date(p.fecha); return f <= lim;
+  }).reduce(function(a,p){ return a+p.monto; }, 0);
 }
 function cajaT() { var t=0; S.cuentas.forEach(function(c){t+=saldoCta(c.id);}); return t; }
 
@@ -1544,7 +1558,7 @@ function rKpi() {
   var caja = cajaT();
   var sfc = 0; S.tcs.forEach(function(t){ if(t.saldoFavor) sfc += t.saldoFavor; });
   var cajaTot = caja + sfc;
-  var pp = pagosT();
+  var pp = pagosUrgentes(30); // solo vencidos + próximos 30 días
   var libre = cajaTot - pp;
   var billetera = S.deudores.reduce(function(a,d){return a+d.monto;},0);
   var debemos = 50000000 + 124090000;
@@ -1565,16 +1579,16 @@ function rKpi() {
      +'<div class="fin-hero-sub">Bancolombia · Snapshot 16 Jun · Incluye saldo a favor TCs</div>'
      +'<div class="fin-hero-row">'
      +'<div class="fin-hero-item"><div class="fhi-l">📥 Por cobrar</div><div class="fhi-v">'+fmtM(billetera)+'</div></div>'
-     +'<div class="fin-hero-item"><div class="fhi-l">📤 Compromisos</div><div class="fhi-v">'+fmtM(pp)+'</div></div>'
-     +'<div class="fin-hero-item"><div class="fhi-l">💚 Caja libre</div><div class="fhi-v" style="color:'+libreCol+'">'+fmtM(libre)+'</div></div>'
+     +'<div class="fin-hero-item"><div class="fhi-l">📤 Compromisos 30D</div><div class="fhi-v">'+fmtM(pp)+'</div></div>'
+     +'<div class="fin-hero-item"><div class="fhi-l">💚 Disponible 30D</div><div class="fhi-v" style="color:'+libreCol+'">'+fmtM(libre)+'</div></div>'
      +'<div class="fin-hero-item"><div class="fhi-l">🔴 Próximo</div><div class="fhi-v" style="font-size:12px;font-weight:600">'+nextTxt+'</div></div>'
      +'</div></div>';
   }
   var kpiEl2 = document.getElementById('kpi-row'); if(kpiEl2) kpiEl2.innerHTML =
-    kpiEl('💰 Caja total empresa','bl', fmtM(cajaTot)) +
-    kpiEl('⚠️ Compromisos pendientes','or', fmtM(pp)) +
-    kpiEl('✅ Caja libre', libre>=0?'gr':'rd', fmtM(libre)) +
-    kpiEl('⚖️ Posición neta hoy', posNeta>=0?'gr':'rd', fmtM(posNeta));
+    kpiEl('💰 Caja banco hoy','bl', fmtM(cajaTot)) +
+    kpiEl('⚠️ Compromisos próx. 30D','or', fmtM(pp)) +
+    kpiEl('✅ Disponible 30D', libre>=0?'gr':'rd', fmtM(libre)) +
+    kpiEl('⚖️ Posición neta', posNeta>=0?'gr':'rd', fmtM(posNeta));
 }
 function kpiEl(l,c,v) { return '<div class="kpi"><div class="kpi-l">'+l+'</div><div class="kpi-v c-'+c+'">'+v+'</div></div>'; }
 
