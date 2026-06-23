@@ -1176,7 +1176,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="bn-more-item" onclick="gotoViewMobile('analisis');toggleMorePanel()"><span class="bn-more-ico">📈</span><span class="bn-more-lbl">Análisis</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('cobrar');toggleMorePanel()"><span class="bn-more-ico">💰</span><span class="bn-more-lbl">Cobrar</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Abonos</span></div>
-    <div class="bn-more-item" onclick="gotoViewMobile('proyeccion');toggleMorePanel()"><span class="bn-more-ico">📊</span><span class="bn-more-lbl">Proyección</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('plan');toggleMorePanel()"><span class="bn-more-ico">📋</span><span class="bn-more-lbl">Plan</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('deudas');toggleMorePanel()"><span class="bn-more-ico">⚖️</span><span class="bn-more-lbl">Posición</span></div>
     <div class="bn-more-item" onclick="openGasto();toggleMorePanel()"><span class="bn-more-ico">➕</span><span class="bn-more-lbl">Gasto</span></div>
@@ -1202,7 +1201,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
     <div class="ni" data-v="plan" onclick="gotoView('plan')"><span class="ni-ico">📋</span><span>Plan</span></div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
-    <div class="ni" data-v="proyeccion" onclick="gotoView('proyeccion')"><span class="ni-ico">📊</span><span>Proyección</span></div>
     <div class="ni" data-v="deudas" onclick="gotoView('deudas')"><span class="ni-ico">⚖️</span><span>Posición</span></div>
   </nav>
   <div class="sb-foot">
@@ -1287,7 +1285,7 @@ nav:not(.sb-nav){display:none!important}
   <div class="view" id="v-movimientos">
     <div id="movs-all-content"></div>
   </div>
-  <div class="view" id="v-proyeccion"><div id="proy-content"></div></div>
+
   <div class="view" id="v-deudas">
     <div id="deudas-content"></div>
   </div>
@@ -2151,7 +2149,6 @@ function renderView(v) {
   else if (v === 'analisis'){ rAnalisis(); }
   else if (v === 'abonos')  { rAbonos(); }
   else if (v === 'movimientos') { rMovimientos(); }
-  else if (v === 'proyeccion')  { rProyeccion(); }
   else if (v === 'deudas')  { rDeudas(); }
 }
 
@@ -4020,249 +4017,7 @@ function rMovimientos() {
 /* ═══════════════════════════════════════════════════
    PROYECCIÓN FINANCIERA — CFO View
 ═══════════════════════════════════════════════════ */
-function rProyeccion(){
-  var el=document.getElementById('proy-content'); if(!el) return;
 
-  var CAJA=saldoCta('bc-grupo');
-
-  // ── Ingresos esperados ────────────────────────────────────────────────
-  var INFLOWS=[
-    {desc:'Novaeva — saldo final',        monto:5000000,   fecha:'2026-06-20',prob:'alta',  proy:'novaeva', icon:'🏗'},
-    {desc:'Gano Excel — cobro préstamo',  monto:18000000,  fecha:'2026-07-15',prob:'media', proy:'empresa', icon:'💼'},
-    {desc:'Yulied — saldo Robledo',       monto:160000000, fecha:'2026-07-15',prob:'media', proy:'robledo', icon:'🏠'},
-    {desc:'Steven — aporte Weliving',     monto:120000000, fecha:'2026-07-31',prob:'media', proy:'weliving',icon:'🏢'},
-    {desc:'Lizeth — aporte Weliving',     monto:150000000, fecha:'2026-07-31',prob:'media', proy:'weliving',icon:'🏢'},
-  ];
-
-  // ── Hitos de obra ─────────────────────────────────────────────────────
-  var HITOS=[
-    {fecha:'2026-06-17',desc:'Vaciado losa P3',           proy:'weliving',icon:'🏗'},
-    {fecha:'2026-06-22',desc:'Vaciado columnas P4',        proy:'weliving',icon:'🏗'},
-    {fecha:'2026-06-27',desc:'Vaciado losa P4',            proy:'weliving',icon:'🏗'},
-    {fecha:'2026-06-30',desc:'Primas 1er semestre',        proy:'empresa', icon:'💰'},
-    {fecha:'2026-07-01',desc:'Nóminas 1 julio',            proy:'empresa', icon:'💰'},
-    {fecha:'2026-07-03',desc:'Vaciado columnas P5',        proy:'weliving',icon:'🏗'},
-    {fecha:'2026-07-09',desc:'Vaciado losa P5',            proy:'weliving',icon:'🏗'},
-    {fecha:'2026-07-14',desc:'Vaciado columnas P6',        proy:'weliving',icon:'🏗'},
-    {fecha:'2026-07-20',desc:'Hidráulica Robledo',         proy:'robledo', icon:'🔧'},
-    {fecha:'2026-07-21',desc:'Vaciado losa P6',            proy:'weliving',icon:'🏗'},
-    {fecha:'2026-07-31',desc:'🏆 Vaciado Cubierta WL',     proy:'weliving',icon:'🏆'},
-    {fecha:'2026-08-01',desc:'Red eléctrica Robledo',      proy:'robledo', icon:'⚡'},
-    {fecha:'2026-08-05',desc:'✅ ESTRUCTURA COMPLETA WL',  proy:'weliving',icon:'✅'},
-    {fecha:'2026-08-10',desc:'Mortero Robledo',            proy:'robledo', icon:'🏠'},
-    {fecha:'2026-09-05',desc:'Enchape pisos Robledo',      proy:'robledo', icon:'🏠'},
-    {fecha:'2026-10-01',desc:'✅ ENTREGA Robledo',         proy:'robledo', icon:'🎉'},
-  ];
-
-  // ── Pagos pendientes ──────────────────────────────────────────────────
-  var pending=(S.pagos||[]).filter(function(p){
-    return (S.pagosPaid||[]).indexOf(p.id)===-1 && p.fecha;
-  });
-  pending.sort(function(a,b){return new Date(a.fecha)-new Date(b.fecha);});
-  var totalPending=pending.reduce(function(s,p){return s+p.monto;},0);
-  var totalInf=INFLOWS.reduce(function(s,i){return s+i.monto;},0);
-
-  // ── Agrupar por mes ──────────────────────────────────────────────────
-  function mesKey(f){var d=new Date(f);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
-  var MNAMES={'06':'Jun','07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'};
-  function mesLabel(k){var p=k.split('-');return (MNAMES[p[1]]||p[1])+' '+p[0];}
-  var meses={};
-  pending.forEach(function(p){
-    var k=mesKey(p.fecha);
-    if(!meses[k]) meses[k]={pagos:[],total:0,inflows:[],inflow:0,balBefore:0,balAfter:0};
-    meses[k].pagos.push(p); meses[k].total+=p.monto;
-  });
-  INFLOWS.forEach(function(i){
-    var k=mesKey(i.fecha);
-    if(!meses[k]) meses[k]={pagos:[],total:0,inflows:[],inflow:0,balBefore:0,balAfter:0};
-    meses[k].inflows.push(i); meses[k].inflow+=i.monto;
-  });
-  var mesKeys=Object.keys(meses).sort();
-
-  // ── Balance acumulado ─────────────────────────────────────────────────
-  var bal=CAJA; var critMes=''; var critBal=0;
-  mesKeys.forEach(function(k){
-    meses[k].balBefore=bal;
-    bal=bal+meses[k].inflow-meses[k].total;
-    meses[k].balAfter=bal;
-    if(bal<0 && !critMes){critMes=mesLabel(k);critBal=bal;}
-  });
-
-  // ── Badge helper ─────────────────────────────────────────────────────
-  function badge(p){
-    var map=(function(){var m={empresa:'be'};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.bcls||'ba';});return m;})();
-    var cls=map[p]||'be';
-    var nm=(function(){var m={empresa:'EMP'};obrasIds().forEach(function(o){m[o]=(obraReg(o).nm||o).substring(0,2).toUpperCase();});return m;})();
-    return '<span class="'+cls+'">'+( nm[p]||p.substring(0,3).toUpperCase())+'</span>';
-  }
-
-  function salCls(v){ return v>20000000?'sal-ok':v>0?'sal-warn':'sal-bad'; }
-
-  // ════════════════════════════════════════════════
-  // RENDER
-  // ════════════════════════════════════════════════
-  var h='';
-
-  // === ALERTA PRINCIPAL ===
-  if(critMes){
-    h+='<div class="alert-banner alert-naranja" style="margin-bottom:14px">'
-     +'<h4>⚠️ ALERTA CFO — Caja en riesgo</h4>'
-     +'<p>Con los pagos proyectados, el saldo llega a <strong>'+fmt(critBal)+'</strong> en '+critMes+'.'
-     +' <strong>La llegada de Yulied ($160M) y aportes de socios Weliving es CRÍTICA</strong> para mantener la obra.'
-     +' Sin esos ingresos, la estructura no se puede terminar.</p>'
-     +'</div>';
-  } else {
-    h+='<div class="alert-banner alert-verde" style="margin-bottom:14px">'
-     +'<h4>✅ Flujo proyectado positivo</h4>'
-     +'<p>Con todos los ingresos esperados la posición se mantiene positiva. Saldo final proyectado: <strong>'+fmtM(bal)+'</strong></p>'
-     +'</div>';
-  }
-
-  // === KPI CARDS ===
-  h+='<div class="kpi-grid" style="margin-bottom:16px">';
-  h+=pKpi('💰 Caja hoy',fmt(CAJA),'#2563eb');
-  h+=pKpi('📤 Total compromisos',fmt(totalPending),'#dc2626');
-  h+=pKpi('📥 Ingresos esperados',fmt(totalInf),'#16a34a');
-  h+=pKpi('📊 Balance final',(CAJA+totalInf-totalPending>=0?'+':'')+fmtM(CAJA+totalInf-totalPending),CAJA+totalInf-totalPending>=0?'#16a34a':'#dc2626');
-  h+='</div>';
-
-  function pKpi(l,v,c){
-    return '<div class="kpi" style="border-top:3px solid '+c+';border-radius:14px">'
-          +'<div class="kpi-l">'+l+'</div><div class="kpi-v" style="color:'+c+'">'+v+'</div></div>';
-  }
-
-  // === TABLA MENSUAL ===
-  h+='<div class="sf" style="margin-bottom:16px;overflow:hidden">';
-  h+='<div class="sf-hdr"><span class="sf-hdr-title">📅 Flujo Mensual — Jun a Oct 2026</span>'
-   +'<span class="sf-hdr-val '+salCls(bal)+'">Saldo final: '+fmtM(bal)+'</span></div>';
-  h+='<div style="overflow-x:auto"><table class="proy-table">';
-  h+='<thead><tr>'
-   +'<th>Concepto</th>'
-   +'<th class="r" style="color:#16a34a">Ingresos</th>'
-   +'<th class="r" style="color:#dc2626">Pagos</th>'
-   +'<th class="r">Neto mes</th>'
-   +'<th class="r">Saldo acum.</th>'
-   +'</tr></thead><tbody>';
-
-  mesKeys.forEach(function(k){
-    var m=meses[k];
-    var neto=m.inflow-m.total;
-    var sc=salCls(m.balAfter);
-    // Encabezado mes
-    h+='<tr class="grp-hdr"><td colspan="5" style="font-size:13px;letter-spacing:.2px">📅 '+mesLabel(k)
-     +'  <span style="font-weight:400;font-size:11.5px;color:var(--tx3)">Saldo inicial: '+fmt(m.balBefore)+'</span></td></tr>';
-    // Ingresos
-    m.inflows.forEach(function(i){
-      var pc=i.prob==='alta'?'#16a34a':'#d97706';
-      h+='<tr><td style="padding-left:28px">'
-       +'<span style="font-size:13px">'+i.icon+' '+i.desc+'</span>'
-       +'<span style="margin-left:8px;font-size:10.5px;padding:1px 7px;border-radius:100px;background:'+(i.prob==='alta'?'#dcfce7;color:#15803d':'#fef3c7;color:#92400e')+'">'+i.prob+'</span>'
-       +'</td>'
-       +'<td class="r" style="color:#16a34a;font-weight:700">'+fmt(i.monto)+'</td>'
-       +'<td class="r" style="color:var(--tx3)">—</td><td class="r" style="color:var(--tx3)">—</td>'
-       +'<td class="r" style="color:var(--tx3)">—</td>'
-       +'</tr>';
-    });
-    // Top pagos
-    var pp=m.pagos.slice().sort(function(a,b){return b.monto-a.monto;});
-    var shown=pp.slice(0,5);
-    shown.forEach(function(p){
-      h+='<tr><td style="padding-left:28px">'+badge(p.proy)
-       +' <span style="font-size:12.5px">'+p.desc.replace(/\s*\(APU[^)]*\)/,'').substring(0,55)+'</span>'
-       +(p.nota?'<br><span style="font-size:10.5px;color:var(--tx3);padding-left:4px">'+p.nota.substring(0,55)+'</span>':'')
-       +'</td>'
-       +'<td class="r" style="color:var(--tx3)">—</td>'
-       +'<td class="r" style="color:#dc2626;font-weight:700">'+fmt(p.monto)+'</td>'
-       +'<td class="r" style="color:var(--tx3)">—</td>'
-       +'<td class="r" style="color:var(--tx3)">—</td>'
-       +'</tr>';
-    });
-    if(pp.length>5){
-      var rest=pp.slice(5);
-      var rtot=rest.reduce(function(s,p){return s+p.monto;},0);
-      h+='<tr><td style="padding-left:28px;color:var(--tx3);font-size:12px">+ '+rest.length+' pagos más ('+rest.map(function(x){return x.desc.substring(0,20);}).join(', ')+'…)</td>'
-       +'<td class="r">—</td><td class="r" style="color:#dc2626;font-weight:600">'+fmt(rtot)+'</td>'
-       +'<td class="r">—</td><td class="r">—</td></tr>';
-    }
-    // Subtotal
-    h+='<tr style="background:#f8fafc;border-top:2px solid var(--br)">'
-     +'<td style="padding-left:28px;font-weight:800;font-size:13px">Subtotal '+mesLabel(k)+'</td>'
-     +'<td class="r" style="font-weight:800;color:#16a34a">'+(m.inflow>0?fmt(m.inflow):'—')+'</td>'
-     +'<td class="r" style="font-weight:800;color:#dc2626">'+fmt(m.total)+'</td>'
-     +'<td class="r" style="font-weight:800;color:'+(neto>=0?'#16a34a':'#dc2626')+'">'+fmt(neto)+'</td>'
-     +'<td class="r '+sc+'" style="font-size:14px">'+fmt(m.balAfter)+'</td>'
-     +'</tr>';
-  });
-  h+='</tbody></table></div></div>';
-
-  // === CRONOGRAMA DE HITOS ===
-  h+='<div class="sf" style="margin-bottom:16px;overflow:hidden">';
-  h+='<div class="sf-hdr"><span class="sf-hdr-title">🏗 Cronograma de Hitos — Jun→Oct 2026</span></div>';
-  h+='<div style="padding:0 18px 12px">';
-  var today2=new Date('2026-06-16');
-  var PCOLS=(function(){var m={empresa:'#7c3aed'};obrasIds().forEach(function(o){m[o]=obraReg(o).col||'#6366f1';});return m;})();
-  HITOS.forEach(function(hit){
-    var d=new Date(hit.fecha);
-    var diff=Math.round((d-today2)/(86400000));
-    var col=PCOLS[hit.proy]||'#64748b';
-    var urg=diff<=0?'#dc2626':diff<=5?'#f97316':diff<=14?'#d97706':'#64748b';
-    var diffTxt=diff<0?'hace '+(- diff)+' d':diff===0?'HOY':diff===1?'mañana':diff+' días';
-    h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--br)">'
-     +'<div style="width:10px;height:10px;border-radius:50%;background:'+col+';flex-shrink:0;box-shadow:0 0 0 3px '+col+'22"></div>'
-     +'<div style="min-width:64px;font-size:11px;font-weight:700;color:var(--tx3)">'+hit.fecha.slice(5).replace('-','/')+'</div>'
-     +'<div style="flex:1;font-size:13px;font-weight:500">'+hit.icon+' '+hit.desc+' '+badge(hit.proy)+'</div>'
-     +'<div style="font-size:11.5px;font-weight:700;color:'+urg+';white-space:nowrap">'+diffTxt+'</div>'
-     +'</div>';
-  });
-  h+='</div></div>';
-
-  // === ROBLEDO ACABADOS ===
-  var robAcab=(S.pagos||[]).filter(function(p){return p.id&&p.id.indexOf('rb_')===0;});
-  if(robAcab.length){
-    robAcab.sort(function(a,b){return new Date(a.fecha)-new Date(b.fecha);});
-    var totalRob=robAcab.reduce(function(s,p){return s+p.monto;},0);
-    var paidRob=robAcab.filter(function(p){return (S.pagosPaid||[]).indexOf(p.id)!==-1;}).reduce(function(s,p){return s+p.monto;},0);
-    var pct=Math.round(paidRob/totalRob*100);
-    h+='<div class="sf" style="margin-bottom:16px;overflow:hidden">';
-    h+='<div class="sf-hdr"><span class="sf-hdr-title">🏠 Robledo — Plan de Acabados (casa 250m²)</span>'
-     +'<div style="text-align:right"><div class="sf-hdr-val" style="color:#d97706">'+fmt(totalRob-paidRob)+' pendiente</div>'
-     +'<div style="font-size:10.5px;color:var(--tx3)">Total: '+fmt(totalRob)+'  ·  Pagado: '+pct+'%</div></div></div>';
-    h+='<div style="height:4px;background:#fef3c7"><div style="height:100%;background:#d97706;width:'+pct+'%"></div></div>';
-    h+='<div style="overflow-x:auto"><table class="proy-table">';
-    h+='<thead><tr><th>Actividad</th><th class="r">Monto</th><th>Fecha est.</th><th>Nota técnica</th><th>Estado</th></tr></thead><tbody>';
-    robAcab.forEach(function(p){
-      var paid=(S.pagosPaid||[]).indexOf(p.id)!==-1;
-      h+='<tr style="'+(paid?'opacity:.45':'')+'"><td style="'+(paid?'text-decoration:line-through;':'')+'">'+p.desc+'</td>'
-       +'<td class="r" style="color:#d97706;font-weight:700">'+fmt(p.monto)+'</td>'
-       +'<td style="font-size:12px;color:var(--tx3);white-space:nowrap">'+p.fecha+'</td>'
-       +'<td style="font-size:11.5px;color:var(--tx3)">'+p.nota+'</td>'
-       +'<td style="font-size:11px;font-weight:700;color:'+(paid?'#16a34a':'#d97706')+'">'+(paid?'✅ Pagado':'⏳ Pendiente')+'</td>'
-       +'</tr>';
-    });
-    h+='<tr style="background:#fef3c7"><td style="font-weight:800;font-size:13px">TOTAL ACABADOS ROBLEDO</td>'
-     +'<td class="r" style="font-weight:900;font-size:15px;color:#92400e">'+fmt(totalRob)+'</td>'
-     +'<td colspan="3"><span style="font-size:12px;color:#92400e">Entrega estimada: Oct 2026</span></td></tr>';
-    h+='</tbody></table></div></div>';
-  }
-
-  // === INGRESOS ESPERADOS ===
-  h+='<div class="sf" style="margin-bottom:16px;overflow:hidden">';
-  h+='<div class="sf-hdr"><span class="sf-hdr-title">📥 Ingresos Esperados</span><span class="sf-hdr-val" style="color:#16a34a">'+fmt(totalInf)+'</span></div>';
-  h+='<div style="overflow-x:auto"><table class="proy-table">';
-  h+='<thead><tr><th>Fuente</th><th class="r">Monto</th><th>Fecha est.</th><th>Probabilidad</th></tr></thead><tbody>';
-  INFLOWS.forEach(function(i){
-    var bg=i.prob==='alta'?'#dcfce7':'#fef3c7';
-    var fc=i.prob==='alta'?'#15803d':'#92400e';
-    h+='<tr><td>'+i.icon+' <strong>'+i.desc+'</strong><br><span style="font-size:11px;color:var(--tx3)">'+badge(i.proy)+'</span></td>'
-     +'<td class="r" style="font-weight:800;color:#16a34a">'+fmt(i.monto)+'</td>'
-     +'<td style="font-size:12px;color:var(--tx3)">'+i.fecha+'</td>'
-     +'<td><span style="background:'+bg+';color:'+fc+';padding:3px 12px;border-radius:100px;font-size:11px;font-weight:700">'+i.prob+'</span></td>'
-     +'</tr>';
-  });
-  h+='</tbody></table></div></div>';
-
-  document.getElementById('proy-content').innerHTML=h;
-}
 
 
 /* ═══════════════════════════════════════════════════
