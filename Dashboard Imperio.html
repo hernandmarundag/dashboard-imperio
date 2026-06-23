@@ -892,6 +892,149 @@ nav:not(.sb-nav){display:none!important}
 
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
+/* ═══════════════════════════════════════════
+   MOBILE — Layout app nativa completo
+═══════════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* ── Espaciado base ── */
+  .main-content{padding:58px 12px calc(var(--bnav)+18px)!important}
+
+  /* ── Section headers ── */
+  .sec{font-size:8.5px;margin:18px 0 8px;letter-spacing:1.2px}
+
+  /* ── Hero financiero ── */
+  .fin-hero{padding:16px 16px 14px;border-radius:20px}
+  .fin-hero-lbl{font-size:9.5px;margin-bottom:4px}
+  .fin-hero-num{font-size:30px;letter-spacing:-1.5px;margin-bottom:3px}
+  .fin-hero-sub{font-size:10px;margin-bottom:12px}
+  .fin-hero-row{gap:8px;padding-top:11px}
+  .fhi-l{font-size:9px;margin-bottom:2px}
+  .fhi-v{font-size:13px;letter-spacing:-.2px}
+
+  /* ── KPI — siempre 2 columnas ── */
+  .kpi-grid{grid-template-columns:repeat(2,1fr)!important;gap:9px}
+  .kpi{padding:13px 13px;border-radius:15px}
+  .kpi-l{font-size:8.5px;margin-bottom:6px;letter-spacing:.4px}
+  .kpi-v{font-size:20px;letter-spacing:-.5px}
+
+  /* ── Wallets — scroll horizontal ── */
+  .wallet{min-width:148px;padding:13px 15px;border-radius:15px}
+  .w-bank{font-size:9px}
+  .w-name{font-size:12px;margin-bottom:10px}
+  .w-lbl{font-size:8.5px}
+  .w-amt{font-size:17px}
+  .tc-card{min-width:150px;padding:13px 15px}
+  .tc-nm{font-size:13px}
+
+  /* ── Obras ── */
+  .obras-grid{grid-template-columns:1fr!important;gap:9px}
+  .obra-hd{padding:11px 13px 7px}
+  .obra-nm{font-size:13px}
+  .obra-stats{padding:0 13px 11px}
+  .obra-stat{padding:5px 0;font-size:12px}
+  .obra-warn{font-size:10.5px;padding:5px 9px;margin-top:6px}
+
+  /* ── Project cards (vista obra) ── */
+  .proj-grid{grid-template-columns:1fr!important}
+  .proj{padding:14px;border-radius:16px}
+  .proj-nm{font-size:14px}
+  .k2g{gap:6px;margin-top:8px}
+  .k2{padding:8px 10px;border-radius:10px}
+  .k2l{font-size:9px}
+  .k2v{font-size:13px}
+  .proj-nota{font-size:10.5px;margin-top:10px;padding-top:10px}
+
+  /* ── Stat grid (dentro de obra) ── */
+  .stat-grid{grid-template-columns:repeat(2,1fr)!important;gap:7px}
+  .stat-card{padding:11px 12px;border-radius:12px}
+  .stat-card .label{font-size:9px}
+  .stat-card .value{font-size:17px}
+
+  /* ── Burn/chart cards ── */
+  .burn-card{padding:13px;border-radius:15px}
+  .chart-card{padding:14px 16px;border-radius:15px}
+
+  /* ── Distribución del gasto ── */
+  .cat-chart-wrap{flex-direction:column;padding:13px 14px;gap:14px;border-radius:15px}
+  .cat-chart-wrap canvas{max-width:180px;margin:0 auto}
+  .cat-row{padding:5px 8px}
+  .cat-nm{font-size:12px}
+  .cat-pct{font-size:11px}
+  .cat-amt{font-size:12px}
+
+  /* ── Posición financiera ── */
+  .pos-grid{grid-template-columns:1fr!important;gap:9px}
+  .pos-panel{border-radius:15px}
+  .pos-ph{padding:11px 13px 8px;font-size:12px}
+  .pos-row{padding:7px 13px;font-size:12px}
+  .pos-lbl{font-size:11.5px}
+  .pos-val{font-size:12px}
+  .pos-tot{padding:8px 13px;font-size:12px}
+  .pos-nota{font-size:10px;padding:6px 13px 12px}
+  .pos-neta{padding:14px 16px;border-radius:16px}
+  .pos-neta-v{font-size:22px;letter-spacing:-.5px}
+  .pos-neta-l{font-size:9.5px}
+  .pos-neta-sub{font-size:10.5px}
+
+  /* ── Alert banners ── */
+  .alert-banner{border-radius:12px;padding:11px 13px;margin-bottom:7px}
+  .alert-banner h4{font-size:12px;margin-bottom:3px}
+  .alert-banner p{font-size:11px;line-height:1.45}
+  .alert-r,.alert-y,.alert-g{border-radius:11px;padding:9px 12px;font-size:12px;margin-bottom:5px}
+
+  /* ── Ledger ── */
+  .ldg-wrap{border-radius:15px;margin-top:10px}
+  .ldg-toolbar{padding:9px 11px;gap:6px}
+  .ldg-search{width:100%;font-size:12px}
+  .ldg-search-row{padding:8px 10px 5px;gap:7px}
+  .ldg-search-big{font-size:12px;padding:8px 12px}
+  .ldg-chips-row{padding:3px 10px 8px;gap:5px}
+  .area-chip{padding:3px 10px;font-size:10.5px}
+  .ldg-tbl{font-size:11.5px}
+  .ldg-tbl thead th{padding:7px 8px;font-size:10px}
+  .ldg-tbl td{padding:7px 8px}
+  .ldg-stat-bar{font-size:11px;padding:8px 12px 7px}
+
+  /* ── Pagos / Flujo ── */
+  .sf{border-radius:15px}
+  .sf-hdr{padding:10px 13px;flex-wrap:wrap}
+  .sf-hdr-title{font-size:10px}
+  .proy-table{font-size:11.5px;min-width:auto}
+  .proy-table th{padding:7px 9px;font-size:9px}
+  .proy-table td{padding:7px 9px}
+
+  /* ── Proj nota ── */
+  .badge{font-size:10px;padding:3px 7px}
+
+  /* ── Modal — full bottom sheet ── */
+  .modal{padding:20px 14px 28px;border-radius:22px 22px 0 0}
+  .mtit{font-size:15px}
+  .mhd{margin-bottom:16px;padding-bottom:13px}
+  .fg{margin-bottom:9px}
+  .fg label{font-size:10.5px;margin-bottom:4px}
+  .fg input,.fg select,.fg textarea{font-size:14px;padding:10px 12px;border-radius:10px}
+  .fdiv{font-size:9.5px;margin:11px 0 8px;padding-bottom:5px}
+  .obra-grid{gap:6px}
+  .obra-opt{padding:9px 6px;font-size:11px;border-radius:10px}
+  .ded-prev{font-size:12px;padding:9px 12px;border-radius:10px}
+  .mfoot{margin-top:16px;padding-top:13px}
+  .bcn{padding:9px 15px;font-size:13px;border-radius:10px}
+  .bsv{padding:9px 18px;font-size:13px;border-radius:10px}
+
+  /* ── Cobrar / tabla ── */
+  .k2g{grid-template-columns:repeat(2,1fr)!important}
+
+  /* ── Bottom nav — más prominente ── */
+  .bn-item{padding:5px 2px}
+  .bn-ico{font-size:21px}
+  .bn-lbl{font-size:9px;letter-spacing:.1px}
+  .bn-more-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+  .bn-more-item{padding:11px 4px;border-radius:13px}
+  .bn-more-ico{font-size:21px}
+  .bn-more-lbl{font-size:9.5px}
+}
+
 /* ── Smooth transitions (safe list only) ── */
 .ni,.bn-item,.wallet,.proj,.obra-card,.kpi,.bsv,.bcn,.btn-clr,.bsm,.obra-opt,.area-chip{
   transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,border-color .18s ease;
