@@ -323,6 +323,10 @@ nav:not(.sb-nav){display:none!important}
 .stat-card .label{font-size:11px;color:var(--tx2);font-weight:500;margin-bottom:5px}
 .stat-card .value{font-size:20px;font-weight:700;letter-spacing:-.4px}
 
+/* Views — show/hide */
+.view{display:none}
+.view.on{display:block}
+
 /* Flujo / Pagos */
 .flujo-grid{display:block}
 
@@ -5210,24 +5214,9 @@ gotoView = function(v) {
 /* ══════════════════════════════════════════════════════
    IMPERIO v3 — Premium Design System
 ══════════════════════════════════════════════════════ */
-:root{
-  --bg:#eef2f7;--sf:#fff;--sf2:#f5f7fa;
-  --tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;
-  --br:#e2e8f0;
-  --sh:0 1px 3px rgba(0,0,0,.06),0 4px 20px rgba(0,0,0,.05);
-  --sh2:0 8px 40px rgba(0,0,0,.14);
-  --r:16px;--rs:10px;--nh:58px;
-  --bl:#2563eb;--gr:#16a34a;--rd:#dc2626;
-  --or:#d97706;--pu:#7c3aed;--gy:#94a3b8;
-}
-body{background:var(--bg)!important}
-/* ── Nav dark ── */
-nav{background:#0d1b2a!important;border-bottom:1px solid rgba(255,255,255,.07)!important;height:58px!important;box-shadow:0 2px 20px rgba(0,0,0,.3)!important}
-.nb{color:#fff!important;font-size:15px!important;font-weight:900!important;letter-spacing:-.3px;text-shadow:0 0 20px rgba(255,255,255,.1)}
-.tab{color:rgba(255,255,255,.48)!important;font-size:12px!important;padding:5px 11px!important;border-radius:8px!important;transition:all .15s!important}
-.tab.on{background:rgba(37,99,235,.8)!important;color:#fff!important;box-shadow:0 2px 8px rgba(37,99,235,.4)!important}
-.tab:hover:not(.on){background:rgba(255,255,255,.07)!important;color:rgba(255,255,255,.85)!important}
-.btnadd{background:linear-gradient(135deg,#2563eb,#1d4ed8)!important;border-radius:8px!important;font-size:12px!important;box-shadow:0 2px 8px rgba(37,99,235,.4)!important}
+
+
+
 /* ── Cards ── */
 .kpi{border-radius:14px!important;padding:16px 18px!important;box-shadow:var(--sh)!important;transition:transform .15s,box-shadow .15s!important}
 .kpi:hover{transform:translateY(-1px)!important;box-shadow:var(--sh2)!important}
@@ -5250,9 +5239,9 @@ nav{background:#0d1b2a!important;border-bottom:1px solid rgba(255,255,255,.07)!i
 .obra-card:hover{transform:translateY(-2px)!important;box-shadow:var(--sh2)!important}
 /* ── Alert banners ── */
 .alert-banner{border-radius:14px;padding:14px 18px;margin-bottom:12px}
-.alert-rojo{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}
-.alert-naranja{background:linear-gradient(135deg,#d97706,#92400e);color:#fff}
-.alert-verde{background:linear-gradient(135deg,#16a34a,#14532d);color:#fff}
+.alert-rojo{background:linear-gradient(135deg,var(--rd),#991b1b);color:#fff}
+.alert-naranja{background:linear-gradient(135deg,var(--or),#92400e);color:#fff}
+.alert-verde{background:linear-gradient(135deg,var(--gr),#14532d);color:#fff}
 .alert-banner h4{font-size:13px;font-weight:800;margin-bottom:4px}
 .alert-banner p{font-size:12px;opacity:.88;line-height:1.5}
 /* ── Proyección table ── */
@@ -5267,11 +5256,11 @@ nav{background:#0d1b2a!important;border-bottom:1px solid rgba(255,255,255,.07)!i
 .proy-table td.r{text-align:right;font-variant-numeric:tabular-nums}
 .proy-table .grp-hdr td{background:#f1f5f9;font-weight:700;font-size:12.5px;letter-spacing:.3px;padding:9px 14px;border-top:2px solid var(--br)}
 .proy-table tr:hover:not(.grp-hdr) td{background:#f8fafc}
-.sal-ok{color:#16a34a;font-weight:800}
-.sal-warn{color:#d97706;font-weight:800}
-.sal-bad{color:#dc2626;font-weight:800}
+.sal-ok{color:var(--gr);font-weight:800}
+.sal-warn{color:var(--or);font-weight:800}
+.sal-bad{color:var(--rd);font-weight:800}
 /* ── Badges ── */
-.bw{background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:100px;font-size:10.5px;font-weight:700;display:inline-block;white-space:nowrap}
+.bw{background:#dbeafe;color:var(--bl2);padding:2px 8px;border-radius:100px;font-size:10.5px;font-weight:700;display:inline-block;white-space:nowrap}
 .br_{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:100px;font-size:10.5px;font-weight:700;display:inline-block;white-space:nowrap}
 .bn{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:100px;font-size:10.5px;font-weight:700;display:inline-block;white-space:nowrap}
 .be{background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:100px;font-size:10.5px;font-weight:700;display:inline-block;white-space:nowrap}
