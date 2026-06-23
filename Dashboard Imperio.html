@@ -891,6 +891,8 @@ nav:not(.sb-nav){display:none!important}
   .cat-chart-wrap canvas{max-width:200px;margin:0 auto}
 }
 
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
 /* ── Smooth transitions (safe list only) ── */
 .ni,.bn-item,.wallet,.proj,.obra-card,.kpi,.bsv,.bcn,.btn-clr,.bsm,.obra-opt,.area-chip{
   transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,border-color .18s ease;
@@ -967,6 +969,7 @@ nav:not(.sb-nav){display:none!important}
   <div class="sb-foot">
     <div class="sb-foot-btn" onclick="openAbono()">💰 Ingreso</div>
     <div class="sb-foot-btn" onclick="openGasto()">＋ Gasto</div>
+    <div class="sb-foot-btn" onclick="syncAll()" id="btn-sync" title="Sincronizar datos">↺</div>
   </div>
 </aside>
 <main class="main-content">
@@ -5634,6 +5637,31 @@ try { _lastV = localStorage.getItem('imp_curv') || 'inicio'; } catch(e){}
 gotoView(_lastV);
 // Cargar datos de Supabase al iniciar
 obrasIds().forEach(function(o){ fetchLive(o); });
+
+/* ── Sync / Auto-refresh ── */
+function syncAll() {
+  var btn = document.getElementById('btn-sync');
+  if (btn) { btn.style.animation = 'spin .7s linear infinite'; btn.style.color = '#A5B4FC'; }
+  var done = 0; var total = obrasIds().length;
+  obrasIds().forEach(function(o) {
+    LIVE_LOADED[o] = false;
+    fetchLive(o).then(function() {
+      done++;
+      if (done >= total) {
+        renderView(curV);
+        if (btn) { btn.style.animation = ''; btn.style.color = '#22C55E'; setTimeout(function(){ if(btn) btn.style.color=''; }, 1200); }
+      }
+    });
+  });
+}
+// Auto-sync cada 2 minutos cuando la página está visible
+setInterval(function() {
+  if (!document.hidden) { obrasIds().forEach(function(o){ LIVE_LOADED[o]=false; fetchLive(o); }); }
+}, 120000);
+// Sync cuando el usuario vuelve a la pestaña/app
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) { syncAll(); }
+});
 
 /* ── Mobile navigation ── */
 function gotoViewMobile(v, btn) {
