@@ -1177,7 +1177,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="bn-more-item" onclick="gotoViewMobile('cobrar');toggleMorePanel()"><span class="bn-more-ico">💰</span><span class="bn-more-lbl">Cobrar</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Abonos</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('plan');toggleMorePanel()"><span class="bn-more-ico">📋</span><span class="bn-more-lbl">Plan</span></div>
-    <div class="bn-more-item" onclick="gotoViewMobile('deudas');toggleMorePanel()"><span class="bn-more-ico">⚖️</span><span class="bn-more-lbl">Posición</span></div>
     <div class="bn-more-item" onclick="openGasto();toggleMorePanel()"><span class="bn-more-ico">➕</span><span class="bn-more-lbl">Gasto</span></div>
   </div>
 </div>
@@ -1201,7 +1200,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
     <div class="ni" data-v="plan" onclick="gotoView('plan')"><span class="ni-ico">📋</span><span>Plan</span></div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
-    <div class="ni" data-v="deudas" onclick="gotoView('deudas')"><span class="ni-ico">⚖️</span><span>Posición</span></div>
   </nav>
   <div class="sb-foot">
     <div class="sb-foot-btn" onclick="openAbono()">💰 Ingreso</div>
@@ -1229,8 +1227,6 @@ nav:not(.sb-nav){display:none!important}
     <div id="obras-resumen"></div>
     <div id="bud-section"></div>
 
-    <div class="sec">⚖️ Posición financiera</div>
-    <div id="pos-financiera"></div>
 
     <div class="sec">🏦 Cuentas bancarias</div>
     <div class="hscroll" id="wallets-i"></div>
@@ -1286,9 +1282,7 @@ nav:not(.sb-nav){display:none!important}
     <div id="movs-all-content"></div>
   </div>
 
-  <div class="view" id="v-deudas">
-    <div id="deudas-content"></div>
-  </div>
+
 </main>
 
 <!-- MODAL GASTO -->
@@ -2139,7 +2133,7 @@ function gotoView(v) {
 }
 
 function renderView(v) {
-  if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rPosFinanciera(); rWallets('wallets-i'); rTCs('tcs-i'); }
+  if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
@@ -2149,7 +2143,6 @@ function renderView(v) {
   else if (v === 'analisis'){ rAnalisis(); }
   else if (v === 'abonos')  { rAbonos(); }
   else if (v === 'movimientos') { rMovimientos(); }
-  else if (v === 'deudas')  { rDeudas(); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2268,49 +2261,6 @@ function rObrasResumen() {
     +'</div>';
 }
 
-function rPosFinanciera() {
-  var el = document.getElementById('pos-financiera'); if(!el) return;
-  var caja = cajaT();
-  var sfc = 0; S.tcs.forEach(function(t){ if(t.saldoFavor) sfc += t.saldoFavor; });
-  var cajaTot = caja + sfc;
-  var billetera = S.deudores.reduce(function(a,d){return a+d.monto;},0);
-  var deudaMama = 50000000, deudaSUFI = 124090000;
-  var totalDebemos = deudaMama + deudaSUFI;
-  var posNeta = cajaTot + billetera - totalDebemos;
-
-  // Panel debemos
-  var pDebo = '<div class="pos-panel">'
-    +'<div class="pos-ph"><span>💸 Lo que debemos</span><span class="c-rd">'+fmtM(totalDebemos)+'</span></div>'
-    +'<div class="pos-row"><span class="pos-lbl">Gloria (mamá) — préstamo personal</span><span class="pos-val c-rd">'+fmtM(deudaMama)+'</span></div>'
-    +'<div class="pos-row"><span class="pos-lbl">SUFI — prenda vehículo</span><span class="pos-val c-rd">'+fmtM(deudaSUFI)+'</span></div>'
-    +'<div class="pos-tot"><span>Total adeudado</span><span class="c-rd">'+fmtM(totalDebemos)+'</span></div>'
-    +'<div class="pos-nota">Costo mensual estimado al 2%: '+fmtM(totalDebemos*0.02)+' / mes</div>'
-    +'</div>';
-
-  // Panel nos deben
-  var billRows = S.deudores.map(function(d){
-    var pri = d.prioridad==='alta'?'🔴':'🟡';
-    return '<div class="pos-row"><span class="pos-lbl">'+pri+' '+d.nombre+' — '+d.concepto+'</span><span class="pos-val c-bl">'+fmtM(d.monto)+'</span></div>';
-  }).join('');
-  var pDeben = '<div class="pos-panel">'
-    +'<div class="pos-ph"><span>💰 Lo que nos deben</span><span class="c-gr">'+fmtM(billetera)+'</span></div>'
-    + billRows
-    +'<div class="pos-tot"><span>Total cobrable</span><span class="c-gr">'+fmtM(billetera)+'</span></div>'
-    +'<div class="pos-nota">Solo cartera personal disponible. Robledo $160M y Novaeva $5M son fondos comprometidos con ejecución de cada proyecto.</div>'
-    +'</div>';
-
-  var posIcon = posNeta>=0?'✅':'🔴';
-  var posCls  = posNeta>=0?'var(--gr)':'var(--rd)';
-  var pNeta = '<div class="pos-neta">'
-    +'<div class="pos-neta-info">'
-      +'<div class="pos-neta-l">⚖️ Posición neta hoy</div>'
-      +'<div class="pos-neta-sub">Caja '+fmtM(cajaTot)+' + Billetera cobrable '+fmtM(billetera)+' − Lo que debemos '+fmtM(totalDebemos)+'</div>'
-    +'</div>'
-    +'<div class="pos-neta-v" style="color:'+posCls+'">'+posIcon+' '+fmtM(posNeta)+'</div>'
-    +'</div>';
-
-  el.innerHTML = '<div class="pos-grid">'+pDebo+pDeben+'</div>'+pNeta;
-}
 
 function rWallets(id) {
   document.getElementById(id).innerHTML = S.cuentas.map(function(c) {
@@ -4023,125 +3973,7 @@ function rMovimientos() {
 /* ═══════════════════════════════════════════════════
    POSICIÓN FINANCIERA REAL — ingresos, gastos, deudas
 ═══════════════════════════════════════════════════ */
-function rDeudas() {
-  var el = document.getElementById('deudas-content'); if (!el) return;
 
-  var fmt = function(n){ return '$' + Math.round(n).toLocaleString('es-CO'); };
-  function sec(title) {
-    return '<div style="font-size:11px;font-weight:700;color:#6e6e73;text-transform:uppercase;letter-spacing:.6px;padding:12px 14px 6px;background:#f8f8f8;border-bottom:1px solid #e5e5ea;">' + title + '</div>';
-  }
-  function row(lbl, val, col, sub, bold, bg) {
-    return '<tr style="border-bottom:1px solid #f2f2f7;' + (bg ? 'background:'+bg+';' : '') + '">' +
-           '<td style="padding:11px 14px;font-size:13px;' + (bold?'font-weight:700;':'') + '">' + lbl +
-           (sub ? '<br><span style="font-size:11px;color:#6e6e73;font-weight:400;">' + sub + '</span>' : '') + '</td>' +
-           '<td style="padding:10px 16px;text-align:right;font-size:13px;font-weight:' + (bold?'700':'500') + ';color:' + col + ';white-space:nowrap;">' + val + '</td>' +
-           '</tr>';
-  }
-
-  // ── DATOS
-  var totalSocios  = S.abonos.reduce(function(s,a){ return s+a.monto; }, 0);
-  var deudaMama    = 50000000;
-  var deudaSUFI    = 124090000;
-  var totalDebemos = deudaMama + deudaSUFI;
-  var costoMes     = totalDebemos * 0.02;
-  var totalEntro   = totalSocios + totalDebemos;
-  var totalGastos  = obrasIds().reduce(function(s,o){return s+(BASE[o]?BASE[o].gastos:0);},0);
-  var diferencia   = totalEntro - totalGastos;
-  var cajaReal     = saldoCta('bc-grupo') + ((S.tcs.find(function(t){return t.id==='h2';}) || {}).saldoFavor || 0);
-  var retirosH     = diferencia - cajaReal;
-
-  // Cartera disponible HOY (solo billetera personal/comercial — NO proyectos)
-  var cartBilletera = 55000000; // Balsos $25M + Gano Excel $13.5M + Mariana $5M + Sebas $5M + Alejandro $3.5M + Dron $3M
-  // Robledo $160M y Novaeva $85M → van a sus proyectos, no disponibles aquí
-
-  var activoDisponible = cajaReal + cartBilletera;
-  var posicionNeta     = activoDisponible - totalDebemos;
-
-  var h = '';
-
-  h += '<div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚖️ Cuadre financiero al 15 Jun 2026</div>';
-
-  // ──────────────────────────────────────────
-  // BLOQUE 1: LO QUE ENTRÓ
-  // ──────────────────────────────────────────
-  h += '<div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;">';
-  h += sec('📥 Lo que entró');
-  h += '<table style="width:100%;border-collapse:collapse;">';
-  h += row('Ingresos de socios y clientes', '+' + fmt(totalSocios), '#007AFF', 'Weliving + Robledo + Novaeva — abonos recibidos');
-  h += row('Deudas contraídas (dinero que entró prestado)', '+' + fmt(totalDebemos), '#FF9500', 'Mamá $50M + SUFI $124.09M');
-  h += row('TOTAL ENTRADAS', fmt(totalEntro), '#007AFF', null, true, '#f0f7ff');
-  h += '</table></div>';
-
-  // ──────────────────────────────────────────
-  // BLOQUE 2: LO QUE SALIÓ
-  // ──────────────────────────────────────────
-  h += '<div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;">';
-  h += sec('📤 Lo que salió');
-  h += '<table style="width:100%;border-collapse:collapse;">';
-  h += row('Gastos registrados en proyectos', '-' + fmt(totalGastos), '#FF9500', 'Hojas reales: Weliving $754.7M + Robledo $305.4M + Novaeva $55.8M');
-  h += row('Retiros Hernán (ganancia pre-cobrada)', '-' + fmt(retirosH), '#AF52DE', 'Diferencia entre entradas, gastos y caja actual');
-  h += row('Caja actual en banco', fmt(cajaReal), '#34C759', 'Bancolombia $145M + Scotia $5M');
-  h += row('TOTAL SALIDAS', fmt(totalGastos + retirosH + cajaReal), '#007AFF', 'Debe coincidir con total entradas', true, '#f2f2f7');
-  h += '</table></div>';
-
-  // ──────────────────────────────────────────
-  // BLOQUE 3: LO QUE NOS DEBEN
-  // ──────────────────────────────────────────
-  h += '<div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;">';
-  h += sec('💰 Lo que nos deben (disponible — excluye Robledo y Novaeva que van a sus proyectos)');
-  h += '<table style="width:100%;border-collapse:collapse;">';
-  h += row('Balsos', '+$25.000.000', '#007AFF', 'Deuda proyecto/lote · URGENTE');
-  h += row('Paquetes 3 (Gano Excel)', '+$13.500.000', '#007AFF', 'Paquetes comerciales · MEDIA');
-  h += row('Mariana', '+$5.000.000', '#007AFF', 'Deuda personal · URGENTE');
-  h += row('Sebas Medina', '+$5.000.000', '#007AFF', 'Deuda personal · URGENTE');
-  h += row('Alejandro', '+$3.500.000', '#007AFF', 'Celulares · MEDIA');
-  h += row('Dron', '+$3.000.000', '#007AFF', 'Dron · MEDIA');
-  h += row('TOTAL NOS DEBEN', '+' + fmt(cartBilletera), '#007AFF', null, true, '#f0f7ff');
-  h += '</table></div>';
-
-  // ──────────────────────────────────────────
-  // BLOQUE 4: LO QUE DEBEMOS
-  // ──────────────────────────────────────────
-  h += '<div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;">';
-  h += sec('🔴 Lo que debemos');
-  h += '<table style="width:100%;border-collapse:collapse;">';
-  h += row('Mamá / Puerta', '-' + fmt(deudaMama), '#ff3b30', '2%/mes = $1.000.000 mensual en intereses');
-  h += row('Finandina / SUFI', '-' + fmt(deudaSUFI), '#ff3b30', '2%/mes = $2.481.800 mensual en intereses');
-  h += row('TOTAL DEBEMOS', '-' + fmt(totalDebemos), '#ff3b30', 'Costo mensual: ' + fmt(costoMes), true, '#fff1f0');
-  h += '</table></div>';
-
-  // ──────────────────────────────────────────
-  // POSICIÓN NETA HOY
-  // ──────────────────────────────────────────
-  var posColor = posicionNeta >= 0 ? '#34C759' : '#ff3b30';
-  h += '<div style="background:' + (posicionNeta>=0?'#f0fff4':'#fff1f0') + ';border:2px solid ' + posColor + ';border-radius:12px;overflow:hidden;margin-bottom:20px;">';
-  h += '<div style="padding:12px 14px;font-size:11px;font-weight:700;color:' + posColor + ';text-transform:uppercase;letter-spacing:.6px;">⚖️ Posición neta al día de hoy</div>';
-  h += '<table style="width:100%;border-collapse:collapse;">';
-  h += row('Caja disponible en banco', fmt(cajaReal), '#34C759', 'Bancolombia + Scotia');
-  h += row('+ Lo que nos deben (billetera)', '+' + fmt(cartBilletera), '#007AFF', '6 deudores');
-  h += row('= Activos disponibles', fmt(activoDisponible), '#007AFF', null, true);
-  h += row('− Lo que debemos (Mamá + SUFI)', '-' + fmt(totalDebemos), '#ff3b30', null);
-  h += row('POSICIÓN NETA HOY', (posicionNeta>=0?'+':'') + fmt(posicionNeta), posColor, posicionNeta>=0 ? 'Saldo a favor después de cubrir todas las deudas' : '🔴 Falta esta cantidad para cubrir las deudas con lo disponible hoy', true, posicionNeta>=0?'#e8fff0':'#fff0f0');
-  h += '</table></div>';
-
-  // ──────────────────────────────────────────
-  // NOTA PROYECTOS (no disponibles, comprometidos)
-  // ──────────────────────────────────────────
-  h += '<div style="background:#f8f8f8;border-radius:12px;padding:14px 16px;margin-bottom:20px;border-left:4px solid #8e8e93;">';
-  h += '<div style="font-size:12px;font-weight:700;color:#6e6e73;margin-bottom:8px;">📌 Cartera comprometida con proyectos (no incluida arriba)</div>';
-  h += '<div style="font-size:12px;color:#1c1c1e;line-height:1.7;">';
-  h += '🏠 <strong>Robledo — $160M</strong> (Yulied): dinero para terminar y cerrar el proyecto Robledo.<br>';
-  h += '🏢 <strong>Novaeva — $85M</strong>: dinero para ejecutar el proyecto Novaeva.<br>';
-  h += '<span style="color:#6e6e73;">Estos fondos no son disponibles para deudas personales — están comprometidos operativamente.</span>';
-  h += '</div></div>';
-
-  // ── ALERTA costo deuda
-  h += '<div style="background:#fff1f0;border-radius:10px;padding:12px 16px;font-size:12px;color:#ff3b30;margin-bottom:8px;">';
-  h += '⚡ <strong>Costo de las deudas: ' + fmt(costoMes) + '/mes.</strong> Cada mes que pasa sin pagarlas se pierden ' + fmt(costoMes) + ' en intereses — en un año serían ' + fmt(costoMes*12) + '.';
-  h += '</div>';
-
-  el.innerHTML = h;
-}
 
 /* ═══════════════════════════════════════════════════
    ANÁLISIS — Vista de inteligencia por proveedores,
