@@ -716,114 +716,192 @@ nav:not(.sb-nav){display:none!important}
 }
 .bcn:hover{background:var(--sf3);color:var(--tx)}
 
-/* ── Section headers ── */
+
+/* ═══════════════════════════════════════════
+   DESIGN UPGRADE — Mejoras visuales profundas
+═══════════════════════════════════════════ */
+
+/* KPI — colored glow background per type */
+.kpi:has(.c-bl)::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 50%,rgba(91,91,214,.07) 0%,transparent 70%);pointer-events:none}
+.kpi:has(.c-gr)::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 50%,rgba(34,197,94,.07) 0%,transparent 70%);pointer-events:none}
+.kpi:has(.c-rd)::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 50%,rgba(239,68,68,.07) 0%,transparent 70%);pointer-events:none}
+.kpi:has(.c-or)::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 0% 50%,rgba(245,158,11,.07) 0%,transparent 70%);pointer-events:none}
+
+/* KPI value subtle scale on hover */
+.kpi:hover .kpi-v{transform:scale(1.03);transition:transform .18s}
+.kpi-v{transition:transform .18s}
+
+/* Better KPI label */
+.kpi-l{
+  font-size:9.5px;color:var(--tx3);font-weight:800;
+  margin-bottom:10px;letter-spacing:.8px;text-transform:uppercase;
+  display:flex;align-items:center;gap:4px;
+}
+
+/* ── Wallet cards — glass shimmer ── */
+.wallet{position:relative;overflow:hidden}
+.wallet::before{
+  content:'';position:absolute;
+  top:-50%;left:-60%;
+  width:60%;height:200%;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.15) 50%,transparent 60%);
+  transform:rotate(0);
+  transition:left .5s ease;
+  pointer-events:none;
+}
+.wallet:hover::before{left:120%}
+
+/* ── Project cards — top accent gradient ── */
+.proj{border-top:3px solid transparent;border-image:linear-gradient(90deg,var(--bl),var(--pu)) 1}
+.proj:hover .proj-nm{color:var(--bl);transition:color .18s}
+.proj-nm{transition:color .18s}
+
+/* ── Obra cards — better stats ── */
+.obra-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--bl),var(--pu));
+  opacity:0;transition:opacity .2s;
+}
+.obra-card:hover::after{opacity:1}
+.obra-stat{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:7px 0;border-bottom:1px solid rgba(91,91,214,.06);
+  font-size:12.5px;
+}
+.obra-stat:last-child{border-bottom:none}
+.obra-sl{font-size:11px;color:var(--tx2);margin-bottom:2px;font-weight:600;letter-spacing:.1px}
+.obra-sv{font-size:14px;font-weight:800;letter-spacing:-.3px}
+
+/* ── Burn card — elevated glass ── */
+.burn-card{
+  background:var(--sf);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  padding:20px;margin-bottom:14px;
+  border:1px solid rgba(255,255,255,.8);
+}
+
+/* ── Chart cards ── */
+.chart-card{
+  background:var(--sf);border-radius:var(--r);
+  padding:22px 24px;box-shadow:var(--sh);
+  border:1px solid rgba(255,255,255,.7);
+}
+
+/* ── Section headers — more vivid ── */
 .sec{
-  font-size:11px;font-weight:800;color:var(--tx3);
-  text-transform:uppercase;letter-spacing:1px;
-  margin:20px 0 10px;
-  display:flex;align-items:center;gap:8px;
+  font-size:9.5px;font-weight:800;color:var(--bl);
+  text-transform:uppercase;letter-spacing:1.4px;
+  margin:28px 0 12px;display:flex;align-items:center;gap:8px;
 }
-.sec::after{
-  content:'';flex:1;height:1px;background:var(--br);
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(91,91,214,.3),transparent)}
+
+/* ── Table — alternating rows, better feel ── */
+.ldg-tbl tbody tr:nth-child(even){background:rgba(91,91,214,.025)}
+.ldg-tbl tbody tr:hover{background:rgba(91,91,214,.07)!important}
+.proy-table tbody tr:nth-child(even) td{background:rgba(91,91,214,.02)}
+.proy-table tbody tr:hover:not(.grp-hdr) td{background:rgba(91,91,214,.06)!important}
+
+/* ── Better progress bars ── */
+.prog-f{
+  background:linear-gradient(90deg,var(--bl),var(--pu));
+  box-shadow:0 1px 6px rgba(91,91,214,.3);
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+}
+.bar-f{background:linear-gradient(90deg,var(--bl),var(--pu))}
+
+/* ── Alerts — better visual weight ── */
+.alert-r,.alert-y,.alert-g{
+  display:flex;gap:10px;align-items:flex-start;
+}
+.alert-banner{
+  position:relative;overflow:hidden;
+}
+.alert-banner::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:4px;border-radius:2px 0 0 2px;
+  background:rgba(255,255,255,.6);
 }
 
-/* ── Bottom nav polish ── */
-.bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;
-  height:var(--bnav);
-  background:rgba(255,255,255,.92);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid rgba(91,91,214,.1);
-  display:flex;align-items:center;justify-content:space-around;
-  z-index:200;padding:0 4px;
-  box-shadow:0 -4px 20px rgba(91,91,214,.08);
+/* ── Modal — professional feel ── */
+.modal{
+  background:var(--sf);
+  border-radius:24px 24px 0 0;
+  padding:24px 20px 32px;
+  width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 -12px 48px rgba(91,91,214,.22),0 -2px 8px rgba(0,0,0,.05);
+  border-top:1px solid rgba(255,255,255,.9);
 }
-.bn-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  gap:3px;padding:6px 0;border:none;background:none;cursor:pointer;
-  color:var(--tx3);transition:color .15s;border-radius:12px;
-  -webkit-tap-highlight-color:transparent;
-}
-.bn-item.on{color:var(--bl)}
-.bn-ico{font-size:20px;line-height:1}
-.bn-lbl{font-size:9.5px;font-weight:700;letter-spacing:.2px}
-.bn-more-panel{
-  position:fixed;bottom:calc(var(--bnav) + 6px);left:0;right:0;
-  background:rgba(255,255,255,.96);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid rgba(91,91,214,.1);
-  border-radius:20px 20px 0 0;
-  padding:16px 12px;z-index:190;
-  box-shadow:0 -8px 32px rgba(91,91,214,.12);
-}
-.bn-more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.bn-more-item{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:12px 4px;border-radius:14px;background:var(--sf2);
-  cursor:pointer;transition:all .15s;border:1.5px solid transparent;
-  -webkit-tap-highlight-color:transparent;
-}
-.bn-more-item:hover{border-color:var(--bl);background:rgba(91,91,214,.06)}
-.bn-more-ico{font-size:22px}
-.bn-more-lbl{font-size:10px;font-weight:700;color:var(--tx2);text-align:center}
-
-/* ── Sidebar polish ── */
-.sidebar{
-  width:var(--sw);position:fixed;left:0;top:0;bottom:0;
-  background:linear-gradient(180deg,#13113A 0%,#1E1B4B 100%);
-  z-index:300;display:flex;flex-direction:column;
-  box-shadow:4px 0 24px rgba(0,0,0,.15);
-}
-.sb-head{
-  height:var(--sb-head);display:flex;align-items:center;
-  padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08);
-  flex-shrink:0;
-}
-.sb-logo{font-size:15px;font-weight:900;color:#fff;letter-spacing:-.3px}
-.sb-logo span{color:var(--bl2)}
-.sb-nav{flex:1;overflow-y:auto;padding:10px 10px}
-.sb-nav::-webkit-scrollbar{width:0}
-.nav-item{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 12px;border-radius:12px;
-  font-size:13px;font-weight:600;color:rgba(255,255,255,.6);
-  cursor:pointer;transition:all .18s;margin-bottom:2px;
-  border:1.5px solid transparent;
-  -webkit-tap-highlight-color:transparent;
-}
-.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
-.nav-item.on{
-  background:rgba(91,91,214,.25);color:#fff;
-  border-color:rgba(91,91,214,.35);
-  box-shadow:0 2px 12px rgba(91,91,214,.2);
-}
-.nav-ico{font-size:16px;width:20px;text-align:center;flex-shrink:0}
-.sb-foot{
-  height:var(--sb-foot);display:flex;align-items:center;
-  padding:0 16px;border-top:1px solid rgba(255,255,255,.08);
-  font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0;
+@media(min-width:600px){
+  .modal{border-radius:24px;max-height:85vh}
 }
 
-/* ── Main layout ── */
-.main{
-  margin-left:var(--sw);min-height:100vh;
-  background:var(--bg);
+/* ── Inputs — better focus ── */
+.inp,.fg input,.fg select,.fg textarea{
+  background:var(--sf2);
+  border:1.5px solid rgba(91,91,214,.15);
+  transition:border-color .2s,box-shadow .2s,background .2s;
 }
-.page-hd{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:20px 24px 14px;
-  flex-wrap:wrap;gap:10px;
+.inp:focus,.fg input:focus,.fg select:focus,.fg textarea:focus{
+  border-color:var(--bl);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(91,91,214,.12);
 }
-.page-title{font-size:22px;font-weight:900;letter-spacing:-.5px;color:var(--tx)}
-.page-sub{font-size:13px;color:var(--tx2);margin-top:2px}
-.content{padding:0 24px 32px}
 
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0;padding-bottom:calc(var(--bnav) + 12px)}
-  .page-hd{padding:14px 16px 10px}
-  .content{padding:0 14px 24px}
+/* ── Save button — gradient ── */
+.bsv{
+  background:linear-gradient(135deg,var(--bl),var(--pu));
+  box-shadow:0 4px 14px rgba(91,91,214,.35);
+  border:none;
+}
+.bsv:hover{
+  background:linear-gradient(135deg,var(--bl2),var(--pu));
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(91,91,214,.45);
+}
+
+/* ── Badge pill animations ── */
+.badge,.bw,.br_,.bn,.be{
+  transition:transform .15s,box-shadow .15s;
+}
+.badge:hover,.bw:hover,.br_:hover{transform:scale(1.04)}
+
+/* ── Pos-financiera neta ── */
+.pos-neta{
+  background:linear-gradient(135deg,#0F0E2E 0%,#1E1B4B 50%,#3730A3 100%);
+  box-shadow:0 12px 40px rgba(91,91,214,.35),0 4px 12px rgba(0,0,0,.15);
+}
+
+/* ── Fin hero ── */
+.fin-hero{
+  background:linear-gradient(135deg,#0F0E2E 0%,#1E1B4B 40%,#312E81 80%,#4C46C8 100%);
+  box-shadow:0 16px 48px rgba(91,91,214,.45),0 4px 16px rgba(0,0,0,.15);
+}
+
+/* ── Ledger wrap ── */
+.ldg-wrap{
+  border:1px solid rgba(255,255,255,.7);
+}
+
+/* ── Cat chart wrap — responsive ── */
+@media(max-width:540px){
+  .cat-chart-wrap{flex-direction:column}
+  .cat-chart-wrap canvas{max-width:200px;margin:0 auto}
+}
+
+/* ── Micro-animation on card entrance ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi,.proj,.obra-card,.wallet{animation:fadeUp .35s ease both}
+.kpi:nth-child(2){animation-delay:.05s}
+.kpi:nth-child(3){animation-delay:.1s}
+.kpi:nth-child(4){animation-delay:.15s}
+
+/* ── Smooth color transitions everywhere ── */
+*{transition-property:none}
+.ni,.bn-item,.wallet,.proj,.obra-card,.kpi,.bsv,.bcn,.btn-clr,.bsm,.obra-opt,.area-chip{
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,border-color .18s ease;
 }
 </style>
 </head>
