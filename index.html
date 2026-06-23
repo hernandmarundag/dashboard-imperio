@@ -593,22 +593,26 @@ nav:not(.sb-nav){display:none!important}
 
 /* Distribución del gasto — chart + list */
 .cat-chart-wrap{
-  background:var(--sf);border-radius:var(--r);
-  box-shadow:var(--sh);padding:22px 24px;
-  display:flex;gap:28px;align-items:flex-start;
+  background:#fff;border-radius:16px;
+  box-shadow:var(--sh);padding:20px 22px;
+  display:flex;gap:24px;align-items:center;
   margin-bottom:14px;
+  border:1px solid rgba(99,102,241,.06);
 }
-.cat-chart-list{flex:1;display:flex;flex-direction:column;gap:2px}
+.cat-chart-list{
+  flex:1;display:flex;flex-direction:column;gap:1px;
+  max-width:480px; /* prevent stretching on wide screens */
+}
 .cat-row{
   display:flex;align-items:center;gap:10px;
-  padding:7px 12px;border-radius:10px;
-  transition:background .15s;cursor:default;
+  padding:6px 10px;border-radius:8px;
+  transition:background .12s;cursor:default;
 }
-.cat-row:hover{background:var(--sf2)}
-.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.cat-nm{flex:1;font-size:13px;font-weight:500;color:var(--tx)}
-.cat-pct{font-size:12px;font-weight:800;color:var(--tx2);min-width:34px;text-align:right}
-.cat-amt{font-size:13px;font-weight:700;color:var(--tx);min-width:64px;text-align:right;letter-spacing:-.2px}
+.cat-row:hover{background:rgba(99,102,241,.04)}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;opacity:.9}
+.cat-nm{flex:1;font-size:12.5px;font-weight:500;color:var(--tx);letter-spacing:-.1px}
+.cat-pct{font-size:11.5px;font-weight:700;color:var(--tx3);min-width:30px;text-align:right}
+.cat-amt{font-size:12.5px;font-weight:800;color:var(--tx);min-width:60px;text-align:right;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
 
 /* ── Pagos card ── */
 .pago-card{border-radius:14px;box-shadow:var(--sh);background:var(--sf);overflow:hidden}
@@ -1975,86 +1979,126 @@ nav:not(.sb-nav){display:none!important}
 }
 
 /* Banner hero por proyecto — colores únicos via data-obra */
-/* El JS pone id="pph-weliving", "pph-robledo", "pph-novaeva" */
-/* Usamos :has() o hermano — lo más limpio es sobre el view padre */
+/* ═══════════════════════════════════════
+   OBRA PAGE — Hero header + body split
+═══════════════════════════════════════ */
 
-/* Weliving — indigo / violet */
-#pph-weliving{
-  background:linear-gradient(160deg,#0F0B32 0%,#1E1660 40%,#3730A3 75%,#6366F1 100%);
-  border:1px solid rgba(99,102,241,.2);
-  box-shadow:0 8px 32px rgba(99,102,241,.25),0 2px 8px rgba(0,0,0,.15);
+/* Wrapper general de la obra — sin fondo propio */
+.pp-hd{
+  background:transparent;
+  border-radius:0;
+  box-shadow:none;
+  padding:0;
 }
 
-/* Robledo — amber / orange */
-#pph-robledo{
-  background:linear-gradient(160deg,#1C0F00 0%,#451A03 40%,#92400E 75%,#F59E0B 100%);
-  border:1px solid rgba(245,158,11,.2);
-  box-shadow:0 8px 32px rgba(245,158,11,.2),0 2px 8px rgba(0,0,0,.15);
+/* HERO WRAP — contiene nombre, progreso y stats k2 */
+.obra-hero-wrap{
+  border-radius:20px;
+  padding:22px 22px 18px;
+  color:#fff;
+  position:relative;
+  overflow:hidden;
+  margin-bottom:12px;
 }
-
-/* Novaeva — emerald / teal */
-#pph-novaeva{
-  background:linear-gradient(160deg,#022C22 0%,#064E3B 40%,#065F46 75%,#10B981 100%);
-  border:1px solid rgba(16,185,129,.2);
-  box-shadow:0 8px 32px rgba(16,185,129,.2),0 2px 8px rgba(0,0,0,.15);
-}
-
-/* Decoración radial superior derecha */
-#pph-weliving::before,#pph-robledo::before,#pph-novaeva::before{
-  content:'';position:absolute;
-  top:-50px;right:-50px;
-  width:180px;height:180px;border-radius:50%;
+/* Decoración radial */
+.obra-hero-wrap::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);
-  pointer-events:none;z-index:0;
+  pointer-events:none;
 }
-#pph-weliving::after,#pph-robledo::after,#pph-novaeva::after{
-  content:'';position:absolute;
-  bottom:-30px;left:-20px;
-  width:120px;height:120px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.06) 0%,transparent 70%);
-  pointer-events:none;z-index:0;
+.obra-hero-wrap::after{
+  content:'';position:absolute;bottom:-30px;left:-20px;
+  width:100px;height:100px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.07) 0%,transparent 70%);
+  pointer-events:none;
 }
 
-/* El contenido dentro del pp-hd lo genera JS — necesita z-index para estar sobre decoración */
-#pph-weliving > *,#pph-robledo > *,#pph-novaeva > *{
+/* Color único por obra */
+#pph-weliving .obra-hero-wrap{
+  background:linear-gradient(135deg,#1E1660 0%,#3730A3 50%,#6366F1 100%);
+  box-shadow:0 8px 28px rgba(99,102,241,.35);
+}
+#pph-robledo .obra-hero-wrap{
+  background:linear-gradient(135deg,#451A03 0%,#92400E 50%,#D97706 100%);
+  box-shadow:0 8px 28px rgba(217,119,6,.3);
+}
+#pph-novaeva .obra-hero-wrap{
+  background:linear-gradient(135deg,#064E3B 0%,#065F46 50%,#10B981 100%);
+  box-shadow:0 8px 28px rgba(16,185,129,.3);
+}
+
+/* Nombre obra y badge */
+.obra-hero-wrap .proj-hd{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;
+}
+.obra-hero-wrap .proj-nm{
+  font-size:22px;font-weight:900;letter-spacing:-.5px;color:#fff;
+}
+/* Progress bar dentro del hero */
+.obra-hero-wrap .prog-bg{
+  height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 0 4px;overflow:hidden;
+}
+.obra-hero-wrap .prog-f{
+  height:4px;border-radius:2px;background:rgba(255,255,255,.9);
+  box-shadow:0 0 6px rgba(255,255,255,.5);
+}
+.obra-hero-wrap .prog-pct{
+  font-size:10px;color:rgba(255,255,255,.55);font-weight:600;margin-bottom:14px;
+}
+/* Stat mini-cards dentro del hero — glass */
+.obra-hero-wrap .k2g{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;
   position:relative;z-index:1;
 }
-
-/* Los k2 (stat mini-cards) dentro del hero deben ser glass blancos */
-#pph-weliving .k2,#pph-robledo .k2,#pph-novaeva .k2{
+.obra-hero-wrap .k2{
   background:rgba(255,255,255,.1);
   border:1px solid rgba(255,255,255,.15);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
+  border-radius:12px;padding:10px 12px;
 }
-#pph-weliving .k2l,#pph-robledo .k2l,#pph-novaeva .k2l{
-  color:rgba(255,255,255,.55);
-  text-transform:uppercase;letter-spacing:.5px;font-size:9px;
+.obra-hero-wrap .k2l{
+  font-size:9px;color:rgba(255,255,255,.5);
+  font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;
 }
-#pph-weliving .k2v,#pph-robledo .k2v,#pph-novaeva .k2v{
-  color:#fff;font-size:15px;font-weight:800;
+.obra-hero-wrap .k2v{
+  font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px;
 }
-/* Sobreescribir colores c-bl, c-gr, c-rd dentro del hero */
-#pph-weliving .c-bl,#pph-robledo .c-bl,#pph-novaeva .c-bl,
-#pph-weliving .c-gr,#pph-robledo .c-gr,#pph-novaeva .c-gr,
-#pph-weliving .c-rd,#pph-robledo .c-rd,#pph-novaeva .c-rd,
-#pph-weliving .c-or,#pph-robledo .c-or,#pph-novaeva .c-or,
-#pph-weliving .c-gy,#pph-robledo .c-gy,#pph-novaeva .c-gy{
-  color:#fff !important;
+/* override color classes inside hero */
+.obra-hero-wrap .c-bl,.obra-hero-wrap .c-gr,.obra-hero-wrap .c-rd,
+.obra-hero-wrap .c-or,.obra-hero-wrap .c-gy{ color:#fff !important; }
+
+/* Badges dentro del hero */
+.obra-hero-wrap .badge{
+  background:rgba(255,255,255,.18);color:#fff;
+  border:1px solid rgba(255,255,255,.25);
 }
-/* proj-hd dentro del hero: texto blanco */
-#pph-weliving .proj-hd,#pph-robledo .proj-hd,#pph-novaeva .proj-hd,
-#pph-weliving .proj-nm,#pph-robledo .proj-nm,#pph-novaeva .proj-nm{
-  color:#fff;
+
+/* BODY WRAP — paneles de caja y notas: FONDO BLANCO siempre */
+.obra-body-wrap{
+  background:transparent;
 }
-/* Textos generales dentro del hero */
-#pph-weliving,#pph-robledo,#pph-novaeva{
-  color:#fff;
+.obra-body-wrap > div{
+  background:#fff !important;
+  border-radius:14px !important;
+  margin-bottom:10px !important;
+  padding:14px 16px !important;
+  box-shadow:0 1px 3px rgba(99,102,241,.06),0 4px 12px rgba(99,102,241,.08) !important;
+  border:1px solid rgba(99,102,241,.06) !important;
 }
-#pph-weliving *:not(.k2):not(.k2l):not(.k2v),
-#pph-robledo *:not(.k2):not(.k2l):not(.k2v),
-#pph-novaeva *:not(.k2):not(.k2l):not(.k2v){
-  color:inherit;
+/* Preservar colores semánticos de texto dentro del body */
+.obra-body-wrap .c-bl{color:var(--bl)!important}
+.obra-body-wrap .c-gr{color:var(--gr)!important}
+.obra-body-wrap .c-rd{color:var(--rd)!important}
+.obra-body-wrap .c-or{color:var(--or)!important}
+/* proj-nota */
+.obra-body-wrap .proj-nota{
+  font-size:11px;color:var(--tx3);font-style:italic;
+  background:#fff !important;
+  border-left:3px solid rgba(99,102,241,.2) !important;
+  padding:10px 14px !important;
+  border-radius:10px !important;
+  box-shadow:none !important;
 }
 
 /* ── Libro de gastos (tabla refinada) ── */
@@ -2968,18 +3012,18 @@ const BASE_CAT = {
 };
 
 const CAT_DEFS = [
-  {k:'mo',   l:'MO',             c:'#007AFF'},
-  {k:'mat',  l:'Materiales',     c:'#34C759'},
-  {k:'adm',  l:'Administración', c:'#AF52DE'},
-  {k:'exc',  l:'Excavación',     c:'#FF9500'},
-  {k:'alq',  l:'Alquiler eq.',   c:'#FF3B30'},
-  {k:'ss',   l:'Seg. Social',    c:'#5AC8FA'},
-  {k:'seg',  l:'Seguros',        c:'#FFD60A'},
-  {k:'her',  l:'Herramienta',    c:'#FF9F0A'},
-  {k:'tsp',  l:'Transporte',     c:'#30D158'},
-  {k:'var2', l:'Varios',         c:'#636366'},
-  {k:'act',  l:'Activos',        c:'#BF5AF2'},
-  {k:'nom',  l:'Nómina Emp.',    c:'#32ADE6'},
+  {k:'mo',   l:'MO',             c:'#6366F1'},
+  {k:'mat',  l:'Materiales',     c:'#10B981'},
+  {k:'adm',  l:'Administración', c:'#8B5CF6'},
+  {k:'exc',  l:'Excavación',     c:'#F59E0B'},
+  {k:'alq',  l:'Alquiler eq.',   c:'#EF4444'},
+  {k:'ss',   l:'Seg. Social',    c:'#06B6D4'},
+  {k:'seg',  l:'Seguros',        c:'#F97316'},
+  {k:'her',  l:'Herramienta',    c:'#A78BFA'},
+  {k:'tsp',  l:'Transporte',     c:'#34D399'},
+  {k:'var2', l:'Varios',         c:'#94A3B8'},
+  {k:'act',  l:'Activos',        c:'#C084FC'},
+  {k:'nom',  l:'Nómina Emp.',    c:'#38BDF8'},
 ];
 
 
@@ -3782,14 +3826,19 @@ function rProjHeader(o) {
         +'</div>';
       })();
 
-  el.innerHTML='<div class="proj-hd">'
+  el.innerHTML='<div class="obra-hero-wrap">'
+    +'<div class="proj-hd">'
     +'<div class="proj-nm">'+pc.nm+'</div>'
     +'<span class="badge '+pc.bcls+'">'+pc.badge+'</span>'
     +'</div>'
     +'<div class="prog-bg"><div class="prog-f" style="width:'+pc.prog+'%;background:'+pc.col+'"></div></div>'
     +'<div class="prog-pct">'+pc.prog+'% — '+pc.etapa+'</div>'
-    +stats+bud
-    +'<div class="proj-nota">'+pc.nota+'</div>';
+    +stats
+    +'</div>'
+    +'<div class="obra-body-wrap">'
+    +bud
+    +'<div class="proj-nota">'+pc.nota+'</div>'
+    +'</div>';
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3837,9 +3886,9 @@ function rCategories(o) {
   el.innerHTML = '<div class="cat-chart-wrap">'
     +'<div style="position:relative;width:180px;height:180px;flex-shrink:0">'
       +'<canvas id="'+chartId+'" width="180" height="180"></canvas>'
-      +'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">'
-        +'<div style="font-size:11px;color:var(--tx2);font-weight:600">TOTAL</div>'
-        +'<div style="font-size:15px;font-weight:900;color:var(--tx)">'+fmtM(total)+'</div>'
+      +'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px">'
+        +'<div style="font-size:9px;color:var(--tx3);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">Total</div>'
+        +'<div style="font-size:16px;font-weight:900;color:var(--tx);letter-spacing:-.5px;line-height:1.1">'+fmtM(total)+'</div>'
       +'</div>'
     +'</div>'
     +'<div class="cat-chart-list">'
@@ -3864,12 +3913,12 @@ function rCategories(o) {
           datasets: [{
             data: catData.map(function(d){return Math.round(d.v/1e6*100)/100;}),
             backgroundColor: catData.map(function(d){return d.c;}),
-            borderWidth: 3, borderColor: 'var(--sf)',
-            hoverOffset: 6
+            borderWidth: 2, borderColor: '#fff',
+            hoverOffset: 4
           }]
         },
         options: {
-          cutout: '66%', responsive: false,
+          cutout: '74%', responsive: false,
           plugins: {
             legend: {display:false},
             tooltip: {callbacks:{label:function(ctx){return ' '+ctx.label+': $'+ctx.raw+'M';}}}
