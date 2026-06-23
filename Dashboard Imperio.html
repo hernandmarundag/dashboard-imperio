@@ -2796,117 +2796,78 @@ function rCajaJun9Chart() {
 }
 
 /* ═══════════════════════════════════════════════════
-   BURN RATE CHART — quema mensual por obra
+   ÚLTIMOS 15 DÍAS — gasto diario por obra
 ═══════════════════════════════════════════════════ */
 function rBurnRate(o) {
   if (typeof Chart === 'undefined') return;
-  var burnId  = 'chart-burn-' + o;
-  var wrapEl  = document.getElementById('burn-' + o);
+  var burnId = 'chart-burn-' + o;
+  var wrapEl = document.getElementById('burn-' + o);
   if (!wrapEl) return;
   _destroyChart(burnId);
 
-  // Agrupar LIVE[o] por mes
-  var monthly = {};
-  (LIVE[o] || []).forEach(function(e) {
-    var ts = parseFecha(e.f || '');
-    if (!ts) return;
-    var d = new Date(ts);
-    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    monthly[key] = (monthly[key] || 0) + (e.monto || 0);
-  });
-  // También agregar hist
-  (S.hist[o] || []).forEach(function(e) {
-    var ts = parseFecha(e.f || '');
-    if (!ts) return;
-    var d = new Date(ts);
-    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    monthly[key] = (monthly[key] || 0) + (e.monto || 0);
-  });
-
-  var keys = Object.keys(monthly).sort();
-  if (keys.length === 0) {
-    wrapEl.style.display = 'none';
-    return;
+  // Últimos 15 días
+  var today = new Date();
+  var days = [];
+  for (var i = 14; i >= 0; i--) {
+    var dd = new Date(today);
+    dd.setDate(today.getDate() - i);
+    var key = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+    days.push({key:key, v:0, d:dd});
   }
-  wrapEl.style.display = '';
+  var dayMap = {};
+  days.forEach(function(d){ dayMap[d.key] = 0; });
 
-  var cumulative = 0;
-  var cumData = keys.map(function(k) {
-    cumulative += monthly[k]; return Math.round(cumulative / 1e6 * 10) / 10;
-  });
-  var barData = keys.map(function(k) { return Math.round(monthly[k] / 1e6 * 10) / 10; });
+  function addG(e) {
+    var ts = parseFecha(e.f || '');
+    if (!ts) return;
+    var d2 = new Date(ts);
+    var k = d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
+    if (dayMap.hasOwnProperty(k)) dayMap[k] += (e.monto || 0);
+  }
+  (LIVE[o] || []).forEach(addG);
+  (S.hist[o] || []).forEach(addG);
 
-  // Colores según obra
-  var col = obraReg(o).col || '#3b82f6';
-  var colFill = 'rgba(99,102,241,.15)';
+  var total15 = days.reduce(function(s,d){ return s + dayMap[d.key]; }, 0);
+  var col = obraReg(o).col || '#5B5BD6';
+  var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  var lbls = days.map(function(d){ return dias[d.d.getDay()]+' '+d.d.getDate(); });
+  var vals = days.map(function(d){ return Math.round(dayMap[d.key]/1e6*100)/100; });
+  var maxV = Math.max.apply(null, vals);
 
-  var lbls = keys.map(function(k) {
-    var p = k.split('-');
-    var meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return meses[parseInt(p[1])] + ' ' + p[0].slice(2);
-  });
+  wrapEl.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">'
+    +'<div><div style="font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Total últimos 15 días</div>'
+    +'<div style="font-size:26px;font-weight:900;color:var(--tx);letter-spacing:-1px">'+fmtM(total15)+'</div></div>'
+    +'<div style="font-size:11px;color:var(--tx3)">Promedio: '+fmtM(total15/15)+'/día</div>'
+    +'</div>'
+    +'<canvas id="'+burnId+'" style="max-height:150px"></canvas>';
 
   var ctx = document.getElementById(burnId);
   if (!ctx) return;
   _charts[burnId] = new Chart(ctx, {
+    type: 'bar',
     data: {
       labels: lbls,
-      datasets: [
-        {
-          type: 'bar',
-          label: 'Gasto mensual',
-          data: barData,
-          backgroundColor: colFill.replace('.15', '.5'),
-          borderColor: col,
-          borderWidth: 1,
-          borderRadius: 5,
-          yAxisID: 'y'
-        },
-        {
-          type: 'line',
-          label: 'Acumulado',
-          data: cumData,
-          borderColor: col,
-          backgroundColor: colFill,
-          borderWidth: 2.5,
-          pointRadius: 3,
-          pointBackgroundColor: col,
-          tension: 0.35,
-          fill: true,
-          yAxisID: 'y2'
-        }
-      ]
+      datasets: [{
+        data: vals,
+        backgroundColor: vals.map(function(v){ return v===maxV&&v>0?col:'rgba(91,91,214,.22)'; }),
+        borderColor: vals.map(function(v){ return v>0?col:'transparent'; }),
+        borderWidth: 1.5, borderRadius: 6, hoverBackgroundColor: col
+      }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { labels: { color: '#64748b', font: { size: 11, weight: '600' }, boxWidth: 10, padding: 14 } },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) {
-              return ' ' + ctx.dataset.label + ': $' + ctx.raw + 'M';
-            }
-          }
-        }
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(c){return ' $'+c.raw+'M';}}}
       },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
-        y: {
-          position: 'left',
-          grid: { color: 'rgba(0,0,0,.04)' },
-          ticks: { color: '#94a3b8', callback: function(v) { return '$' + v + 'M'; }, font: { size: 10 } },
-          beginAtZero: true
-        },
-        y2: {
-          position: 'right',
-          grid: { drawOnChartArea: false },
-          ticks: { color: col, callback: function(v) { return '$' + v + 'M'; }, font: { size: 10 } },
-          beginAtZero: true
-        }
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:9}}},
+        y:{grid:{color:'rgba(91,91,214,.06)'},ticks:{color:'#94A3B8',font:{size:9},callback:function(v){return v>0?'$'+v+'M':'';},maxTicksLimit:4},border:{display:false}}
       }
     }
   });
+
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5350,10 +5311,8 @@ function initObrasViews() {
       + '<div class="pp-hd" id="pph-'+id+'"></div>'
       + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribucion del gasto</div>'
       + '<div id="cat-'+id+'"></div>'
-      + '<div class="sec" style="margin-top:12px">'+ICO_BURN+' Quema mensual - '+r.nm+'</div>'
-      + '<div class="burn-card" id="burn-'+id+'">'
-      + '<canvas id="chart-burn-'+id+'" style="max-height:170px"></canvas>'
-      + '</div>'
+      + '<div class="sec" style="margin-top:12px">📅 Últimos 15 días — '+r.nm+'</div>'
+      + '<div class="burn-card" id="burn-'+id+'"></div>'
       + '<div class="sec">Libro de gastos</div>'
       + dedupBar
       + '<div class="ldg-wrap" id="ldg-'+id+'"></div>'
