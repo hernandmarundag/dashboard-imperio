@@ -326,6 +326,9 @@ nav:not(.sb-nav){display:none!important}
 .bsv:active{transform:scale(.97)}
 .btn-clr{padding:8px 14px;border:none;border-radius:10px;background:var(--sf2);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--br)}
 .btn-clr:hover{background:var(--sf3)}
+.btn{padding:10px 20px;border:none;border-radius:12px;background:var(--bl);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
 .bsm{
   padding:7px 14px;border-radius:20px;
   background:var(--sf2);color:var(--tx2);
@@ -891,6 +894,7 @@ nav:not(.sb-nav){display:none!important}
 }
 
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes ldg-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ═══════════════════════════════════════════
    MOBILE — Layout app nativa completo
@@ -1114,10 +1118,13 @@ nav:not(.sb-nav){display:none!important}
 .rtot td{background:var(--sf2)!important;font-weight:700;font-size:12px;color:var(--tx2)}
 
 /* ── ov-box (nueva obra modal) ── */
-.ov-box{background:var(--sf);border-radius:20px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;overflow:hidden}
+.ov-box{background:var(--sf);border-radius:20px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:520px;overflow:hidden}
 .ov-hd{font-size:15px;font-weight:700;padding:16px 18px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;color:var(--tx)}
 .ov-x{cursor:pointer;color:var(--tx3);font-size:16px;transition:color .15s}
 .ov-x:hover{color:var(--rd)}
+/* Nueva Obra: siempre centrada, no bottom-sheet */
+#ov-nueva-obra.on{align-items:center;padding:24px}
+#ov-nueva-obra .ov-box{border-radius:20px}
 
 /* Mobile fixes for movimientos */
 @media(max-width:768px){
@@ -1279,378 +1286,6 @@ nav:not(.sb-nav){display:none!important}
   </div>
   <div class="view" id="v-movimientos">
     <div id="movs-all-content"></div>
-  </div>
-  <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.35)">⬇ El informe detallado de gastos Jun 9-15 por obra continúa abajo</div>
-</div>
-<h1>📊 Informe de Gastos — Jun 9 al 15, 2026</h1>
-  <div class="sub">Seguimiento del dinero ingresado el 9–10 de junio · Fuente: Supabase (Base de datos Imperial) · Generado 15 Jun 2026</div>
-
-  <!-- RESUMEN EJECUTIVO -->
-  <div class="sec-tit">Resumen por obra</div>
-  <div class="res-grid">
-
-    <div class="res-card" style="border-top:4px solid #007AFF">
-      <div class="res-obra"><span>🏗 Weliving</span><span class="c-bl" style="font-size:11px">21 movimientos</span></div>
-      <div class="res-row"><span class="res-lbl">💵 Entró el 9 Jun</span><span class="res-val c-bl">$110.000.000</span></div>
-      <div class="res-row"><span class="res-lbl">📤 Total gastado</span><span class="res-val c-rd">$33.588.876</span></div>
-      <div class="res-row"><span class="res-lbl">📅 Días cubiertos</span><span class="res-val c-gy">9 – 14 Jun</span></div>
-      <div class="res-saldo">
-        <span class="rs-l">Saldo disponible</span>
-        <span class="rs-v c-gr">$76.411.124</span>
-      </div>
-    </div>
-
-    <div class="res-card" style="border-top:4px solid #FF9500">
-      <div class="res-obra"><span>🏠 Robledo</span><span class="c-or" style="font-size:11px">25 movimientos</span></div>
-      <div class="res-row"><span class="res-lbl">💵 Entró el 9 Jun</span><span class="res-val c-bl">$145.000.000</span></div>
-      <div class="res-row"><span class="res-lbl">📤 Total gastado</span><span class="res-val c-rd">$35.840.762</span></div>
-      <div class="res-row"><span class="res-lbl">📅 Días cubiertos</span><span class="res-val c-gy">9 – 14 Jun</span></div>
-      <div class="res-saldo">
-        <span class="rs-l">Saldo disponible</span>
-        <span class="rs-v c-gr">$109.159.238</span>
-      </div>
-    </div>
-
-    <div class="res-card" style="border-top:4px solid #34C759">
-      <div class="res-obra"><span>🏢 Novaeva</span><span class="c-gr" style="font-size:11px">6 movimientos</span></div>
-      <div class="res-row"><span class="res-lbl">💵 Entró el 10 Jun</span><span class="res-val c-bl">$20.000.000</span></div>
-      <div class="res-row"><span class="res-lbl">📤 Total gastado</span><span class="res-val c-rd">$10.193.800</span></div>
-      <div class="res-row"><span class="res-lbl">📅 Días cubiertos</span><span class="res-val c-gy">10 – 15 Jun</span></div>
-      <div class="res-saldo">
-        <span class="rs-l">Saldo disponible</span>
-        <span class="rs-v c-gr">$9.806.200</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOTALIZADOR GLOBAL -->
-  <div class="tot-bar">
-    <div class="tot-item">
-      <div class="tot-l">Total ingresó</div>
-      <div class="tot-v" style="color:#5AC8FA">$275.000.000</div>
-    </div>
-    <div class="tot-item">
-      <div class="tot-l">Total gastado (6 días)</div>
-      <div class="tot-v" style="color:#FF6B6B">$79.623.438</div>
-      <div class="tot-pct">29,0% del total recibido</div>
-    </div>
-    <div class="tot-item">
-      <div class="tot-l">Saldo acumulado</div>
-      <div class="tot-v" style="color:#34C759">$195.376.562</div>
-      <div class="tot-pct">71,0% disponible</div>
-    </div>
-    <div class="tot-item">
-      <div class="tot-l">Quemado / día</div>
-      <div class="tot-v" style="color:#FFD60A">$11.374.777</div>
-      <div class="tot-pct">promedio 6 días hábiles</div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════ WELIVING ══════════════════════ -->
-  <div class="sec-tit">🏗 Weliving — Detalle por fecha</div>
-  <div class="obra-sec">
-    <div class="obra-hd" style="background:#eff6ff">
-      <span class="obra-title">Weliving · Juan Campillo (abono Jun 9)</span>
-      <span class="obra-tot c-rd">−$33.588.876</span>
-    </div>
-
-    <!-- 9 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 9 de junio</span><span class="dia-tot">$4.694.943</span></div>
-      <table>
-        <tr><td class="td-prv">San Pío (ferretería)</td><td class="td-desc">Material hierro P3 — acero para armado losa</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$4.644.943</td></tr>
-        <tr><td class="td-prv">Vigilante</td><td class="td-desc">Pago vigilancia nocturna obra</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$50.000</td></tr>
-      </table>
-    </div>
-
-    <!-- 10 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 10 de junio</span><span class="dia-tot">$5.668.500</span></div>
-      <table>
-        <tr><td class="td-prv">Daiver Valoyes</td><td class="td-desc">Préstamo a empleado — anticipo de nómina</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$100.000</td></tr>
-        <tr style="background:#fff7ed"><td class="td-prv"><strong>Manuela Gil Rojas</strong></td><td class="td-desc"><strong>Alquiler de equipos</strong> — factura pendiente registrar</td><td><span class="td-cat" style="background:#ffedd5;color:#c2410c">Alquiler equipos</span></td><td class="td-amt" style="font-size:14px">$5.000.000</td></tr>
-        <tr><td class="td-prv">San Pío (ferretería)</td><td class="td-desc">Alambre</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$568.500</td></tr>
-      </table>
-    </div>
-
-    <!-- 11 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 11 de junio</span><span class="dia-tot">$12.368.433</span></div>
-      <table>
-        <tr><td class="td-prv">Transporte y Bombeo Ant.</td><td class="td-desc">Bombeo columnas P2–P3 (factura 19 may + ajuste 8 may)</td><td><span class="td-cat">Alquiler equipos</span></td><td class="td-amt">$1.115.000</td></tr>
-        <tr><td class="td-prv">San Pío (ferretería)</td><td class="td-desc">Insumos de trabajo — guantes y varios</td><td><span class="td-cat">Herramientas</span></td><td class="td-amt">$634.080</td></tr>
-        <tr><td class="td-prv">Steckerl Aceros</td><td class="td-desc">Hierro columnas P3–P4 (acero estructural)</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$10.000.000</td></tr>
-        <tr><td class="td-prv">Steckerl Aceros</td><td class="td-desc">Alambre corrugado</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$164.816</td></tr>
-        <tr><td class="td-prv">Papelería</td><td class="td-desc">Papelería obra</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$108.370</td></tr>
-        <tr><td class="td-prv">Biloria</td><td class="td-desc">Liquidación empleado anterior</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$216.167</td></tr>
-        <tr><td class="td-prv">Adriana Patricia López</td><td class="td-desc">Gestión seguridad social — trámite SS</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$130.000</td></tr>
-      </table>
-    </div>
-
-    <!-- 14 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 14 de junio — Nómina Jun 1 al 15</span><span class="dia-tot">$10.857.000</span></div>
-      <table>
-        <tr><td colspan="4" style="padding:7px 18px;background:#f0f9ff;font-size:11px;color:#1d4ed8;font-weight:700">👷 Obreros de obra (7 personas)</td></tr>
-        <tr><td class="td-prv">Eugenio Salgado</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$2.000.000</td></tr>
-        <tr><td class="td-prv">Luis Alberto Coronado</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$1.250.000</td></tr>
-        <tr><td class="td-prv">Jose Alberto Batista</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$1.400.000</td></tr>
-        <tr><td class="td-prv">Johan Estiven Jaramillo</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$1.000.000</td></tr>
-        <tr><td class="td-prv">Daiber Valoyes</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$900.000</td></tr>
-        <tr><td class="td-prv">Yorbis Borja</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$903.000</td></tr>
-        <tr><td class="td-prv">Marvin Jose Matos</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$800.000</td></tr>
-        <tr><td colspan="4" style="padding:7px 18px;background:#f3e8ff;font-size:11px;color:#7c3aed;font-weight:700">👔 Administración compartida (3 personas)</td></tr>
-        <tr><td class="td-prv">Jhon Alexander Castro</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$1.250.000</td></tr>
-        <tr><td class="td-prv">Luis Albeiro Jiménez</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$825.000</td></tr>
-        <tr><td class="td-prv">María Fernanda García</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$529.000</td></tr>
-      </table>
-    </div>
-
-    <!-- Categorías Weliving -->
-    <div style="padding:14px 18px 6px;font-size:11px;font-weight:700;color:#636366;text-transform:uppercase;letter-spacing:.6px;border-top:1px solid #e5e5ea">Distribución por categoría</div>
-    <div class="cat-grid">
-      <div class="cat-it"><div class="cat-bar-bg" style="width:100%;background:#007AFF"></div><div class="cat-nm">Materiales (acero/alambre)</div><div class="cat-amt c-bl">$15.378.259</div><div class="cat-pct">53,8%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:80%;background:#34C759"></div><div class="cat-nm">Nómina MO obreros</div><div class="cat-amt c-gr">$8.253.000</div><div class="cat-pct">28,9%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:25%;background:#AF52DE"></div><div class="cat-nm">Nómina Administración</div><div class="cat-amt" style="color:#AF52DE">$2.604.000</div><div class="cat-pct">9,1%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:12%;background:#FF9500"></div><div class="cat-nm">Alquiler equipos</div><div class="cat-amt c-or">$1.115.000</div><div class="cat-pct">3,9%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:7%;background:#FF9F0A"></div><div class="cat-nm">Herramientas</div><div class="cat-amt" style="color:#FF9F0A">$634.080</div><div class="cat-pct">2,2%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:5%;background:#636366"></div><div class="cat-nm">Liquidaciones / SS</div><div class="cat-amt c-gy">$346.167</div><div class="cat-pct">1,2%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:3%;background:#aeaeb2"></div><div class="cat-nm">Varios</div><div class="cat-amt c-gy">$258.370</div><div class="cat-pct">0,9%</div></div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════ ROBLEDO ══════════════════════ -->
-  <div class="sec-tit">🏠 Robledo — Detalle por fecha</div>
-  <div class="obra-sec">
-    <div class="obra-hd" style="background:#fff7ed">
-      <span class="obra-title">Robledo · Yulied Morales (abono Jun 9)</span>
-      <span class="obra-tot c-rd">−$35.840.762</span>
-    </div>
-
-    <!-- 9 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 9 de junio</span><span class="dia-tot">$607.500</span></div>
-      <table>
-        <tr><td class="td-prv">Diagnóstico Laboral</td><td class="td-desc">Exámenes médicos ingreso obreros</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$38.000</td></tr>
-        <tr><td class="td-prv">La Manguita</td><td class="td-desc">Arena, cemento, acrónol</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$557.500</td></tr>
-        <tr><td class="td-prv">Ana Muñoz</td><td class="td-desc">Impresión planos hidrosanitarios</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$12.000</td></tr>
-      </table>
-    </div>
-
-    <!-- 10 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 10 de junio</span><span class="dia-tot">$12.644.495</span></div>
-      <table>
-        <tr><td class="td-prv">Acuametro</td><td class="td-desc">Material tubería PVC — instalación hidrosanitaria</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$3.962.266</td></tr>
-        <tr style="background:#fff7ed"><td class="td-prv"><strong>Manuela Gil Rojas</strong></td><td class="td-desc"><strong>Alquiler de equipos</strong></td><td><span class="td-cat" style="background:#ffedd5;color:#c2410c">Alquiler equipos</span></td><td class="td-amt" style="font-size:14px">$5.000.000</td></tr>
-        <tr><td class="td-prv">Stecker Aceros</td><td class="td-desc">Malla electrosoldada estándar</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$2.462.229</td></tr>
-        <tr><td class="td-prv">Juan Ruiz</td><td class="td-desc">Liquidación — salida empleado administrativo</td><td><span class="td-cat">Nómina ADM</span></td><td class="td-amt">$1.220.000</td></tr>
-      </table>
-    </div>
-
-    <!-- 11 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 11 de junio</span><span class="dia-tot">$481.167</span></div>
-      <table>
-        <tr><td class="td-prv">Transporte</td><td class="td-desc">Transporte concretadora</td><td><span class="td-cat">Transporte</span></td><td class="td-amt">$115.000</td></tr>
-        <tr><td class="td-prv">Silvana González</td><td class="td-desc">Material general</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$20.000</td></tr>
-        <tr><td class="td-prv">Biloria</td><td class="td-desc">Liquidación empleada</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$216.167</td></tr>
-        <tr><td class="td-prv">Adriana Patricia López</td><td class="td-desc">Gestión seguridad social</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$130.000</td></tr>
-      </table>
-    </div>
-
-    <!-- 12 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 12 de junio</span><span class="dia-tot" style="color:#FF3B30">$14.422.400 🔑</span></div>
-      <table>
-        <tr><td class="td-prv">Carlos Angulo</td><td class="td-desc">Caja menor obra</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$100.000</td></tr>
-        <tr><td class="td-prv">Transporte y Bombeo Ant.</td><td class="td-desc">Bombeo losa piso 2 (factura 27 may)</td><td><span class="td-cat">Alquiler equipos</span></td><td class="td-amt">$1.918.000</td></tr>
-        <tr><td class="td-prv">Silveria González</td><td class="td-desc">Material general</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$100.000</td></tr>
-        <tr style="background:#fff7ed">
-          <td class="td-prv"><strong>GT Concretos SAS</strong></td>
-          <td class="td-desc"><strong>Concreto vaciado losa contrapiso</strong> — pago único mayor</td>
-          <td><span class="td-cat" style="background:#ffedd5;color:#c2410c">Materiales</span></td>
-          <td class="td-amt" style="font-size:15px">$12.304.400</td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- 14 Jun -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 14 de junio — Nómina Jun 1 al 15</span><span class="dia-tot">$7.685.200</span></div>
-      <table>
-        <tr><td colspan="4" style="padding:7px 18px;background:#f0fdf4;font-size:11px;color:#15803d;font-weight:700">👷 Obreros de obra (6 personas)</td></tr>
-        <tr><td class="td-prv">Milton Herrera</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$2.000.000</td></tr>
-        <tr><td class="td-prv">Carlos Angulo</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$954.000</td></tr>
-        <tr><td class="td-prv">Jesus Danobis Castro</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$869.000</td></tr>
-        <tr><td class="td-prv">John Palacios</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$200.000</td></tr>
-        <tr><td class="td-prv">German Rueda</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$412.000</td></tr>
-        <tr><td class="td-prv">Ayudante extra</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$400.000</td></tr>
-        <tr><td colspan="4" style="padding:7px 18px;background:#f3e8ff;font-size:11px;color:#7c3aed;font-weight:700">👔 Administración compartida (3 personas)</td></tr>
-        <tr><td class="td-prv">Jhon Alexander Castro</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$1.250.000</td></tr>
-        <tr><td class="td-prv">Luis Albeiro Jiménez</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$825.000</td></tr>
-        <tr><td class="td-prv">María Fernanda García</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">Administración</span></td><td class="td-amt">$529.000</td></tr>
-        <tr><td colspan="4" style="padding:7px 18px;background:#fafafa;font-size:11px;color:#636366;font-weight:700">📋 Gastos operativos</td></tr>
-        <tr><td class="td-prv">Cristian Rodas</td><td class="td-desc">Caja menor obra</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$66.200</td></tr>
-        <tr><td class="td-prv">Restaurante</td><td class="td-desc">Almuerzos cuadrilla</td><td><span class="td-cat">Varios</span></td><td class="td-amt">$180.000</td></tr>
-      </table>
-    </div>
-
-    <!-- Categorías Robledo -->
-    <div style="padding:14px 18px 6px;font-size:11px;font-weight:700;color:#636366;text-transform:uppercase;letter-spacing:.6px;border-top:1px solid #e5e5ea">Distribución por categoría</div>
-    <div class="cat-grid">
-      <div class="cat-it"><div class="cat-bar-bg" style="width:100%;background:#FF9500"></div><div class="cat-nm">Materiales (concreto, PVC, malla)</div><div class="cat-amt c-or">$19.406.395</div><div class="cat-pct">62,9%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:40%;background:#34C759"></div><div class="cat-nm">Nómina MO obreros</div><div class="cat-amt c-gr">$4.835.000</div><div class="cat-pct">15,7%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:26%;background:#AF52DE"></div><div class="cat-nm">Nómina Administración</div><div class="cat-amt" style="color:#AF52DE">$2.604.000</div><div class="cat-pct">8,4%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:18%;background:#8E8E93"></div><div class="cat-nm">Liquidaciones (Ruiz + Biloria)</div><div class="cat-amt c-gy">$1.436.167</div><div class="cat-pct">4,7%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:15%;background:#FF3B30"></div><div class="cat-nm">Alquiler equipos (bombeo)</div><div class="cat-amt c-rd">$1.918.000</div><div class="cat-pct">6,2%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:5%;background:#aeaeb2"></div><div class="cat-nm">Varios + transporte</div><div class="cat-amt c-gy">$511.200</div><div class="cat-pct">1,7%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:3%;background:#5AC8FA"></div><div class="cat-nm">SS / Gestión admin</div><div class="cat-amt" style="color:#5AC8FA">$130.000</div><div class="cat-pct">0,4%</div></div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════ NOVAEVA ══════════════════════ -->
-  <div class="sec-tit">🏢 Novaeva — Detalle por fecha</div>
-  <div class="obra-sec">
-    <div class="obra-hd" style="background:#f0fdf4">
-      <span class="obra-title">Novaeva · Cliente (abono Jun 10)</span>
-      <span class="obra-tot c-rd">−$10.193.800</span>
-    </div>
-
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 10 de junio</span><span class="dia-tot">$63.800</span></div>
-      <table>
-        <tr><td class="td-prv">Agroconstrucción La Palma</td><td class="td-desc">Ferretería — materiales acabados</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$60.000</td></tr>
-        <tr><td class="td-prv">Agroconstrucción La Palma</td><td class="td-desc">Ferretería — insumos menores</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$3.800</td></tr>
-      </table>
-    </div>
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 11 de junio</span><span class="dia-tot">$130.000</span></div>
-      <table>
-        <tr><td class="td-prv">Deco Interprise</td><td class="td-desc">Material general acabados</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$130.000</td></tr>
-      </table>
-    </div>
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 12 de junio</span><span class="dia-tot">$600.000</span></div>
-      <table>
-        <tr><td class="td-prv">Eugenio Salgado</td><td class="td-desc">Hidrosanitario — instalación final</td><td><span class="td-cat">Materiales</span></td><td class="td-amt">$600.000</td></tr>
-      </table>
-    </div>
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 13 de junio</span><span class="dia-tot">$5.800.000</span></div>
-      <table>
-        <tr><td class="td-prv">Material General</td><td class="td-desc">Ebanistería — carpintería y acabados interiores</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$5.000.000</td></tr>
-        <tr><td class="td-prv">Ventanero</td><td class="td-desc">Instalación ventanería</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$800.000</td></tr>
-      </table>
-    </div>
-
-    <!-- 14 Jun Novaeva -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 14 de junio — Nómina Jun 1 al 15</span><span class="dia-tot">$2.000.000</span></div>
-      <table>
-        <tr><td class="td-prv">Jeison</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$2.000.000</td></tr>
-      </table>
-    </div>
-    <!-- 15 Jun Novaeva -->
-    <div class="dia-block">
-      <div class="dia-hd"><span>📅 15 de junio — Nómina Jun 1 al 15</span><span class="dia-tot">$1.600.000</span></div>
-      <table>
-        <tr><td class="td-prv">Mosco</td><td class="td-desc">Nómina Jun 1–15</td><td><span class="td-cat">MO general</span></td><td class="td-amt">$1.600.000</td></tr>
-      </table>
-    </div>
-
-    <div style="padding:14px 18px 6px;font-size:11px;font-weight:700;color:#636366;text-transform:uppercase;letter-spacing:.6px;border-top:1px solid #e5e5ea">Distribución por categoría</div>
-    <div class="cat-grid">
-      <div class="cat-it"><div class="cat-bar-bg" style="width:100%;background:#007AFF"></div><div class="cat-nm">MO (ebanistería, ventanero, nóminas)</div><div class="cat-amt c-bl">$9.400.000</div><div class="cat-pct">92,2%</div></div>
-      <div class="cat-it"><div class="cat-bar-bg" style="width:9%;background:#34C759"></div><div class="cat-nm">Materiales</div><div class="cat-amt c-gr">$793.800</div><div class="cat-pct">7,8%</div></div>
-    </div>
-  </div>
-
-  <!-- SALDO FINAL -->
-  <div class="sec-tit">💰 Saldo disponible por obra · 15 Jun 2026</div>
-  <div class="saldo-final">
-    <div class="sf-card" style="border-top-color:#007AFF">
-      <div class="sf-obra">🏗 Weliving</div>
-      <div class="sf-recibio">Recibió: <strong>$110.000.000</strong></div>
-      <div class="sf-gasto">Gastó: <strong>$33.588.876</strong></div>
-      <div class="sf-saldo c-gr">$76.411.124</div>
-      <div class="sf-pct">69% disponible</div>
-    </div>
-    <div class="sf-card" style="border-top-color:#FF9500">
-      <div class="sf-obra">🏠 Robledo</div>
-      <div class="sf-recibio">Recibió: <strong>$145.000.000</strong></div>
-      <div class="sf-gasto">Gastó: <strong>$35.840.762</strong></div>
-      <div class="sf-saldo c-gr">$109.159.238</div>
-      <div class="sf-pct">75% disponible</div>
-    </div>
-    <div class="sf-card" style="border-top-color:#34C759">
-      <div class="sf-obra">🏢 Novaeva</div>
-      <div class="sf-recibio">Recibió: <strong>$20.000.000</strong></div>
-      <div class="sf-gasto">Gastó: <strong>$10.193.800</strong></div>
-      <div class="sf-saldo c-gr">$9.806.200</div>
-      <div class="sf-pct">49% disponible</div>
-    </div>
-  </div>
-
-  <!-- ALERTAS Y OBSERVACIONES -->
-  <div class="sec-tit">🔍 Observaciones y alertas</div>
-  <div class="alertas">
-
-    <div class="alerta ok">
-      <div class="al-ico">✅</div>
-      <div>
-        <div class="al-tit">Gasto controlado — solo el 22% en 6 días</div>
-        <div class="al-txt">De $275M recibidos, se gastaron $61M en la semana del 9 al 14 de junio. El 78% ($213.9M) sigue disponible para financiar obra en las próximas semanas. Ritmo saludable.</div>
-      </div>
-    </div>
-
-    <div class="alerta">
-      <div class="al-ico">🔑</div>
-      <div>
-        <div class="al-tit">Robledo: GT Concretos fue el gasto mayor — $12.304.400 el 12 Jun</div>
-        <div class="al-txt">El concreto del vaciado de losa contrapiso fue el único pago grande. Representa el 39,9% del total gastado en Robledo en la semana. Pago verificado y coherente con la etapa de obra (mampostería + contrapiso).</div>
-      </div>
-    </div>
-
-    <div class="alerta">
-      <div class="al-ico">⚙️</div>
-      <div>
-        <div class="al-tit">Weliving: $10M en acero Steckerl el 11 Jun — hierro columnas P3–P4</div>
-        <div class="al-txt">El 34,9% del gasto de Weliving fue acero estructural para avanzar columnas P3–P4. Es el gasto más grande de la semana en esa obra. Pago directo a proveedor, coherente con el cronograma (vaciado losa P3: mié 17 Jun).</div>
-      </div>
-    </div>
-
-    <div class="alerta ok">
-      <div class="al-ico">👷</div>
-      <div>
-        <div class="al-tit">Nóminas Jun 1–15 pagadas el 14 de junio — ambas obras</div>
-        <div class="al-txt">Weliving: 7 obreros ($8.25M) + 3 admin ($2.6M) = $10.85M. Robledo: 6 obreros ($4.83M) + 3 admin ($2.6M) = $7.43M. Los 3 admins (Castro, Jiménez, García) están registrados en ambas obras, lo cual es correcto dado que son personal compartido.</div>
-      </div>
-    </div>
-
-    <div class="alerta">
-      <div class="al-ico">⚠️</div>
-      <div>
-        <div class="al-tit">Novaeva gastó $10.2M de $20M — quedan $9.8M para cierre</div>
-        <div class="al-txt">Ebanistería $5M + nóminas Jeison/Mosco $3.6M + ventanero $800K = $9.4M en MO (92%). Saldo disponible: $9.8M. Con los acabados pendientes (vidrio, instalaciones finales, detalles) el margen es ajustado — monitorear de cerca para no quedar corto.</div>
-      </div>
-    </div>
-
-    <div class="alerta alert">
-      <div class="al-ico">🔴</div>
-      <div>
-        <div class="al-tit">Weliving: vaciado losa P3 programado Miércoles 17 Jun — concreto $22.97M pendiente</div>
-        <div class="al-txt">El gasto más grande que viene es el concreto losa P3 ($22.97M) + bomba ($2.5M) = $25.47M el 17 de junio. Con $81.4M disponibles en Weliving, hay caja suficiente para cubrirlo sin problema.</div>
-      </div>
-    </div>
-
-  </div>
-
-  <div style="margin-top:32px;padding:16px;background:#f2f2f7;border-radius:12px;font-size:11px;color:#636366;text-align:center">
-    🗄 Datos cargados desde Supabase (base de datos Imperio) · 15 Jun 2026<br>
-    Los saldos no incluyen compromisos futuros (pagos pendientes de firmar/pagar por obra)
-  </div>
-    </div>
   </div>
   <div class="view" id="v-proyeccion"><div id="proy-content"></div></div>
   <div class="view" id="v-deudas">
@@ -2393,7 +2028,6 @@ function gastosT(o) {
 }
 
 
-async
 // ── Importación histórica Novaeva (mismo patrón Weliving/Robledo) ──────
 // 75 registros del sheet = $70,738,151 exacto
 var NOVAEVA_HIST = [{"obra":"novaeva","fecha":"2026-03-27","nombre":"Mauricio Alejandro Echavarria","descripcion":"Ebanisteria","area":"MO General","etapa_gral":"General","mp":"","monto":80000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-03-31","nombre":"agroconstruccion la palmas","descripcion":"herramienta","area":"Material General","etapa_gral":"General","mp":"","monto":55000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-03-31","nombre":"san pio","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":4531062,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-01","nombre":"ferreteria Rio frio","descripcion":"tiros drywall","area":"Material General","etapa_gral":"General","mp":"","monto":63000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-01","nombre":"homecenter","descripcion":"herramienta","area":"Material General","etapa_gral":"General","mp":"","monto":269370,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-01","nombre":"homecenter","descripcion":"gafas claras","area":"herramienta","etapa_gral":"General","mp":"","monto":30000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-01","nombre":"homecenter","descripcion":"pistola fijacion","area":"herramienta","etapa_gral":"General","mp":"","monto":699900,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-04","nombre":"GAS","descripcion":"GAS","area":"MO General","etapa_gral":"General","mp":"","monto":200000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-05","nombre":"MOSCO","descripcion":"nomina","area":"MO General","etapa_gral":"General","mp":"","monto":1050000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-05","nombre":"KEVIN","descripcion":"nomina","area":"MO General","etapa_gral":"General","mp":"","monto":430000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-05","nombre":"ferrocabless","descripcion":"materiales","area":"Material General","etapa_gral":"General","mp":"","monto":788735,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-05","nombre":"homecenter","descripcion":"homecenter","area":"Material General","etapa_gral":"General","mp":"","monto":29800,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-06","nombre":"marco tulio uribe","descripcion":"rodillo, lijas varios","area":"Material General","etapa_gral":"General","mp":"","monto":150000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-06","nombre":"yeison","descripcion":"caja menor","area":"VARIOS","etapa_gral":"General","mp":"","monto":200000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-06","nombre":"jose arley jaramillo","descripcion":"modificacion red incendios","area":"MO General","etapa_gral":"General","mp":"","monto":400000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-08","nombre":"ferrocabless","descripcion":"material electrico","area":"Material electrico","etapa_gral":"General","mp":"","monto":1223901,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-10","nombre":"deposito","descripcion":"canoas","area":"Material General","etapa_gral":"General","mp":"","monto":200000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-10","nombre":"ferreteria Rio frio","descripcion":"material","area":"Material General","etapa_gral":"General","mp":"","monto":20000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-10","nombre":"Pintuco","descripcion":"pintura","area":"Material General","etapa_gral":"General","mp":"","monto":480000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-14","nombre":"peajes","descripcion":"peajes","area":"VARIOS","etapa_gral":"General","mp":"","monto":60000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-15","nombre":"MOSCO","descripcion":"nomina","area":"MO General","etapa_gral":"General","mp":"","monto":1333000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-15","nombre":"jeison","descripcion":"nomina","area":"MO General","etapa_gral":"General","mp":"","monto":1067000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-20","nombre":"pinturas y yesos","descripcion":"compra pintura","area":"Material General","etapa_gral":"General","mp":"","monto":2406336,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-22","nombre":"papeleria","descripcion":"compra grapadora","area":"VARIOS","etapa_gral":"General","mp":"","monto":120000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-22","nombre":"empleados","descripcion":"pasajes","area":"VARIOS","etapa_gral":"General","mp":"","monto":80000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-22","nombre":"ingeniero","descripcion":"caja menor","area":"VARIOS","etapa_gral":"General","mp":"","monto":100000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":76900,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":76900,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":76900,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":98700,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":468600,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":76900,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-23","nombre":"homecenter","descripcion":"material general","area":"Material General","etapa_gral":"General","mp":"","monto":76900,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-25","nombre":"wilman alexis mena taborda","descripcion":"electrico","area":"Material electrico","etapa_gral":"General","mp":"","monto":900000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-29","nombre":"albeiro lopez muñoz","descripcion":"tuberia","area":"MO General","etapa_gral":"General","mp":"","monto":160000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-30","nombre":"pinturas y yesos","descripcion":"masilla, placa superboar","area":"Material General","etapa_gral":"General","mp":"","monto":1853128,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-30","nombre":"jose alberto castaño","descripcion":"transportematerial","area":"Transporte","etapa_gral":"General","mp":"","monto":150000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-04-30","nombre":"claudiar patricia gonzalez","descripcion":"nomina abril 15 al 30","area":"MO General","etapa_gral":"General","mp":"","monto":1830000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-02","nombre":"jorge ivan vega","descripcion":"mano de obra electrica","area":"MO General","etapa_gral":"General","mp":"","monto":1250000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-02","nombre":"ferrocabless","descripcion":"material electrico","area":"Material electrico","etapa_gral":"General","mp":"","monto":1292911,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-02","nombre":"Ventaneria","descripcion":"Ventaneria","area":"Vidrio","etapa_gral":"General","mp":"","monto":1709074,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-06","nombre":"leonela de carmen","descripcion":"accesorios electricos","area":"Material electrico","etapa_gral":"General","mp":"","monto":850000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-06","nombre":"leonela de carmen","descripcion":"accesorios electricos","area":"Material electrico","etapa_gral":"General","mp":"","monto":246000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-09","nombre":"yeison","descripcion":"anticipo nomina","area":"MO General","etapa_gral":"General","mp":"","monto":500000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-09","nombre":"jorge ivan vega","descripcion":"mano de obra electrica","area":"MO General","etapa_gral":"General","mp":"","monto":750000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-12","nombre":"ferrocabless","descripcion":"material electrico","area":"Material electrico","etapa_gral":"General","mp":"","monto":222256,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-15","nombre":"Transporte","descripcion":"transporte material","area":"Transporte","etapa_gral":"General","mp":"","monto":100000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-16","nombre":"jose alberto castaño","descripcion":"botada basura","area":"MO General","etapa_gral":"General","mp":"","monto":440000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-16","nombre":"MOSCO","descripcion":"nomina","area":"MO General","etapa_gral":"General","mp":"","monto":1600000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-16","nombre":"jorge ivan vega","descripcion":"mano de obra electrica","area":"MO General","etapa_gral":"General","mp":"","monto":1400000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-25","nombre":"hernan marulanda","descripcion":"nomina e impuestos","area":"MO General","etapa_gral":"General","mp":"","monto":945000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-28","nombre":"agroconstruccion la palmas","descripcion":"tapa registros","area":"Material General","etapa_gral":"General","mp":"","monto":67000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-28","nombre":"agroconstruccion la palmas","descripcion":"material","area":"Material General","etapa_gral":"General","mp":"","monto":22000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-28","nombre":"agroconstruccion la palmas","descripcion":"hidrosanitario","area":"Material General","etapa_gral":"General","mp":"","monto":606200,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-28","nombre":"madecentro","descripcion":"compra madera","area":"Material General","etapa_gral":"General","mp":"","monto":4725794,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-28","nombre":"empleados","descripcion":"transporte empleados","area":"VARIOS","etapa_gral":"General","mp":"","monto":100000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-05-30","nombre":"mosco y yeison","descripcion":"nomina mayo 15 al 30","area":"MO General","etapa_gral":"General","mp":"","monto":3600000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-01","nombre":"remodelarte pvc","descripcion":"compra de piso","area":"Material General","etapa_gral":"General","mp":"","monto":6470000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-01","nombre":"jose alberto castaño","descripcion":"nomina","area":"MO General","etapa_gral":"General","mp":"","monto":490000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-04","nombre":"hidrosanitario","descripcion":"hidrosanitario","area":"MO General","etapa_gral":"General","mp":"","monto":400000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-04","nombre":"remodelarte pvc","descripcion":"compra piso","area":"Material General","etapa_gral":"General","mp":"","monto":2487000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-10","nombre":"agroconstruccion la palmas","descripcion":"ferreteria","area":"Material General","etapa_gral":"General","mp":"","monto":60000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-10","nombre":"agroconstruccion la palmas","descripcion":"ferreteria","area":"Material General","etapa_gral":"General","mp":"","monto":3800,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-11","nombre":"Deco interprise","descripcion":"material","area":"Material General","etapa_gral":"General","mp":"","monto":130000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-12","nombre":"Eugenio Salgado","descripcion":"hidrosanitario","area":"Material General","etapa_gral":"General","mp":"","monto":600000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-13","nombre":"material general","descripcion":"ebanisteria","area":"MO General","etapa_gral":"General","mp":"","monto":5000000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-13","nombre":"sin nombre","descripcion":"Ventanero","area":"MO General","etapa_gral":"General","mp":"","monto":800000,"material":"Mo General","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-13","nombre":"juan esteban ruiz","descripcion":"carpintero","area":"MO General","etapa_gral":"General","mp":"","monto":600000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-13","nombre":"diego aljandro zapata","descripcion":"acabados","area":"MO General","etapa_gral":"General","mp":"","monto":754000,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-14","nombre":"Jeison","descripcion":"Nomina junio 1 al 15 jeison","area":"MO General","etapa_gral":"General","mp":"","monto":2000000,"material":"","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-15","nombre":"Mosco","descripcion":"Nomina junio 1 al 15 mosco","area":"MO General","etapa_gral":"General","mp":"","monto":1600000,"material":"","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-15","nombre":"jose alberto castaño","descripcion":"transporte","area":"Transporte","etapa_gral":"General","mp":"","monto":400000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-16","nombre":"pinturas y yesos","descripcion":"pintura","area":"Material General","etapa_gral":"General","mp":"","monto":1405084,"material":"material general","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-17","nombre":"jose alberto castaño","descripcion":"transporte","area":"Transporte","etapa_gral":"General","mp":"","monto":200000,"material":"No aplica","cuenta":"bc-grupo"},{"obra":"novaeva","fecha":"2026-06-17","nombre":"HMH Ebanisteria","descripcion":"madera","area":"Material General","etapa_gral":"General","mp":"","monto":5000000,"material":"material general","cuenta":"bc-grupo"}];
@@ -4022,6 +3656,20 @@ function pagosTabSwitch(tab) {
 
 
 
+function updateBadgePagos() {
+  var b = document.getElementById('badge-pagos');
+  if (!b) return;
+  var pagos = S.pagos || [];
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var venc = pagos.filter(function(p){
+    if (!p.fecha) return false;
+    var d = new Date(p.fecha); d.setHours(0,0,0,0);
+    return d < hoy;
+  }).length;
+  b.textContent = venc > 0 ? venc : '';
+  b.style.display = venc > 0 ? 'inline-flex' : 'none';
+}
+
 function marcarPagado(id, btn) {
   var pidx = -1;
   for (var i=0;i<S.pagos.length;i++){ if(S.pagos[i].id===id){pidx=i;break;} }
@@ -5476,10 +5124,11 @@ function renderObrasNav() {
 function initObrasViews() {
   var container = document.getElementById('obras-views-container');
   if (!container) return;
-  var ICO_BURN  = '📈';
+  container.innerHTML = obrasIds().map(function(id) {
+    var r = obraReg(id);
     return '<div class="view" id="v-'+id+'">'
       + '<div class="pp-hd" id="pph-'+id+'"></div>'
-      + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribucion del gasto</div>'
+      + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribución del gasto</div>'
       + '<div id="cat-'+id+'"></div>'
       + '<div class="sec" style="margin-top:12px">📅 Últimos 15 días — '+r.nm+'</div>'
       + '<div class="burn-card" id="burn-'+id+'"></div>'
