@@ -4,47 +4,71 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Imperio · Centro de Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
-   IMPERIO ERP — Design System v4 (Futurista Moderno)
+   IMPERIO ERP — Design System v5 (Elite Dark Pro)
 ═══════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  /* Palette — Futurista Moderno */
-  --bg:#ECEDF8;
+  /* ── Palette Elite v5 ──────────────────── */
+  /* Fondos — deep slate/lavender */
+  --bg:#F0F1FA;
+  --bg2:#E8EAF6;
+  /* Superficies */
   --sf:#FFFFFF;
-  --sf2:#F2F3FC;
-  --sf3:#E8E9F5;
-  --bl:#5B5BD6;
-  --bl2:#7C7CE8;
-  --gr:#22C55E;
+  --sf2:#F5F6FE;
+  --sf3:#ECEEF8;
+  /* Primario — electric indigo */
+  --bl:#6366F1;
+  --bl2:#818CF8;
+  --bl3:#4F46E5;
+  /* Acento — violet */
+  --pu:#7C3AED;
+  --pu2:#A78BFA;
+  /* Semánticos */
+  --gr:#10B981;
+  --gr2:#34D399;
   --rd:#EF4444;
+  --rd2:#F87171;
   --or:#F59E0B;
-  --pu:#8B5CF6;
-  --gy:#94A3B8;
-  --tx:#1E1B4B;
-  --tx2:#64748B;
-  --tx3:#94A3B8;
-  --br:rgba(91,91,214,.1);
+  --or2:#FCD34D;
+  /* Texto */
+  --tx:#0F0E2A;
+  --tx2:#4B5563;
+  --tx3:#9CA3AF;
+  --tx4:#D1D5DB;
+  /* Bordes */
+  --br:rgba(99,102,241,.1);
+  --br2:rgba(99,102,241,.2);
+  /* Gradientes clave */
+  --grad-primary:linear-gradient(135deg,#6366F1 0%,#7C3AED 100%);
+  --grad-dark:linear-gradient(160deg,#0A0920 0%,#13103A 40%,#1E1A5E 80%,#312E8A 100%);
+  --grad-card:linear-gradient(145deg,rgba(255,255,255,1) 0%,rgba(245,246,254,.95) 100%);
   /* Layout */
-  --sw:225px;
-  --sb-head:64px;
-  --sb-foot:54px;
-  --r:18px;
-  --rs:12px;
-  /* Neumorphic shadows */
-  --sh:6px 6px 16px rgba(163,165,215,.35),-4px -4px 10px rgba(255,255,255,.85);
-  --sh2:8px 8px 24px rgba(163,165,215,.5),-6px -6px 16px rgba(255,255,255,.9);
-  --sh-in:inset 4px 4px 8px rgba(163,165,215,.25),inset -3px -3px 6px rgba(255,255,255,.7);
+  --sw:230px;
+  --sb-head:68px;
+  --sb-foot:56px;
+  --r:16px;
+  --rs:10px;
+  /* Sombras — elegantes multicapa */
+  --sh:0 1px 3px rgba(99,102,241,.08),0 4px 16px rgba(99,102,241,.1),0 1px 0 rgba(255,255,255,.8) inset;
+  --sh2:0 2px 8px rgba(99,102,241,.12),0 12px 32px rgba(99,102,241,.15),0 1px 0 rgba(255,255,255,.9) inset;
+  --sh-glow:0 0 0 1px rgba(99,102,241,.15),0 4px 24px rgba(99,102,241,.2);
+  --sh-in:inset 0 2px 6px rgba(99,102,241,.08),inset 0 1px 2px rgba(0,0,0,.04);
   --bnav:68px;
 }
 
 /* ── Base ── */
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',system-ui,sans-serif;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',system-ui,sans-serif;
   background:var(--bg);color:var(--tx);min-height:100vh;font-size:15px;
-  letter-spacing:-.01em;
+  letter-spacing:-.015em;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
 /* ══════════════════════════════════════════
