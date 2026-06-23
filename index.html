@@ -1171,7 +1171,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Abonos</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('proyeccion');toggleMorePanel()"><span class="bn-more-ico">📊</span><span class="bn-more-lbl">Proyección</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('plan');toggleMorePanel()"><span class="bn-more-ico">📋</span><span class="bn-more-lbl">Plan</span></div>
-    <div class="bn-more-item" onclick="gotoViewMobile('movimientos');toggleMorePanel()"><span class="bn-more-ico">📋</span><span class="bn-more-lbl">Movimientos</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('deudas');toggleMorePanel()"><span class="bn-more-ico">⚖️</span><span class="bn-more-lbl">Posición</span></div>
     <div class="bn-more-item" onclick="openGasto();toggleMorePanel()"><span class="bn-more-ico">➕</span><span class="bn-more-lbl">Gasto</span></div>
   </div>
@@ -1196,7 +1195,6 @@ nav:not(.sb-nav){display:none!important}
     <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
     <div class="ni" data-v="plan" onclick="gotoView('plan')"><span class="ni-ico">📋</span><span>Plan</span></div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
-    <div class="ni" data-v="movimientos" onclick="gotoView('movimientos')"><span class="ni-ico">📋</span><span>Movimientos</span></div>
     <div class="ni" data-v="proyeccion" onclick="gotoView('proyeccion')"><span class="ni-ico">📊</span><span>Proyección</span></div>
     <div class="ni" data-v="deudas" onclick="gotoView('deudas')"><span class="ni-ico">⚖️</span><span>Posición</span></div>
   </nav>
@@ -1280,17 +1278,7 @@ nav:not(.sb-nav){display:none!important}
     <div id="abonos-content"></div>
   </div>
   <div class="view" id="v-movimientos">
-    <div style="padding:20px 16px 60px;max-width:960px;margin:0 auto">
-<div style="background:linear-gradient(135deg,#0d1b2a,#1e3a5f);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px">
-  <div style="font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🏦 Corte de Caja actualizado — 16 Jun 2026</div>
-  <div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-bottom:8px">$143.500.000</div>
-  <div style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:16px">Saldo real Bancolombia tras corte de caja Jun 9-16</div>
-  <div style="display:flex;flex-wrap:wrap;gap:20px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px">
-    <div><div style="font-size:10.5px;color:rgba(255,255,255,.4)">TC pagadas (WL+RB)</div><div style="font-size:15px;font-weight:800">$17.908.000</div></div>
-    <div><div style="font-size:10.5px;color:rgba(255,255,255,.4)">Pagos Grupo Imperio</div><div style="font-size:15px;font-weight:800">$68.936.000</div></div>
-    <div><div style="font-size:10.5px;color:rgba(255,255,255,.4)">Deuda Andrés+Puerta</div><div style="font-size:15px;font-weight:800">$25.000.000</div></div>
-    <div><div style="font-size:10.5px;color:rgba(255,255,255,.4)">Préstamo Gano Excel</div><div style="font-size:15px;font-weight:800">$18.000.000</div></div>
-    <div><div style="font-size:10.5px;color:rgba(255,255,255,.4)">Nómina Hernán Casa</div><div style="font-size:15px;font-weight:800">$7.220.000</div></div>
+    <div id="movs-all-content"></div>
   </div>
   <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.35)">⬇ El informe detallado de gastos Jun 9-15 por obra continúa abajo</div>
 </div>
@@ -1963,131 +1951,11 @@ async function _autoDedup(obra) {
 
 // Detecta y elimina registros duplicados en Supabase por (nombre, monto, fecha)
 // Solo para Robledo/Novaeva donde ocurrió la importación doble
-async function runDedup(obra) {
-  var btn = document.getElementById('dedup-btn-'+obra);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
-
-  // Paginar para traer todos (>1000 registros)
-  var all = [], offset = 0, limit = 1000;
-  while (true) {
-    var rows = await sbFetch('gastos', 'obra=eq.'+obra+'&order=id.asc&limit='+limit+'&offset='+offset);
-    if (!Array.isArray(rows) || rows.length === 0) break;
-    all = all.concat(rows);
-    if (rows.length < limit) break;
-    offset += limit;
-  }
-
-  if (btn) btn.textContent = '⏳ Detectando dups...';
-
-  // Detectar duplicados
-  var seen = {}, toDelete = [];
-  all.forEach(function(g) {
-    var ts = parseFecha(g.fecha || '');
-    var dk = ts > 0 ? new Date(ts).toISOString().split('T')[0] : (g.fecha||'').toLowerCase();
-    var key = (g.nombre||'').trim().toLowerCase() + '|' + (g.monto||0) + '|' + dk;
-    if (!seen[key]) { seen[key] = g.id; }
-    else { toDelete.push(g.id); }
-  });
-
-  if (toDelete.length === 0) {
-    if (btn) { btn.disabled = false; btn.textContent = '✅ Sin duplicados'; }
-    alert(obra + ': No se encontraron duplicados. Total: ' + all.length + ' registros.');
-    return;
-  }
-
-  var sumAntes = all.reduce(function(a,g){return a+(g.monto||0);},0);
-  var sumDespues = all.filter(function(g){return toDelete.indexOf(g.id)<0;}).reduce(function(a,g){return a+(g.monto||0);},0);
-  var ok = confirm(obra.toUpperCase()+': Se encontraron '+toDelete.length+' duplicados.\n'
-    +'Total actual: $'+Math.round(sumAntes).toLocaleString('es-CO')+'\n'
-    +'Total limpio: $'+Math.round(sumDespues).toLocaleString('es-CO')+'\n\n'
-    +'¿Eliminar los duplicados?');
-  if (!ok) { if(btn){btn.disabled=false;btn.textContent='🗑 Limpiar duplicados';} return; }
-
-  if (btn) btn.textContent = '⏳ Eliminando...';
-
-  // Borrar en lotes de 50
-  for (var i = 0; i < toDelete.length; i += 50) {
-    var batch = toDelete.slice(i, i+50);
-    await sbDelete('gastos', 'id=in.('+batch.join(',')+')');
-  }
-
-  // Recargar LIVE y actualizar BASE dinámicamente
-  LIVE_LOADED[obra] = false;
-  fetchLive(obra);
-
-  if (btn) { btn.disabled = false; btn.textContent = '✅ Listo — '+toDelete.length+' eliminados'; }
-  alert('✅ Limpieza completa.\nEliminados: '+toDelete.length+'\nQuedan: '+(all.length-toDelete.length)+' registros únicos.\nTotal: $'+Math.round(sumDespues).toLocaleString('es-CO'));
-}
 
 // ═══════════════════════════════════════════════
 // IMPORTAR GASTOS FALTANTES DESDE HOJA
 // Corre en el navegador → inserta directo a Supabase
 // ═══════════════════════════════════════════════
-async function importarGastosFaltantes(obra) {
-  var btn = document.getElementById('import-btn-'+obra);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Verificando...'; }
-
-  var FALTANTES = {
-    robledo: [
-      {fecha:'2026-06-16',nombre:'ferrara, materiales, accesorios', descripcion:'materiales general',    area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:2830000,  material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-16',nombre:'seguridad social',                 descripcion:'seguridad social losa', area:'seguridad social',   etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:5852000,  material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-17',nombre:'jhon hernan usuga',                descripcion:'vaciado concreto',      area:'concreto',           etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:1000000,  material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'carmen cecilia m',                 descripcion:'porones',               area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:3050000,  material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'cristian camilo galeano',          descripcion:'re diseño arquitectura',area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:500000,   material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'deposito los botero',              descripcion:'icopor, arena, cemento',area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:836100,   material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'zakoo',                            descripcion:'algamsa polimerica',    area:'materiales general', etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:1428000,  material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'german rueda',                     descripcion:'prestamo empleado',     area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:100000,   material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'Jesus Danobis Castro',             descripcion:'prestamo empleado',     area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:100000,   material:'', cuenta:'bc-grupo'},
-      {fecha:'2026-06-18',nombre:'wilmar garcia',                    descripcion:'prestamo empleado',     area:'no aplica',          etapa_gral:'Mampostería', mp:'Transferencia — Grupo Imperio', monto:150000,   material:'', cuenta:'bc-grupo'},
-    ]
-  };
-
-  var pendientes = FALTANTES[obra];
-  if (!pendientes) { if(btn){btn.disabled=false;btn.textContent='📥 Importar faltantes';} return; }
-
-  // Consultar existentes en Supabase
-  var existentes = [];
-  try {
-    var resp = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.'+obra+'&fecha=gte.2026-06-14&select=fecha,nombre,monto', {headers:SB_H});
-    if (!resp.ok) throw new Error('HTTP '+resp.status);
-    existentes = await resp.json();
-  } catch(e) {
-    if(btn){btn.disabled=false;btn.textContent='❌ Error — reintenta';}
-    return;
-  }
-
-  // Solo los que no existen (por monto+fecha+nombre)
-  var nuevos = pendientes.filter(function(p) {
-    return !existentes.some(function(ex) {
-      return ex.monto == p.monto
-        && String(ex.fecha||'').slice(0,10) === p.fecha
-        && String(ex.nombre||'').toLowerCase().trim() === p.nombre.toLowerCase().trim();
-    });
-  });
-
-  if (nuevos.length === 0) {
-    if(btn){btn.disabled=false;btn.textContent='✅ Ya está al día';}
-    return;
-  }
-
-  // Insertar directo sin confirmación
-  if(btn) btn.textContent = '⏳ Insertando '+nuevos.length+'...';
-  var payload = nuevos.map(function(x){ return Object.assign({obra:obra}, x); });
-  try {
-    var ins = await fetch(SB_URL+'/rest/v1/gastos', {
-      method:'POST',
-      headers: Object.assign({},SB_H,{'Prefer':'return=minimal'}),
-      body: JSON.stringify(payload)
-    });
-    if (!ins.ok) throw new Error('HTTP '+ins.status);
-    var sumNuevos = nuevos.reduce(function(a,x){return a+x.monto;},0);
-    LIVE_LOADED[obra] = false;
-    fetchLive(obra);
-    if(btn){btn.disabled=false;btn.textContent='✅ '+nuevos.length+' insertados — $'+Math.round(sumNuevos/1000000)+'M';}
-  } catch(e) {
-    if(btn){btn.disabled=false;btn.textContent='❌ Error — reintenta';}
-  }
-}
 
 // ═══════════════════════════════════════════════
 // OBRAS_REG — Registro maestro de obras (dinámico)
@@ -4495,7 +4363,11 @@ function rAbonos() {
 /* ═══════════════════════════════════════════════════
    MOVIMIENTOS CONSOLIDADOS — Jun 9 en adelante
 ═══════════════════════════════════════════════════ */
-function rMovimientos() { /* static content embedded */ }
+function rMovimientos() {
+  var el = document.getElementById('movs-all-content');
+  if (!el) return;
+  el.innerHTML = '<div class="sec">📋 Libro de gastos — todas las obras</div>';
+}
 
 /* ═══════════════════════════════════════════════════
    PROYECCIÓN FINANCIERA — CFO View
@@ -5604,23 +5476,7 @@ function renderObrasNav() {
 function initObrasViews() {
   var container = document.getElementById('obras-views-container');
   if (!container) return;
-  var ICO_DEDUP = '🗑';
   var ICO_BURN  = '📈';
-  container.innerHTML = obrasIds().map(function(id) {
-    var r = obraReg(id);
-    // Botón importar faltantes (solo robledo por ahora)
-    var importBar = id === 'robledo'
-      ? '<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'
-        + '<button id="import-btn-'+id+'" onclick="importarGastosFaltantes(\''+id+'\')" style="padding:6px 14px;border-radius:8px;border:1px solid #6366f1;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700;cursor:pointer">📥 Importar gastos faltantes (Jun 16-18)</button>'
-        + '<span style="font-size:11px;color:var(--tx3)">Detecta y agrega solo lo que falta en Supabase</span>'
-        + '</div>'
-      : '';
-    var dedupBar = id === 'weliving' ? '' :
-      '<div id="dedup-bar-'+id+'" style="display:flex;align-items:center;gap:10px;padding:8px 0 4px">'
-      + '<button id="dedup-btn-'+id+'" onclick="runDedup(\'' +id+ '\')" style="padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#fff8e7;color:#b45309;font-size:12px;font-weight:700;cursor:pointer">'+ICO_DEDUP+' Limpiar duplicados Supabase</button>'
-      + '<span style="font-size:11px;color:var(--tx3)">Solo necesario una vez para datos historicos</span>'
-      + '</div>'
-      + importBar;
     return '<div class="view" id="v-'+id+'">'
       + '<div class="pp-hd" id="pph-'+id+'"></div>'
       + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribucion del gasto</div>'
@@ -5628,7 +5484,6 @@ function initObrasViews() {
       + '<div class="sec" style="margin-top:12px">📅 Últimos 15 días — '+r.nm+'</div>'
       + '<div class="burn-card" id="burn-'+id+'"></div>'
       + '<div class="sec">Libro de gastos</div>'
-      + dedupBar
       + '<div class="ldg-wrap" id="ldg-'+id+'"></div>'
       + '</div>';
   }).join('');
