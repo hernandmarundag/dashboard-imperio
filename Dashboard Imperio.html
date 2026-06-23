@@ -1856,7 +1856,7 @@ var initDone = {};
    HELPERS
 ═══════════════════════════════════════════════════ */
 function fmt(n)  { return '$' + Math.round(n||0).toLocaleString('es-CO'); }
-function fmtM(n) { n=n||0; if(n>=1e9) return '$'+(n/1e9).toFixed(1)+'B'; if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M'; return fmt(n); }
+function fmtM(n) { n=n||0; var s=n<0?'-':''; var a=Math.abs(n); if(a>=1e9) return s+'$'+(a/1e9).toFixed(1)+'B'; if(a>=1e6) return s+'$'+(a/1e6).toFixed(1)+'M'; if(a>=1e3) return s+'$'+(a/1e3).toFixed(0)+'K'; return fmt(n); }
 var _MESES={ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11};
 function parseFecha(f){
   // Converts "14 Jun", "31 Dic", "9 May" → timestamp for correct chronological sort
