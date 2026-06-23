@@ -4619,7 +4619,7 @@ function rAlertsRaw() {
     if(!p.fecha) return;
     var pd = new Date(p.fecha+'T12:00:00');
     var dias = Math.round((pd-hoy)/86400000);
-    if(dias < 0) venc.push({nivel:'🔴',msg:'<b>'+p.desc+'</b> — VENCIDO hace '+Math.abs(dias)+' días ('+fmtM(p.monto)+')',tipo:'venc',sort:dias});
+    if(dias < 0) venc.push({nivel:'🔴',msg:'<b>'+p.desc+'</b> — VENCIDO hace '+Math.abs(dias)+' días ('+fmtM(p.monto)+')',tipo:'venc',sort:dias,id:p.id});
   });
   venc.sort(function(a,b){return a.sort-b.sort;});
   alerts = alerts.concat(venc);
@@ -4718,7 +4718,10 @@ function rFlujo() {
     ? topAlerts.map(function(a){
         var bg=(a.tipo==='neg'||a.tipo==='venc')?'#fee2e2':'#fff7ed';
         var tc=(a.tipo==='neg'||a.tipo==='venc')?'#991b1b':'#92400e';
-        return '<div style="background:'+bg+';border-radius:10px;padding:10px 14px;font-size:12px;color:'+tc+';margin-bottom:6px">'+a.nivel+' '+a.msg+'</div>';
+        var payBtn=(a.tipo==='venc'&&a.id)
+          ?'<button onclick="marcarPagado(''+a.id+'',null);rFlujo()" style="flex-shrink:0;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">✅ Pagado</button>'
+          :'';
+        return '<div style="background:'+bg+';border-radius:10px;padding:9px 14px;font-size:12px;color:'+tc+';margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px"><span>'+a.nivel+' '+a.msg+'</span>'+payBtn+'</div>';
       }).join('')
     : '<div style="background:#f0fdf4;border-radius:10px;padding:12px 16px;color:#166534;font-size:13px;font-weight:600">✅ Sin alertas activas</div>';
   if (moreCount > 0) alertsInner += '<div style="text-align:right;margin-top:4px"><span style="font-size:12px;color:var(--tx2)">+ '+moreCount+' más abajo ↓</span></div>';
