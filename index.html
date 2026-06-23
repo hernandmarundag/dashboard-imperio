@@ -5632,11 +5632,11 @@ function rPagosPorObra(o) {
 function rAnalisis() {
   var el = document.getElementById('analisis-content'); if (!el) return;
 
-  // ── filtro de obra activo
-  var obraFil = (window._anObraFil) || 'todas';
+  var anTab = window._anTab || 'general';
+  var obraFil = window._anObraFil || 'todas';
   var obras = obraFil === 'todas' ? obrasIds() : [obraFil];
 
-  // ── recolectar TODAS las filas relevantes (LIVE + hist)
+  // ── recolectar todas las filas
   var rows = [];
   obras.forEach(function(o) {
     (LIVE[o]||[]).forEach(function(e) {
@@ -5650,126 +5650,360 @@ function rAnalisis() {
   });
 
   if (rows.length === 0) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--tx2)">'
+    el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--tx2)">'
       + '<div style="font-size:48px;margin-bottom:16px">📊</div>'
-      + '<div style="font-size:16px;font-weight:600">Conectando con Supabase…</div>'
-      + '<div style="font-size:13px;color:var(--tx3);margin-top:8px">Los datos se cargan automáticamente desde la base de datos</div>'
+      + '<div style="font-size:16px;font-weight:600">Cargando datos…</div>'
+      + '<div style="font-size:13px;color:var(--tx3);margin-top:8px">Conectando con Supabase</div>'
       + '</div>';
     return;
   }
 
   var totalRows = rows.reduce(function(a,e){return a+e.monto;},0);
-  function fmtA(n){return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':'$'+(n/1000).toFixed(0)+'K';}
+  function fmtA(n){return n>=1e9?'$'+(n/1e9).toFixed(2)+'B':n>=1e6?'$'+(n/1e6).toFixed(1)+'M':'$'+(n/1e3).toFixed(0)+'K';}
+  function pct(a,b){return b>0?Math.round(a/b*100)+'%':'0%';}
 
-  // ── helper: agrupar y ordenar
-  function agrupar(keyFn) {
+  var OBRA_NAMES = {};
+  var OBRA_COLS  = {};
+  obrasIds().forEach(function(o){var r=obraReg(o);OBRA_NAMES[o]=r.ico+' '+r.nm;OBRA_COLS[o]=r.col||'#6366f1';});
+
+  function agrupar(keyFn, source) {
+    var src = source || rows;
     var map = {};
-    rows.forEach(function(e) {
-      var k = keyFn(e)||'Sin dato';
-      map[k] = (map[k]||0) + e.monto;
-    });
-    return Object.keys(map).map(function(k){return {k:k,v:map[k]};})
-      .sort(function(a,b){return b.v-a.v;});
+    src.forEach(function(e){var k=keyFn(e)||'Sin dato';map[k]=(map[k]||0)+e.monto;});
+    return Object.keys(map).map(function(k){return {k:k,v:map[k]};}).sort(function(a,b){return b.v-a.v;});
   }
 
-  // ── bar chart helper
-  function barChart(items, maxN, color, showPct) {
-    var top = items.slice(0,maxN);
+  // ── bar chart
+  function barChart(items, maxN, color, base) {
+    var top = items.slice(0, maxN);
     var maxV = top.length ? top[0].v : 1;
+    var baseV = base || totalRows;
     return top.map(function(it){
-      var pct = totalRows>0?Math.round(it.v/totalRows*100):0;
-      var barW = Math.round(it.v/maxV*100);
-      var pctStr = showPct ? '<span style="font-size:10px;color:var(--tx3);margin-left:4px">'+pct+'%</span>' : '';
-      return '<div style="margin-bottom:10px">'
+      var p = baseV>0?Math.round(it.v/baseV*100):0;
+      var bw = Math.round(it.v/maxV*100);
+      return '<div style="margin-bottom:9px">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
-        + '<span style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%">'+it.k+'</span>'
-        + '<span style="font-size:12px;font-weight:700;color:var(--tx1)">'+fmtA(it.v)+pctStr+'</span>'
+        + '<span style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62%">'+it.k+'</span>'
+        + '<span style="font-size:12px;font-weight:700;color:var(--tx1)">'+fmtA(it.v)+' <span style="font-weight:400;color:var(--tx3);font-size:10px">'+p+'%</span></span>'
         + '</div>'
-        + '<div style="background:var(--sf2);border-radius:4px;height:8px;overflow:hidden">'
-        + '<div style="background:'+color+';height:100%;width:'+barW+'%;border-radius:4px;transition:width .4s"></div>'
+        + '<div style="background:var(--sf2);border-radius:4px;height:7px;overflow:hidden">'
+        + '<div style="background:'+color+';height:100%;width:'+bw+'%;border-radius:4px;transition:width .4s"></div>'
         + '</div></div>';
     }).join('');
   }
 
-  // ── datos
-  var proveedores = agrupar(function(e){return e.a;});
-  var materiales  = agrupar(function(e){return e.material||'Sin especificar';});
-  var etapas      = agrupar(function(e){return e.etapa;});
-  var areas       = agrupar(function(e){return e.area;});
-  var obrasDist   = agrupar(function(e){return e.obra;});
-
-  var OBRA_NAMES = (function(){var m={};obrasIds().forEach(function(o){var r=obraReg(o);m[o]=r.ico+' '+r.nm;});return m;})();
-  var OBRA_COLS  = (function(){var m={};obrasIds().forEach(function(o){m[o]=obraReg(o).col||'#6366f1';});return m;})();
-
-  // ── sección card
-  function secCard(title, content, icon) {
-    return '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:16px">'
-      + '<div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">'
-      + icon + ' ' + title + '</div>'
-      + content + '</div>';
+  function card(title, body, icon) {
+    return '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:14px">'
+      + '<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:14px">'+icon+' '+title+'</div>'
+      + body + '</div>';
   }
 
-  // ── filtros de obra
-  var obraOpts = [
-    {v:'todas',l:'🌐 Todas las obras'},
-    {v:'weliving',l:'🏗 Weliving'},
-    {v:'robledo',l:'🏠 Robledo'},
-    {v:'novaeva',l:'🏢 Novaeva'}
+  // ── filtro obra + tabs nav
+  var obraOpts = [{v:'todas',l:'Todas'}].concat(obrasIds().map(function(o){
+    var r=obraReg(o);return {v:o,l:r.ico+' '+r.nm};
+  }));
+  var tabDefs = [
+    {k:'general',  l:'🌐 General'},
+    {k:'prov',     l:'🏭 Proveedores'},
+    {k:'tiempo',   l:'📅 Tiempo'},
+    {k:'etapas',   l:'🏗 Etapas'}
   ];
-  var filterBar = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'
-    + obraOpts.map(function(oo){
-      var active = obraFil === oo.v;
-      return '<button onclick="window._anObraFil=\''+oo.v+'\';rAnalisis()" style="padding:7px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:700;'
-        + (active ? 'background:var(--bl);color:#fff' : 'background:var(--sf2);color:var(--tx2)')
-        + '">'+oo.l+'</button>';
+
+  var nav = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:1">'
+    + tabDefs.map(function(t){
+      var on = anTab===t.k;
+      return '<button onclick="window._anTab=\''+t.k+'\';rAnalisis()" style="padding:7px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:700;'
+        +(on?'background:var(--bl);color:#fff':'background:var(--sf2);color:var(--tx2)')+'">'+t.l+'</button>';
+    }).join('')
+    + '</div>'
+    + '<select onchange="window._anObraFil=this.value;rAnalisis()" style="padding:7px 10px;border-radius:10px;border:1px solid var(--br);background:var(--sf);font-size:12px;font-weight:700;color:var(--tx1)">'
+    + obraOpts.map(function(oo){return '<option value="'+oo.v+'"'+(obraFil===oo.v?' selected':'')+'>'+oo.l+'</option>';}).join('')
+    + '</select>'
+    + '</div>';
+
+  // KPI strip siempre visible
+  var proveedores = agrupar(function(e){return e.a;});
+  var etapas = agrupar(function(e){return e.etapa;});
+  var areas  = agrupar(function(e){return e.area;});
+
+  // ROI / saldo por obra
+  var obraStats = obrasIds().map(function(o){
+    var rec = sumAbonos(o);
+    var eje = sumLiveDesdeJun9(o)+sumHist(o);
+    var saldo = rec - eje;
+    var col = obraReg(o).col||'#6366f1';
+    return {o:o,nm:OBRA_NAMES[o],rec:rec,eje:eje,saldo:saldo,col:col};
+  });
+
+  var kpis = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px">'
+    + [
+      {l:'Total gastado',v:fmtA(totalRows),sub:rows.length+' txn',col:'var(--rd)'},
+      {l:'Proveedores',v:proveedores.length,sub:'únicos',col:'#FF9500'},
+      {l:'Áreas de gasto',v:areas.length,sub:'categorías',col:'#AF52DE'},
+      {l:'Etapas',v:etapas.length,sub:'cubiertas',col:'#34C759'}
+    ].map(function(k){
+      return '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px">'
+        +'<div style="font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase">'+k.l+'</div>'
+        +'<div style="font-size:22px;font-weight:900;color:'+k.col+';margin:3px 0">'+k.v+'</div>'
+        +'<div style="font-size:11px;color:var(--tx3)">'+k.sub+'</div>'
+        +'</div>';
     }).join('')
     + '</div>';
 
-  // ── resumen KPI
-  var kpiBar = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px">'
-    + '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px">'
-    + '<div style="font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase">Total analizado</div>'
-    + '<div style="font-size:22px;font-weight:900;color:var(--bl);margin-top:4px">'+fmtA(totalRows)+'</div>'
-    + '<div style="font-size:11px;color:var(--tx3)">'+rows.length+' transacciones</div>'
-    + '</div>'
-    + '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px">'
-    + '<div style="font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase">Proveedores únicos</div>'
-    + '<div style="font-size:22px;font-weight:900;color:#FF9500;margin-top:4px">'+proveedores.length+'</div>'
-    + '</div>'
-    + '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px">'
-    + '<div style="font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase">Etapas cubiertas</div>'
-    + '<div style="font-size:22px;font-weight:900;color:#34C759;margin-top:4px">'+etapas.length+'</div>'
-    + '</div>'
-    + '</div>';
+  var body = '';
 
-  // ── distribución por obra (si es "todas")
-  var obraDistHtml = '';
-  if (obraFil === 'todas') {
-    obraDistHtml = secCard('Distribución por obra', obrasDist.map(function(it){
-      var col = OBRA_COLS[it.k]||'#8E8E93';
-      var nm  = OBRA_NAMES[it.k]||it.k;
-      var pct = totalRows>0?Math.round(it.v/totalRows*100):0;
+  // ══════════════════════
+  // TAB: GENERAL
+  // ══════════════════════
+  if (anTab === 'general') {
+    // Distribución por obra
+    var obraDistHtml = obraStats.map(function(s){
+      var p = totalRows>0?Math.round(s.eje/totalRows*100):0;
       return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'
-        + '<div style="width:10px;height:10px;border-radius:50%;background:'+col+';flex-shrink:0"></div>'
-        + '<div style="flex:1"><div style="font-size:12px;font-weight:600">'+nm+'</div>'
-        + '<div style="background:var(--sf2);border-radius:4px;height:6px;margin-top:4px;overflow:hidden">'
-        + '<div style="background:'+col+';height:100%;width:'+pct+'%;border-radius:4px"></div></div></div>'
-        + '<div style="text-align:right"><div style="font-size:13px;font-weight:700">'+fmtA(it.v)+'</div>'
-        + '<div style="font-size:10px;color:var(--tx3)">'+pct+'%</div></div>'
+        + '<div style="width:10px;height:10px;border-radius:50%;background:'+s.col+';flex-shrink:0"></div>'
+        + '<div style="flex:1">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        + '<span style="font-size:12px;font-weight:600">'+s.nm+'</span>'
+        + '<span style="font-size:12px;font-weight:700">'+fmtA(s.eje)+'  <span style="color:var(--tx3);font-size:10px">'+p+'%</span></span>'
+        + '</div>'
+        + '<div style="background:var(--sf2);border-radius:4px;height:7px;overflow:hidden">'
+        + '<div style="background:'+s.col+';height:100%;width:'+p+'%;border-radius:4px"></div></div>'
+        + '</div></div>';
+    }).join('');
+
+    // Saldo por obra — mini semáforo
+    var saldoObrasHtml = obraStats.map(function(s){
+      var ok = s.saldo > 10e6;
+      var warn = s.saldo > 0 && s.saldo <= 10e6;
+      var ico = ok?'✅':warn?'⚠️':'🔴';
+      var col = ok?'#34C759':warn?'#FF9500':'#FF3B30';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--br)">'
+        + '<span style="font-size:13px">'+ico+' '+s.nm+'</span>'
+        + '<div style="text-align:right">'
+        + '<div style="font-size:14px;font-weight:800;color:'+col+'">'+fmtA(s.saldo)+'</div>'
+        + '<div style="font-size:10px;color:var(--tx3)">'+pct(s.eje,s.rec)+' ejecutado</div>'
+        + '</div></div>';
+    }).join('');
+
+    body = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + card('Distribución por obra', obraDistHtml, '🏗')
+      + card('Saldo disponible por obra', saldoObrasHtml, '🏦')
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + card('Top categorías de gasto', barChart(areas, 10, '#AF52DE'), '📂')
+      + card('Top etapas', barChart(etapas, 10, '#FF9500'), '🏗')
+      + '</div>';
+
+  // ══════════════════════
+  // TAB: PROVEEDORES
+  // ══════════════════════
+  } else if (anTab === 'prov') {
+    var provFull = agrupar(function(e){return e.a;});
+    var totalProv = provFull.reduce(function(s,p){return s+p.v;},0)||1;
+
+    // Pareto 80/20
+    var acum = 0;
+    var paretoHtml = provFull.slice(0,20).map(function(p, i){
+      acum += p.v;
+      var pProv = Math.round(p.v/totalProv*100);
+      var pAcum = Math.round(acum/totalProv*100);
+      var bw = Math.round(p.v/provFull[0].v*100);
+      var isPareto = pAcum <= 80;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--br)">'
+        + '<div style="width:22px;text-align:right;font-size:11px;color:var(--tx3);flex-shrink:0">#'+(i+1)+'</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        + '<span style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%">'+p.k+'</span>'
+        + '<span style="font-size:12px;font-weight:700">'+fmtA(p.v)+'<span style="color:var(--tx3);font-size:10px;margin-left:4px">'+pProv+'%</span></span>'
+        + '</div>'
+        + '<div style="display:flex;gap:4px;align-items:center">'
+        + '<div style="flex:1;background:var(--sf2);border-radius:3px;height:5px;overflow:hidden">'
+        + '<div style="background:'+(isPareto?'#007AFF':'#94A3B8')+';height:100%;width:'+bw+'%;border-radius:3px"></div></div>'
+        + '<span style="font-size:10px;color:'+(isPareto?'#007AFF':'var(--tx3)')+';width:28px;text-align:right">'+pAcum+'%</span>'
+        + '</div></div></div>';
+    }).join('');
+
+    // Concentración
+    var top3 = provFull.slice(0,3).reduce(function(s,p){return s+p.v;},0);
+    var top3pct = Math.round(top3/totalProv*100);
+    var concentAlert = top3pct > 60
+      ? '<div style="background:rgba(255,59,48,.08);border-left:3px solid #FF3B30;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px">🔴 Alta concentración: los 3 proveedores principales acumulan el '+top3pct+'% del gasto total. Riesgo de dependencia.</div>'
+      : top3pct > 40
+      ? '<div style="background:rgba(255,149,0,.08);border-left:3px solid #FF9500;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px">⚠️ Concentración moderada: top 3 proveedores = '+top3pct+'%. Considerar diversificación.</div>'
+      : '<div style="background:rgba(52,199,89,.08);border-left:3px solid #34C759;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px">✅ Concentración saludable: top 3 proveedores = '+top3pct+'%.</div>';
+
+    // Por área
+    var provXArea = agrupar(function(e){return e.area;});
+
+    body = concentAlert
+      + '<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">'
+      + card('Ranking de proveedores (Pareto 80/20 en azul)', paretoHtml, '🏭')
+      + '<div>'
+      + card('Por área de gasto', barChart(provXArea, 10, '#AF52DE'), '📂')
+      + '</div>'
+      + '</div>';
+
+  // ══════════════════════
+  // TAB: TIEMPO
+  // ══════════════════════
+  } else if (anTab === 'tiempo') {
+    // Agrupar por semana
+    function isoWeek(dateStr) {
+      if (!dateStr) return null;
+      var d = new Date(dateStr);
+      if (isNaN(d)) return null;
+      var day = d.getDay()||7;
+      d.setDate(d.getDate()+4-day);
+      var y = d.getFullYear();
+      var jan1 = new Date(y,0,1);
+      return y+'-W'+String(Math.ceil(((d-jan1)/86400000+1)/7)).padStart(2,'0');
+    }
+
+    function isoMonth(dateStr) {
+      if (!dateStr) return null;
+      return dateStr.slice(0,7);
+    }
+
+    var weekMap = {};
+    var monthMap = {};
+    var obraWeekMap = {};
+
+    rows.forEach(function(e){
+      var w = isoWeek(e.f);
+      var m = isoMonth(e.f);
+      if (w) { weekMap[w]=(weekMap[w]||0)+e.monto; }
+      if (m) { monthMap[m]=(monthMap[m]||0)+e.monto; }
+      if (w) {
+        if (!obraWeekMap[e.obra]) obraWeekMap[e.obra]={};
+        obraWeekMap[e.obra][w] = (obraWeekMap[e.obra][w]||0)+e.monto;
+      }
+    });
+
+    var weeks  = Object.keys(weekMap).sort();
+    var months = Object.keys(monthMap).sort();
+
+    // Burn acumulado
+    var acumVal = 0;
+    var acumHtml = weeks.map(function(w){
+      acumVal += weekMap[w];
+      var pctA = totalRows>0?Math.round(acumVal/totalRows*100):0;
+      var fmtW = w.replace('-W',' Sem ');
+      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--br)">'
+        + '<div style="width:80px;font-size:11px;color:var(--tx3);flex-shrink:0">'+fmtW+'</div>'
+        + '<div style="flex:1;background:var(--sf2);border-radius:4px;height:8px;overflow:hidden">'
+        + '<div style="background:linear-gradient(90deg,#6366F1,#8B5CF6);height:100%;width:'+pctA+'%;border-radius:4px;transition:width .4s"></div></div>'
+        + '<div style="width:70px;text-align:right">'
+        + '<div style="font-size:11px;font-weight:700">'+fmtA(weekMap[w])+'</div>'
+        + '<div style="font-size:10px;color:var(--tx3)">acum: '+fmtA(acumVal)+'</div>'
+        + '</div></div>';
+    }).join('') || '<div style="color:var(--tx3);font-size:12px;padding:16px">Sin datos de tiempo</div>';
+
+    // Por mes
+    var mesHtml = months.map(function(m){
+      var mv = monthMap[m];
+      var bw = Math.round(mv/( Math.max.apply(null,months.map(function(x){return monthMap[x];}))||1)*100);
+      var label = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(m.slice(5,7))-1]+' '+m.slice(0,4);
+      return '<div style="margin-bottom:10px">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+        + '<span style="font-size:12px;font-weight:700">'+label+'</span>'
+        + '<span style="font-size:12px;font-weight:700">'+fmtA(mv)+'</span>'
+        + '</div>'
+        + '<div style="background:var(--sf2);border-radius:5px;height:10px;overflow:hidden">'
+        + '<div style="background:#10B981;height:100%;width:'+bw+'%;border-radius:5px"></div></div>'
         + '</div>';
-    }).join(''), '🏗');
+    }).join('') || '<div style="color:var(--tx3);font-size:12px">Sin datos</div>';
+
+    // Canvas para gráfica semanal
+    var canvasId = 'chart-an-semanal';
+    body = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + card('Gasto por mes', mesHtml, '🗓')
+      + card('Burn acumulado por semana', acumHtml, '📈')
+      + '</div>';
+
+    // render chart después de que el DOM esté listo
+    setTimeout(function(){
+      var wkCanvas = document.getElementById(canvasId);
+      if (!wkCanvas || typeof Chart==='undefined') return;
+      _destroyChart(canvasId);
+      _charts[canvasId] = new Chart(wkCanvas, {
+        type:'bar',
+        data:{
+          labels: weeks.map(function(w){return w.replace('-W','W');}),
+          datasets:[{
+            label:'Gasto semanal',
+            data: weeks.map(function(w){return Math.round(weekMap[w]/1e6*100)/100;}),
+            backgroundColor:'rgba(99,102,241,.6)',
+            borderColor:'#6366F1',
+            borderWidth:1.5,
+            borderRadius:5
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' $'+c.raw+'M';}}}},
+          scales:{x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:9}}},
+            y:{grid:{color:'rgba(99,102,241,.05)'},ticks:{color:'#94A3B8',font:{size:9},callback:function(v){return '$'+v+'M';}},border:{display:false}}}}
+      });
+    }, 100);
+
+  // ══════════════════════
+  // TAB: ETAPAS
+  // ══════════════════════
+  } else if (anTab === 'etapas') {
+    var etapaList = agrupar(function(e){return e.etapa;});
+    var areaList  = agrupar(function(e){return e.area;});
+    var topAreas  = areaList.slice(0,6);
+
+    // Tabla cruzada etapa × área
+    var tableRows = etapaList.slice(0,12).map(function(et){
+      var row = '<tr>'
+        + '<td style="padding:9px 12px;font-size:12px;font-weight:700;color:var(--tx1);white-space:nowrap;border-bottom:1px solid var(--br)">'+et.k+'</td>';
+      topAreas.forEach(function(ar){
+        var cell = rows.filter(function(r){return r.etapa===et.k && r.area===ar.k;})
+          .reduce(function(s,r){return s+r.monto;},0);
+        var opacity = cell>0 ? Math.max(0.1,cell/et.v) : 0;
+        row += '<td style="padding:9px 10px;text-align:right;font-size:11px;font-weight:700;border-bottom:1px solid var(--br);'
+          +'background:rgba(99,102,241,'+opacity.toFixed(2)+');color:'+(opacity>0.3?'#fff':'var(--tx2)')+'">'
+          +(cell>0?fmtA(cell):'—')+'</td>';
+      });
+      row += '<td style="padding:9px 12px;text-align:right;font-size:12px;font-weight:900;color:var(--bl);border-bottom:1px solid var(--br)">'+fmtA(et.v)+'</td>';
+      row += '</tr>';
+      return row;
+    }).join('');
+
+    var tableHeader = '<tr style="background:var(--sf2)">'
+      + '<th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--tx3)">Etapa</th>'
+      + topAreas.map(function(ar){
+        return '<th style="padding:10px 10px;text-align:right;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--tx3)">'+ar.k+'</th>';
+      }).join('')
+      + '<th style="padding:10px 12px;text-align:right;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--bl)">Total</th>'
+      + '</tr>';
+
+    var tableHtml = '<div style="overflow-x:auto">'
+      + '<table style="width:100%;border-collapse:collapse">'
+      + '<thead>'+tableHeader+'</thead>'
+      + '<tbody>'+tableRows+'</tbody>'
+      + '</table></div>';
+
+    // Etapas por obra
+    var etXObra = obrasIds().map(function(o){
+      var oRows = rows.filter(function(r){return r.obra===o;});
+      var oEtapas = {};
+      oRows.forEach(function(r){oEtapas[r.etapa]=(oEtapas[r.etapa]||0)+r.monto;});
+      var sorted = Object.keys(oEtapas).map(function(k){return {k:k,v:oEtapas[k]};}).sort(function(a,b){return b.v-a.v;});
+      if (!sorted.length) return '';
+      var r2 = obraReg(o);
+      return '<div style="margin-bottom:14px">'
+        + '<div style="font-size:12px;font-weight:800;color:'+r2.col+';margin-bottom:8px">'+r2.ico+' '+r2.nm+'</div>'
+        + barChart(sorted, 6, r2.col, sorted.reduce(function(s,x){return s+x.v;},0))
+        + '</div>';
+    }).join('');
+
+    body = card('Mapa de calor: Etapa × Categoría (intensidad = % del total de la etapa)', tableHtml, '🔥')
+      + card('Distribución de etapas por obra', etXObra, '🏗');
   }
 
-  // ── contenido final
-  el.innerHTML = filterBar + kpiBar + obraDistHtml
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + secCard('Top proveedores', barChart(proveedores, 15, '#007AFF', true), '🏭')
-    + secCard('Por área de gasto', barChart(areas, 12, '#AF52DE', true), '📂')
-    + '</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + secCard('Por material', barChart(materiales.filter(function(m){return m.k&&m.k!=='Sin especificar'&&m.k!=='';}).slice(0,10), 10, '#34C759', true), '🧱')
-    + secCard('Por etapa constructiva', barChart(etapas, 12, '#FF9500', true), '🏗')
-    + '</div>';
+  el.innerHTML = nav + kpis + body;
 }
 
 /* ═══════════════════════════════════════════════════
