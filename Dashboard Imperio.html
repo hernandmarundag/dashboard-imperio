@@ -475,11 +475,10 @@ nav:not(.sb-nav){display:none!important}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .proj-nm{font-size:15px}
   .sec{margin:16px 0 8px}
-  .fin-hero{padding:20px 18px 18px}
-  .fin-hero-num{font-size:30px}
-  .fin-hero-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .fin-hero-item{min-width:auto;padding-right:0}
-  .fhi-v{font-size:14px}
+  .fin-hero{padding:18px 16px 16px;border-radius:18px}
+  .fin-hero-num{font-size:28px;letter-spacing:-1.5px}
+  .fhi-v{font-size:13px}
+  .fhi-l{font-size:9.5px}
   .obras-grid{grid-template-columns:1fr}
 }
 
@@ -507,13 +506,13 @@ nav:not(.sb-nav){display:none!important}
 
 /* ── Financial Hero ── */
 .fin-hero{background:linear-gradient(135deg,#13113A 0%,#2D2B6B 45%,#5B5BD6 100%);border-radius:24px;padding:28px 26px 24px;color:#fff;box-shadow:0 12px 40px rgba(91,91,214,.4)}
-.fin-hero-lbl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.fin-hero-lbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fin-hero-num{font-size:40px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:4px}
-.fin-hero-sub{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:18px}
-.fin-hero-row{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.1);padding-top:16px;flex-wrap:wrap}
-.fin-hero-item{flex:1;min-width:100px;padding-right:16px}
-.fhi-l{font-size:10.5px;color:rgba(255,255,255,.42);margin-bottom:3px}
-.fhi-v{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.fin-hero-sub{font-size:11px;color:rgba(255,255,255,.38);margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fin-hero-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
+.fin-hero-item{min-width:0}
+.fhi-l{font-size:10px;color:rgba(255,255,255,.42);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fhi-v{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px;white-space:nowrap}
 
 /* ── Obras grid ── */
 .obras-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
@@ -2527,14 +2526,14 @@ function rKpi() {
     var libreCol = libre>=30000000?'#4ade80':libre>=0?'#fbbf24':'#f87171';
     heroEl.innerHTML =
       '<div class="fin-hero">'
-     +'<div class="fin-hero-lbl">💰 Caja Grupo Imperio — actualizado 16 Jun 2026</div>'
+     +'<div class="fin-hero-lbl">💰 Caja total · Jun 2026</div>'
      +'<div class="fin-hero-num">'+fmt(cajaTot)+'</div>'
-     +'<div class="fin-hero-sub">Bancolombia · Snapshot 16 Jun · Incluye saldo a favor TCs</div>'
+     +'<div class="fin-hero-sub">Bancolombia · Snapshot 16 Jun</div>'
      +'<div class="fin-hero-row">'
-     +'<div class="fin-hero-item"><div class="fhi-l">📥 Por cobrar</div><div class="fhi-v">'+fmtM(billetera)+'</div></div>'
-     +'<div class="fin-hero-item"><div class="fhi-l">📤 Compromisos 30D</div><div class="fhi-v">'+fmtM(pp)+'</div></div>'
-     +'<div class="fin-hero-item"><div class="fhi-l">💚 Disponible 30D</div><div class="fhi-v" style="color:'+libreCol+'">'+fmtM(libre)+'</div></div>'
-     +'<div class="fin-hero-item"><div class="fhi-l">🔴 Próximo</div><div class="fhi-v" style="font-size:12px;font-weight:600">'+nextTxt+'</div></div>'
+     +'<div class="fin-hero-item"><div class="fhi-l">Por cobrar</div><div class="fhi-v">'+fmtM(billetera)+'</div></div>'
+     +'<div class="fin-hero-item"><div class="fhi-l">Compromisos 30D</div><div class="fhi-v">'+fmtM(pp)+'</div></div>'
+     +'<div class="fin-hero-item"><div class="fhi-l">Disponible 30D</div><div class="fhi-v" style="color:'+libreCol+'">'+fmtM(libre)+'</div></div>'
+     +'<div class="fin-hero-item"><div class="fhi-l">Próximo pago</div><div class="fhi-v" style="font-size:12px;font-weight:600">'+nextTxt+'</div></div>'
      +'</div></div>';
   }
   var kpiEl2 = document.getElementById('kpi-row'); if(kpiEl2) kpiEl2.innerHTML =
