@@ -5566,13 +5566,26 @@ function saveGasto() {
         }
         saveS();
       }
-      // ── Recargar LIVE para que aparezca en el libro ───────
-      LIVE_LOADED[obra] = false;
-      fetchLive(obra);
-      // ── Cerrar modal y navegar ────────────────────────────
+      // ── Update optimista: insertar inmediatamente en LIVE ─
+      if (!Array.isArray(LIVE[obra])) LIVE[obra] = [];
+      LIVE[obra].unshift({
+        id:    (Array.isArray(res) && res[0]) ? res[0].id : ('tmp-'+Date.now()),
+        src:   'supabase',
+        f:     fStr,
+        a:     nombre,
+        desc:  desc,
+        area:  areaVal,
+        monto: total,
+        mp:    metodo + ' — ' + ctaLbl,
+        ctaId: ctaV
+      });
+      LIVE_LOADED[obra] = true;
+      // ── Cerrar modal y navegar (ya con dato visible) ──────
       if (btn) { btn.disabled = false; btn.textContent = '✓ Guardar gasto'; }
       closeOv('ov-gasto');
       gotoView(obra);
+      // ── Re-fetch diferido para confirmar con Supabase ─────
+      setTimeout(function(){ LIVE_LOADED[obra] = false; fetchLive(obra); }, 1500);
     })
     .catch(function(e) {
       console.warn('saveGasto Supabase error:', e);
