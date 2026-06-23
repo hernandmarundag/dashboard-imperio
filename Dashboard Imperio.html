@@ -396,9 +396,17 @@ nav:not(.sb-nav){display:none!important}
 .tl-dot.past{background:var(--tx3)}
 
 @media(max-width:480px){
-  .kpi-v{font-size:19px}
+  .kpi-v{font-size:17px;letter-spacing:-.5px}
+  .kpi{padding:16px 14px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .proj-nm{font-size:15px}
   .sec{margin:16px 0 8px}
+  .fin-hero{padding:20px 18px 18px}
+  .fin-hero-num{font-size:30px}
+  .fin-hero-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fin-hero-item{min-width:auto;padding-right:0}
+  .fhi-v{font-size:14px}
+  .obras-grid{grid-template-columns:1fr}
 }
 
 /* ── FAB — Floating Action Button ── */
@@ -436,6 +444,10 @@ nav:not(.sb-nav){display:none!important}
 /* ── Obras grid ── */
 .obras-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
 .obra-card{border-radius:20px;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;cursor:pointer;border-top-width:4px;border-top-style:solid;overflow:hidden;background:var(--sf)}
+.obra-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
+.obra-nm{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.obra-stats{padding:0 16px}
+.obra-saldo-bar{margin:10px 16px 14px!important}
 .obra-card:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
 .obra-saldo-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-top:10px}
 .obra-snm{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
