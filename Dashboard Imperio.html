@@ -220,19 +220,27 @@ nav:not(.sb-nav){display:none!important}
    CARDS & COMPONENTS
 ══════════════════════════════════════════ */
 .sec{
-  font-size:11px;font-weight:700;color:var(--tx3);
-  text-transform:uppercase;letter-spacing:.8px;
-  margin:22px 0 10px;
+  font-size:10px;font-weight:800;color:var(--bl);
+  text-transform:uppercase;letter-spacing:1.2px;
+  margin:24px 0 12px;display:flex;align-items:center;gap:6px;
 }
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--br),transparent)}
 
 /* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:14px}
 .kpi{
-  background:var(--sf);border-radius:var(--r);
-  padding:18px 20px;box-shadow:var(--sh);
+  background:var(--sf);border-radius:20px;
+  padding:20px 22px;box-shadow:var(--sh);
+  position:relative;overflow:hidden;
 }
-.kpi-l{font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:8px;letter-spacing:.2px}
-.kpi-v{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.kpi::before{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--bl),var(--pu));
+  opacity:.06;
+}
+.kpi-l{font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:10px;letter-spacing:.2px}
+.kpi-v{font-size:24px;font-weight:900;letter-spacing:-.8px}
 .c-bl{color:var(--bl)}.c-gr{color:var(--gr)}.c-rd{color:var(--rd)}.c-or{color:var(--or)}.c-gy{color:var(--gy)}
 
 /* Wallets */
@@ -289,7 +297,7 @@ nav:not(.sb-nav){display:none!important}
 .proj-nota{font-size:11px;color:var(--tx2);margin-top:12px;padding-top:12px;border-top:1px solid var(--br);font-style:italic}
 
 /* Libro/Ledger */
-.ldg-wrap{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);overflow:visible;margin-top:14px;border:1px solid rgba(60,60,67,.05)}
+.ldg-wrap{background:var(--sf);border-radius:20px;box-shadow:var(--sh);overflow:visible;margin-top:14px}
 .ldg-toolbar{padding:12px 16px;border-bottom:1px solid var(--br);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ldg-title{font-size:12px;font-weight:700;color:var(--tx2);flex:1;min-width:180px}
 .ldg-search{padding:8px 12px;border:1px solid var(--br);border-radius:10px;font-size:13px;background:var(--sf2);color:var(--tx);width:190px}
@@ -305,9 +313,8 @@ nav:not(.sb-nav){display:none!important}
   white-space:nowrap;transition:all .18s;
   letter-spacing:-.1px;
 }
-.bsv:hover{background:#0066DD;transform:translateY(-1px)}
+.bsv:hover{background:var(--bl2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(91,91,214,.4)}
 .bsv:active{transform:scale(.97)}
-.bsv:hover{opacity:.9}
 .btn-clr{padding:8px 14px;border:none;border-radius:10px;background:var(--sf2);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--br)}
 .btn-clr:hover{background:var(--sf3)}
 .bsm{
@@ -417,7 +424,7 @@ nav:not(.sb-nav){display:none!important}
 }
 
 /* ── Financial Hero ── */
-.fin-hero{background:linear-gradient(135deg,#0d1b2a 0%,#1e3a5f 55%,var(--bl) 100%);border-radius:20px;padding:26px 24px 22px;color:#fff;box-shadow:0 8px 40px rgba(13,27,42,.5)}
+.fin-hero{background:linear-gradient(135deg,#13113A 0%,#2D2B6B 45%,#5B5BD6 100%);border-radius:24px;padding:28px 26px 24px;color:#fff;box-shadow:0 12px 40px rgba(91,91,214,.4)}
 .fin-hero-lbl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
 .fin-hero-num{font-size:40px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:4px}
 .fin-hero-sub{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:18px}
@@ -427,9 +434,9 @@ nav:not(.sb-nav){display:none!important}
 .fhi-v{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
 
 /* ── Obras grid ── */
-.obras-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
-.obra-card{border-radius:16px;box-shadow:var(--sh);transition:transform .15s,box-shadow .15s;cursor:pointer;border-top-width:3px;border-top-style:solid;overflow:hidden}
-.obra-card:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.obras-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.obra-card{border-radius:20px;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;cursor:pointer;border-top-width:4px;border-top-style:solid;overflow:hidden;background:var(--sf)}
+.obra-card:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
 .obra-saldo-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-top:10px}
 .obra-snm{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
 .obra-sv{font-size:14px;font-weight:800}
