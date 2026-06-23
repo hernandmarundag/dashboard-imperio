@@ -2470,6 +2470,42 @@ canvas{border-radius:4px}
 /* ── Sub-texto descriptivo ── */
 .sub{font-size:12.5px;color:var(--tx2);margin-bottom:18px;line-height:1.6}
 
+
+/* ── Obra tabs ── */
+.obra-tabs{display:flex;gap:4px;padding:0 0 14px 0;flex-wrap:wrap}
+.obra-tab{padding:7px 16px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:var(--sf2);color:var(--tx2);transition:all .18s;letter-spacing:.2px}
+.obra-tab.on{background:var(--bl);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.35)}
+.obra-tab-content{display:none}.obra-tab-content.on{display:block}
+/* Informe layout */
+.inf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.inf-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.inf-card{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px}
+.inf-kpi-val{font-size:26px;font-weight:900;letter-spacing:-1px;margin:4px 0 2px}
+.inf-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx3)}
+.inf-kpi-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.inf-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--br)}
+.inf-row:last-child{border-bottom:none}
+.inf-row-lbl{font-size:13px;color:var(--tx2)}
+.inf-row-val{font-size:13px;font-weight:700;color:var(--tx1)}
+.inf-bar-wrap{background:var(--sf2);border-radius:4px;height:7px;overflow:hidden;margin-top:6px}
+.inf-bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.inf-hdr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--tx3);margin-bottom:14px}
+.inf-pago-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--br)}
+.inf-pago-row:last-child{border-bottom:none}
+.inf-pago-ico{font-size:16px;width:22px;text-align:center}
+.inf-pago-body{flex:1;min-width:0}
+.inf-pago-desc{font-size:12px;font-weight:700;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inf-pago-date{font-size:11px;color:var(--tx3);margin-top:1px}
+.inf-pago-monto{font-size:13px;font-weight:800;color:var(--tx1);white-space:nowrap}
+.inf-alert{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:10px;margin-bottom:8px;font-size:12px}
+.inf-alert.red{background:rgba(255,59,48,.08);border-left:3px solid #FF3B30}
+.inf-alert.orange{background:rgba(255,149,0,.08);border-left:3px solid #FF9500}
+.inf-alert.green{background:rgba(52,199,89,.08);border-left:3px solid #34C759}
+.inf-prov-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.inf-prov-bar{flex:1;background:var(--sf2);border-radius:4px;height:6px;overflow:hidden}
+.inf-prov-fill{height:100%;border-radius:4px}
+@media(max-width:700px){.inf-grid,.inf-grid-3{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -4238,7 +4274,6 @@ function rProjView(o) {
   rProjHeader(o);
   rCategories(o);
   rBurnRate(o);
-  renderLedger(o);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5320,6 +5355,280 @@ function rMovimientos() {
    ANÁLISIS — Vista de inteligencia por proveedores,
    materiales y etapas. Fuente: LIVE (Sheet real) + S.hist
 ═══════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════
+   INFORME POR OBRA — vista completa financiera
+═══════════════════════════════════════════════════ */
+function rInforme(o) {
+  var el = document.getElementById('informe-'+o);
+  if (!el) return;
+  var pc  = PC[o] || {};
+  var r   = obraReg(o);
+  var col = r.col || '#6366F1';
+
+  // ── datos financieros
+  var recibido   = sumAbonos(o);
+  var ejecutado  = sumLiveDesdeJun9(o) + sumHist(o);
+  var comprometido = pagosXObra(o);
+  var saldo      = recibido - ejecutado;
+  var saldoLibre = saldo - comprometido;
+
+  // Pagos próximos de esta obra (no pagados, próximos 90 días)
+  var hoy = new Date();
+  var en90 = new Date(hoy); en90.setDate(hoy.getDate()+90);
+  var pagosPendientes = (S.pagos||[]).filter(function(p){
+    if ((S.pagosPaid||[]).indexOf(p.id)>=0) return false;
+    if ((p.proy||'weliving') !== o) return false;
+    return true;
+  }).sort(function(a,b){return new Date(a.fecha)-new Date(b.fecha);});
+
+  var totalComprometidoObra = pagosPendientes.reduce(function(s,p){return s+p.monto;},0);
+
+  // ── proveedores top (live data)
+  var provMap = {};
+  (LIVE[o]||[]).forEach(function(e){
+    var k = e.a||'Sin nombre';
+    provMap[k]=(provMap[k]||0)+(e.monto||0);
+  });
+  var provList = Object.keys(provMap).map(function(k){return {k:k,v:provMap[k]};})
+    .sort(function(a,b){return b.v-a.v;}).slice(0,6);
+  var maxProv = provList.length ? provList[0].v : 1;
+
+  // ── categorías top
+  var catMap = {};
+  (LIVE[o]||[]).forEach(function(e){
+    var k = e.area||'Otros';
+    catMap[k]=(catMap[k]||0)+(e.monto||0);
+  });
+  var catList = Object.keys(catMap).map(function(k){return {k:k,v:catMap[k]};})
+    .sort(function(a,b){return b.v-a.v;});
+
+  // helpers
+  function fmt(n){return n>=1e9?'$'+(n/1e9).toFixed(2)+'B':n>=1e6?'$'+(n/1e6).toFixed(1)+'M':'$'+(n/1e3).toFixed(0)+'K';}
+  function fmtFull(n){return '$'+(n).toLocaleString('es-CO');}
+  function pctFmt(a,b){return b>0?Math.round(a/b*100)+'%':'0%';}
+
+  var saldoOk = saldo>10000000;
+  var saldoWarn = saldo>0 && saldo<=10000000;
+  var saldoMal = saldo<=0;
+
+  // ── semáforo saldo
+  var semCol = saldoOk?'#34C759':saldoWarn?'#FF9500':'#FF3B30';
+  var semTxt = saldoOk?'✅ Margen saludable':saldoWarn?'⚠️ Margen ajustado':'🔴 Déficit — requiere fondeo';
+
+  // ── fecha generación
+  var ahora = new Date();
+  var fechaGen = ahora.getDate()+'/'+(ahora.getMonth()+1)+'/'+ahora.getFullYear();
+
+  // ── alertas de la obra
+  var alertas = [];
+  if (saldoMal) alertas.push({nivel:'red',msg:'Déficit de caja: '+fmt(Math.abs(saldo))+' — fondeo urgente'});
+  pagosPendientes.slice(0,3).forEach(function(p){
+    var dias = Math.round((new Date(p.fecha)-hoy)/(1000*60*60*24));
+    if (dias<0) alertas.push({nivel:'red',msg:'VENCIDO '+p.desc+' · '+fmt(p.monto)});
+    else if (dias<=7) alertas.push({nivel:'orange',msg:'Esta semana: '+p.desc+' · '+fmt(p.monto)+' · '+dias+'d'});
+    else if (dias<=15) alertas.push({nivel:'orange',msg:'En '+dias+'d: '+p.desc+' · '+fmt(p.monto)});
+  });
+  if (alertas.length===0) alertas.push({nivel:'green',msg:'Sin alertas críticas — flujo bajo control'});
+
+  // ── próximos pagos (máx 8)
+  var pagosHtml = pagosPendientes.slice(0,8).map(function(p){
+    var dias = Math.round((new Date(p.fecha)-hoy)/(1000*60*60*24));
+    var ico = dias<0?'🔴':dias<=7?'⚡':dias<=15?'🟠':'📅';
+    var dateStr = p.fecha ? p.fecha.slice(5).replace('-','/') : '—';
+    return '<div class="inf-pago-row">'
+      +'<div class="inf-pago-ico">'+ico+'</div>'
+      +'<div class="inf-pago-body">'
+      +'<div class="inf-pago-desc">'+p.desc+'</div>'
+      +'<div class="inf-pago-date">'+dateStr+(dias>=0?' · en '+dias+'d':' · '+Math.abs(dias)+'d vencido')+'</div>'
+      +'</div>'
+      +'<div class="inf-pago-monto">'+fmt(p.monto)+'</div>'
+      +'</div>';
+  }).join('') || '<div style="padding:16px;text-align:center;color:var(--tx3);font-size:13px">Sin pagos pendientes</div>';
+
+  // ── proveedores html
+  var provHtml = provList.map(function(p){
+    var pct = Math.round(p.v/maxProv*100);
+    return '<div class="inf-prov-row">'
+      +'<div style="width:120px;font-size:11px;font-weight:700;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0">'+p.k+'</div>'
+      +'<div class="inf-prov-bar"><div class="inf-prov-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'
+      +'<div style="width:60px;text-align:right;font-size:11px;font-weight:700;color:var(--tx1);flex-shrink:0">'+fmt(p.v)+'</div>'
+      +'</div>';
+  }).join('') || '<div style="color:var(--tx3);font-size:12px">Sin datos aún</div>';
+
+  // ── categorías html
+  var totalCat = catList.reduce(function(s,c){return s+c.v;},0)||1;
+  var catHtml = catList.slice(0,6).map(function(c){
+    var pct = Math.round(c.v/totalCat*100);
+    return '<div class="inf-row">'
+      +'<span class="inf-row-lbl">'+c.k+'</span>'
+      +'<span class="inf-row-val">'+fmt(c.v)+' <span style="color:var(--tx3);font-weight:400;font-size:11px">'+pct+'%</span></span>'
+      +'</div>';
+  }).join('') || '<div style="color:var(--tx3);font-size:12px">Sin datos aún</div>';
+
+  // ── avance barra
+  var progPct = pc.prog || 0;
+  var gastPct = recibido>0 ? Math.min(100, Math.round(ejecutado/recibido*100)) : 0;
+
+  el.innerHTML =
+    // Header del informe
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    +'<div>'
+    +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx3)">Informe financiero</div>'
+    +'<div style="font-size:20px;font-weight:900;color:var(--tx1);margin-top:2px">'+r.ico+' '+r.nm+'</div>'
+    +'</div>'
+    +'<div style="text-align:right">'
+    +'<div style="font-size:11px;color:var(--tx3)">Generado '+fechaGen+'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:'+semCol+';margin-top:3px">'+semTxt+'</div>'
+    +'</div>'
+    +'</div>'
+
+    // KPIs financieros
+    +'<div class="inf-grid-3">'
+    +'<div class="inf-card">'
+    +'<div class="inf-kpi-lbl">💰 Recibido</div>'
+    +'<div class="inf-kpi-val" style="color:#007AFF">'+fmt(recibido)+'</div>'
+    +'<div class="inf-kpi-sub">Desde Jun 9 · inversores</div>'
+    +'</div>'
+    +'<div class="inf-card">'
+    +'<div class="inf-kpi-lbl">📤 Ejecutado</div>'
+    +'<div class="inf-kpi-val" style="color:#FF3B30">'+fmt(ejecutado)+'</div>'
+    +'<div class="inf-kpi-sub">'+pctFmt(ejecutado,recibido)+' del capital</div>'
+    +'</div>'
+    +'<div class="inf-card" style="border:2px solid '+(saldoMal?'#FF3B30':saldoWarn?'#FF9500':'#34C759')+'">'
+    +'<div class="inf-kpi-lbl">🏦 Saldo disponible</div>'
+    +'<div class="inf-kpi-val" style="color:'+(saldoMal?'#FF3B30':saldoWarn?'#FF9500':'#34C759')+'">'+fmt(saldo)+'</div>'
+    +'<div class="inf-kpi-sub">Libre tras compromisos: '+fmt(saldoLibre)+'</div>'
+    +'</div>'
+    +'</div>'
+
+    // Avance físico vs financiero
+    +'<div class="inf-card" style="margin-bottom:12px">'
+    +'<div class="inf-hdr">📐 Avance de obra</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+    +'<div>'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+    +'<span style="font-size:12px;color:var(--tx2)">Avance físico</span>'
+    +'<span style="font-size:13px;font-weight:800;color:'+col+'">'+progPct+'%</span>'
+    +'</div>'
+    +'<div class="inf-bar-wrap"><div class="inf-bar-fill" style="width:'+progPct+'%;background:'+col+'"></div></div>'
+    +'<div style="font-size:11px;color:var(--tx3);margin-top:5px">'+( pc.etapa||'—' )+'</div>'
+    +'</div>'
+    +'<div>'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+    +'<span style="font-size:12px;color:var(--tx2)">Consumo financiero</span>'
+    +'<span style="font-size:13px;font-weight:800;color:#FF3B30">'+gastPct+'%</span>'
+    +'</div>'
+    +'<div class="inf-bar-wrap"><div class="inf-bar-fill" style="width:'+gastPct+'%;background:#FF3B30"></div></div>'
+    +'<div style="font-size:11px;color:var(--tx3);margin-top:5px">'+pctFmt(ejecutado,recibido)+' de lo recibido</div>'
+    +'</div>'
+    +'</div>'
+    +(pc.nota?'<div style="margin-top:12px;font-size:12px;color:var(--tx3);line-height:1.5;padding:10px 12px;background:var(--sf2);border-radius:8px">📝 '+(pc.nota||'')+'</div>':'')
+    +'</div>'
+
+    // Alertas
+    +'<div class="inf-card" style="margin-bottom:12px">'
+    +'<div class="inf-hdr">🚨 Alertas de la obra</div>'
+    +alertas.map(function(a){
+      return '<div class="inf-alert '+a.nivel+'"><span>'+( a.nivel==='red'?'🔴':a.nivel==='orange'?'🟠':'✅' )+'</span><span>'+a.msg+'</span></div>';
+    }).join('')
+    +'</div>'
+
+    // Próximos pagos + Distribución 2 columnas
+    +'<div class="inf-grid">'
+    +'<div class="inf-card">'
+    +'<div class="inf-hdr">💸 Próximos pagos · '+fmt(totalComprometidoObra)+'</div>'
+    +pagosHtml
+    +'</div>'
+    +'<div>'
+    +'<div class="inf-card" style="margin-bottom:12px">'
+    +'<div class="inf-hdr">🏭 Top proveedores</div>'
+    +provHtml
+    +'</div>'
+    +'<div class="inf-card">'
+    +'<div class="inf-hdr">📂 Por categoría</div>'
+    +catHtml
+    +'</div>'
+    +'</div>'
+    +'</div>';
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGOS POR OBRA — tab dedicado
+═══════════════════════════════════════════════════ */
+function rPagosPorObra(o) {
+  var el = document.getElementById('pag-obra-'+o);
+  if (!el) return;
+  var r = obraReg(o);
+  var hoy = new Date();
+
+  var pagos = (S.pagos||[]).filter(function(p){
+    if ((S.pagosPaid||[]).indexOf(p.id)>=0) return false;
+    return (p.proy||'weliving') === o;
+  }).sort(function(a,b){return new Date(a.fecha)-new Date(b.fecha);});
+
+  var pagados = (S.pagos||[]).filter(function(p){
+    if ((S.pagosPaid||[]).indexOf(p.id)===-1) return false;
+    return (p.proy||'weliving') === o;
+  });
+
+  function fmt(n){return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':'$'+(n/1e3).toFixed(0)+'K';}
+
+  var totalPend = pagos.reduce(function(s,p){return s+p.monto;},0);
+  var totalPagado = pagados.reduce(function(s,p){return s+p.monto;},0);
+
+  function pagoCard(p, isPaid) {
+    var dias = p.fecha ? Math.round((new Date(p.fecha)-hoy)/(1000*60*60*24)) : null;
+    var ico = isPaid?'✅':dias===null?'📅':dias<0?'🔴':dias<=7?'⚡':dias<=15?'🟠':'📅';
+    var dateStr = p.fecha ? p.fecha.slice(5).replace('-','/') : 'Sin fecha';
+    var diasTxt = isPaid?'Pagado':dias===null?'':dias<0?'Vencido hace '+Math.abs(dias)+'d':'En '+dias+'d';
+    var bg = isPaid?'rgba(52,199,89,.06)':dias<0?'rgba(255,59,48,.06)':dias<=7?'rgba(255,149,0,.06)':'var(--sf)';
+    var border = isPaid?'rgba(52,199,89,.25)':dias<0?'rgba(255,59,48,.25)':dias<=7?'rgba(255,149,0,.25)':'var(--br)';
+    var payBtn = (!isPaid && p.id)
+      ? '<button data-pid="'+p.id+'" data-obra="'+o+'" onclick="var id=this.getAttribute(\'data-pid\');var ob=this.getAttribute(\'data-obra\');marcarPagado(id,null);rPagosPorObra(ob)" '
+        +'style="padding:5px 12px;border-radius:8px;border:none;background:#34C759;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✅ Pagado</button>'
+      : '';
+    return '<div style="background:'+bg+';border:1px solid '+border+';border-radius:12px;padding:12px 14px;margin-bottom:8px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<span style="font-size:18px">'+ico+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--tx1)">'+p.desc+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3);margin-top:2px">'+dateStr+(diasTxt?' · '+diasTxt:'')+'</div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-size:15px;font-weight:900;color:var(--tx1)">'+fmt(p.monto)+'</div>'
+      +payBtn
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  el.innerHTML =
+    // KPIs
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+    +'<div class="inf-card" style="text-align:center">'
+    +'<div class="inf-kpi-lbl">Por pagar</div>'
+    +'<div class="inf-kpi-val" style="color:#FF3B30">'+fmt(totalPend)+'</div>'
+    +'<div class="inf-kpi-sub">'+pagos.length+' pagos pendientes</div>'
+    +'</div>'
+    +'<div class="inf-card" style="text-align:center">'
+    +'<div class="inf-kpi-lbl">Ya pagado</div>'
+    +'<div class="inf-kpi-val" style="color:#34C759">'+fmt(totalPagado)+'</div>'
+    +'<div class="inf-kpi-sub">'+pagados.length+' pagos completados</div>'
+    +'</div>'
+    +'</div>'
+    // Pendientes
+    +'<div class="inf-card" style="margin-bottom:12px">'
+    +'<div class="inf-hdr">💸 Pendientes</div>'
+    +( pagos.length ? pagos.map(function(p){return pagoCard(p,false);}).join('') : '<div style="text-align:center;color:var(--tx3);font-size:13px;padding:20px">Sin pagos pendientes 🎉</div>')
+    +'</div>'
+    // Pagados
+    +(pagados.length ? '<div class="inf-card">'
+    +'<div class="inf-hdr">✅ Completados</div>'
+    +pagados.map(function(p){return pagoCard(p,true);}).join('')
+    +'</div>' : '');
+}
+
 function rAnalisis() {
   var el = document.getElementById('analisis-content'); if (!el) return;
 
@@ -6053,17 +6362,46 @@ function initObrasViews() {
   var container = document.getElementById('obras-views-container');
   if (!container) return;
   container.innerHTML = obrasIds().map(function(id) {
-    var r = obraReg(id);
     return '<div class="view" id="v-'+id+'">'
       + '<div class="pp-hd" id="pph-'+id+'"></div>'
-      + '<div class="sec" id="catsec-'+id+'" style="margin-top:16px">Distribución del gasto</div>'
+      // Tabs nav
+      + '<div class="obra-tabs">'
+      + '<button class="obra-tab on" id="otab-res-'+id+'" onclick="obraTab(\''+id+'\',\'res\')">📊 Resumen</button>'
+      + '<button class="obra-tab" id="otab-inf-'+id+'" onclick="obraTab(\''+id+'\',\'inf\')">📋 Informe</button>'
+      + '<button class="obra-tab" id="otab-pag-'+id+'" onclick="obraTab(\''+id+'\',\'pag\')">💸 Pagos</button>'
+      + '<button class="obra-tab" id="otab-ldg-'+id+'" onclick="obraTab(\''+id+'\',\'ldg\')">📒 Libro</button>'
+      + '</div>'
+      // Tab: Resumen
+      + '<div class="obra-tab-content on" id="otc-res-'+id+'">'
       + '<div id="cat-'+id+'"></div>'
-      + '<div class="sec" style="margin-top:12px">📅 Últimos 15 días — '+r.nm+'</div>'
-      + '<div class="burn-card" id="burn-'+id+'"></div>'
-      + '<div class="sec">Libro de gastos</div>'
+      + '<div id="burn-'+id+'" class="burn-card"></div>'
+      + '</div>'
+      // Tab: Informe
+      + '<div class="obra-tab-content" id="otc-inf-'+id+'">'
+      + '<div id="informe-'+id+'"></div>'
+      + '</div>'
+      // Tab: Pagos
+      + '<div class="obra-tab-content" id="otc-pag-'+id+'">'
+      + '<div id="pag-obra-'+id+'"></div>'
+      + '</div>'
+      // Tab: Libro
+      + '<div class="obra-tab-content" id="otc-ldg-'+id+'">'
       + '<div class="ldg-wrap" id="ldg-'+id+'"></div>'
+      + '</div>'
       + '</div>';
   }).join('');
+}
+
+function obraTab(o, tab) {
+  ['res','inf','pag','ldg'].forEach(function(t){
+    var btn = document.getElementById('otab-'+t+'-'+o);
+    var cnt = document.getElementById('otc-'+t+'-'+o);
+    if(btn) btn.classList.toggle('on', t===tab);
+    if(cnt) cnt.classList.toggle('on', t===tab);
+  });
+  if(tab==='inf') rInforme(o);
+  if(tab==='pag') rPagosPorObra(o);
+  if(tab==='ldg') renderLedger(o);
 }
 
 function renderObraSelects() {
