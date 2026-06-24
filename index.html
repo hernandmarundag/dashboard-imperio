@@ -2506,6 +2506,17 @@ canvas{border-radius:4px}
 .inf-prov-fill{height:100%;border-radius:4px}
 @media(max-width:700px){.inf-grid,.inf-grid-3{grid-template-columns:1fr}}
 
+
+/* ── FAB Acciones Rápidas ──────────────────────────────────────── */
+#fab-wrap{position:fixed;bottom:24px;right:16px;z-index:9000;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+#fab-main{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--bl),#4f46e5);color:#fff;font-size:28px;line-height:1;border:none;box-shadow:0 4px 18px rgba(99,102,241,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .2s;-webkit-tap-highlight-color:transparent}
+#fab-main.fab-open{transform:rotate(45deg);background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 4px 18px rgba(220,38,38,.4)}
+#fab-opts{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+#fab-opts.fab-hidden{display:none}
+.fab-opt-btn{display:flex;align-items:center;gap:10px;background:var(--sf,#fff);border:none;border-radius:22px;padding:10px 18px 10px 12px;box-shadow:0 3px 14px rgba(0,0,0,.13);cursor:pointer;font-size:13px;font-weight:700;color:var(--tx,#0f172a);white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s}
+.fab-opt-btn:active{transform:scale(.97)}
+.fab-opt-icon{font-size:20px;width:24px;text-align:center;flex-shrink:0}
+@media(max-width:600px){#fab-wrap{bottom:20px;right:14px}#fab-main{width:52px;height:52px;font-size:26px}}
 </style>
 </head>
 <body>
@@ -4141,6 +4152,33 @@ function openAbono() {
   document.getElementById('ab-desc').value = '';
   openOv('ov-abono');
 }
+
+/* ── Supabase: insertar movimiento ──────────────────────────── */
+function insertMovimiento(mov) {
+  var row = {
+    fecha:            mov.fecha       || new Date().toISOString().split('T')[0],
+    tipo:             mov.tipo        || 'ingreso',
+    obra_id:          mov.obra        || null,
+    descripcion:      mov.descripcion || null,
+    monto:            Math.abs(mov.monto || 0),
+    cuenta_origen_id: mov.cta_id      || null,
+    tarjeta_id:       mov.tc_id       || null,
+    origen:           'plataforma'
+  };
+  fetch(SB_URL + '/rest/v1/movimientos', {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(row)
+  }).then(function(r){
+    if (!r.ok) r.text().then(function(t){ console.warn('insertMov err:', t); });
+  }).catch(function(e){ console.warn('insertMov net:', e); });
+}
+
 function saveAbono() {
   var monto = parseFloat(document.getElementById('ab-monto').value)||0;
   var desc  = document.getElementById('ab-desc').value.trim();
@@ -4152,6 +4190,7 @@ function saveAbono() {
   var fFmt = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
   S.abonos.push({id:'ab'+Date.now(),f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
   saveS(); closeOv('ov-abono'); rKpi(); rBudgets(); rWallets('wallets-i'); rWallets('wallets-c'); renderView(curV);
+  insertMovimiento({fecha:fStr,tipo:'ingreso',obra:obra,cta_id:ctaId,descripcion:desc,monto:monto});
 }
 function _poblarSelectsTraspaso() {
   // Cuentas bancarias → select origen
@@ -6746,6 +6785,26 @@ document.querySelectorAll('.ni').forEach(function(el){
   });
 });
 
+
+/* ── FAB JS ─────────────────────────────────────────────────── */
+function toggleFab() {
+  var o = document.getElementById('fab-opts'), b = document.getElementById('fab-main');
+  if (o.classList.contains('fab-hidden')) {
+    o.classList.remove('fab-hidden'); b.classList.add('fab-open'); b.setAttribute('aria-expanded','true');
+  } else {
+    o.classList.add('fab-hidden'); b.classList.remove('fab-open'); b.setAttribute('aria-expanded','false');
+  }
+}
+function closeFab() {
+  var o = document.getElementById('fab-opts'), b = document.getElementById('fab-main');
+  if (o) o.classList.add('fab-hidden');
+  if (b) { b.classList.remove('fab-open'); b.setAttribute('aria-expanded','false'); }
+}
+document.addEventListener('click', function(e) {
+  var w = document.getElementById('fab-wrap');
+  if (w && !w.contains(e.target)) closeFab();
+});
+
 </script>
 
 
@@ -6763,6 +6822,22 @@ document.querySelectorAll('.ni').forEach(function(el){
       <button onclick="saveNuevaObra()" style="margin-top:8px;padding:10px;border-radius:10px;background:#2563eb;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer">Crear obra</button>
     </div>
   </div>
+</div>
+
+<!-- ── FAB Acciones Rápidas ─────────────────────────────────── -->
+<div id="fab-wrap" role="navigation" aria-label="Acciones rápidas">
+  <div id="fab-opts" class="fab-hidden" role="menu">
+    <button class="fab-opt-btn" onclick="closeFab();openGasto()">
+      <span class="fab-opt-icon">📋</span><span>Nuevo gasto</span>
+    </button>
+    <button class="fab-opt-btn" onclick="closeFab();openAbono()">
+      <span class="fab-opt-icon">💰</span><span>Nuevo abono</span>
+    </button>
+    <button class="fab-opt-btn" onclick="closeFab();openPagoTC('')">
+      <span class="fab-opt-icon">💳</span><span>Pagar tarjeta</span>
+    </button>
+  </div>
+  <button id="fab-main" onclick="toggleFab()" aria-expanded="false">＋</button>
 </div>
 </body>
 </html>
