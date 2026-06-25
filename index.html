@@ -2777,7 +2777,7 @@ canvas{border-radius:4px}
     <div class="mhd"><div class="mtit">💳 Abonar a Tarjeta</div><button class="mclose" onclick="closeOv('ov-traspaso')">✕</button></div>
     <div class="mbody">
       <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:12px;color:#166534;margin-bottom:12px">
-        💡 Sale dinero del banco → se libera cupo de la tarjeta
+        💡 Pagas la tarjeta desde tu cuenta → la deuda de la TC baja, el saldo bancario baja
       </div>
       <!-- TC destino con info en tiempo real -->
       <div class="fg">
@@ -4323,9 +4323,10 @@ function _poblarSelectsTraspaso() {
   }).join('');
   var elDe = document.getElementById('trsp-de');
   if (elDe) elDe.innerHTML = optsCtas;
-  // TCs → select destino
-  var optsTCs = S.tcs.map(function(t){
-    return '<option value="'+t.id+'">'+t.nm+' ('+t.tit+') — Deuda: '+fmtM(t.cupoUsado)+'</option>';
+  // TCs → select destino (deuda real = cupoUsado + cargos - pagos)
+  var optsTCs = (S.tcs||[]).map(function(t){
+    var deuda = saldoTC(t.id);
+    return '<option value="'+t.id+'">'+t.nm+' ('+t.banco+') — Deuda: '+fmtM(deuda)+'</option>';
   }).join('');
   var elPara = document.getElementById('trsp-para');
   if (elPara) elPara.innerHTML = optsTCs;
@@ -4345,6 +4346,24 @@ function openTraspaso(preselTcId) {
 }
 
 function openAbonarTC(tcId) { openTraspaso(tcId); }
+function openPagoTC(tcId)    { openTraspaso(tcId); }
+
+// Deuda real de una TC = cupoUsado base + cargos en gastos - traspasos pagados
+function saldoTC(tcId) {
+  var tc = S.tcs ? S.tcs.find(function(x){return x.id===tcId;}) : null;
+  if (!tc) return 0;
+  // Base
+  var base = tc.cupoUsado || 0;
+  // Gastos que referencian esta TC como cuenta de cargo
+  var cargos = (S.gastos||[]).reduce(function(s,g){
+    return s + (g.ctaCargo===tcId ? (g.monto||0) : 0);
+  }, 0);
+  // Pagos ya realizados (traspasos hacia esta TC)
+  var pagos = (S.traspasos||[]).reduce(function(s,t){
+    return s + (t.para===tcId ? (t.monto||0) : 0);
+  }, 0);
+  return base + cargos - pagos;
+}
 
 function updateTCInfo() {
   var tcId = document.getElementById('trsp-para').value;
@@ -4352,8 +4371,9 @@ function updateTCInfo() {
   var panel = document.getElementById('tc-info-panel');
   if (!tc || !panel) return;
   panel.style.display = 'block';
-  document.getElementById('tc-info-deuda').textContent = fmt(tc.cupoUsado);
-  document.getElementById('tc-info-libre').textContent = fmt(tc.cupoTotal - tc.cupoUsado + (tc.saldoFavor||0));
+  var deudaReal = saldoTC(tcId);
+  document.getElementById('tc-info-deuda').textContent = fmt(deudaReal);
+  document.getElementById('tc-info-libre').textContent = fmt(Math.max(0, tc.cupoTotal - deudaReal + (tc.saldoFavor||0)));
   updateTraspasoPreview();
 }
 
@@ -4366,7 +4386,7 @@ function updateTraspasoPreview() {
   var tc  = S.tcs.find(function(x){ return x.id===tcId; });
   var cta = S.cuentas.find(function(x){ return x.id===ctaId; });
   var saldoCuentaActual = cta ? saldoCta(cta.id) : 0;
-  var nuevaDeudaTC  = tc  ? Math.max(0, tc.cupoUsado - monto) : 0;
+  var nuevaDeudaTC  = tc  ? Math.max(0, saldoTC(tc.id) - monto) : 0;
   var nuevoSaldoCta = saldoCuentaActual - monto;
   preview.style.display = 'block';
   preview.innerHTML =
@@ -4398,7 +4418,8 @@ function saveTraspaso() {
 
   // 1. Liberar cupo TC
   var tc = S.tcs.find(function(x){return x.id===para;});
-  if (tc) tc.cupoUsado = Math.max(0, (tc.cupoUsado||0) - monto);
+  // Reducir deuda: guardamos cupoUsado como la nueva deuda neta
+  if (tc) tc.cupoUsado = Math.max(0, saldoTC(tc.id) - monto);
 
   // 2. Descontar del saldo bancario
   var cta = S.cuentas.find(function(x){return x.id===de;});
