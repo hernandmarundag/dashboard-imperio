@@ -3464,38 +3464,37 @@ async function _autoImportarHistNovaeva() {
 }
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id) {
-  var ct = S.cuentas ? S.cuentas.find(function(x){return x.id===id;}) : null;
-  // Base = snapshot manual (saldoReal editado con ✏️) o saldoBase
+  var ct = S.cuentas ? S.cuentas.find(function(x) { return x.id === id; }) : null;
+  // Base: snapshot manual (✏️) o saldoBase definido
   var base = (ct && ct.saldoReal !== undefined) ? ct.saldoReal
-           : (ct ? (ct.saldoBase||0) : 0);
+           : (ct ? (ct.saldoBase || 0) : 0);
 
-  // Sumar abonos de S.abonos que pertenecen a esta cuenta
+  // Abonos registrados para esta cuenta
   var abonos = ((S && S.abonos) ? S.abonos : [])
-    .filter(function(a){ return a.ctaId === id; })
-    .reduce(function(s,a){ return s + (a.monto||0); }, 0);
+    .filter(function(a) { return a.ctaId === id; })
+    .reduce(function(s, a) { return s + (a.monto || 0); }, 0);
 
-  // Restar gastos de LIVE que pertenecen a esta cuenta
-  // (si el gasto no tiene cta definido, cuenta como 'bc-grupo' = cuenta principal)
+  // Gastos en LIVE (cargados de Supabase)
   var gastos = 0;
-  var MAIN_CTA = 'bc-grupo'; // cuenta por defecto
+  var MAIN_CTA = 'bc-grupo';
   if (typeof LIVE !== 'undefined') {
-    Object.keys(LIVE).forEach(function(obra){
-      (LIVE[obra]||[]).forEach(function(g){
+    Object.keys(LIVE).forEach(function(obra) {
+      (LIVE[obra] || []).forEach(function(g) {
         var gcta = g.cta || g.ctaId || g.cta_id || MAIN_CTA;
-        if (gcta === id) { gastos += (g.monto||0); }
+        if (gcta === id) { gastos += (g.monto || 0); }
       });
     });
   }
 
-  // MOVIMIENTOS del módulo (abonos TC, pagos, etc.)
+  // Movimientos (abonos TC, pagos, etc.)
   var mvts = (typeof MOVIMIENTOS !== 'undefined' ? MOVIMIENTOS : [])
-    .filter(function(m){ return m.cta_id === id; });
-  var delta = mvts.reduce(function(s,m){ return s + (m.monto||0)*(m.signo||0); }, 0);
+    .filter(function(m) { return m.cta_id === id; });
+  var delta = mvts.reduce(function(s, m) { return s + (m.monto || 0) * (m.signo || 0); }, 0);
 
   // Traspasos salientes
   var trp = ((S && S.traspasos) ? S.traspasos : [])
-    .filter(function(x){ return x.de === id; })
-    .reduce(function(a,x){ return a+(x.monto||0); }, 0);
+    .filter(function(x) { return x.de === id; })
+    .reduce(function(a, x) { return a + (x.monto || 0); }, 0);
 
   return base + abonos + delta - gastos - trp;
 });
