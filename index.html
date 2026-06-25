@@ -3181,7 +3181,7 @@ const DEF = {
     {id:'wl-03',obra:'weliving',act:'Vaciado columnas P3-P4',          tipo:'vaciado',    fi:'2026-06-25',ff:'2026-06-25',mat:6126601, nom:2632500,  estado:'en_curso',  avance:50},
     // Losa P4: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
     {id:'wl-04',obra:'weliving',act:'Encofrado losa P4',               tipo:'encofrado',  fi:'2026-06-26',ff:'2026-06-30',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
-    {id:'wl-05',obra:'weliving',act:'Amarre acero losa P4',            tipo:'acero',      fi:'2026-06-30',ff:'2026-07-02',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
+    {id:'wl-05',obra:'weliving',act:'Amarre acero losa P4',            tipo:'acero',      fi:'2026-06-30',ff:'2026-07-02',mat:21543165,nom:2870000,  estado:'pendiente', avance:0, matPagado:true},
     {id:'wl-06',obra:'weliving',act:'Vaciado losa P4',                 tipo:'vaciado',    fi:'2026-07-03',ff:'2026-07-03',mat:24164644,nom:2152500,  estado:'pendiente', avance:0},
     // P4-P5 col: acero=$10.12M formaleta=$0.62M concreto=$4.52M MdO=$8.78M (total $24.0M)
     {id:'wl-07',obra:'weliving',act:'Amarre acero columnas P4-P5',     tipo:'acero',      fi:'2026-07-04',ff:'2026-07-06',mat:10118679,nom:3510000,  estado:'pendiente', avance:0},
@@ -7310,9 +7310,11 @@ function rCronograma() {
     var fi=dDate(a.fi),ff=dDate(a.ff);
     var dur=Math.ceil((ff-fi)/86400000)+1;
     if(a.tipo==='acero'){
-      // Acero: pagar 12 días hábiles antes del amarre
-      var pagoDia=new Date(fi.getTime()-12*86400000);
-      addToWeek(pagoDia,a.mat,0);
+      // Acero: pagar 12 días hábiles antes del amarre (skip si ya pagado)
+      if(!a.matPagado){
+        var pagoDia=new Date(fi.getTime()-12*86400000);
+        addToWeek(pagoDia,a.mat,0);
+      }
     } else {
       // Materiales al inicio de actividad (formaleta, concreto, bomba)
       addToWeek(fi,a.mat,0);
@@ -7379,7 +7381,7 @@ function rCronograma() {
 
   // ── Alertas acero urgente (pago < 15 días)
   var aceroUrgente=acts.filter(function(a){
-    if(a.tipo!=='acero'||a.estado==='completado') return false;
+    if(a.tipo!=='acero'||a.estado==='completado'||a.matPagado) return false;
     var pagoDia=new Date(dDate(a.fi).getTime()-12*86400000);
     var diff=Math.ceil((pagoDia-TODAY)/86400000);
     return diff<=15;
