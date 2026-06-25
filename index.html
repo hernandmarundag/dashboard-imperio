@@ -7315,8 +7315,12 @@ function rCronograma() {
         var pagoDia=new Date(fi.getTime()-12*86400000);
         addToWeek(pagoDia,a.mat,0);
       }
+    } else if(a.tipo==='vaciado'){
+      // Concreto + bomba: pagar 1 día antes del vaciado
+      var diaConcreto=new Date(fi.getTime()-86400000);
+      addToWeek(diaConcreto,a.mat,0);
     } else {
-      // Materiales al inicio de actividad (formaleta, concreto, bomba)
+      // Encofrado (formaleta): pagar al inicio
       addToWeek(fi,a.mat,0);
     }
     // Nómina APU: se mantiene como referencia en tabla pero NO va al flujo de caja
