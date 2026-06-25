@@ -7317,32 +7317,34 @@ function rCronograma() {
       // Materiales al inicio de actividad (formaleta, concreto, bomba)
       addToWeek(fi,a.mat,0);
     }
-    // Nómina: pagos quincenales (día 15 y último día del mes)
-    // Se buscan todos los días de pago que caen dentro del período de la actividad
-    if(a.nom > 0){
-      var payDays=[];
-      var cur=new Date(fi.getFullYear(),fi.getMonth(),1);
-      var ffTime=ff.getTime();
-      // Iterar meses cubiertos por la actividad
-      while(cur.getTime() <= ffTime){
-        var y=cur.getFullYear(), m=cur.getMonth();
-        var d15=new Date(y,m,15);
-        var d30=new Date(y,m+1,0); // último día del mes
-        [d15,d30].forEach(function(pd){
-          if(pd.getTime()>=fi.getTime() && pd.getTime()<=ffTime) payDays.push(pd);
-        });
-        cur=new Date(y,m+1,1);
-      }
-      // Si ningún día de pago cae en el rango, usar el primer día de pago DESPUÉS de ff
-      if(!payDays.length){
-        var afterFF=new Date(ff.getFullYear(),ff.getMonth(), ff.getDate()<=15?15:0);
-        if(ff.getDate()>15) afterFF=new Date(ff.getFullYear(),ff.getMonth()+1,0);
-        payDays.push(afterFF);
-      }
-      var nomPorPago=a.nom/payDays.length;
-      payDays.forEach(function(pd){ addToWeek(pd,0,nomPorPago); });
-    }
+    // Nómina APU: se mantiene como referencia en tabla pero NO va al flujo de caja
+    // (reemplazada por nómina real quincenal abajo)
   });
+
+  /* ── Nómina real quincenal Weliving ──────────────────────────────────
+     Weliving obra ($21.3M) + 50% Admin ($7.55M) = $28.85M/mes
+     Empleados: Eugenio, Luis Alberto, Jose Alberto, Yorvis, Daiber, Jorbis
+                + 50% John Alexander, Vanessa, María Fernanda, Marbin
+     Pago: día 15 y último día de cada mes
+  ──────────────────────────────────────────────────────────────────── */
+  var NOM_WL_QUINCENAL = 14425000; // $28.85M/mes ÷ 2
+  (function(){
+    // Rango: primera fi hasta última ff de todas las actividades
+    var firstFi = acts.reduce(function(mn,a){ var d=dDate(a.fi); return d<mn?d:mn; }, dDate(acts[0].fi));
+    var lastFf  = acts.reduce(function(mx,a){ var d=dDate(a.ff); return d>mx?d:mx; }, dDate(acts[0].ff));
+    // Generar todos los días 15 y fin de mes en el rango
+    var cur = new Date(firstFi.getFullYear(), firstFi.getMonth(), 1);
+    while(cur <= lastFf){
+      var y=cur.getFullYear(), m=cur.getMonth();
+      var d15  = new Date(y, m, 15);
+      var d30  = new Date(y, m+1, 0); // último día del mes
+      [d15, d30].forEach(function(pd){
+        if(pd >= firstFi && pd <= lastFf) addToWeek(pd, 0, NOM_WL_QUINCENAL);
+      });
+      cur = new Date(y, m+1, 1);
+    }
+  })();
+
   var wkKeys=Object.keys(weekFlowMap).sort();
   var wkLabels=wkKeys.map(function(k){return weekFlowMap[k].label;});
   var wkMat=wkKeys.map(function(k){return Math.round(weekFlowMap[k].mat);});
