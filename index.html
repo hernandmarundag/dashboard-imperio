@@ -181,7 +181,7 @@ nav:not(.sb-nav){display:none!important}
 @media(max-width:768px){
   :root{--sw:225px}
   .sidebar{transform:translateX(-100%)}
-  .sb-burger{display:flex}
+  .sb-burger{display:none}
   .main-content{margin-left:0!important;padding:70px 14px calc(var(--bnav) + 16px)!important}
 
   /* Bottom nav bar */
@@ -2620,6 +2620,7 @@ canvas{border-radius:4px}
 
     <div class="sec">🏦 Cuentas bancarias</div>
     <div class="hscroll" id="wallets-i"></div>
+    <div id="cta-ledger-i"></div>
 
     <div class="sec">💳 Tarjetas de crédito</div>
     <div class="hscroll" id="tcs-i"></div>
@@ -2632,6 +2633,7 @@ canvas{border-radius:4px}
   <div class="view" id="v-cuentas">
     <div class="sec">Cuentas bancarias</div>
     <div class="hscroll" id="wallets-c"></div>
+    <div id="cta-ledger-c"></div>
     <div class="sec">Tarjetas de crédito</div>
     <div class="hscroll" id="tcs-c"></div>
     <div class="sec">Movimientos — libro mayor</div>
@@ -3719,6 +3721,133 @@ function rObrasView() {
     +'</div>';
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   LEDGER POR CUENTA — Cuadre bancario
+════════════════════════════════════════════════════════════════════ */
+function _movsCtaAll(ctaId) {
+  var MAIN = 'bc-grupo';
+  var all  = [];
+  /* 1. Abonos (entradas) */
+  (S.abonos || []).forEach(function(a) {
+    if (a.ctaId === ctaId)
+      all.push({fecha:a.fecha||'',f:a.f||a.fecha||'',tipo:'abono',
+                desc:a.desc||('Abono '+a.obra),monto:a.monto||0,obra:a.obra||'',origen:''});
+  });
+  /* 2. Gastos hist localStorage (salidas) */
+  obrasIds().forEach(function(o) {
+    ((S.hist && S.hist[o]) || []).forEach(function(e) {
+      var cta = e.ctaId || e.ctaCargo || MAIN;
+      if (cta === ctaId && e.metodoPago !== 'Externo')
+        all.push({fecha:e.fecha||'',f:e.f||e.fecha||'',tipo:'cargo',
+                  desc:e.desc||e.a||'Gasto',monto:e.monto||0,obra:o,origen:'Banco'});
+    });
+  });
+  /* 3. Gastos LIVE Supabase (salidas) */
+  if (typeof LIVE !== 'undefined') {
+    Object.keys(LIVE).forEach(function(o) {
+      (LIVE[o] || []).forEach(function(g) {
+        var gcta = g.cta || g.ctaId || g.cta_id || MAIN;
+        if (gcta === ctaId)
+          all.push({fecha:g.fecha||'',f:g.f||g.fecha||'',tipo:'cargo',
+                    desc:g.desc||g.concepto||('Gasto '+o),monto:g.monto||0,obra:o,origen:'Banco'});
+      });
+    });
+  }
+  /* 4. Traspasos salientes (pago TC u otra cuenta) */
+  (S.traspasos || []).forEach(function(t) {
+    if (t.de === ctaId)
+      all.push({fecha:t.fecha||'',f:t.f||t.fecha||'',tipo:'traspaso-out',
+                desc:t.desc||('Pago a '+(t.para||'?')),monto:t.monto||0,obra:'—',origen:t.para||''});
+  });
+  /* 5. Traspasos entrantes */
+  (S.traspasos || []).forEach(function(t) {
+    if (t.para === ctaId)
+      all.push({fecha:t.fecha||'',f:t.f||t.fecha||'',tipo:'abono',
+                desc:t.desc||('Traslado de '+(t.de||'?')),monto:t.monto||0,obra:'—',origen:t.de||''});
+  });
+  /* 6. MOVIMIENTOS */
+  if (typeof MOVIMIENTOS !== 'undefined') {
+    (MOVIMIENTOS || []).filter(function(m){return m.cta_id===ctaId;}).forEach(function(m) {
+      var isIn = (m.signo||0) > 0;
+      all.push({fecha:m.fecha||'',f:m.f||m.fecha||'',tipo:isIn?'abono':'cargo',
+                desc:m.desc||m.concepto||'Movimiento',monto:Math.abs(m.monto||0),
+                obra:m.obra||'—',origen:isIn?'Entrada':'TC'});
+    });
+  }
+  all.sort(function(a,b){ return (a.fecha||a.f||'').localeCompare(b.fecha||b.f||''); });
+  /* Running balance */
+  var run = 0;
+  all.forEach(function(m){ run += (m.tipo==='abono')?m.monto:-m.monto; m.bal=run; });
+  return all;
+}
+
+var _ctaLedgerOpen = {};
+
+function toggleCtaLedger(ctaId, ledgerId) {
+  var el = document.getElementById(ledgerId); if (!el) return;
+  if (_ctaLedgerOpen[ledgerId] === ctaId && el.innerHTML !== '') {
+    el.innerHTML = ''; _ctaLedgerOpen[ledgerId] = null; return;
+  }
+  _ctaLedgerOpen[ledgerId] = ctaId;
+  var ct = (S.cuentas||[]).find(function(x){return x.id===ctaId;}); if (!ct) return;
+  var movs = _movsCtaAll(ctaId);
+  var saldoApp = saldoCta(ctaId);
+  var totalIn=0, totalOut=0;
+  movs.forEach(function(m){ if(m.tipo==='abono') totalIn+=m.monto; else totalOut+=m.monto; });
+  /* Mapas nombres */
+  var oNm={};
+  obrasIds().forEach(function(o){ var r=obraReg(o); oNm[o]=r.ico+' '+r.nm; });
+  var ctaNm={};
+  (S.cuentas||[]).forEach(function(c){ ctaNm[c.id]=c.banco+' · '+c.nm; });
+  (S.tcs||[]).forEach(function(t){ ctaNm[t.id]='💳 TC '+t.nm; });
+
+  var h='<div style="background:var(--sf);border-radius:14px;margin-top:10px;overflow:hidden;box-shadow:var(--sh);border:1px solid var(--br)">'
+    +'<div style="padding:12px 16px;background:var(--sf2);border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between">'
+    +  '<div><div style="font-size:14px;font-weight:800;color:var(--tx)">📒 '+ct.nm+'</div>'
+    +  '<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+ct.banco+' · '+movs.length+' registros</div></div>'
+    +  '<button onclick="toggleCtaLedger(\''+ctaId+'\',\''+ledgerId+'\')" style="background:var(--sf);border:1px solid var(--br);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--tx2);cursor:pointer">✕</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--br)">'
+    +  '<div style="padding:10px 12px;border-right:1px solid var(--br)"><div style="font-size:9px;color:var(--tx3);font-weight:700;text-transform:uppercase">Entradas</div><div style="font-size:13px;font-weight:800;color:#22c55e">+'+fmtM(totalIn)+'</div></div>'
+    +  '<div style="padding:10px 12px;border-right:1px solid var(--br)"><div style="font-size:9px;color:var(--tx3);font-weight:700;text-transform:uppercase">Salidas</div><div style="font-size:13px;font-weight:800;color:#ef4444">-'+fmtM(totalOut)+'</div></div>'
+    +  '<div style="padding:10px 12px"><div style="font-size:9px;color:var(--tx3);font-weight:700;text-transform:uppercase">Saldo app</div><div style="font-size:13px;font-weight:800;color:'+(saldoApp>=0?'#3b82f6':'#ef4444')+'">'+fmtM(saldoApp)+'</div></div>'
+    +'</div>';
+  if (!movs.length) {
+    h+='<div style="padding:24px;text-align:center;color:var(--tx2)">Sin movimientos para esta cuenta</div>';
+  } else {
+    h+='<div style="overflow-x:auto;max-height:420px;-webkit-overflow-scrolling:touch">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:580px">'
+      +'<thead><tr style="position:sticky;top:0;background:var(--sf2);z-index:2">'
+      +'<th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:700;white-space:nowrap">Fecha</th>'
+      +'<th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:700">Descripción</th>'
+      +'<th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:700">Obra</th>'
+      +'<th style="padding:7px 10px;text-align:left;font-size:10px;color:#3b82f6;font-weight:700">Cuenta / TC</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;color:#ef4444;font-weight:700">Débito</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;color:#22c55e;font-weight:700">Crédito</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;color:var(--tx3);font-weight:700">Saldo</th>'
+      +'</tr></thead><tbody>';
+    movs.slice().reverse().forEach(function(m) {
+      var isIn = m.tipo==='abono';
+      var fLbl = m.f || (m.fecha ? m.fecha.slice(5).replace('-','/') : '—');
+      var orNm = ctaNm[m.origen] || m.origen || '—';
+      h+='<tr style="border-bottom:1px solid var(--br)">'
+        +'<td style="padding:6px 10px;white-space:nowrap;color:var(--tx2)">'+fLbl+'</td>'
+        +'<td style="padding:6px 10px;color:var(--tx)">'+m.desc+'</td>'
+        +'<td style="padding:6px 10px;color:var(--tx2);font-size:10px">'+(oNm[m.obra]||m.obra||'—')+'</td>'
+        +'<td style="padding:6px 10px;color:#3b82f6;font-size:10px;font-weight:600">'+orNm+'</td>'
+        +'<td style="padding:6px 10px;text-align:right;font-weight:700;color:#ef4444">'+(isIn?'':fmtM(m.monto))+'</td>'
+        +'<td style="padding:6px 10px;text-align:right;font-weight:700;color:#22c55e">'+(isIn?fmtM(m.monto):'')+'</td>'
+        +'<td style="padding:6px 10px;text-align:right;font-weight:800;color:'+(m.bal>=0?'var(--tx)':'#ef4444')+'">'+fmtM(m.bal)+'</td>'
+        +'</tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+  setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'nearest'}); },80);
+}
+
 function rBudgets(){
   var el=document.getElementById('bud-section');
   if(!el)return;
@@ -3830,15 +3959,19 @@ function rObrasResumen() {
 
 
 function rWallets(id) {
+  var ledgerId = id === 'wallets-i' ? 'cta-ledger-i' : 'cta-ledger-c';
   document.getElementById(id).innerHTML = S.cuentas.map(function(c) {
     var g = WG[c.id] || 'linear-gradient(135deg,#374151,#6b7280)';
     var sal = saldoCta(c.id);
-    return '<div class="wallet" style="background:'+g+';cursor:pointer" onclick="editSaldoInline(\''+c.id+'\',this)">' +
-      '<div class="w-bank">'+c.banco+'</div>' +
-      '<div class="w-name">'+c.nm+'</div>' +
-      '<div class="w-lbl">Saldo ✏️</div>' +
-      '<div class="w-amt w-amt-'+c.id+'">'+fmt(sal)+'</div>' +
-      '</div>';
+    return '<div class="wallet" style="background:'+g+';cursor:pointer;position:relative" onclick="toggleCtaLedger(\''+c.id+'\'\,\''+ledgerId+'\')" >'
+      + '<div class="w-bank">'+c.banco+'</div>'
+      + '<div class="w-name">'+c.nm+'</div>'
+      + '<div class="w-lbl" style="opacity:.7;font-size:10px">📒 ver movimientos</div>'
+      + '<div class="w-amt w-amt-'+c.id+'">'+fmt(sal)+'</div>'
+      + '<button onclick="event.stopPropagation();editSaldoInline(\''+c.id+'\',this.closest(\'.wallet\'))" '
+      + 'style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.2);border:none;'
+      + 'border-radius:8px;padding:3px 8px;font-size:12px;color:#fff;cursor:pointer">✏️</button>'
+      + '</div>';
   }).join('');
 }
 
@@ -4676,7 +4809,7 @@ function renderLedger(o) {
         +'<td style="font-weight:700;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+e.a+'">'+e.a+'</td>'
         +'<td style="font-size:11px;color:var(--tx2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+(e.desc||'')+'">'+descTxt+'</td>'
         +'<td style="padding:7px 10px"><span style="background:'+clr+'20;color:'+clr+';border:1px solid '+clr+'40;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">'+areaShort.toUpperCase()+'</span></td>'
-        +'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
+        +'<td style="padding:4px 8px;min-width:90px">'+ (function(){  var cNm={'bc-grupo':'BCol Grupo','dv-lib':'Davivienda','bb-lib':'B.Bogotá','bc-hernan':'BCol Hernán','bc-paulina':'BCol Paulina','wlt-emp':'Efectivo'};  var tNm={}; (S.tcs||[]).forEach(function(t){tNm[t.id]='💳 '+t.nm;});  var rawCta=e.ctaId||e.ctaCargo||'';  var rawMet=e.metodoPago||'';  var label=tNm[rawCta]||cNm[rawCta]||rawCta||rawMet||'—';  var col=rawMet==='TC'||tNm[rawCta]?'#8b5cf6':rawMet==='Efectivo'?'#22c55e':'#3b82f6';  return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+col+'18;border-radius:6px;padding:2px 6px">'+label+'</span>';})()+'</td>'+'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
         +'<td style="padding:5px 6px"><div style="display:flex;gap:3px">'+editBtn+delBtn+'</div></td>'
         +'</tr>';
     });
@@ -4684,7 +4817,7 @@ function renderLedger(o) {
 
   /* Totals */
   var filtSum = filtered.reduce(function(a,e){return a+e.monto;},0);
-  var footH = '<tr class="rtot"><td colspan="5" style="padding:10px 12px;font-size:12px;color:var(--tx2)">'+(hasF?'Subtotal filtrado — '+tot+' registros':'Total registros en plataforma — '+tot)+'</td>'
+  var footH = '<tr class="rtot"><td colspan="6" style="padding:10px 12px;font-size:12px;color:var(--tx2)">'+(hasF?'Subtotal filtrado — '+tot+' registros':'Total registros en plataforma — '+tot)+'</td>'
     +'<td class="monto" style="color:var(--rd);font-size:14px;font-weight:900;padding:10px 12px">'+fmt(filtSum)+'</td><td></td></tr>';
 
   /* PAGINATION CONTROLS */
@@ -4795,6 +4928,7 @@ function renderLedger(o) {
           +'<th class="sortable" onclick="sortL(\''+o+'\',\'fecha\')">Fecha '+(col==='fecha'?(dir>0?'▲':'▼'):'⇅')+'</th>'
           +'<th class="sortable" onclick="sortL(\''+o+'\',\'a\')">Pagado a '+(col==='a'?(dir>0?'▲':'▼'):'⇅')+'</th>'
           +'<th>Descripción</th>'
+          +'<th style="color:#3b82f6;font-size:10px">Cuenta/TC</th>'
           +'<th class="sortable" onclick="sortL(\''+o+'\',\'area\')">Área '+(col==='area'?(dir>0?'▲':'▼'):'⇅')+'</th>'
           +'<th class="sortable th-right" onclick="sortL(\''+o+'\',\'monto\')">Valor '+(col==='monto'?(dir>0?'▲':'▼'):'⇅')+'</th>'
           +'<th style="width:32px"></th>'
