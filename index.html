@@ -6794,7 +6794,13 @@ var _lastV = 'inicio';
 try { _lastV = localStorage.getItem('imp_curv') || 'inicio'; } catch(e){}
 gotoView(_lastV);
 // Cargar datos de Supabase al iniciar
-obrasIds().forEach(function(o){ fetchLive(o); });
+var _liveCount = 0, _liveTotal = obrasIds().length;
+obrasIds().forEach(function(o){
+  fetchLive(o).then(function(){
+    _liveCount++;
+    if (_liveCount >= _liveTotal) { renderView(curV || 'inicio', true); }
+  });
+});
 
 /* Ã¢ÂÂÃ¢ÂÂ Sync / Auto-refresh Ã¢ÂÂÃ¢ÂÂ */
 function syncAll() {
