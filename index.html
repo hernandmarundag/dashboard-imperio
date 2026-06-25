@@ -2549,6 +2549,24 @@ canvas{border-radius:4px}
   /* KPI: 1 columna en pantallas muy chicas */
   #kpi-row{grid-template-columns:1fr 1fr!important}
 }
+
+/* ===== TAREA 4: MOBILE DESIGN FIXES =====
+   overflow-x, touch targets, obras-grid */
+html, body { max-width:100%; overflow-x:hidden; }
+@media(max-width:768px){
+  button[onclick*="marcarPagado"]{
+    min-height:36px!important;padding:8px 14px!important;
+    font-size:13px!important;border-radius:10px!important;
+  }
+  button[onclick*="openAbonarTC"]{
+    min-height:36px!important;padding:6px 12px!important;font-size:12px!important;
+  }
+  .main-content{overflow-x:hidden;}
+  .obras-grid{grid-template-columns:1fr!important;}
+}
+@media(max-width:480px){
+  .ldg-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch;}
+}
 </style>
 </head>
 <body>
