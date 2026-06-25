@@ -2966,6 +2966,13 @@ function sbPost(table, data) {
 function sbDelete(table, query) {
   return fetch(SB_URL+'/rest/v1/'+table+'?'+query, {method:'DELETE',headers:SB_H}).then(function(r){return r.status;});
 }
+function sbPatch(table, query, data) {
+  return fetch(SB_URL+'/rest/v1/'+table+'?'+query, {
+    method: 'PATCH',
+    headers: Object.assign({}, SB_H, {'Prefer': 'return=minimal'}),
+    body: JSON.stringify(data)
+  }).then(function(r){ if (!r.ok) return r.text().then(function(t){ throw new Error(t); }); });
+}
 
 // Ã¢ÂÂÃ¢ÂÂ LIMPIEZA DE DUPLICADOS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 // Auto-dedup silencioso Ã¢ÂÂ corre en background cuando fetchLive detecta duplicados
@@ -3519,16 +3526,6 @@ function saldoCta(id) {
     .reduce(function(a, x) { return a + (x.monto || 0); }, 0);
 
   return base + abonos + delta - gastos - trp;
-});
-  // Si hay snapshot real del banco, usarlo directamente (override)
-  if (c && c.saldoReal !== undefined) return c.saldoReal;
-  var base = c ? (c.saldoBase||0) : 0;
-  var ent = S.abonos.filter(function(x){return x.ctaId===id;}).reduce(function(a,x){return a+x.monto;},0);
-  var sal = 0; obrasIds().forEach(function(o){
-    S.hist[o].forEach(function(e){ if(e.ctaId===id) sal+=e.monto; });
-  });
-  var trp = S.traspasos.filter(function(x){return x.de===id;}).reduce(function(a,x){return a+x.monto;},0);
-  return base + ent - sal - trp;
 }
 // Suma gastos del LIVE desde una fecha (timestamp)
 var JUN9_TS = new Date(2026, 5, 9).getTime();
@@ -3596,10 +3593,9 @@ function gotoView(v) {
   renderView(v);
 }
 
-function renderView(v, s
+function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
-kipHistory) {
   if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
@@ -3764,6 +3760,8 @@ function editSaldoInline(id, cardEl) {
       c.saldoReal = v;
       c.snapFecha = new Date().toISOString().split('T')[0];
       saveS();
+      // FASE 3D: PATCH cuentas en Supabase
+      sbPatch('cuentas', 'id=eq.'+c.id, {saldo: v}).catch(function(e){ console.warn('[saveCuenta] SB:', e); });
     }
     if (document.getElementById('wallets-i')) rWallets('wallets-i');
     if (document.getElementById('wallets-c')) rWallets('wallets-c');
@@ -3843,6 +3841,8 @@ function saveTCInline(id, pfx) {
   if(vu) t.cupoUsado  = parseFloat(vu.value)||0;
   if(vs) t.saldoFavor = parseFloat(vs.value)||0;
   saveS();
+  // FASE 3D: PATCH tarjetas en Supabase
+  sbPatch('tarjetas', 'id=eq.'+id, {cupo: t.cupoTotal, usado: t.cupoUsado}).catch(function(e){ console.warn('[saveTCInline] SB:', e); });
   if(document.getElementById('tcs-i')) rTCs('tcs-i');
   if(document.getElementById('tcs-c')) rTCs('tcs-c');
   rKpi();
@@ -4272,9 +4272,12 @@ function saveAbono() {
   var fStr  = document.getElementById('ab-fecha').value;
   var d = new Date(fStr+'T12:00:00');
   var fFmt = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
-  S.abonos.push({id:'ab'+Date.now(),f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
+  var _abonoId = 'ab'+Date.now();
+  S.abonos.push({id:_abonoId,f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
   saveS(); closeOv('ov-abono'); rKpi(); rBudgets(); rWallets('wallets-i'); rWallets('wallets-c'); renderView(curV);
   insertMovimiento({fecha:fStr,tipo:'ingreso',obra:obra,cta_id:ctaId,descripcion:desc,monto:monto});
+  // FASE 3D: POST abonos en Supabase
+  sbPost('abonos', {legacy_id:_abonoId,obra_id:obra,fecha:fStr,descripcion:desc,monto:monto,cuenta_id:ctaId}).catch(function(e){ console.warn('[saveAbono] SB:', e); });
 }
 function _poblarSelectsTraspaso() {
   // Cuentas bancarias Ã¢ÂÂ select origen
@@ -4878,7 +4881,7 @@ function rFlujo() {
         var bg=(a.tipo==='neg'||a.tipo==='venc')?'#fee2e2':'#fff7ed';
         var tc=(a.tipo==='neg'||a.tipo==='venc')?'#991b1b':'#92400e';
         var payBtn=(a.tipo==='venc'&&a.id)
-          ?'<button data-pid="'+a.id+'" onclick="var id=this.getAttribute(\x27data-pid\x27);marcarPagado(id,null);rFlujo()" style="flex-shrink:0;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">\u2705 Pagado</button>'
+          ?'<button data-pid="'+a.id+'" onclick="var id=this.getAttribute(\x27data-pid\x27);marcarPagadoConMedio(id,this)" style="flex-shrink:0;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">\u2705 Pagado</button>'
           :'';
         return '<div style="background:'+bg+';border-radius:10px;padding:9px 14px;font-size:12px;color:'+tc+';margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px"><span>'+a.nivel+' '+a.msg+'</span>'+payBtn+'</div>';
       }).join('')
@@ -5077,7 +5080,7 @@ function rPagos() {
           +'<div style="font-size:13px;font-weight:800;color:var(--rd)">'+fmtM(p.monto)+'</div>'
           +'<div style="font-size:10px;color:var(--tx2)">'+fLabel+' '+diaLabel(d)+'</div>'
           +'</div>'
-          +'<button onclick="marcarPagado(\''+p.id+'\',this)" title="Marcar pagado" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0">Ã¢ÂÂ</button>'
+          +'<button onclick="marcarPagadoConMedio(\''+p.id+'\',this)" title="Marcar pagado" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0">Ã¢ÂÂ</button>'
           +'</div>';
       });
       html+='</div></div>';
@@ -5116,7 +5119,7 @@ function updateBadgePagos() {
   b.style.display = venc > 0 ? 'inline-flex' : 'none';
 }
 
-function marcarPagado(id, btn) {
+function marcarPagado(id, btn, ctaId, tcId) {
   var pidx = -1;
   for (var i=0;i<S.pagos.length;i++){ if(S.pagos[i].id===id){pidx=i;break;} }
   if (pidx < 0) return;
@@ -5124,6 +5127,11 @@ function marcarPagado(id, btn) {
   if (!S.pagosPaid) S.pagosPaid = [];
   if (S.pagosPaid.indexOf(id) === -1) S.pagosPaid.push(id);
   saveS();
+  // FASE 3D: PATCH pagos en Supabase
+  var sbData = {pagado: true};
+  if (ctaId) sbData.cuenta_id = ctaId;
+  if (tcId)  sbData.tarjeta_id = tcId;
+  sbPatch('pagos', 'legacy_id=eq.'+id, sbData).catch(function(e){ console.warn('[marcarPagado] SB:', e); });
   updateBadgePagos();
   var row = btn ? btn.closest('[data-pago-id]') : null;
   if (row) {
@@ -5131,6 +5139,29 @@ function marcarPagado(id, btn) {
     row.style.opacity = '0';
     setTimeout(function(){ row.remove(); rPagos(); }, 160);
   } else { rPagos(); }
+}
+
+// TAREA 3: captura medio de pago antes de marcar como pagado
+function marcarPagadoConMedio(id, btn) {
+  var row = btn ? btn.closest('[data-pago-id]') : null;
+  if (!row) { marcarPagado(id, btn, null, null); return; }
+
+  var opts = '<option value="">— Sin especificar —</option>';
+  (S.cuentas||[]).forEach(function(c){ opts += '<option value="c:'+c.id+'">🏦 '+c.nm+'</option>'; });
+  (S.tcs||[]).forEach(function(t){ opts += '<option value="t:'+t.id+'">💳 '+t.nm+' ('+t.tit+')</option>'; });
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap';
+  wrap.innerHTML = '<select style="padding:3px 6px;border-radius:6px;border:1px solid var(--br);font-size:11px;background:var(--sf);color:var(--tx)">'+opts+'</select>'
+    +'<button style="padding:3px 9px;border-radius:6px;border:none;background:var(--gr);color:#fff;font-size:11px;font-weight:700;cursor:pointer">✓ Confirmar</button>';
+  btn.replaceWith(wrap);
+  wrap.querySelector('button').addEventListener('click', function() {
+    var val = wrap.querySelector('select').value;
+    var ctaId = null, tcId = null;
+    if (val.startsWith('c:')) ctaId = val.slice(2);
+    else if (val.startsWith('t:')) tcId = val.slice(2);
+    marcarPagado(id, null, ctaId, tcId);
+  });
 }
 
 /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ COBRAR Ã¢ÂÂ BILLETERA DE DEUDORES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
@@ -5222,12 +5253,14 @@ function rCobrar(){
 function cobrarDeuda(id){
   if(!S.deudores) S.deudores=JSON.parse(JSON.stringify(DEF.deudores));
   var d=S.deudores.find(function(x){return x.id===id;});
-  if(d){d.estado='cobrado';saveS();rCobrar();}
+  if(d){d.estado='cobrado';saveS();rCobrar();
+    sbPatch('deudores','legacy_id=eq.'+id,{pagado:true}).catch(function(e){console.warn('[cobrarDeuda] SB:',e);});}
 }
 function devolverDeuda(id){
   if(!S.deudores) S.deudores=JSON.parse(JSON.stringify(DEF.deudores));
   var d=S.deudores.find(function(x){return x.id===id;});
-  if(d){d.estado='pendiente';saveS();rCobrar();}
+  if(d){d.estado='pendiente';saveS();rCobrar();
+    sbPatch('deudores','legacy_id=eq.'+id,{pagado:false}).catch(function(e){console.warn('[devolverDeuda] SB:',e);});}
 }
 function editDeuda(idx){
   if(!S.deudores) S.deudores=JSON.parse(JSON.stringify(DEF.deudores));
@@ -5237,6 +5270,7 @@ function editDeuda(idx){
   var mt=parseFloat(prompt('Monto:',d.monto)); if(!mt||isNaN(mt)) return;
   d.nombre=nm; d.concepto=cp; d.monto=mt;
   saveS(); rCobrar();
+  sbPatch('deudores','legacy_id=eq.'+d.id,{nombre:nm,descripcion:cp,monto:mt}).catch(function(e){console.warn('[editDeuda] SB:',e);});
 }
 function openNuevoDeudor(){
   var nm=prompt('Nombre deudor:'); if(!nm) return;
@@ -5244,8 +5278,11 @@ function openNuevoDeudor(){
   var mt=parseFloat(prompt('Monto a cobrar:')); if(!mt||isNaN(mt)) return;
   if(!S.deudores) S.deudores=JSON.parse(JSON.stringify(DEF.deudores));
   var newId='d'+(Date.now());
-  S.deudores.push({id:newId,nombre:nm,concepto:cp,monto:mt,fecha:new Date().toISOString().slice(0,10),estado:'pendiente',prioridad:'alta'});
+  var _dFecha = new Date().toISOString().slice(0,10);
+  S.deudores.push({id:newId,nombre:nm,concepto:cp,monto:mt,fecha:_dFecha,estado:'pendiente',prioridad:'alta'});
   saveS(); rCobrar();
+  // FASE 3D: POST deudores en Supabase
+  sbPost('deudores', {legacy_id:newId, nombre:nm, descripcion:cp, monto:mt, monto_pagado:0, fecha:_dFecha, pagado:false}).catch(function(e){ console.warn('[nuevoDeudor] SB:', e); });
 }
 /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
    ABONOS Ã¢ÂÂ Capital recibido e ingresos por proyecto
@@ -5708,7 +5745,7 @@ function rPagosPorObra(o) {
     var bg = isPaid?'rgba(52,199,89,.06)':dias<0?'rgba(255,59,48,.06)':dias<=7?'rgba(255,149,0,.06)':'var(--sf)';
     var border = isPaid?'rgba(52,199,89,.25)':dias<0?'rgba(255,59,48,.25)':dias<=7?'rgba(255,149,0,.25)':'var(--br)';
     var payBtn = (!isPaid && p.id)
-      ? '<button data-pid="'+p.id+'" data-obra="'+o+'" onclick="var id=this.getAttribute(\'data-pid\');var ob=this.getAttribute(\'data-obra\');marcarPagado(id,null);rPagosPorObra(ob)" '
+      ? '<button data-pid="'+p.id+'" data-obra="'+o+'" onclick="var id=this.getAttribute(\'data-pid\');var ob=this.getAttribute(\'data-obra\');marcarPagadoConMedio(id,this)" '
         +'style="padding:5px 12px;border-radius:8px;border:none;background:#34C759;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Ã¢ÂÂ Pagado</button>'
       : '';
     return '<div style="background:'+bg+';border:1px solid '+border+';border-radius:12px;padding:12px 14px;margin-bottom:8px">'
@@ -6684,8 +6721,13 @@ function savePago() {
   var desc = document.getElementById('pf-desc').value.trim();
   var monto = parseFloat(document.getElementById('pf-monto').value)||0;
   if (!desc||!monto) { alert('Completa descripciÃÂ³n y monto'); return; }
-  S.pagos.push({id:Date.now().toString(), desc:desc, proy:document.getElementById('pf-proy').value, monto:monto, nota:document.getElementById('pf-nota').value.trim()});
+  var _pagoId = Date.now().toString();
+  var _pagoProy = document.getElementById('pf-proy').value;
+  var _pagoNota = document.getElementById('pf-nota').value.trim();
+  S.pagos.push({id:_pagoId, desc:desc, proy:_pagoProy, monto:monto, nota:_pagoNota});
   saveS(); closeOv('ov-pago'); rPagos();
+  // FASE 3D: POST pagos en Supabase
+  sbPost('pagos', {legacy_id:_pagoId, obra_id:_pagoProy, descripcion:desc, monto:monto, tipo:'egreso', fecha:new Date().toISOString().slice(0,10), pagado:false, notas:_pagoNota}).catch(function(e){ console.warn('[savePago] SB:', e); });
 }
 
 /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
