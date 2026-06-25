@@ -5963,6 +5963,113 @@ function rPagosPorObra(o) {
     +'</div>' : '');
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   POR COBRAR — Cartera y deudores personales
+════════════════════════════════════════════════════════════════════ */
+function rCobrar() {
+  var el = document.getElementById('cobrar-content'); if(!el) return;
+  var deudores = (S.deudores || []).slice().sort(function(a,b){
+    var pri = {alta:0, media:1, baja:2};
+    return (pri[a.prioridad]||1) - (pri[b.prioridad]||1);
+  });
+  var total = deudores.reduce(function(s,d){ return s+(d.monto||0); }, 0);
+  var cobrado = deudores.filter(function(d){return d.estado==='cobrado';})
+                        .reduce(function(s,d){return s+(d.monto||0);},0);
+  var pendiente = total - cobrado;
+
+  var priCol = {alta:'#ef4444', media:'#f59e0b', baja:'#22c55e'};
+  var priIco = {alta:'🔴', media:'🟡', baja:'🟢'};
+
+  var h = ''
+    /* ── Header ── */
+    + '<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:14px;padding:18px 20px;margin-bottom:16px;color:#fff">'
+    +   '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#94a3b8;margin-bottom:6px">💰 CARTERA POR COBRAR</div>'
+    +   '<div style="font-size:32px;font-weight:900;margin-bottom:12px">'+fmtM(pendiente)+'</div>'
+    +   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+    +     '<div style="background:rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center">'
+    +       '<div style="font-size:13px;font-weight:800;color:#f59e0b">'+deudores.filter(function(d){return d.estado!=='cobrado';}).length+'</div>'
+    +       '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-top:2px">PENDIENTES</div>'
+    +     '</div>'
+    +     '<div style="background:rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center">'
+    +       '<div style="font-size:13px;font-weight:800;color:#22c55e">'+fmtM(cobrado)+'</div>'
+    +       '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-top:2px">COBRADO</div>'
+    +     '</div>'
+    +     '<div style="background:rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center">'
+    +       '<div style="font-size:13px;font-weight:800;color:#fff">'+fmtM(total)+'</div>'
+    +       '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-top:2px">TOTAL</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>'
+
+    /* ── Botón agregar ── */
+    + '<button onclick="openNuevoDeudor()" style="width:100%;padding:12px;border-radius:12px;border:2px dashed var(--br);background:transparent;color:var(--tx2);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px">+ Agregar deudor</button>';
+
+  if (!deudores.length) {
+    h += '<div style="padding:40px;text-align:center;color:var(--tx2)">Sin deudores registrados</div>';
+  } else {
+    deudores.forEach(function(d) {
+      var isCobrado = d.estado === 'cobrado';
+      var col = isCobrado ? '#22c55e' : (priCol[d.prioridad] || '#f59e0b');
+      var ico = isCobrado ? '✅' : (priIco[d.prioridad] || '🟡');
+      var fechaStr = d.fecha ? d.fecha.slice(5).replace('-','/') : '';
+      h += '<div style="background:var(--sf);border-radius:14px;border-left:4px solid '+col+';'
+         + 'padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh);'
+         + (isCobrado?'opacity:.55;':'')
+         + '">'
+         +   '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+         +     '<div style="flex:1;min-width:0">'
+         +       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+         +         '<span style="font-size:16px">'+ico+'</span>'
+         +         '<span style="font-size:15px;font-weight:800;color:var(--tx)">'+d.nombre+'</span>'
+         +         (isCobrado ? '<span style="font-size:10px;background:#22c55e20;color:#22c55e;border-radius:6px;padding:2px 8px;font-weight:700">COBRADO</span>' : '')
+         +       '</div>'
+         +       '<div style="font-size:12px;color:var(--tx2);margin-bottom:6px">'+d.concepto+'</div>'
+         +       '<div style="font-size:10px;color:var(--tx3)">📅 '+fechaStr+' · '+
+         +         (d.prioridad ? d.prioridad.toUpperCase() : 'MEDIA')
+         +       '</div>'
+         +     '</div>'
+         +     '<div style="text-align:right;flex-shrink:0">'
+         +       '<div style="font-size:18px;font-weight:900;color:'+col+'">'+fmtM(d.monto)+'</div>'
+         +       (!isCobrado
+         ?         '<button onclick="marcarCobrado(\''+d.id+'\')" '
+         +           'style="margin-top:6px;padding:5px 12px;border-radius:8px;border:none;'
+         +           'background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700;cursor:pointer">✓ Cobrado</button>'
+         :         '<button onclick="reabrirDeuda(\''+d.id+'\')" '
+         +           'style="margin-top:6px;padding:5px 12px;border-radius:8px;border:none;'
+         +           'background:var(--sf2);color:var(--tx2);font-size:11px;font-weight:700;cursor:pointer">↩ Reabrir</button>'
+         )
+         +     '</div>'
+         +   '</div>'
+         + '</div>';
+    });
+  }
+
+  el.innerHTML = h;
+}
+
+function marcarCobrado(id) {
+  var d = (S.deudores||[]).find(function(x){return x.id===id;}); if(!d) return;
+  d.estado = 'cobrado'; saveS(); rCobrar();
+}
+function reabrirDeuda(id) {
+  var d = (S.deudores||[]).find(function(x){return x.id===id;}); if(!d) return;
+  d.estado = 'pendiente'; saveS(); rCobrar();
+}
+function openNuevoDeudor() {
+  var nombre  = prompt('Nombre del deudor:'); if(!nombre) return;
+  var concepto= prompt('Concepto / motivo:') || '';
+  var monto   = parseInt((prompt('Monto ($):') || '0').replace(/\D/g,''));
+  if(!monto) return;
+  var pri = prompt('Prioridad (alta / media / baja):') || 'media';
+  var id = 'deu-'+Date.now();
+  var hoy = new Date().toISOString().slice(0,10);
+  if(!S.deudores) S.deudores = [];
+  S.deudores.push({id:id, nombre:nombre, concepto:concepto, monto:monto,
+                   fecha:hoy, estado:'pendiente', prioridad:pri.toLowerCase()});
+  saveS(); rCobrar();
+}
+
 function rAnalisis() {
   var el = document.getElementById('analisis-content'); if (!el) return;
 
