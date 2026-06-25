@@ -7317,10 +7317,30 @@ function rCronograma() {
       // Materiales al inicio de actividad (formaleta, concreto, bomba)
       addToWeek(fi,a.mat,0);
     }
-    // Nómina distribuida por días
-    for(var d=0;d<dur;d++){
-      var day=new Date(fi.getTime()+d*86400000);
-      addToWeek(day,0,a.nom/dur);
+    // Nómina: pagos quincenales (día 15 y último día del mes)
+    // Se buscan todos los días de pago que caen dentro del período de la actividad
+    if(a.nom > 0){
+      var payDays=[];
+      var cur=new Date(fi.getFullYear(),fi.getMonth(),1);
+      var ffTime=ff.getTime();
+      // Iterar meses cubiertos por la actividad
+      while(cur.getTime() <= ffTime){
+        var y=cur.getFullYear(), m=cur.getMonth();
+        var d15=new Date(y,m,15);
+        var d30=new Date(y,m+1,0); // último día del mes
+        [d15,d30].forEach(function(pd){
+          if(pd.getTime()>=fi.getTime() && pd.getTime()<=ffTime) payDays.push(pd);
+        });
+        cur=new Date(y,m+1,1);
+      }
+      // Si ningún día de pago cae en el rango, usar el primer día de pago DESPUÉS de ff
+      if(!payDays.length){
+        var afterFF=new Date(ff.getFullYear(),ff.getMonth(), ff.getDate()<=15?15:0);
+        if(ff.getDate()>15) afterFF=new Date(ff.getFullYear(),ff.getMonth()+1,0);
+        payDays.push(afterFF);
+      }
+      var nomPorPago=a.nom/payDays.length;
+      payDays.forEach(function(pd){ addToWeek(pd,0,nomPorPago); });
     }
   });
   var wkKeys=Object.keys(weekFlowMap).sort();
