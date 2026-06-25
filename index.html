@@ -6786,6 +6786,106 @@ function saveNuevaObra() {
   closeOv('ov-nueva-obra'); fetchLive(id); gotoView(id);
 }
 
+// ── FASE 3C: Lectura desde Supabase (overlay en memoria · sin tocar localStorage) ──
+function fetchObras() {
+  return sbFetch('obras', 'order=orden.asc&limit=100')
+    .then(function(rows) {
+      if (!rows || rows.error || !rows.length) return;
+      S.obras = rows.map(function(r) { return r.id; });
+      console.log('[fetchObras] OK', rows.length, 'obras');
+    })
+    .catch(function(e) { console.warn('[fetchObras] fallback localStorage:', e); });
+}
+
+function fetchCuentas() {
+  return sbFetch('cuentas', 'order=orden.asc&limit=100')
+    .then(function(rows) {
+      if (!rows || rows.error || !rows.length) return;
+      S.cuentas = rows.map(function(r) {
+        return { id: r.id, nm: r.nombre, banco: r.banco, saldoBase: r.saldo || 0 };
+      });
+      console.log('[fetchCuentas] OK', rows.length, 'cuentas');
+      if (curV === 'inicio' || curV === 'cuentas') { rWallets('wallets-i'); rWallets('wallets-c'); rKpi(); }
+    })
+    .catch(function(e) { console.warn('[fetchCuentas] fallback localStorage:', e); });
+}
+
+function fetchTarjetas() {
+  return sbFetch('tarjetas', 'order=id.asc&limit=100')
+    .then(function(rows) {
+      if (!rows || rows.error || !rows.length) return;
+      S.tcs = rows.map(function(r) {
+        return { id: r.id, nm: r.nombre, tit: r.titular, banco: r.banco, cupoTotal: r.cupo || 0, cupoUsado: r.usado || 0 };
+      });
+      console.log('[fetchTarjetas] OK', rows.length, 'tarjetas');
+      if (curV === 'inicio' || curV === 'cuentas') { rTCs('tcs-i'); rTCs('tcs-c'); rKpi(); }
+    })
+    .catch(function(e) { console.warn('[fetchTarjetas] fallback localStorage:', e); });
+}
+
+function fetchPagos() {
+  return sbFetch('pagos', 'order=fecha.asc&limit=500')
+    .then(function(rows) {
+      if (!rows || rows.error || !rows.length) return;
+      var activos = [], pagosIds = [];
+      rows.forEach(function(r) {
+        var item = { id: r.legacy_id || r.id, desc: r.descripcion, proy: r.obra_id, monto: r.monto, fecha: r.fecha, nota: r.notas || '' };
+        if (r.pagado) { pagosIds.push(item.id); }
+        else { activos.push(item); }
+      });
+      S.pagos = activos;
+      S.pagosPaid = pagosIds;
+      console.log('[fetchPagos] OK', activos.length, 'pendientes,', pagosIds.length, 'pagados');
+      if (curV === 'pagos') rPagos();
+      if (curV === 'inicio') rKpi();
+    })
+    .catch(function(e) { console.warn('[fetchPagos] fallback localStorage:', e); });
+}
+
+function fetchAbonos() {
+  return sbFetch('abonos', 'order=fecha.asc&limit=500')
+    .then(function(rows) {
+      if (!rows || rows.error || !rows.length) return;
+      S.abonos = rows.map(function(r) {
+        var fmtF = '';
+        try {
+          var d = new Date(r.fecha + 'T12:00:00');
+          fmtF = d.getDate() + ' ' + d.toLocaleString('es-CO', { month: 'short' }).replace('.', '');
+        } catch(e2) {}
+        return { id: r.legacy_id || r.id, f: fmtF, fecha: r.fecha, monto: r.monto, obra: r.obra_id, ctaId: r.cuenta_id, desc: r.descripcion || '' };
+      });
+      console.log('[fetchAbonos] OK', rows.length, 'abonos');
+      if (curV === 'abonos') rAbonos();
+    })
+    .catch(function(e) { console.warn('[fetchAbonos] fallback localStorage:', e); });
+}
+
+function fetchDeudores() {
+  return sbFetch('deudores', 'order=fecha.desc&limit=200')
+    .then(function(rows) {
+      if (!rows || rows.error || !rows.length) return;
+      S.deudores = rows.map(function(r) {
+        return { id: r.legacy_id || r.id, nombre: r.nombre, concepto: r.descripcion || '', monto: r.monto, fecha: r.fecha, estado: r.pagado ? 'pagado' : 'pendiente', prioridad: 'alta' };
+      });
+      console.log('[fetchDeudores] OK', rows.length, 'deudores');
+      if (curV === 'cobrar') rCobrar();
+      if (curV === 'inicio') rKpi();
+    })
+    .catch(function(e) { console.warn('[fetchDeudores] fallback localStorage:', e); });
+}
+
+function fetchSupabaseData() {
+  fetchObras()
+    .then(fetchCuentas)
+    .then(fetchTarjetas)
+    .then(fetchPagos)
+    .then(fetchAbonos)
+    .then(fetchDeudores)
+    .catch(function(e) { console.warn('[fetchSupabaseData] error:', e); });
+}
+// ── FIN FASE 3C ──────────────────────────────────────────────────────────────
+
+
 loadS();
 initObrasViews();
 renderObrasNav();
@@ -6793,6 +6893,7 @@ renderObraSelects();
 var _lastV = 'inicio';
 try { _lastV = localStorage.getItem('imp_curv') || 'inicio'; } catch(e){}
 gotoView(_lastV);
+fetchSupabaseData(); // FASE 3C
 // Cargar datos de Supabase al iniciar
 var _liveCount = 0, _liveTotal = obrasIds().length;
 obrasIds().forEach(function(o){
