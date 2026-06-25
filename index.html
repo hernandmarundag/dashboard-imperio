@@ -3170,7 +3170,7 @@ const DEF = {
     // estado: pendiente | en_curso | completado | retrasado
     // mat=materiales(COP), nom=nómina(COP) — costos reales APU jun 2026
     // P3-P4 col: acero=$10.12M formaleta=$2.48M concreto=$4.93M MdO=$8.78M (total $26.3M)
-    {id:'wl-01',obra:'weliving',act:'Amarre acero columnas P3-P4',     tipo:'acero',      fi:'2026-06-22',ff:'2026-06-22',mat:10118679,nom:3510000,  estado:'completado',avance:100},
+    {id:'wl-01',obra:'weliving',act:'Amarre acero columnas P3-P4',     tipo:'acero',      fi:'2026-06-22',ff:'2026-06-23',mat:10118679,nom:3510000,  estado:'completado',avance:100},
     {id:'wl-02',obra:'weliving',act:'Encofrado columnas P3-P4',        tipo:'encofrado',  fi:'2026-06-23',ff:'2026-06-24',mat:2476679, nom:2632500,  estado:'completado',avance:100},
     {id:'wl-03',obra:'weliving',act:'Vaciado columnas P3-P4',          tipo:'vaciado',    fi:'2026-06-25',ff:'2026-06-25',mat:6126601, nom:2632500,  estado:'en_curso',  avance:50},
     // Losa P4: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
@@ -3202,9 +3202,9 @@ const DEF = {
     {id:'wl-23',obra:'weliving',act:'Encofrado col P6-P7 T2 (1.5m)',  tipo:'encofrado',  fi:'2026-08-05',ff:'2026-08-06',mat:249696,  nom:1053000,  estado:'pendiente', avance:0},
     {id:'wl-24',obra:'weliving',act:'Vaciado col P6-P7 T2 (1.5m)',    tipo:'vaciado',    fi:'2026-08-08',ff:'2026-08-08',mat:3008084, nom:1053000,  estado:'pendiente', avance:0},
     // Cubierta: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
-    {id:'wl-25',obra:'weliving',act:'Encofrado losa Cubierta',         tipo:'encofrado',  fi:'2026-08-10',ff:'2026-08-13',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
-    {id:'wl-26',obra:'weliving',act:'Amarre acero losa Cubierta',      tipo:'acero',      fi:'2026-08-13',ff:'2026-08-15',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
-    {id:'wl-27',obra:'weliving',act:'Vaciado losa Cubierta',           tipo:'vaciado',    fi:'2026-08-18',ff:'2026-08-18',mat:24164644,nom:2152500,  estado:'pendiente', avance:0},
+    {id:'wl-25',obra:'weliving',act:'Encofrado losa P7',         tipo:'encofrado',  fi:'2026-08-10',ff:'2026-08-13',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
+    {id:'wl-26',obra:'weliving',act:'Amarre acero losa P7',      tipo:'acero',      fi:'2026-08-13',ff:'2026-08-15',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
+    {id:'wl-27',obra:'weliving',act:'Vaciado losa P7',           tipo:'vaciado',    fi:'2026-08-18',ff:'2026-08-18',mat:24164644,nom:2152500,  estado:'pendiente', avance:0},
   ],
   pagos:[
     /* ── PILA MAYO — VENCIDA 11 JUN · dividida entre obras ─────────── */
@@ -7061,28 +7061,38 @@ function rCronograma() {
     +'</div></div>';
 
   // ── Flujo de caja proyectado por semana
-  // Agrupar actividades por semana ISO
+  // Acero: pago 12 días antes del amarre (pedido anticipado)
+  // Concreto+Formaleta+Bomba: al inicio de actividad (vaciado/encofrado)
+  // Nómina (nom): distribuida uniformemente durante la actividad
   var weekFlowMap={};
+  function addToWeek(day,mat,nom){
+    var dc=new Date(day); var dayN=dc.getDay()||7;
+    dc.setDate(dc.getDate()+4-dayN);
+    var y=dc.getFullYear(); var jan1=new Date(y,0,1);
+    var wk=y+'-W'+String(Math.ceil(((dc-jan1)/86400000+1)/7)).padStart(2,'0');
+    if(!weekFlowMap[wk]) weekFlowMap[wk]={mat:0,nom:0,label:''};
+    weekFlowMap[wk].mat+=mat;
+    weekFlowMap[wk].nom+=nom;
+    if(!weekFlowMap[wk].label){
+      var mon=new Date(day.getFullYear(),day.getMonth(),day.getDate()-(day.getDay()||7)+1);
+      weekFlowMap[wk].label=('0'+mon.getDate()).slice(-2)+'/'+(('0'+(mon.getMonth()+1)).slice(-2));
+    }
+  }
   acts.forEach(function(a){
-    // Distribuir costo uniformemente entre los días de la actividad
     var fi=dDate(a.fi),ff=dDate(a.ff);
     var dur=Math.ceil((ff-fi)/86400000)+1;
-    var matPerDay=a.mat/dur, nomPerDay=a.nom/dur;
+    if(a.tipo==='acero'){
+      // Acero: pagar 12 días hábiles antes del amarre
+      var pagoDia=new Date(fi.getTime()-12*86400000);
+      addToWeek(pagoDia,a.mat,0);
+    } else {
+      // Materiales al inicio de actividad (formaleta, concreto, bomba)
+      addToWeek(fi,a.mat,0);
+    }
+    // Nómina distribuida por días
     for(var d=0;d<dur;d++){
       var day=new Date(fi.getTime()+d*86400000);
-      // ISO week key
-      var dc=new Date(day); var dayN=dc.getDay()||7;
-      dc.setDate(dc.getDate()+4-dayN);
-      var y=dc.getFullYear(); var jan1=new Date(y,0,1);
-      var wk=y+'-W'+String(Math.ceil(((dc-jan1)/86400000+1)/7)).padStart(2,'0');
-      if(!weekFlowMap[wk]) weekFlowMap[wk]={mat:0,nom:0,label:''};
-      weekFlowMap[wk].mat+=matPerDay;
-      weekFlowMap[wk].nom+=nomPerDay;
-      // Label: "Sem DD/MM"
-      if(!weekFlowMap[wk].label){
-        var mon=new Date(day.getFullYear(),day.getMonth(),day.getDate()-day.getDay()+1);
-        weekFlowMap[wk].label=('0'+mon.getDate()).slice(-2)+'/'+(('0'+(mon.getMonth()+1)).slice(-2));
-      }
+      addToWeek(day,0,a.nom/dur);
     }
   });
   var wkKeys=Object.keys(weekFlowMap).sort();
@@ -7117,6 +7127,37 @@ function rCronograma() {
     }).join('')
     +'</tbody></table></div>';
 
+  // ── Alertas acero urgente (pago < 15 días)
+  var aceroUrgente=acts.filter(function(a){
+    if(a.tipo!=='acero'||a.estado==='completado') return false;
+    var pagoDia=new Date(dDate(a.fi).getTime()-12*86400000);
+    var diff=Math.ceil((pagoDia-TODAY)/86400000);
+    return diff<=15;
+  }).sort(function(a,b){return dDate(a.fi)-dDate(b.fi);});
+
+  var alertasAcero='';
+  if(aceroUrgente.length){
+    alertasAcero='<div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">'
+      +'<div style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.9px;margin-bottom:8px">🚨 ACERO — Pagar en los próximos días</div>'
+      +aceroUrgente.map(function(a){
+        var pagoDia=new Date(dDate(a.fi).getTime()-12*86400000);
+        var diff=Math.ceil((pagoDia-TODAY)/86400000);
+        var urgCol=diff<=0?'#dc2626':diff<=5?'#ea580c':'#ca8a04';
+        var urgTxt=diff<=0?'⚡ VENCIDO':diff===1?'⚡ MAÑANA':'📅 En '+diff+' días';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--sf);border-radius:8px;margin-bottom:6px">'
+          +'<div style="flex:1">'
+          +'<div style="font-size:12px;font-weight:800;color:var(--tx1)">'+a.act+'</div>'
+          +'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Pagar antes: '
+          +('0'+pagoDia.getDate()).slice(-2)+'/'+(('0'+(pagoDia.getMonth()+1)).slice(-2))
+          +'</div></div>'
+          +'<div style="text-align:right">'
+          +'<div style="font-size:14px;font-weight:900;color:#6366f1">'+fM(a.mat)+'</div>'
+          +'<div style="font-size:10px;font-weight:800;color:'+urgCol+'">'+urgTxt+'</div>'
+          +'</div></div>';
+      }).join('')
+      +'</div>';
+  }
+
   var flujoSection='<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px">'
     +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:4px">💸 Flujo de caja proyectado</div>'
     +'<div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Distribución semanal estimada · Total estructura: <strong>'+fM(totalCost)+'</strong> (Mat: '+fM(totalMat)+' · Nóm: '+fM(totalNom)+')</div>'
@@ -7133,8 +7174,8 @@ function rCronograma() {
     +'</div>'
     +'<canvas id="chart-flujo-lp" style="max-height:220px;margin-bottom:8px"></canvas>'
     +tablaFluj
-    +'<div style="margin-top:12px;padding:10px 14px;background:rgba(239,68,68,.07);border-left:3px solid #ef4444;border-radius:8px;font-size:11px;color:var(--tx2)">'
-    +'⚠️ <strong>Costos estimados</strong> — Actualiza los valores reales en cada actividad del cronograma. Los costos actuales son referencias de obra típica en Medellín.'
+    +'<div style="margin-top:12px;padding:10px 14px;background:rgba(16,185,129,.07);border-left:3px solid #10b981;border-radius:8px;font-size:11px;color:var(--tx2)">'
+    +'✅ <strong>Costos reales APU · Jun 2026</strong> — Precios unitarios: Acero $4.284/kg · Concreto losa $552.187/m³ · Formaleta $12.701/m² · Bomba $1.2M/vaciado'
     +'</div>'
     +'</div>';
 
@@ -7160,7 +7201,7 @@ function rCronograma() {
     }).join('')
     +'</div></div>';
 
-  el.innerHTML = header + gantt + lookahead + flujoSection + costoTipo;
+  el.innerHTML = header + gantt + alertasAcero + lookahead + flujoSection + costoTipo;
 
   // ── Renderizar chart flujo
   (function(){
