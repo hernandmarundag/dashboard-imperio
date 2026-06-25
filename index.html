@@ -3037,7 +3037,7 @@ var LIVE = {weliving:[], robledo:[], novaeva:[]};
 var LIVE_LOADED = {weliving:false, robledo:false, novaeva:false};
 
 function fetchLive(obra) {
-  sbFetch('gastos', 'obra=eq.'+obra+'&order=fecha.desc&limit=2000')
+  return sbFetch('gastos', 'obra=eq.'+obra+'&order=fecha.desc&limit=2000')
     .then(function(rows){
       if (!Array.isArray(rows)) return;
       // Mapear columnas Supabase al formato interno del dashboard
