@@ -5901,20 +5901,32 @@ function rAnalisis() {
   // ══════════════════════
   } else if (anTab === 'tiempo') {
     // Agrupar por semana
-    function isoWeek(dateStr) {
-      if (!dateStr) return null;
-      var d = new Date(dateStr);
-      if (isNaN(d)) return null;
-      var day = d.getDay()||7;
-      d.setDate(d.getDate()+4-day);
-      var y = d.getFullYear();
-      var jan1 = new Date(y,0,1);
-      return y+'-W'+String(Math.ceil(((d-jan1)/86400000+1)/7)).padStart(2,'0');
+    function parseDateStr(s) {
+      if (!s) return null;
+      // ISO: YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) { var di=new Date(s+'T12:00:00'); return isNaN(di)?null:di; }
+      // Español corto: "2 jun", "15 may"
+      var MESES={ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11};
+      var mt=s.toLowerCase().trim().match(/^(\d{1,2})\s+([a-z]{3})/);
+      if (!mt) return null;
+      var day2=parseInt(mt[1]), mon=MESES[mt[2]];
+      if (isNaN(day2)||mon===undefined) return null;
+      var now2=new Date(), yr=now2.getFullYear();
+      if (mon>now2.getMonth()||(mon===now2.getMonth()&&day2>now2.getDate())) yr--;
+      return new Date(yr,mon,day2);
     }
-
+    function isoWeek(dateStr) {
+      var d=parseDateStr(dateStr);
+      if (!d||isNaN(d)) return null;
+      var dc=new Date(d); var day=dc.getDay()||7;
+      dc.setDate(dc.getDate()+4-day);
+      var y=dc.getFullYear(); var jan1=new Date(y,0,1);
+      return y+'-W'+String(Math.ceil(((dc-jan1)/86400000+1)/7)).padStart(2,'0');
+    }
     function isoMonth(dateStr) {
-      if (!dateStr) return null;
-      return dateStr.slice(0,7);
+      var d=parseDateStr(dateStr);
+      if (!d||isNaN(d)) return null;
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
     }
 
     var weekMap = {};
