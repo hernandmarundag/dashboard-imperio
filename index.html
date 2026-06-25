@@ -188,6 +188,7 @@
 </head>
 <body>
 
+<div id="error-banner"></div>
 <div class="top-bar">
   <div>
     <h1>🏗️ Imperio · Contable</h1>
@@ -421,10 +422,25 @@ function sbHeaders() {
   };
 }
 
-function sbGet(table, params) {
+function sbGet(table, params, timeoutMs) {
+  timeoutMs = timeoutMs || 9000;
   var url = SB_URL + '/rest/v1/' + table + '?' + (params || '');
-  return fetch(url, { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } })
-    .then(function(r) { return r.json(); });
+  var hdrs = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+  // Timeout via race
+  var fetchP = fetch(url, { headers: hdrs }).then(function(r) {
+    if (!r.ok) return r.text().then(function(t) {
+      console.warn('sbGet ' + table + ' HTTP ' + r.status + ':', t.slice(0,200));
+      return [];
+    });
+    return r.json();
+  });
+  var timeoutP = new Promise(function(_, reject) {
+    setTimeout(function() { reject(new Error('Timeout ' + table)); }, timeoutMs);
+  });
+  return Promise.race([fetchP, timeoutP]).catch(function(e) {
+    console.warn('sbGet ' + table + ':', e.message);
+    return [];
+  });
 }
 
 function sbPost(table, row) {
@@ -466,17 +482,89 @@ function saldoCta(id) {
 
 // ── Cargar movimientos de Supabase ────────────────────────────────
 function loadMovs() {
-  return sbGet('movimientos', 'order=fecha.desc,created_at.desc&limit=200')
-    .then(function(rows) {
-      if (Array.isArray(rows)) MOVS = rows;
-      renderAll();
-    })
-    .catch(function(e) { console.warn('loadMovs:', e); });
+  // Tabla movimientos: abonos, pagos TC, ingresos (columnas reales Supabase)
+  var pMovs = sbGet(
+    'movimientos',
+    'order=fecha.desc%2Ccreated_at.desc&limit=300',
+    9000
+  ).then(function(rows) {
+    if (!Array.isArray(rows)) return [];
+    return rows.map(function(r) {
+      return {
+        fecha:           r.fecha            || '',
+        tipo:            r.tipo             || 'ingreso',
+        descripcion:     r.descripcion      || '',
+        monto:           r.monto            || 0,
+        cuenta_origen_id: r.cuenta_origen_id || null,
+        tarjeta_id:      r.tarjeta_id       || null,
+        obra_id:         r.obra_id          || null,
+        _src:            'movimientos'
+      };
+    });
+  });
+
+  // Tabla gastos: gastos de obra históricos (columnas reales Supabase)
+  var pGastos = sbGet(
+    'gastos',
+    'order=fecha.desc&limit=300',
+    9000
+  ).then(function(rows) {
+    if (!Array.isArray(rows)) return [];
+    return rows.map(function(r) {
+      return {
+        fecha:            r.fecha       || '',
+        tipo:             'gasto',
+        descripcion:      r.descripcion || r.nombre || '',
+        monto:            r.monto       || 0,
+        cuenta_origen_id: null,          // gastos no tienen cuenta en Supabase
+        tarjeta_id:       null,
+        obra_id:          r.obra        || null,
+        _src:             'gastos'
+      };
+    });
+  });
+
+  return Promise.all([pMovs, pGastos]).then(function(results) {
+    var movs   = results[0];
+    var gastos = results[1];
+    // Unir y ordenar por fecha descendente
+    var all = movs.concat(gastos);
+    all.sort(function(a, b) {
+      if (a.fecha > b.fecha) return -1;
+      if (a.fecha < b.fecha) return 1;
+      return 0;
+    });
+    MOVS = all;
+
+    // Error visible si no hay datos y Supabase no respondió
+    if (!all.length) {
+      showError('Sin datos. Verifica conexión a Supabase o RLS policies.');
+    } else {
+      clearError();
+    }
+  }).catch(function(e) {
+    console.warn('loadMovs error:', e);
+    MOVS = [];
+    showError('Error al conectar con Supabase: ' + (e.message || e));
+  }).finally(function() {
+    // SIEMPRE renderizar — nunca dejar spinner infinito
+    renderAll();
+  });
+}
+
+function showError(msg) {
+  var el = document.getElementById('error-banner');
+  if (el) { el.textContent = '⚠️ ' + msg; el.style.display = 'block'; }
+}
+function clearError() {
+  var el = document.getElementById('error-banner');
+  if (el) el.style.display = 'none';
 }
 
 function syncAll() {
   showToast('Sincronizando...', true);
-  loadMovs().then(function() { showToast('Actualizado', true); });
+  clearError();
+  loadMovs().then(function() { showToast('Actualizado ✅', true); });
 }
 
 // ── Render: KPI total ─────────────────────────────────────────────
