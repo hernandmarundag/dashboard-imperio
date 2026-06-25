@@ -3711,13 +3711,13 @@ function rObrasResumen() {
   el.innerHTML = '<div class="obras-grid">'
     + oCard('weliving','Ã°ÂÂÂ Weliving','#007AFF',
         ['InversiÃÂ³n total socios', fmtM(BASE.weliving.inversion), 'c-gy'],
-        ['Margen vs inversiÃÂ³n', fmtM(BASE.weliving.inversion - gastosT('weliving')), gastosT('weliving')<=BASE.weliving.inversion?'c-gr':'c-rd']
+        ['Margen vs inversiÃÂ³n', fmtM(BASE.weliving.inversion - gastosT('weliving')), gastosT('weliving')<=BASE.weliving.inversion?'c-gr':'c-rd'])
     + oCard('robledo','Ã°ÂÂÂ  Robledo','#FF9500',
         ['Por cobrar ÃÂ· Yulied', fmtM(BASE.robledo.porCobrar), 'c-or'],
-        ['Precio venta total', fmtM(BASE.robledo.precio), 'c-gy']
+        ['Precio venta total', fmtM(BASE.robledo.precio), 'c-gy'])
     + oCard('novaeva','Ã°ÂÂÂ¢ Novaeva','#34C759',
         ['Por cobrar ÃÂ· cliente', fmtM(BASE.novaeva.cartera - BASE.novaeva.abonos), 'c-or'],
-        ['Abonos recibidos', fmtM(BASE.novaeva.abonos), 'c-gr']
+        ['Abonos recibidos', fmtM(BASE.novaeva.abonos), 'c-gr'])
     +'</div>';
 }
 
