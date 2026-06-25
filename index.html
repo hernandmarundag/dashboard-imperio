@@ -3168,34 +3168,43 @@ const DEF = {
   cronograma:[
     // ESTRUCTURA BELÉN WELIVING — inicio 22/06/2026, fin 18/08/2026
     // estado: pendiente | en_curso | completado | retrasado
-    // mat=materiales(COP), nom=nómina(COP)
-    {id:'wl-01',obra:'weliving',act:'Amarre acero columnas P3-P4',     tipo:'acero',      fi:'2026-06-22',ff:'2026-06-22',mat:1500000, nom:900000,  estado:'completado',avance:100},
-    {id:'wl-02',obra:'weliving',act:'Encofrado columnas P3-P4',        tipo:'encofrado',  fi:'2026-06-23',ff:'2026-06-24',mat:400000,  nom:1100000, estado:'completado',avance:100},
-    {id:'wl-03',obra:'weliving',act:'Vaciado columnas P3-P4',          tipo:'vaciado',    fi:'2026-06-25',ff:'2026-06-25',mat:3500000, nom:600000,  estado:'en_curso',  avance:50},
-    {id:'wl-04',obra:'weliving',act:'Encofrado losa P4',               tipo:'encofrado',  fi:'2026-06-26',ff:'2026-06-30',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
-    {id:'wl-05',obra:'weliving',act:'Amarre acero losa P4',            tipo:'acero',      fi:'2026-06-30',ff:'2026-07-02',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
-    {id:'wl-06',obra:'weliving',act:'Vaciado losa P4',                 tipo:'vaciado',    fi:'2026-07-03',ff:'2026-07-03',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
-    {id:'wl-07',obra:'weliving',act:'Amarre acero columnas P4-P5',     tipo:'acero',      fi:'2026-07-04',ff:'2026-07-06',mat:1500000, nom:900000,  estado:'pendiente', avance:0},
-    {id:'wl-08',obra:'weliving',act:'Encofrado columnas P4-P5',        tipo:'encofrado',  fi:'2026-07-06',ff:'2026-07-07',mat:400000,  nom:1100000, estado:'pendiente', avance:0},
-    {id:'wl-09',obra:'weliving',act:'Vaciado columnas P4-P5',          tipo:'vaciado',    fi:'2026-07-08',ff:'2026-07-08',mat:3500000, nom:600000,  estado:'pendiente', avance:0},
-    {id:'wl-10',obra:'weliving',act:'Encofrado losa P5',               tipo:'encofrado',  fi:'2026-07-09',ff:'2026-07-11',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
-    {id:'wl-11',obra:'weliving',act:'Amarre acero losa P5',            tipo:'acero',      fi:'2026-07-11',ff:'2026-07-15',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
-    {id:'wl-12',obra:'weliving',act:'Vaciado losa P5',                 tipo:'vaciado',    fi:'2026-07-16',ff:'2026-07-16',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
-    {id:'wl-13',obra:'weliving',act:'Amarre acero columnas P5-P6',     tipo:'acero',      fi:'2026-07-17',ff:'2026-07-18',mat:1500000, nom:900000,  estado:'pendiente', avance:0},
-    {id:'wl-14',obra:'weliving',act:'Encofrado columnas P5-P6',        tipo:'encofrado',  fi:'2026-07-18',ff:'2026-07-21',mat:400000,  nom:1100000, estado:'pendiente', avance:0},
-    {id:'wl-15',obra:'weliving',act:'Vaciado columnas P5-P6',          tipo:'vaciado',    fi:'2026-07-22',ff:'2026-07-22',mat:3500000, nom:600000,  estado:'pendiente', avance:0},
-    {id:'wl-16',obra:'weliving',act:'Encofrado losa P6',               tipo:'encofrado',  fi:'2026-07-23',ff:'2026-07-25',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
-    {id:'wl-17',obra:'weliving',act:'Amarre acero losa P6',            tipo:'acero',      fi:'2026-07-25',ff:'2026-07-28',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
-    {id:'wl-18',obra:'weliving',act:'Vaciado losa P6',                 tipo:'vaciado',    fi:'2026-07-29',ff:'2026-07-29',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
-    {id:'wl-19',obra:'weliving',act:'Amarre acero col P6-P7 T1 (3m)', tipo:'acero',      fi:'2026-07-30',ff:'2026-07-31',mat:2500000, nom:1400000, estado:'pendiente', avance:0},
-    {id:'wl-20',obra:'weliving',act:'Encofrado col P6-P7 T1 (3m)',    tipo:'encofrado',  fi:'2026-07-31',ff:'2026-08-01',mat:700000,  nom:1800000, estado:'pendiente', avance:0},
-    {id:'wl-21',obra:'weliving',act:'Vaciado col P6-P7 T1 (3m)',      tipo:'vaciado',    fi:'2026-08-03',ff:'2026-08-03',mat:5500000, nom:900000,  estado:'pendiente', avance:0},
-    {id:'wl-22',obra:'weliving',act:'Amarre acero col P6-P7 T2 (1.5m)',tipo:'acero',     fi:'2026-08-04',ff:'2026-08-05',mat:1200000, nom:800000,  estado:'pendiente', avance:0},
-    {id:'wl-23',obra:'weliving',act:'Encofrado col P6-P7 T2 (1.5m)',  tipo:'encofrado',  fi:'2026-08-05',ff:'2026-08-06',mat:350000,  nom:900000,  estado:'pendiente', avance:0},
-    {id:'wl-24',obra:'weliving',act:'Vaciado col P6-P7 T2 (1.5m)',    tipo:'vaciado',    fi:'2026-08-08',ff:'2026-08-08',mat:2800000, nom:450000,  estado:'pendiente', avance:0},
-    {id:'wl-25',obra:'weliving',act:'Encofrado losa P7',               tipo:'encofrado',  fi:'2026-08-10',ff:'2026-08-13',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
-    {id:'wl-26',obra:'weliving',act:'Amarre acero losa P7',            tipo:'acero',      fi:'2026-08-13',ff:'2026-08-15',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
-    {id:'wl-27',obra:'weliving',act:'Vaciado losa P7',                 tipo:'vaciado',    fi:'2026-08-18',ff:'2026-08-18',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
+    // mat=materiales(COP), nom=nómina(COP) — costos reales APU jun 2026
+    // P3-P4 col: acero=$10.12M formaleta=$2.48M concreto=$4.93M MdO=$8.78M (total $26.3M)
+    {id:'wl-01',obra:'weliving',act:'Amarre acero columnas P3-P4',     tipo:'acero',      fi:'2026-06-22',ff:'2026-06-22',mat:10118679,nom:3510000,  estado:'completado',avance:100},
+    {id:'wl-02',obra:'weliving',act:'Encofrado columnas P3-P4',        tipo:'encofrado',  fi:'2026-06-23',ff:'2026-06-24',mat:2476679, nom:2632500,  estado:'completado',avance:100},
+    {id:'wl-03',obra:'weliving',act:'Vaciado columnas P3-P4',          tipo:'vaciado',    fi:'2026-06-25',ff:'2026-06-25',mat:4926601, nom:2632500,  estado:'en_curso',  avance:50},
+    // Losa P4: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
+    {id:'wl-04',obra:'weliving',act:'Encofrado losa P4',               tipo:'encofrado',  fi:'2026-06-26',ff:'2026-06-30',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
+    {id:'wl-05',obra:'weliving',act:'Amarre acero losa P4',            tipo:'acero',      fi:'2026-06-30',ff:'2026-07-02',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
+    {id:'wl-06',obra:'weliving',act:'Vaciado losa P4',                 tipo:'vaciado',    fi:'2026-07-03',ff:'2026-07-03',mat:22964644,nom:2152500,  estado:'pendiente', avance:0},
+    // P4-P5 col: acero=$10.12M formaleta=$0.62M concreto=$4.52M MdO=$8.78M (total $24.0M)
+    {id:'wl-07',obra:'weliving',act:'Amarre acero columnas P4-P5',     tipo:'acero',      fi:'2026-07-04',ff:'2026-07-06',mat:10118679,nom:3510000,  estado:'pendiente', avance:0},
+    {id:'wl-08',obra:'weliving',act:'Encofrado columnas P4-P5',        tipo:'encofrado',  fi:'2026-07-06',ff:'2026-07-07',mat:624240,  nom:2632500,  estado:'pendiente', avance:0},
+    {id:'wl-09',obra:'weliving',act:'Vaciado columnas P4-P5',          tipo:'vaciado',    fi:'2026-07-08',ff:'2026-07-08',mat:4520211, nom:2632500,  estado:'pendiente', avance:0},
+    // Losa P5: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
+    {id:'wl-10',obra:'weliving',act:'Encofrado losa P5',               tipo:'encofrado',  fi:'2026-07-09',ff:'2026-07-11',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
+    {id:'wl-11',obra:'weliving',act:'Amarre acero losa P5',            tipo:'acero',      fi:'2026-07-11',ff:'2026-07-15',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
+    {id:'wl-12',obra:'weliving',act:'Vaciado losa P5',                 tipo:'vaciado',    fi:'2026-07-16',ff:'2026-07-16',mat:22964644,nom:2152500,  estado:'pendiente', avance:0},
+    // P5-P6 col: acero=$9.14M formaleta=$0.62M concreto=$4.52M MdO=$8.78M (total $23.1M)
+    {id:'wl-13',obra:'weliving',act:'Amarre acero columnas P5-P6',     tipo:'acero',      fi:'2026-07-17',ff:'2026-07-18',mat:9138243, nom:3510000,  estado:'pendiente', avance:0},
+    {id:'wl-14',obra:'weliving',act:'Encofrado columnas P5-P6',        tipo:'encofrado',  fi:'2026-07-18',ff:'2026-07-21',mat:624240,  nom:2632500,  estado:'pendiente', avance:0},
+    {id:'wl-15',obra:'weliving',act:'Vaciado columnas P5-P6',          tipo:'vaciado',    fi:'2026-07-22',ff:'2026-07-22',mat:4520211, nom:2632500,  estado:'pendiente', avance:0},
+    // Losa P6: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
+    {id:'wl-16',obra:'weliving',act:'Encofrado losa P6',               tipo:'encofrado',  fi:'2026-07-23',ff:'2026-07-25',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
+    {id:'wl-17',obra:'weliving',act:'Amarre acero losa P6',            tipo:'acero',      fi:'2026-07-25',ff:'2026-07-28',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
+    {id:'wl-18',obra:'weliving',act:'Vaciado losa P6',                 tipo:'vaciado',    fi:'2026-07-29',ff:'2026-07-29',mat:22964644,nom:2152500,  estado:'pendiente', avance:0},
+    // P6-CUB col T1 (60%): acero=$4.34M formaleta=$0.37M concreto=$2.71M MdO=$5.27M (total $12.7M)
+    {id:'wl-19',obra:'weliving',act:'Amarre acero col P6-P7 T1 (3m)', tipo:'acero',      fi:'2026-07-30',ff:'2026-07-31',mat:4343976, nom:2106000,  estado:'pendiente', avance:0},
+    {id:'wl-20',obra:'weliving',act:'Encofrado col P6-P7 T1 (3m)',    tipo:'encofrado',  fi:'2026-07-31',ff:'2026-08-01',mat:374544,  nom:1579500,  estado:'pendiente', avance:0},
+    {id:'wl-21',obra:'weliving',act:'Vaciado col P6-P7 T1 (3m)',      tipo:'vaciado',    fi:'2026-08-03',ff:'2026-08-03',mat:2712127, nom:1579500,  estado:'pendiente', avance:0},
+    // P6-CUB col T2 (40%): acero=$2.90M formaleta=$0.25M concreto=$1.81M MdO=$3.51M (total $8.5M)
+    {id:'wl-22',obra:'weliving',act:'Amarre acero col P6-P7 T2 (1.5m)',tipo:'acero',     fi:'2026-08-04',ff:'2026-08-05',mat:2895984, nom:1404000,  estado:'pendiente', avance:0},
+    {id:'wl-23',obra:'weliving',act:'Encofrado col P6-P7 T2 (1.5m)',  tipo:'encofrado',  fi:'2026-08-05',ff:'2026-08-06',mat:249696,  nom:1053000,  estado:'pendiente', avance:0},
+    {id:'wl-24',obra:'weliving',act:'Vaciado col P6-P7 T2 (1.5m)',    tipo:'vaciado',    fi:'2026-08-08',ff:'2026-08-08',mat:1808084, nom:1053000,  estado:'pendiente', avance:0},
+    // Cubierta: acero=$21.54M concreto=$22.96M formaleta=$2.48M MdO=$7.18M (total $54.2M)
+    {id:'wl-25',obra:'weliving',act:'Encofrado losa Cubierta',         tipo:'encofrado',  fi:'2026-08-10',ff:'2026-08-13',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
+    {id:'wl-26',obra:'weliving',act:'Amarre acero losa Cubierta',      tipo:'acero',      fi:'2026-08-13',ff:'2026-08-15',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
+    {id:'wl-27',obra:'weliving',act:'Vaciado losa Cubierta',           tipo:'vaciado',    fi:'2026-08-18',ff:'2026-08-18',mat:22964644,nom:2152500,  estado:'pendiente', avance:0},
   ],
   pagos:[
     /* ── PILA MAYO — VENCIDA 11 JUN · dividida entre obras ─────────── */
