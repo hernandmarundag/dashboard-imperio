@@ -3472,9 +3472,11 @@ async function _autoImportarHistNovaeva() {
 function sumAbonos(o){ return S.abonos.filter(function(x){return x.obra===o;}).reduce(function(a,x){return a+x.monto;},0); }
 function saldoCta(id) {
   var ct = S.cuentas ? S.cuentas.find(function(x) { return x.id === id; }) : null;
-  // Base: snapshot manual (✏️) o saldoBase definido
-  var base = (ct && ct.saldoReal !== undefined) ? ct.saldoReal
-           : (ct ? (ct.saldoBase || 0) : 0);
+  // Si hay saldo real (snapshot manual o Supabase), retornarlo directo
+  // sin sumar abonos históricos — el valor ya refleja el estado actual
+  if (ct && ct.saldoReal !== undefined) return ct.saldoReal;
+  // Base: saldoBase (sin snapshot)
+  var base = ct ? (ct.saldoBase || 0) : 0;
 
   // Abonos registrados para esta cuenta
   var abonos = ((S && S.abonos) ? S.abonos : [])
@@ -4250,6 +4252,12 @@ function saveAbono() {
   var fFmt = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
   S.abonos.push({id:'ab'+Date.now(),f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
   var _abonoId='ab'+Date.now();
+  // Actualizar saldoReal de la cuenta receptora
+  var _ctaAb = S.cuentas ? S.cuentas.find(function(c){return c.id===ctaId;}) : null;
+  if (_ctaAb && _ctaAb.saldoReal !== undefined) {
+    _ctaAb.saldoReal = _ctaAb.saldoReal + monto;
+    sbPatch('cuentas','id=eq.'+ctaId,{saldo:_ctaAb.saldoReal}).catch(function(e){console.warn('[saveAbono] SB cta:',e);});
+  }
   saveS(); closeOv('ov-abono'); rKpi(); rBudgets(); rWallets('wallets-i'); rWallets('wallets-c'); renderView(curV);
   insertMovimiento({fecha:fStr,tipo:'ingreso',obra:obra,cta_id:ctaId,descripcion:desc,monto:monto});
   sbPost('abonos',{legacy_id:_abonoId,obra_id:obra,fecha:fStr,descripcion:desc,monto:monto,cuenta_id:ctaId}).catch(function(e){console.warn('[saveAbono] SB:',e);});
@@ -6723,7 +6731,7 @@ function fetchCuentas() {
     .then(function(rows){
       if(!rows||rows.error||!rows.length) return;
       S.cuentas = rows.map(function(r){
-        return {id:r.id,nm:r.nombre,banco:r.banco,saldoBase:r.saldo||0};
+        return {id:r.id,nm:r.nombre,banco:r.banco,saldoBase:0,saldoReal:r.saldo||0};
       });
       console.log('[fetchCuentas] OK',S.cuentas.length,'cuentas');
       if(curV==='inicio'||curV==='cuentas'){rWallets('wallets-i');rWallets('wallets-c');rKpi();}
