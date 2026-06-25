@@ -2625,6 +2625,10 @@ canvas{border-radius:4px}
     <div class="hscroll" id="tcs-i"></div>
   </div>
   <div id="obras-views-container"></div>
+  <div class="view" id="v-obras">
+    <div class="sec">🏗 Proyectos</div>
+    <div id="obras-section"></div>
+  </div>
   <div class="view" id="v-cuentas">
     <div class="sec">Cuentas bancarias</div>
     <div class="hscroll" id="wallets-c"></div>
@@ -3630,6 +3634,7 @@ function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
   if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rWallets('wallets-i'); rTCs('tcs-i'); }
+  else if (v === 'obras')   { rObrasView(); }
   else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
@@ -3645,6 +3650,74 @@ function renderView(v, skipHistory) {
 /* ═══════════════════════════════════════════════════
    INICIO
 ═══════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════
+   OBRAS VIEW — resumen de los 3 proyectos
+═══════════════════════════════════════════════════ */
+function rObrasView() {
+  var el = document.getElementById('obras-section');
+  if (!el) return;
+
+  var proyectos = [
+    { id:'weliving', nm:'Weliving Belén',  ico:'🏗', col:'#007AFF',
+      etapa: S.proyInfo && S.proyInfo.weliving ? S.proyInfo.weliving.etapa : 'Estructura P3→P7',
+      badge:'En construcción' },
+    { id:'robledo',  nm:'Robledo',         ico:'🏠', col:'#FF9500',
+      etapa: S.proyInfo && S.proyInfo.robledo  ? S.proyInfo.robledo.etapa  : 'Acabados',
+      badge:'Estructura completa' },
+    { id:'novaeva',  nm:'Novaeva',         ico:'🏢', col:'#34C759',
+      etapa: 'Gestión comercial',
+      badge:'Preventas' },
+  ];
+
+  var cards = proyectos.map(function(p) {
+    var saldo = saldoVirtualObra(p.id);
+    var abonos = sumAbonos(p.id);
+    var gastos = sumLiveDesdeJun9(p.id) + sumHist(p.id);
+    var compromisos = pagosXObra(p.id);
+    var saldoCol = saldo > 10000000 ? '#22c55e' : saldo > 0 ? '#f59e0b' : '#ef4444';
+    var saldoIco = saldo > 10000000 ? '✅' : saldo > 0 ? '⚠️' : '🔴';
+
+    return '<div onclick="gotoViewMobile(''+p.id+'',null)" style="'
+      +'background:var(--sf);border-radius:16px;border-left:4px solid '+p.col+';'
+      +'padding:16px;margin-bottom:12px;cursor:pointer;'
+      +'box-shadow:0 2px 12px rgba(0,0,0,.07);active:opacity:.9">'
+      // Header
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<span style="font-size:26px">'+p.ico+'</span>'
+      +'<div>'
+      +'<div style="font-size:15px;font-weight:800;color:var(--tx1)">'+p.nm+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3);margin-top:2px">'+p.etapa+'</div>'
+      +'</div></div>'
+      +'<span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;'
+      +'background:'+p.col+'22;color:'+p.col+'">'+p.badge+'</span>'
+      +'</div>'
+      // Métricas
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">'
+      +'<div style="background:var(--sf2);border-radius:8px;padding:8px;text-align:center">'
+      +'<div style="font-size:12px;font-weight:800;color:#3b82f6">'+fmtM(abonos)+'</div>'
+      +'<div style="font-size:9px;color:var(--tx3);font-weight:700">Recibido</div></div>'
+      +'<div style="background:var(--sf2);border-radius:8px;padding:8px;text-align:center">'
+      +'<div style="font-size:12px;font-weight:800;color:#ef4444">'+fmtM(gastos)+'</div>'
+      +'<div style="font-size:9px;color:var(--tx3);font-weight:700">Gastado</div></div>'
+      +'<div style="background:var(--sf2);border-radius:8px;padding:8px;text-align:center">'
+      +'<div style="font-size:12px;font-weight:800;color:'+saldoCol+'">'+fmtM(saldo)+'</div>'
+      +'<div style="font-size:9px;color:var(--tx3);font-weight:700">'+saldoIco+' Saldo</div></div>'
+      +'</div>'
+      +(compromisos>0
+        ?'<div style="font-size:11px;color:#f59e0b;font-weight:700">⚠️ Compromisos pendientes: '+fmtM(compromisos)+'</div>'
+        :'')
+      +'<div style="font-size:11px;color:var(--tx3);text-align:right;margin-top:6px">Ver detalle →</div>'
+      +'</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="padding:4px 0">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--tx3);text-transform:uppercase;'
+    +'letter-spacing:.9px;margin-bottom:14px">🏗 Mis Obras</div>'
+    +cards
+    +'</div>';
+}
 
 function rBudgets(){
   var el=document.getElementById('bud-section');
@@ -7320,13 +7393,10 @@ document.addEventListener('visibilitychange', function() {
 
 /* ── Mobile navigation ── */
 function gotoViewMobile(v, btn) {
-  /* Si es 'obras', ir al inicio que muestra las obras */
-  if (v === 'obras') v = 'inicio';
   gotoView(v);
   /* update bottom nav active state */
   document.querySelectorAll('.bn-item').forEach(function(b){
-    var bv = b.dataset.v;
-    b.classList.toggle('on', bv===v || (v==='inicio' && bv==='obras') || (btn && b===btn));
+    b.classList.toggle('on', b.dataset.v === v || (btn && b === btn));
   });
 }
 
@@ -7350,8 +7420,7 @@ var _origGotoView = gotoView;
 gotoView = function(v) {
   _origGotoView(v);
   document.querySelectorAll('.bn-item').forEach(function(b){
-    var bv = b.dataset.v;
-    b.classList.toggle('on', bv===v || (bv==='inicio'&&v==='inicio') || (bv==='obras'&&v==='inicio'));
+    b.classList.toggle('on', b.dataset.v === v);
   });
 };
 
