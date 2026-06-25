@@ -2581,6 +2581,7 @@ canvas{border-radius:4px}
     <div class="sb-sect">Obras</div>
     <div id="obras-nav"></div>
     <div class="ni" style="cursor:pointer;color:var(--bl);font-size:12px;padding:6px 12px" onclick="openNuevaObra()">+ Nueva obra</div>
+    <div class="ni" data-v="cronograma" onclick="gotoView('cronograma')"><span class="ni-ico">📅</span><span>Last Planner</span></div>
     <div class="sb-sect">Finanzas</div>
     <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
     <div class="ni" data-v="flujo" onclick="gotoView('flujo')"><span class="ni-ico">💸</span><span>Flujo & Pagos</span><span class="ni-b" id="badge-pagos"></span></div>
@@ -2669,6 +2670,9 @@ canvas{border-radius:4px}
   </div>
   <div class="view" id="v-movimientos">
     <div id="movs-all-content"></div>
+  </div>
+  <div class="view" id="v-cronograma">
+    <div id="cronograma-content"></div>
   </div>
 
 
@@ -3161,6 +3165,38 @@ const DEF = {
     {id:'h2',nm:'Scotia 4531',   tit:'Hernán', banco:'Scotiabank', cupoTotal:10000000, cupoUsado:0},
     {id:'h3',nm:'MASTER 2656',   tit:'Hernán', banco:'Mastercard', cupoTotal:15000000, cupoUsado:0},
   ],
+  cronograma:[
+    // ESTRUCTURA BELÉN WELIVING — inicio 22/06/2026, fin 18/08/2026
+    // estado: pendiente | en_curso | completado | retrasado
+    // mat=materiales(COP), nom=nómina(COP)
+    {id:'wl-01',obra:'weliving',act:'Amarre acero columnas P3-P4',     tipo:'acero',      fi:'2026-06-22',ff:'2026-06-22',mat:1500000, nom:900000,  estado:'completado',avance:100},
+    {id:'wl-02',obra:'weliving',act:'Encofrado columnas P3-P4',        tipo:'encofrado',  fi:'2026-06-23',ff:'2026-06-24',mat:400000,  nom:1100000, estado:'completado',avance:100},
+    {id:'wl-03',obra:'weliving',act:'Vaciado columnas P3-P4',          tipo:'vaciado',    fi:'2026-06-25',ff:'2026-06-25',mat:3500000, nom:600000,  estado:'en_curso',  avance:50},
+    {id:'wl-04',obra:'weliving',act:'Encofrado losa P4',               tipo:'encofrado',  fi:'2026-06-26',ff:'2026-06-30',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
+    {id:'wl-05',obra:'weliving',act:'Amarre acero losa P4',            tipo:'acero',      fi:'2026-06-30',ff:'2026-07-02',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
+    {id:'wl-06',obra:'weliving',act:'Vaciado losa P4',                 tipo:'vaciado',    fi:'2026-07-03',ff:'2026-07-03',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
+    {id:'wl-07',obra:'weliving',act:'Amarre acero columnas P4-P5',     tipo:'acero',      fi:'2026-07-04',ff:'2026-07-06',mat:1500000, nom:900000,  estado:'pendiente', avance:0},
+    {id:'wl-08',obra:'weliving',act:'Encofrado columnas P4-P5',        tipo:'encofrado',  fi:'2026-07-06',ff:'2026-07-07',mat:400000,  nom:1100000, estado:'pendiente', avance:0},
+    {id:'wl-09',obra:'weliving',act:'Vaciado columnas P4-P5',          tipo:'vaciado',    fi:'2026-07-08',ff:'2026-07-08',mat:3500000, nom:600000,  estado:'pendiente', avance:0},
+    {id:'wl-10',obra:'weliving',act:'Encofrado losa P5',               tipo:'encofrado',  fi:'2026-07-09',ff:'2026-07-11',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
+    {id:'wl-11',obra:'weliving',act:'Amarre acero losa P5',            tipo:'acero',      fi:'2026-07-11',ff:'2026-07-15',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
+    {id:'wl-12',obra:'weliving',act:'Vaciado losa P5',                 tipo:'vaciado',    fi:'2026-07-16',ff:'2026-07-16',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
+    {id:'wl-13',obra:'weliving',act:'Amarre acero columnas P5-P6',     tipo:'acero',      fi:'2026-07-17',ff:'2026-07-18',mat:1500000, nom:900000,  estado:'pendiente', avance:0},
+    {id:'wl-14',obra:'weliving',act:'Encofrado columnas P5-P6',        tipo:'encofrado',  fi:'2026-07-18',ff:'2026-07-21',mat:400000,  nom:1100000, estado:'pendiente', avance:0},
+    {id:'wl-15',obra:'weliving',act:'Vaciado columnas P5-P6',          tipo:'vaciado',    fi:'2026-07-22',ff:'2026-07-22',mat:3500000, nom:600000,  estado:'pendiente', avance:0},
+    {id:'wl-16',obra:'weliving',act:'Encofrado losa P6',               tipo:'encofrado',  fi:'2026-07-23',ff:'2026-07-25',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
+    {id:'wl-17',obra:'weliving',act:'Amarre acero losa P6',            tipo:'acero',      fi:'2026-07-25',ff:'2026-07-28',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
+    {id:'wl-18',obra:'weliving',act:'Vaciado losa P6',                 tipo:'vaciado',    fi:'2026-07-29',ff:'2026-07-29',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
+    {id:'wl-19',obra:'weliving',act:'Amarre acero col P6-P7 T1 (3m)', tipo:'acero',      fi:'2026-07-30',ff:'2026-07-31',mat:2500000, nom:1400000, estado:'pendiente', avance:0},
+    {id:'wl-20',obra:'weliving',act:'Encofrado col P6-P7 T1 (3m)',    tipo:'encofrado',  fi:'2026-07-31',ff:'2026-08-01',mat:700000,  nom:1800000, estado:'pendiente', avance:0},
+    {id:'wl-21',obra:'weliving',act:'Vaciado col P6-P7 T1 (3m)',      tipo:'vaciado',    fi:'2026-08-03',ff:'2026-08-03',mat:5500000, nom:900000,  estado:'pendiente', avance:0},
+    {id:'wl-22',obra:'weliving',act:'Amarre acero col P6-P7 T2 (1.5m)',tipo:'acero',     fi:'2026-08-04',ff:'2026-08-05',mat:1200000, nom:800000,  estado:'pendiente', avance:0},
+    {id:'wl-23',obra:'weliving',act:'Encofrado col P6-P7 T2 (1.5m)',  tipo:'encofrado',  fi:'2026-08-05',ff:'2026-08-06',mat:350000,  nom:900000,  estado:'pendiente', avance:0},
+    {id:'wl-24',obra:'weliving',act:'Vaciado col P6-P7 T2 (1.5m)',    tipo:'vaciado',    fi:'2026-08-08',ff:'2026-08-08',mat:2800000, nom:450000,  estado:'pendiente', avance:0},
+    {id:'wl-25',obra:'weliving',act:'Encofrado losa P7',               tipo:'encofrado',  fi:'2026-08-10',ff:'2026-08-13',mat:2800000, nom:3200000, estado:'pendiente', avance:0},
+    {id:'wl-26',obra:'weliving',act:'Amarre acero losa P7',            tipo:'acero',      fi:'2026-08-13',ff:'2026-08-15',mat:6500000, nom:2800000, estado:'pendiente', avance:0},
+    {id:'wl-27',obra:'weliving',act:'Vaciado losa P7',                 tipo:'vaciado',    fi:'2026-08-18',ff:'2026-08-18',mat:12000000,nom:2000000, estado:'pendiente', avance:0},
+  ],
   pagos:[
     /* ── PILA MAYO — VENCIDA 11 JUN · dividida entre obras ─────────── */
     {id:'gp_w',desc:'🔴 PILA planilla MAYO (VENCIDA) — Weliving 50%', proy:'weliving',monto:5631400,fecha:'2026-06-12',nota:'VENCIÓ 11-Jun · multas corriendo · pagar HOY · total planilla $11.26M dividida entre obras'},
@@ -3334,6 +3370,14 @@ function loadS() {
   // Migrate old saldo-based accounts + sync DEF snapshots
   S.cuentas.forEach(function(c){
     if (c.saldo !== undefined && c.saldoBase === undefined) { c.saldoBase = 0; delete c.saldo; }
+  // Merge cronograma from DEF if not present
+  if (!S.cronograma || S.cronograma.length === 0) S.cronograma = DEF.cronograma;
+  else {
+    // Update DEF activities that don't exist in saved state
+    DEF.cronograma.forEach(function(da){
+      if (!S.cronograma.find(function(a){return a.id===da.id;})) S.cronograma.push(da);
+    });
+  }
     if (c.saldoBase === undefined) c.saldoBase = 0;
     // Migración: limpiar saldoReal hardcodeado anterior (143.5M de bc-grupo)
     // Solo aplica una vez — si el valor aún es el viejo hardcodeado, lo borra
@@ -3586,6 +3630,7 @@ function renderView(v, skipHistory) {
   else if (v === 'analisis'){ rAnalisis(); }
   else if (v === 'abonos')  { rAbonos(); }
   else if (v === 'movimientos') { rMovimientos(); }
+  else if (v === 'cronograma') { rCronograma(); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -6800,6 +6845,365 @@ function fetchDeudores() {
       if(curV==='inicio') rKpi();
     }).catch(function(e){console.warn('[fetchDeudores] fallback:',e);});
 }
+
+
+/* ═══════════════════════════════════════════════════
+   LAST PLANNER — CRONOGRAMA INTEGRADO
+═══════════════════════════════════════════════════ */
+function rCronograma() {
+  var el = document.getElementById('cronograma-content');
+  if (!el) return;
+
+  if (!S.cronograma || !S.cronograma.length) {
+    S.cronograma = DEF.cronograma.map(function(a){return Object.assign({},a);});
+    saveS();
+  }
+  var acts = S.cronograma.filter(function(a){return a.obra==='weliving';});
+
+  var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+  var PROJ_START = new Date('2026-06-22'); PROJ_START.setHours(0,0,0,0);
+  var PROJ_END   = new Date('2026-08-18'); PROJ_END.setHours(0,0,0,0);
+  var TOTAL_DAYS = Math.ceil((PROJ_END - PROJ_START)/86400000)+1;
+
+  function dDate(s){var d=new Date(s+'T00:00:00');return d;}
+  function dayOffset(s){return Math.ceil((dDate(s)-PROJ_START)/86400000);}
+  function daysDur(fi,ff){return Math.ceil((dDate(ff)-dDate(fi))/86400000)+1;}
+
+  // ── KPIs
+  var total=acts.length;
+  var done=acts.filter(function(a){return a.estado==='completado';}).length;
+  var inProgress=acts.filter(function(a){return a.estado==='en_curso';}).length;
+  var delayed=acts.filter(function(a){
+    var ff=dDate(a.ff); return ff<TODAY && a.estado!=='completado';
+  }).length;
+  var pastDue=acts.filter(function(a){return dDate(a.ff)<TODAY;}).length;
+  var ppc = pastDue>0 ? Math.min(100,Math.round(done/pastDue*100)) : 100;
+
+  var todayOffset=Math.ceil((TODAY-PROJ_START)/86400000);
+  var todayPct=Math.max(0,Math.min(100,(todayOffset/TOTAL_DAYS)*100)).toFixed(2);
+
+  var totalMat=acts.reduce(function(s,a){return s+a.mat;},0);
+  var totalNom=acts.reduce(function(s,a){return s+a.nom;},0);
+  var totalCost=totalMat+totalNom;
+
+  function fM(n){return n>=1e9?'$'+(n/1e9).toFixed(2)+'B':n>=1e6?'$'+(n/1e6).toFixed(1)+'M':'$'+(n/1e3).toFixed(0)+'K';}
+
+  // ── Estado config
+  var EST={
+    completado:{lbl:'✅ Completado',bg:'#d1fae5',col:'#065f46',next:'pendiente'},
+    en_curso:  {lbl:'🔵 En curso',  bg:'#dbeafe',col:'#1e40af',next:'completado'},
+    pendiente: {lbl:'⚪ Pendiente', bg:'var(--sf2)',col:'var(--tx2)',next:'en_curso'},
+    retrasado: {lbl:'🔴 Retrasado', bg:'#fee2e2',col:'#991b1b',next:'en_curso'}
+  };
+  function estCfg(e){return EST[e]||EST.pendiente;}
+
+  // ── Detectar estado auto (retrasado si ff pasó y no completado)
+  acts.forEach(function(a){
+    if(a.estado!=='completado' && dDate(a.ff)<TODAY) a.estado='retrasado';
+  });
+
+  // ── Tipo color bar
+  var TIPO_COL={acero:'#6366f1',encofrado:'#f59e0b',vaciado:'#10b981'};
+
+  // ── Construir HTML
+  // Header
+  var header='<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:14px;padding:20px 24px;margin-bottom:16px;color:#fff">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+    +'<div>'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:#94a3b8;text-transform:uppercase">Last Planner · Weliving</div>'
+    +'<div style="font-size:20px;font-weight:900;margin:4px 0">📅 Programación Estructura Belén</div>'
+    +'<div style="font-size:12px;color:#94a3b8">22 Jun → 18 Ago 2026 · 45 días hábiles · 58 calendario</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 16px">'
+    +'<div style="font-size:24px;font-weight:900;color:'+(ppc>=80?'#4ade80':ppc>=60?'#fbbf24':'#f87171')+'">'+ppc+'%</div>'
+    +'<div style="font-size:10px;color:#94a3b8;font-weight:700">PPC</div></div>'
+    +'<div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 16px">'
+    +'<div style="font-size:24px;font-weight:900;color:#4ade80">'+done+'</div>'
+    +'<div style="font-size:10px;color:#94a3b8;font-weight:700">Completas</div></div>'
+    +'<div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 16px">'
+    +'<div style="font-size:24px;font-weight:900;color:#60a5fa">'+inProgress+'</div>'
+    +'<div style="font-size:10px;color:#94a3b8;font-weight:700">En curso</div></div>'
+    +(delayed>0?'<div style="text-align:center;background:rgba(239,68,68,.2);border-radius:10px;padding:10px 16px">'
+    +'<div style="font-size:24px;font-weight:900;color:#f87171">'+delayed+'</div>'
+    +'<div style="font-size:10px;color:#fca5a5;font-weight:700">Retrasadas</div></div>':'')
+    +'</div></div>'
+    // Progress bar
+    +'<div style="margin-top:14px">'
+    +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-bottom:4px">'
+    +'<span>Inicio obra</span><span>Hoy '+(TODAY.getDate())+' '+(TODAY.toLocaleString('es-CO',{month:'short'}))+'</span><span>Fin estructura</span></div>'
+    +'<div style="background:rgba(255,255,255,.15);border-radius:20px;height:8px;position:relative;overflow:hidden">'
+    +'<div style="background:linear-gradient(90deg,#4ade80,#22d3ee);height:100%;width:'+todayPct+'%;border-radius:20px;transition:width .5s"></div>'
+    +'</div></div>'
+    +'</div>';
+
+  // ── Leyenda tipos
+  var leyenda='<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:11px;font-weight:700">'
+    +'<span>Tipo:</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#6366f1;border-radius:3px;display:inline-block"></span>Acero</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#f59e0b;border-radius:3px;display:inline-block"></span>Encofrado</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#10b981;border-radius:3px;display:inline-block"></span>Vaciado</span>'
+    +'<span style="margin-left:12px">Clic en estado para actualizar</span>'
+    +'</div>';
+
+  // ── Gantt header (month markers)
+  var months=['Jun 2026','Jul 2026','Ago 2026'];
+  var monthStarts=[new Date('2026-06-01'),new Date('2026-07-01'),new Date('2026-08-01')];
+  var monthLabels=monthStarts.map(function(ms,i){
+    var off=Math.max(0,Math.ceil((ms-PROJ_START)/86400000));
+    var pct=(off/TOTAL_DAYS*100).toFixed(1);
+    return '<span style="position:absolute;left:'+pct+'%;font-size:10px;font-weight:700;color:var(--tx3);white-space:nowrap;transform:translateX(-50%)">'+months[i]+'</span>';
+  }).join('');
+
+  var ganttHdr='<div style="position:relative;height:22px;border-bottom:1px solid var(--br);margin-bottom:4px">'
+    +monthLabels+'</div>';
+
+  // ── Gantt rows
+  function ganttRow(a,i){
+    var off=dayOffset(a.fi);
+    var dur=daysDur(a.fi,a.ff);
+    var leftPct=(off/TOTAL_DAYS*100).toFixed(2);
+    var widPct=Math.max(0.5,(dur/TOTAL_DAYS*100)).toFixed(2);
+    var col=TIPO_COL[a.tipo]||'#6366f1';
+    var ec=estCfg(a.estado);
+    var isToday=TODAY>=dDate(a.fi)&&TODAY<=dDate(a.ff);
+    var isFuture=dDate(a.fi)>TODAY;
+    var barOpacity=a.estado==='completado'?'1':isFuture?'0.55':'0.85';
+    var totalA=a.mat+a.nom;
+
+    return '<div style="display:grid;grid-template-columns:220px 110px 1fr 100px;align-items:center;gap:0;'
+      +'border-bottom:1px solid var(--br);min-height:36px;'+(isToday?'background:rgba(99,102,241,.06)':'')+'">'
+      // Nombre actividad
+      +'<div style="padding:4px 8px;font-size:11px;font-weight:'+(a.estado==='completado'?'500':'700')+';color:'+(a.estado==='completado'?'var(--tx3)':'var(--tx1)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+      +(a.estado==='completado'?'<span style="text-decoration:line-through">':'')+a.act+(a.estado==='completado'?'</span>':'')+'</div>'
+      // Estado chip (clickable)
+      +'<div style="padding:4px 6px">'
+      +'<span onclick="lp_toggleEstado(\''+a.id+'\')" style="cursor:pointer;font-size:9px;font-weight:700;padding:3px 7px;border-radius:20px;white-space:nowrap;background:'+ec.bg+';color:'+ec.col+'">'
+      +ec.lbl+'</span></div>'
+      // Gantt bar
+      +'<div style="position:relative;height:100%;min-height:36px">'
+      // Hoy line
+      +(todayOffset>=0&&todayOffset<=TOTAL_DAYS?'<div style="position:absolute;left:'+todayPct+'%;top:0;bottom:0;width:2px;background:#ef4444;z-index:5;opacity:.7"></div>':'')
+      // Bar
+      +'<div style="position:absolute;left:'+leftPct+'%;width:'+widPct+'%;top:50%;transform:translateY(-50%);height:16px;border-radius:6px;'
+      +'background:'+col+';opacity:'+barOpacity+';display:flex;align-items:center;justify-content:center">'
+      +(a.avance>0&&a.avance<100?'<div style="position:absolute;left:0;top:0;bottom:0;width:'+a.avance+'%;background:rgba(255,255,255,.3);border-radius:6px 0 0 6px"></div>':'')
+      +'</div>'
+      +'</div>'
+      // Costo
+      +'<div style="padding:4px 8px;text-align:right;font-size:10px;font-weight:700;color:var(--tx2)">'+fM(totalA)+'</div>'
+      +'</div>';
+  }
+
+  var ganttRows=acts.map(function(a,i){return ganttRow(a,i);}).join('');
+
+  var gantt='<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:16px">'
+    +'<div style="padding:14px 16px 0">'
+    +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px">📊 Gantt · Actividades</div>'
+    +leyenda
+    // Header cols
+    +'<div style="display:grid;grid-template-columns:220px 110px 1fr 100px;font-size:9px;font-weight:800;color:var(--tx3);text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid var(--br)">'
+    +'<div style="padding:0 8px">Actividad</div><div style="padding:0 6px">Estado</div>'
+    +'<div>'+ganttHdr+'</div><div style="text-align:right;padding:0 8px">Costo est.</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto">'+ganttRows+'</div>'
+    // Totals
+    +'<div style="display:grid;grid-template-columns:220px 110px 1fr 100px;border-top:2px solid var(--br);background:var(--sf2);padding:8px 0">'
+    +'<div style="padding:4px 8px;font-size:11px;font-weight:800;color:var(--tx1)">TOTAL ESTRUCTURA</div>'
+    +'<div></div><div></div>'
+    +'<div style="padding:4px 8px;text-align:right;font-size:12px;font-weight:900;color:var(--bl)">'+fM(totalCost)+'</div>'
+    +'</div></div>';
+
+  // ── Lookahead 3 semanas
+  var WEEK_MS=7*86400000;
+  var W1_END=new Date(TODAY.getTime()+WEEK_MS);
+  var W2_END=new Date(TODAY.getTime()+2*WEEK_MS);
+  var W3_END=new Date(TODAY.getTime()+3*WEEK_MS);
+
+  function inRange(a,from,to){
+    var fi=dDate(a.fi),ff=dDate(a.ff);
+    return fi<=to&&ff>=from;
+  }
+  var w1=acts.filter(function(a){return inRange(a,TODAY,W1_END)&&a.estado!=='completado';});
+  var w2=acts.filter(function(a){return inRange(a,W1_END,W2_END)&&a.estado!=='completado';});
+  var w3=acts.filter(function(a){return inRange(a,W2_END,W3_END)&&a.estado!=='completado';});
+
+  function weekCard(title,items,col){
+    if(!items.length) return '<div style="background:var(--sf2);border-radius:10px;padding:12px;text-align:center;color:var(--tx3);font-size:12px">'+title+'<br>Sin actividades</div>';
+    return '<div style="background:var(--sf);border-radius:10px;border-left:3px solid '+col+';padding:12px">'
+      +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:8px">'+title+'</div>'
+      +items.map(function(a){
+        var ec=estCfg(a.estado);
+        return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+          +'<span style="font-size:9px;padding:2px 6px;border-radius:10px;background:'+ec.bg+';color:'+ec.col+';font-weight:700">'+ec.lbl.split(' ')[0]+'</span>'
+          +'<span style="font-size:11px;font-weight:600;color:var(--tx1)">'+a.act+'</span>'
+          +'<span style="font-size:10px;color:var(--tx3);margin-left:auto">'+fM(a.mat+a.nom)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }
+
+  var lookahead='<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px">'
+    +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px">🔭 Lookahead 3 semanas</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
+    +weekCard('Esta semana',w1,'#6366f1')
+    +weekCard('Semana 2',w2,'#f59e0b')
+    +weekCard('Semana 3',w3,'#10b981')
+    +'</div></div>';
+
+  // ── Flujo de caja proyectado por semana
+  // Agrupar actividades por semana ISO
+  var weekFlowMap={};
+  acts.forEach(function(a){
+    // Distribuir costo uniformemente entre los días de la actividad
+    var fi=dDate(a.fi),ff=dDate(a.ff);
+    var dur=Math.ceil((ff-fi)/86400000)+1;
+    var matPerDay=a.mat/dur, nomPerDay=a.nom/dur;
+    for(var d=0;d<dur;d++){
+      var day=new Date(fi.getTime()+d*86400000);
+      // ISO week key
+      var dc=new Date(day); var dayN=dc.getDay()||7;
+      dc.setDate(dc.getDate()+4-dayN);
+      var y=dc.getFullYear(); var jan1=new Date(y,0,1);
+      var wk=y+'-W'+String(Math.ceil(((dc-jan1)/86400000+1)/7)).padStart(2,'0');
+      if(!weekFlowMap[wk]) weekFlowMap[wk]={mat:0,nom:0,label:''};
+      weekFlowMap[wk].mat+=matPerDay;
+      weekFlowMap[wk].nom+=nomPerDay;
+      // Label: "Sem DD/MM"
+      if(!weekFlowMap[wk].label){
+        var mon=new Date(day.getFullYear(),day.getMonth(),day.getDate()-day.getDay()+1);
+        weekFlowMap[wk].label=('0'+mon.getDate()).slice(-2)+'/'+(('0'+(mon.getMonth()+1)).slice(-2));
+      }
+    }
+  });
+  var wkKeys=Object.keys(weekFlowMap).sort();
+  var wkLabels=wkKeys.map(function(k){return weekFlowMap[k].label;});
+  var wkMat=wkKeys.map(function(k){return Math.round(weekFlowMap[k].mat);});
+  var wkNom=wkKeys.map(function(k){return Math.round(weekFlowMap[k].nom);});
+  var wkTotal=wkKeys.map(function(k,i){return wkMat[i]+wkNom[i];});
+  var wkAcum=[];var acc=0;
+  wkTotal.forEach(function(v){acc+=v;wkAcum.push(acc);});
+
+  // Tabla flujo
+  var tablaFluj='<div style="overflow-x:auto;margin-top:14px"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+    +'<thead><tr style="background:var(--sf2)">'
+    +'<th style="padding:6px 8px;text-align:left;font-weight:800;color:var(--tx3);font-size:10px">Semana</th>'
+    +'<th style="padding:6px 8px;text-align:right;font-weight:800;color:#6366f1;font-size:10px">Materiales</th>'
+    +'<th style="padding:6px 8px;text-align:right;font-weight:800;color:#f59e0b;font-size:10px">Nómina</th>'
+    +'<th style="padding:6px 8px;text-align:right;font-weight:800;color:var(--tx1);font-size:10px">Total semana</th>'
+    +'<th style="padding:6px 8px;text-align:right;font-weight:800;color:#10b981;font-size:10px">Acumulado</th>'
+    +'</tr></thead><tbody>'
+    +wkKeys.map(function(k,i){
+      var isNow=wkLabels[i]===(function(){
+        var d=TODAY,mn=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1);
+        return ('0'+mn.getDate()).slice(-2)+'/'+(('0'+(mn.getMonth()+1)).slice(-2));
+      })();
+      return '<tr style="border-bottom:1px solid var(--br);'+(isNow?'background:rgba(99,102,241,.07)':'')+'">'
+        +'<td style="padding:6px 8px;font-weight:'+(isNow?'800':'600')+'">'+(isNow?'→ ':'')+wkLabels[i]+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;color:#6366f1;font-weight:700">'+fM(wkMat[i])+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;color:#f59e0b;font-weight:700">'+fM(wkNom[i])+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-weight:800">'+fM(wkTotal[i])+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;color:#10b981;font-weight:800">'+fM(wkAcum[i])+'</td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table></div>';
+
+  var flujoSection='<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px">'
+    +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:4px">💸 Flujo de caja proyectado</div>'
+    +'<div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Distribución semanal estimada · Total estructura: <strong>'+fM(totalCost)+'</strong> (Mat: '+fM(totalMat)+' · Nóm: '+fM(totalNom)+')</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+    +'<div style="flex:1;min-width:200px;background:rgba(99,102,241,.08);border-radius:10px;padding:12px;text-align:center">'
+    +'<div style="font-size:20px;font-weight:900;color:#6366f1">'+fM(totalMat)+'</div>'
+    +'<div style="font-size:10px;color:var(--tx3);font-weight:700">MATERIALES</div></div>'
+    +'<div style="flex:1;min-width:200px;background:rgba(245,158,11,.08);border-radius:10px;padding:12px;text-align:center">'
+    +'<div style="font-size:20px;font-weight:900;color:#f59e0b">'+fM(totalNom)+'</div>'
+    +'<div style="font-size:10px;color:var(--tx3);font-weight:700">NÓMINA</div></div>'
+    +'<div style="flex:1;min-width:200px;background:rgba(16,185,129,.08);border-radius:10px;padding:12px;text-align:center">'
+    +'<div style="font-size:20px;font-weight:900;color:#10b981">'+fM(totalCost)+'</div>'
+    +'<div style="font-size:10px;color:var(--tx3);font-weight:700">TOTAL ESTRUCTURA</div></div>'
+    +'</div>'
+    +'<canvas id="chart-flujo-lp" style="max-height:220px;margin-bottom:8px"></canvas>'
+    +tablaFluj
+    +'<div style="margin-top:12px;padding:10px 14px;background:rgba(239,68,68,.07);border-left:3px solid #ef4444;border-radius:8px;font-size:11px;color:var(--tx2)">'
+    +'⚠️ <strong>Costos estimados</strong> — Actualiza los valores reales en cada actividad del cronograma. Los costos actuales son referencias de obra típica en Medellín.'
+    +'</div>'
+    +'</div>';
+
+  // Cost breakdown by type
+  var byTipo={acero:{mat:0,nom:0},encofrado:{mat:0,nom:0},vaciado:{mat:0,nom:0}};
+  acts.forEach(function(a){
+    if(byTipo[a.tipo]){byTipo[a.tipo].mat+=a.mat;byTipo[a.tipo].nom+=a.nom;}
+  });
+  var costoTipo='<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px">'
+    +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px">📂 Costo por tipo de actividad</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
+    +['acero','encofrado','vaciado'].map(function(t){
+      var d=byTipo[t]; var col=TIPO_COL[t];
+      var pctMat=d.mat>0?Math.round(d.mat/(d.mat+d.nom)*100):0;
+      return '<div style="border-radius:10px;border:1px solid var(--br);padding:14px">'
+        +'<div style="width:12px;height:12px;background:'+col+';border-radius:3px;margin-bottom:8px"></div>'
+        +'<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--tx3);margin-bottom:6px">'+t+'</div>'
+        +'<div style="font-size:18px;font-weight:900;color:var(--tx1)">'+fM(d.mat+d.nom)+'</div>'
+        +'<div style="font-size:10px;color:var(--tx3);margin-top:4px">Mat '+pctMat+'% · Nóm '+(100-pctMat)+'%</div>'
+        +'<div style="background:var(--sf2);border-radius:4px;height:6px;margin-top:8px;overflow:hidden">'
+        +'<div style="background:'+col+';height:100%;width:'+pctMat+'%;border-radius:4px"></div></div>'
+        +'</div>';
+    }).join('')
+    +'</div></div>';
+
+  el.innerHTML = header + gantt + lookahead + flujoSection + costoTipo;
+
+  // ── Renderizar chart flujo
+  (function(){
+    var cv=document.getElementById('chart-flujo-lp');
+    if(!cv||typeof Chart==='undefined') return;
+    if(cv._chart) cv._chart.destroy();
+    cv._chart=new Chart(cv,{
+      type:'bar',
+      data:{
+        labels:wkLabels,
+        datasets:[
+          {label:'Materiales',data:wkMat,backgroundColor:'rgba(99,102,241,.75)',borderRadius:4,stack:'s'},
+          {label:'Nómina',    data:wkNom, backgroundColor:'rgba(245,158,11,.75)',borderRadius:4,stack:'s'},
+          {label:'Acumulado', data:wkAcum,type:'line',borderColor:'#10b981',backgroundColor:'transparent',
+           borderWidth:2,pointRadius:3,pointBackgroundColor:'#10b981',yAxisID:'y2',tension:.3}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:true,
+        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
+          tooltip:{callbacks:{label:function(ctx){
+            return ctx.dataset.label+': $'+ctx.raw.toLocaleString('es-CO');
+          }}}
+        },
+        scales:{
+          y:{stacked:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:function(v){
+            return v>=1e6?'$'+(v/1e6).toFixed(0)+'M':'$'+v.toLocaleString();
+          },font:{size:10}}},
+          y2:{position:'right',grid:{display:false},ticks:{callback:function(v){
+            return v>=1e6?'$'+(v/1e6).toFixed(0)+'M':'$'+v.toLocaleString();
+          },font:{size:10}}},
+          x:{grid:{display:false},ticks:{font:{size:10}}}
+        }
+      }
+    });
+  })();
+}
+
+// ── Actualizar estado de actividad (Last Planner)
+function lp_toggleEstado(id) {
+  var EST_ORDER=['pendiente','en_curso','completado'];
+  var a=S.cronograma ? S.cronograma.find(function(x){return x.id===id;}) : null;
+  if(!a) return;
+  var idx=EST_ORDER.indexOf(a.estado);
+  a.estado=EST_ORDER[(idx+1)%EST_ORDER.length];
+  if(a.estado==='completado') a.avance=100;
+  else if(a.estado==='en_curso') a.avance=50;
+  else a.avance=0;
+  saveS();
+  rCronograma();
+}
+
 function fetchSupabaseData() {
   fetchObras().then(fetchCuentas).then(fetchTarjetas).then(fetchPagos).then(fetchAbonos).then(fetchDeudores)
     .catch(function(e){console.warn('[fetchSupabaseData] error:',e);});
