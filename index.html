@@ -6462,282 +6462,8 @@ function rAnalisis() {
 /* ═══════════════════════════════════════════════════
    PLAN DE INVERSIÓN — vista 📋
 ═══════════════════════════════════════════════════ */
-function rPlan() {
-  var el = document.getElementById('plan-content'); if(!el) return;
+function rPlan() { gotoView('cronograma'); }
 
-  /* ── APU real Weliving (fuente: Flujo de inversión .numbers Jun 2026)
-     Hierro: $4.284/kg  |  Concreto losa: $552.187/m³  |  Concreto col: $603.750/m³  */
-  var APU = [
-    {tipo:'losa',lbl:'Losa P3',    fecha:'2026-06-17',acero:21543165,conc:22964644,form:2476679,mo:7175000},
-    {tipo:'col', lbl:'Col P3→P4', fecha:'2026-06-22',acero:10118679,conc:4926601, form:2476679,mo:8775000},
-    {tipo:'losa',lbl:'Losa P4',    fecha:'2026-06-27',acero:21543165,conc:22964644,form:2476679,mo:7175000},
-    {tipo:'col', lbl:'Col P4→P5', fecha:'2026-07-03',acero:10118679,conc:4520211, form:624240, mo:8775000},
-    {tipo:'losa',lbl:'Losa P5',    fecha:'2026-07-09',acero:21543165,conc:22964644,form:2476679,mo:7175000},
-    {tipo:'col', lbl:'Col P5→P6', fecha:'2026-07-15',acero:9138243, conc:4520211, form:624240, mo:8775000},
-    {tipo:'losa',lbl:'Losa P6',    fecha:'2026-07-21',acero:21543165,conc:22964644,form:2476679,mo:7175000},
-    {tipo:'col', lbl:'Col P6→CUB',fecha:'2026-07-26',acero:7239960, conc:4520211, form:624240, mo:8775000},
-    {tipo:'losa',lbl:'Cubierta',   fecha:'2026-07-31',acero:21543165,conc:22964644,form:2476679,mo:7175000},
-  ];
-  APU.forEach(function(r){ r.total = r.acero+r.conc+r.form+r.mo; });
-  var totA=0,totC=0,totF=0,totM=0,totT=0;
-  APU.forEach(function(r){totA+=r.acero;totC+=r.conc;totF+=r.form;totM+=r.mo;totT+=r.total;});
-
-  /* ── Necesidades por mes ── */
-  var mNeeds = {};
-  APU.forEach(function(r){
-    var d = new Date(r.fecha+'T12:00:00');
-    var k = d.getFullYear()+'-'+(d.getMonth()+1);
-    mNeeds[k] = (mNeeds[k]||0)+r.total;
-  });
-  var mLabels = {'2026-6':'Jun 2026','2026-7':'Jul 2026','2026-8':'Ago 2026'};
-  var mMax = Math.max.apply(null,Object.values(mNeeds));
-
-  /* ── Caja y proyección ── */
-  var wSaldo  = saldoVirtualObra('weliving');
-  var rSaldo  = saldoVirtualObra('robledo');
-  var nSaldo  = saldoVirtualObra('novaeva');
-  var totalCaja = wSaldo + rSaldo + nSaldo;
-  var fentConf  = FENT.filter(function(f){return f.prob!=='baja';}).reduce(function(a,f){return a+f.monto;},0);
-  var wFentConf = FENT.filter(function(f){return f.desc.toLowerCase().indexOf('weliving')>=0&&f.prob!=='baja';}).reduce(function(a,f){return a+f.monto;},0);
-  var brecha    = totT - wSaldo - wFentConf; // necesidades estructura - caja Weliving - financiamiento comprometido
-
-  /* ── Robledo restante estimado (losa P1 + mampostería + cubierta + acabados) ── */
-  var robRestimate = 140510129; // Total flujo Robledo del APU sheet (restante estructura)
-
-  /* ── Inversión total acumulada por obra ── */
-  var wInv = BASE.weliving.gastos; // = total histórico Sheet al 15-Jun
-  var rInv = BASE.robledo.gastos;
-
-  function pc(v,tot){ return Math.min(100,Math.round(v/tot*100)); }
-  function bar(v,max,col){
-    var w = Math.round(v/max*100);
-    return '<div style="height:10px;background:var(--br);border-radius:5px;overflow:hidden;flex:1">'
-      +'<div style="height:100%;width:'+w+'%;background:'+col+';border-radius:5px;transition:width .4s"></div></div>';
-  }
-  function rowCard(lbl,val,sub,col){
-    return '<div style="background:var(--sf);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">'+lbl+'</div>'
-      +'<div style="font-size:22px;font-weight:900;color:'+(col||'var(--tx)')+'">'+fmtM(val)+'</div>'
-      +(sub?'<div style="font-size:11px;color:var(--tx2);margin-top:3px">'+sub+'</div>':'')
-      +'</div>';
-  }
-
-  var brechaColor = brecha>50000000?'var(--rd)':brecha>0?'var(--or)':'var(--gr)';
-  var brechaLabel = brecha>0?'⚠️ BRECHA — necesita financiamiento':'✅ Cubierto';
-
-  var h = '';
-
-  /* ── HEADER ── */
-  h += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px">'
-    +'<div><div style="font-size:18px;font-weight:900">📋 Plan de Inversión · Imperio Constructora</div>'
-    +'<div style="font-size:12px;color:var(--tx2);margin-top:2px">Análisis financiero estructural · Jun 13, 2026 · Fuente: APU real (Numbers + Sheets)</div></div>'
-    +'</div>';
-
-  /* ── KPIS ESTRUCTURA ── */
-  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">';
-  h += rowCard('Total estructura restante', totT, '9 eventos (losas + columnas)', 'var(--bl)');
-  h += rowCard('Caja Weliving hoy', wSaldo, 'Saldo virtual disponible', wSaldo<20000000?'var(--rd)':'var(--gr)');
-  h += rowCard('Financiamiento comprometido', wFentConf, 'Socios + clientes (prob. alta/media)', 'var(--or)');
-  h += rowCard('Brecha financiera', brecha>0?brecha:-brecha, brechaLabel, brechaColor);
-  h += '</div>';
-
-  /* ── ALERTA BRECHA ── */
-  if(brecha > 0) {
-    h += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:14px 18px;margin-bottom:18px">'
-      +'<div style="font-size:13px;font-weight:800;color:var(--rd);margin-bottom:6px">🔴 ALERTA FINANCIERA — Brecha estructural Weliving</div>'
-      +'<div style="font-size:12px;color:#7f1d1d;line-height:1.7">'
-      +'Con la caja actual (<b>'+fmtM(wSaldo)+'</b>) y el financiamiento comprometido (<b>'+fmtM(wFentConf)+'</b>), '
-      +'aún falta <b>'+fmtM(brecha)+'</b> para completar la estructura. '
-      +'<b>Acción:</b> Confirmar o ampliar compromisos de socios (Steven $120M, Lizeth $150M) antes de iniciar losa P5.'
-      +'</div></div>';
-  } else {
-    h += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r);padding:12px 18px;margin-bottom:18px">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--gr)">✅ Estructura financiada — con caja actual + compromisos hay suficiente para terminar la estructura.</div>'
-      +'</div>';
-  }
-
-  /* ── APU TABLE ── */
-  h += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:18px">';
-  h += '<div style="padding:14px 16px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center">'
-    +'<div style="font-size:14px;font-weight:800">🏗 Weliving — APU Estructura Restante</div>'
-    +'<div style="font-size:12px;color:var(--tx2)">Hierro $4.284/kg · Concreto $552.187/m³</div>'
-    +'</div>';
-  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
-  h += '<thead><tr style="background:var(--sf2)">'
-    +'<th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">Piso/Evento</th>'
-    +'<th style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2)">Fecha</th>'
-    +'<th style="padding:9px 12px;text-align:right;font-weight:700;color:#1d4ed8">Acero</th>'
-    +'<th style="padding:9px 12px;text-align:right;font-weight:700;color:#c2410c">Concreto</th>'
-    +'<th style="padding:9px 12px;text-align:right;font-weight:700;color:#15803d">Formaleta</th>'
-    +'<th style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2)">M de O</th>'
-    +'<th style="padding:9px 12px;text-align:right;font-weight:800;color:var(--tx)">TOTAL</th>'
-    +'</tr></thead>';
-  h += '<tbody>';
-  var hoy = new Date(); hoy.setHours(0,0,0,0);
-  APU.forEach(function(r,i){
-    var isLosa = r.tipo==='losa';
-    var d = new Date(r.fecha+'T12:00:00');
-    var isPast = d < hoy;
-    var bgRow = isPast ? 'background:#f9fafb' : (i%2===0 ? '' : 'background:var(--sf2)');
-    var fLabel = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
-    var dias = Math.round((d-hoy)/86400000);
-    var diasStr = isPast ? '<span style="color:var(--tx3);font-size:10px">pasado</span>'
-      : '<span style="color:'+(dias<14?'var(--or)':'var(--tx3)')+';font-size:10px">+'+dias+'d</span>';
-    h += '<tr style="border-top:1px solid var(--br);'+bgRow+'">'
-      +'<td style="padding:9px 12px;font-weight:'+(isLosa?800:600)+';'+(isLosa?'':'padding-left:20px;color:var(--tx2)')+'">'+r.lbl+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;color:var(--tx2);white-space:nowrap">'+fLabel+' '+diasStr+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;color:#1d4ed8;font-weight:600">'+fmtM(r.acero)+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;color:#c2410c;font-weight:600">'+fmtM(r.conc)+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;color:#15803d;font-weight:600">'+fmtM(r.form)+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;color:var(--tx2)">'+fmtM(r.mo)+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;font-weight:800">'+fmtM(r.total)+'</td>'
-      +'</tr>';
-  });
-  h += '<tr style="background:var(--sf2);border-top:2px solid var(--br)">'
-    +'<td style="padding:10px 12px;font-weight:800">TOTAL</td>'
-    +'<td></td>'
-    +'<td style="padding:10px 12px;text-align:right;font-weight:800;color:#1d4ed8">'+fmtM(totA)+'</td>'
-    +'<td style="padding:10px 12px;text-align:right;font-weight:800;color:#c2410c">'+fmtM(totC)+'</td>'
-    +'<td style="padding:10px 12px;text-align:right;font-weight:800;color:#15803d">'+fmtM(totF)+'</td>'
-    +'<td style="padding:10px 12px;text-align:right;font-weight:800;color:var(--tx2)">'+fmtM(totM)+'</td>'
-    +'<td style="padding:10px 12px;text-align:right;font-weight:900;font-size:15px;color:var(--bl)">'+fmtM(totT)+'</td>'
-    +'</tr>';
-  h += '</tbody></table></div>';
-  h += '<div style="padding:10px 16px;font-size:11px;color:var(--tx3);border-top:1px solid var(--br)">* Costos en pesos colombianos. Acero puede variar ±3% por fluctuación de precio de acero.</div>';
-  h += '</div>';
-
-  /* ── NECESIDADES POR MES ── */
-  h += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;margin-bottom:18px">';
-  h += '<div style="font-size:14px;font-weight:800;margin-bottom:14px">📅 Necesidades de Caja por Mes</div>';
-  ['2026-6','2026-7','2026-8'].forEach(function(k){
-    var v = mNeeds[k]||0;
-    if(!v) return;
-    var parts = [];
-    APU.forEach(function(r){
-      var d2 = new Date(r.fecha+'T12:00:00');
-      var k2 = d2.getFullYear()+'-'+(d2.getMonth()+1);
-      if(k2===k) parts.push(r.lbl+' '+fmtM(r.total));
-    });
-    var label = mLabels[k]||k;
-    h += '<div style="margin-bottom:12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
-        +'<span style="font-size:13px;font-weight:700">'+label+'</span>'
-        +'<span style="font-size:14px;font-weight:900;color:var(--bl)">'+fmtM(v)+'</span>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-        +bar(v,mMax,'var(--bl)')
-      +'</div>'
-      +'<div style="font-size:10px;color:var(--tx3);margin-top:4px">'+parts.join(' · ')+'</div>'
-    +'</div>';
-  });
-  h += '</div>';
-
-  /* ── FUENTES DE FINANCIAMIENTO ── */
-  h += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;margin-bottom:18px">';
-  h += '<div style="font-size:14px;font-weight:800;margin-bottom:12px">💰 Fuentes de Financiamiento Proyectadas</div>';
-  var probColor = {'conf':'var(--gr)','alta':'var(--bl)','media':'var(--or)','baja':'var(--tx3)'};
-  var probLbl   = {'conf':'Confirmado','alta':'Prob. alta','media':'Prob. media','baja':'Prob. baja'};
-  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
-  h += '<thead><tr style="background:var(--sf2)"><th style="padding:9px 12px;text-align:left;color:var(--tx2);font-weight:700">Fuente</th>'
-    +'<th style="padding:9px 12px;text-align:center;color:var(--tx2);font-weight:700">Probabilidad</th>'
-    +'<th style="padding:9px 12px;text-align:center;color:var(--tx2);font-weight:700">Fecha</th>'
-    +'<th style="padding:9px 12px;text-align:right;color:var(--tx2);font-weight:700">Monto</th></tr></thead>';
-  h += '<tbody>';
-  var fentTotal=0;
-  FENT.forEach(function(f,i){
-    fentTotal+=f.monto;
-    var col = probColor[f.prob]||'var(--tx2)';
-    h += '<tr style="border-top:1px solid var(--br);'+(i%2?'background:var(--sf2)':'')+'">'
-      +'<td style="padding:9px 12px;font-weight:600">'+f.desc+'</td>'
-      +'<td style="padding:9px 12px;text-align:center"><span style="font-size:11px;font-weight:700;color:'+col+'">●</span> <span style="font-size:11px;color:var(--tx2)">'+probLbl[f.prob]+'</span></td>'
-      +'<td style="padding:9px 12px;text-align:center;color:var(--tx3);font-size:11px">'+f.fecha+'</td>'
-      +'<td style="padding:9px 12px;text-align:right;font-weight:700">'+fmtM(f.monto)+'</td>'
-      +'</tr>';
-  });
-  h += '<tr style="background:var(--sf2);border-top:2px solid var(--br)">'
-    +'<td colspan="3" style="padding:10px 12px;font-weight:800">TOTAL COMPROMETIDO (prob.≥media)</td>'
-    +'<td style="padding:10px 12px;text-align:right;font-weight:900;font-size:15px;color:var(--gr)">'+fmtM(fentConf)+'</td>'
-    +'</tr>';
-  h += '</tbody></table></div>';
-  h += '</div>';
-
-  /* ── BALANCE FINANCIERO PROYECTADO ── */
-  h += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;margin-bottom:18px">';
-  h += '<div style="font-size:14px;font-weight:800;margin-bottom:14px">⚖️ Balance Proyectado — Weliving Estructura</div>';
-  var items = [
-    {lbl:'Caja disponible hoy (Weliving)',   monto:wSaldo,    color:'var(--gr)',  sign:'+'},
-    {lbl:'Financiamiento comprometido',       monto:wFentConf, color:'var(--bl)',  sign:'+'},
-    {lbl:'Total disponible',                  monto:wSaldo+wFentConf, color:'var(--tx)', sign:'=', bold:true},
-    {lbl:'Costo total estructura restante',   monto:-totT,     color:'var(--rd)',  sign:'−'},
-    {lbl:'Balance final (superávit / brecha)',monto:wSaldo+wFentConf-totT, color:brecha>0?'var(--rd)':'var(--gr)', sign:'=', bold:true},
-  ];
-  items.forEach(function(row){
-    var v = Math.abs(row.monto);
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--br)'+(row.bold?';font-weight:800':'')+'">'
-      +'<div style="font-size:12px;'+(row.bold?'font-weight:800':'')+'">'+row.sign+' '+row.lbl+'</div>'
-      +'<div style="font-size:'+(row.bold?'16':'13')+'px;font-weight:'+(row.bold?900:700)+';color:'+row.color+'">'+(row.monto<0?'− ':'')+fmtM(v)+'</div>'
-      +'</div>';
-  });
-  h += '</div>';
-
-  /* ── DECISIONES CRÍTICAS ── */
-  h += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;margin-bottom:18px">';
-  h += '<div style="font-size:14px;font-weight:800;margin-bottom:12px">🎯 Decisiones Críticas — Próximos 30 días</div>';
-  var decisions = [
-    {emoji:'🔴',when:'Hoy - Jun 13',what:'Confirmar vaciado losa P3 el 17 Jun',why:'Concreto $23M + bomba $2.5M deben estar en caja. Pedir cotización final Vías Triturado / Polimix.'},
-    {emoji:'🟠',when:'Jun 15-17',what:'Pagar prima legal de junio',why:'$7.61M admin + ~$10M obra — vence jun 30. Provisionar ahora de los abonos recibidos.'},
-    {emoji:'🟡',when:'Antes Jun 18',what:'Confirmar socios Steven ($120M) y Lizeth ($150M)',why:'La brecha estructural de '+fmtM(brecha)+' requiere confirmar por lo menos uno antes de iniciar losa P5 (Jul 9).'},
-    {emoji:'🟡',when:'Jun 20',what:'Cobrar Novaeva — cliente pendiente',why:'$85M estimado. Recaudo crítico para sostener caja del pool mientras llegan aportes.'},
-    {emoji:'🟢',when:'Jul 31',what:'Estructura Weliving completa',why:'Con financiamiento confirmado, cubierta vaciaría el 31 Jul. Paso siguiente: mampostería + acabados.'},
-  ];
-  decisions.forEach(function(d){
-    h += '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--br)">'
-      +'<span style="font-size:20px;flex-shrink:0">'+d.emoji+'</span>'
-      +'<div>'
-        +'<div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">'+d.when+'</div>'
-        +'<div style="font-size:13px;font-weight:700;margin-top:2px">'+d.what+'</div>'
-        +'<div style="font-size:11px;color:var(--tx2);margin-top:3px">'+d.why+'</div>'
-      +'</div>'
-    +'</div>';
-  });
-  h += '</div>';
-
-  /* ── RESUMEN 3 OBRAS ── */
-  h += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px">';
-  h += '<div style="font-size:14px;font-weight:800;margin-bottom:14px">🏛 Estado 3 Obras</div>';
-  var obrasData = [
-    {nm:'🏗 Weliving',  prog:35, saldo:wSaldo, inversion:BASE.weliving.gastos, presupuesto:BASE.weliving.inversion,
-     estado:'En estructura', col:'var(--bl)', nota:'P3 pendiente vaciado · P4-CUB: '+fmtM(totT)+' restante'},
-    {nm:'🏠 Robledo',   prog:55, saldo:rSaldo, inversion:BASE.robledo.gastos,  presupuesto:BASE.robledo.precio,
-     estado:'Mampostería',   col:'var(--or)', nota:'Saldo cobrar: '+fmtM(BASE.robledo.porCobrar)+' · Costo restante estructura ~$140M est.'},
-    {nm:'🏢 Novaeva',   prog:90, saldo:nSaldo, inversion:BASE.novaeva.gastos,  presupuesto:BASE.novaeva.abonos,
-     estado:'Por cerrar',    col:'var(--gr)', nota:'Cartera: '+fmtM(BASE.novaeva.cartera)+' · Cierre estimado: '+fmtM(nSaldo)+' caja disponible'},
-  ];
-  obrasData.forEach(function(o){
-    h += '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--br)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;margin-bottom:8px">'
-        +'<div><div style="font-size:14px;font-weight:800">'+o.nm+'</div>'
-        +'<div style="font-size:11px;color:var(--tx2);margin-top:2px">'+o.nota+'</div></div>'
-        +'<div style="text-align:right">'
-          +'<div style="font-size:18px;font-weight:900;color:'+(o.saldo<0?'var(--rd)':o.saldo<20000000?'var(--or)':'var(--gr)')+'">'+fmtM(o.saldo)+'</div>'
-          +'<div style="font-size:10px;color:var(--tx3)">caja disponible</div>'
-        +'</div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-        +'<span style="font-size:11px;color:var(--tx3);white-space:nowrap">'+o.prog+'%</span>'
-        +bar(o.prog,100,o.col)
-        +'<span style="font-size:11px;font-weight:700;color:'+o.col+'">'+o.estado+'</span>'
-      +'</div>'
-    +'</div>';
-  });
-  h += '</div>';
-
-  el.innerHTML = h;
-}
-
-/* ═══════════════════════════════════════════════════
-   EDIT CUENTA / TC
-═══════════════════════════════════════════════════ */
 function ctaMovs(id) {
   var movs = [];
   S.abonos.forEach(function(a){ if(a.ctaId===id) movs.push({f:a.f,desc:a.desc+' ('+a.obra+')',monto:a.monto,tipo:'abono',fecha:a.fecha||''}); });
@@ -7358,42 +7084,143 @@ function rCronograma() {
     +'<div style="padding:4px 8px;text-align:right;font-size:12px;font-weight:900;color:var(--bl)">'+fM(totalCost)+'</div>'
     +'</div></div>';
 
-  // ── Lookahead 3 semanas
-  var WEEK_MS=7*86400000;
-  var W1_END=new Date(TODAY.getTime()+WEEK_MS);
-  var W2_END=new Date(TODAY.getTime()+2*WEEK_MS);
-  var W3_END=new Date(TODAY.getTime()+3*WEEK_MS);
 
-  function inRange(a,from,to){
-    var fi=dDate(a.fi),ff=dDate(a.ff);
-    return fi<=to&&ff>=from;
-  }
-  var w1=acts.filter(function(a){return inRange(a,TODAY,W1_END)&&a.estado!=='completado';});
-  var w2=acts.filter(function(a){return inRange(a,W1_END,W2_END)&&a.estado!=='completado';});
-  var w3=acts.filter(function(a){return inRange(a,W2_END,W3_END)&&a.estado!=='completado';});
+  // ── Calendario semanal de pagos ──────────────────────────────────────
+  // Genera todos los eventos de pago: materiales + nómina por semana
+  (function(){
+    var NOM_Q = 14425000; // quincenal Weliving
+    var events = []; // {fecha, label, tipo, monto, actId}
 
-  function weekCard(title,items,col){
-    if(!items.length) return '<div style="background:var(--sf2);border-radius:10px;padding:12px;text-align:center;color:var(--tx3);font-size:12px">'+title+'<br>Sin actividades</div>';
-    return '<div style="background:var(--sf);border-radius:10px;border-left:3px solid '+col+';padding:12px">'
-      +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:8px">'+title+'</div>'
-      +items.map(function(a){
-        var ec=estCfg(a.estado);
-        return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
-          +'<span style="font-size:9px;padding:2px 6px;border-radius:10px;background:'+ec.bg+';color:'+ec.col+';font-weight:700">'+ec.lbl.split(' ')[0]+'</span>'
-          +'<span style="font-size:11px;font-weight:600;color:var(--tx1)">'+a.act+'</span>'
-          +'<span style="font-size:10px;color:var(--tx3);margin-left:auto">'+fM(a.mat+a.nom)+'</span>'
-          +'</div>';
-      }).join('')
-      +'</div>';
-  }
+    acts.forEach(function(a){
+      var fi = dDate(a.fi);
+      var TIPO_ICO = {acero:'🔩', encofrado:'🪚', vaciado:'🏗'};
+      var ico = TIPO_ICO[a.tipo] || '🔨';
 
-  var lookahead='<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px">'
-    +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px">🔭 Lookahead 3 semanas</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
-    +weekCard('Esta semana',w1,'#6366f1')
-    +weekCard('Semana 2',w2,'#f59e0b')
-    +weekCard('Semana 3',w3,'#10b981')
-    +'</div></div>';
+      // Actividad misma
+      events.push({fecha:fi, label: ico+' '+a.act,
+                   tipo:'obra', monto:0, actId:a.id, estado:a.estado});
+
+      // Pago material
+      if(a.tipo==='acero' && !a.matPagado){
+        var pd = new Date(fi.getTime()-12*86400000);
+        events.push({fecha:pd, label:'💰 Pagar hierro — '+a.act,
+                     tipo:'pago-mat', monto:a.mat, actId:a.id});
+      } else if(a.tipo==='vaciado'){
+        var pd2 = new Date(fi.getTime()-86400000);
+        events.push({fecha:pd2, label:'💰 Pagar concreto+bomba — '+a.act,
+                     tipo:'pago-mat', monto:a.mat, actId:a.id});
+      } else if(a.tipo==='encofrado'){
+        events.push({fecha:fi, label:'💰 Pagar formaleta — '+a.act,
+                     tipo:'pago-mat', monto:a.mat, actId:a.id});
+      }
+    });
+
+    // Nómina quincenales en el rango
+    var firstFi = acts.reduce(function(mn,a){var d=dDate(a.fi);return d<mn?d:mn;},dDate(acts[0].fi));
+    var lastFf  = acts.reduce(function(mx,a){var d=dDate(a.ff);return d>mx?d:mx;},dDate(acts[0].ff));
+    var cur = new Date(firstFi.getFullYear(), firstFi.getMonth(), 1);
+    while(cur <= lastFf){
+      var y=cur.getFullYear(), m=cur.getMonth();
+      var d15 = new Date(y,m,15);
+      var d30 = new Date(y,m+1,0);
+      [d15,d30].forEach(function(pd){
+        if(pd>=firstFi && pd<=lastFf)
+          events.push({fecha:pd, label:'💸 Nómina quincenal Weliving',
+                       tipo:'nomina', monto:NOM_Q});
+      });
+      cur = new Date(y,m+1,1);
+    }
+
+    // Agrupar por semana (lunes→domingo)
+    function weekKey(d){
+      var dc=new Date(d); var day=dc.getDay()||7;
+      dc.setDate(dc.getDate()-(day-1));
+      return dc.toISOString().slice(0,10);
+    }
+    function weekLabel(monStr){
+      var mon=new Date(monStr+'T12:00:00');
+      var sun=new Date(mon.getTime()+6*86400000);
+      var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      return mon.getDate()+' '+meses[mon.getMonth()]+' – '+sun.getDate()+' '+meses[sun.getMonth()];
+    }
+
+    var weekMap={};
+    events.forEach(function(ev){
+      var k=weekKey(ev.fecha); 
+      if(!weekMap[k]) weekMap[k]={events:[],totalPagos:0};
+      weekMap[k].events.push(ev);
+      if(ev.tipo!=='obra') weekMap[k].totalPagos += ev.monto;
+    });
+
+    var weekKeys2 = Object.keys(weekMap).sort();
+
+    var rows = weekKeys2.map(function(wk){
+      var wData = weekMap[wk];
+      wData.events.sort(function(a,b){return a.fecha-b.fecha;});
+      var hasPago = wData.totalPagos > 0;
+
+      var evRows = wData.events.map(function(ev){
+        var isPast = ev.fecha < TODAY;
+        var dayStr = ('0'+ev.fecha.getDate()).slice(-2)+'/'+('0'+(ev.fecha.getMonth()+1)).slice(-2);
+        var colMap = {
+          'obra':     {bg:'var(--sf2)', tx:'var(--tx2)', badge:'', lbl:'Actividad'},
+          'pago-mat': {bg:'rgba(239,68,68,.07)', tx:'#ef4444', badge:'PAGAR', lbl:''},
+          'nomina':   {bg:'rgba(99,102,241,.07)', tx:'#6366f1', badge:'NÓMINA', lbl:''},
+        };
+        var c = colMap[ev.tipo] || colMap['obra'];
+
+        // Estado badge for obra
+        var estadoBadge = '';
+        if(ev.tipo==='obra' && ev.estado){
+          var ec=estCfg(ev.estado);
+          estadoBadge='<span style="font-size:9px;padding:1px 5px;border-radius:6px;background:'+ec.bg+';color:'+ec.col+';font-weight:700;margin-right:4px">'+ec.lbl+'</span>';
+        }
+
+        return '<tr style="border-bottom:1px solid var(--br);opacity:'+(isPast?.55:1)+'">'
+          + '<td style="padding:6px 10px;white-space:nowrap;font-size:11px;color:var(--tx3);width:46px">'+dayStr+'</td>'
+          + '<td style="padding:6px 10px;font-size:11.5px;color:var(--tx)">'+estadoBadge+ev.label+'</td>'
+          + '<td style="padding:6px 10px;text-align:center;width:54px">'
+          +   (c.badge?'<span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;background:'+c.bg+';color:'+c.tx+'">'+c.badge+'</span>':'')
+          + '</td>'
+          + '<td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:800;color:'+(ev.monto>0?c.tx:'var(--tx3)')+';">'
+          +   (ev.monto>0 ? fM(ev.monto) : '—')
+          + '</td>'
+          + '</tr>';
+      }).join('');
+
+      var isCurrentWeek = weekKey(TODAY)===wk;
+      var borderColor   = isCurrentWeek ? '#6366f1' : (hasPago ? '#ef4444' : 'var(--br)');
+
+      return '<div style="background:var(--sf);border-radius:12px;border:1.5px solid '+borderColor+';'
+           + 'margin-bottom:10px;overflow:hidden'+(isCurrentWeek?';box-shadow:0 0 0 3px rgba(99,102,241,.15)':'')+'">'
+           + '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--sf2);border-bottom:1px solid var(--br)">'
+           +   '<div style="font-size:11px;font-weight:800;color:var(--tx)'+(isCurrentWeek?';color:#6366f1':'')+'">'
+           +   (isCurrentWeek?'📍 ':'📅 ')+'Semana '+weekLabel(wk)+'</div>'
+           +   (hasPago
+               ? '<div style="font-size:12px;font-weight:900;color:#ef4444">💸 '+fM(wData.totalPagos)+'</div>'
+               : '<div style="font-size:11px;color:var(--tx3)">Sin pagos</div>')
+           + '</div>'
+           + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:340px">'
+           + '<thead><tr style="background:var(--sf2)">'
+           + '<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--tx3);font-weight:700;width:46px">DÍA</th>'
+           + '<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--tx3);font-weight:700">CONCEPTO</th>'
+           + '<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--tx3);font-weight:700;width:54px">TIPO</th>'
+           + '<th style="padding:5px 10px;text-align:right;font-size:9px;color:var(--tx3);font-weight:700">MONTO</th>'
+           + '</tr></thead><tbody>'+evRows+'</tbody></table></div>'
+           + '</div>';
+    }).join('');
+
+    var tablaPagos = '<div style="margin-bottom:16px">'
+      + '<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px">📅 Calendario de pagos semanal</div>'
+      + rows
+      + '<div style="font-size:10px;color:var(--tx3);margin-top:4px">🔩 Hierro = 12 días antes · 🏗 Concreto = 1 día antes · 💸 Nómina = día 15 y 30</div>'
+      + '</div>';
+
+    // Inject into el - replace lookahead in innerHTML
+    // We'll store it and compose in final innerHTML
+    window._tablaPagos = tablaPagos;
+  })();
+
 
   // ── Flujo de caja proyectado por semana
   // Acero: pago 12 días antes del amarre (pedido anticipado)
@@ -7564,7 +7391,7 @@ function rCronograma() {
     }).join('')
     +'</div></div>';
 
-  el.innerHTML = header + gantt + alertasAcero + lookahead + flujoSection + costoTipo;
+  el.innerHTML = header + (window._tablaPagos||'') + gantt + alertasAcero + flujoSection + costoTipo;
 
   // ── Renderizar chart flujo
   (function(){
