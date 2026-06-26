@@ -7672,11 +7672,10 @@ function saveGasto() {
   var areaVal   = document.getElementById('gf-area')  ? document.getElementById('gf-area').value  : '';
   var etapaVal  = document.getElementById('gf-etapa') ? document.getElementById('gf-etapa').value : '';
   var matVal    = document.getElementById('gf-mat')   ? document.getElementById('gf-mat').value   : '';
-  // ACTIVAR_CAMPOS_FACTURA — descomentar después de ejecutar MIGRATION_gastos_campos_factura.sql en Supabase
-  // var cotizVal  = (document.getElementById('gf-cotiz')  ? document.getElementById('gf-cotiz').value.trim()  : '') || null;
-  // var cantVal   = parseFloat(document.getElementById('gf-cant')  ? document.getElementById('gf-cant').value  : '') || null;
-  // var ivaVal    = parseFloat(document.getElementById('gf-iva')   ? document.getElementById('gf-iva').value   : '') || null;
-  // var facrevVal = document.getElementById('gf-facrev') ? document.getElementById('gf-facrev').checked : false;
+  var cotizVal  = (document.getElementById('gf-cotiz')  ? document.getElementById('gf-cotiz').value.trim()  : '') || null;
+  var cantVal   = parseFloat(document.getElementById('gf-cant')  ? document.getElementById('gf-cant').value  : '') || null;
+  var ivaVal    = parseFloat(document.getElementById('gf-iva')   ? document.getElementById('gf-iva').value   : '') || null;
+  var facrevVal = document.getElementById('gf-facrev') ? document.getElementById('gf-facrev').checked : false;
 
   // Payload directo a Supabase (fuente única de verdad)
   var sbData = {
@@ -7689,12 +7688,11 @@ function saveGasto() {
     mp:          metodo + ' — ' + ctaLbl,
     monto:       total,
     material:    matVal,
-    cuenta:      ctaV
-    // ACTIVAR_CAMPOS_FACTURA — agregar estas 4 líneas después del SQL:
-    // ,cotiz:   cotizVal
-    // ,cantidad: cantVal
-    // ,iva:     ivaVal
-    // ,facrev:  facrevVal
+    cuenta:      ctaV,
+    cotiz:       cotizVal,
+    cantidad:    cantVal,
+    iva:         ivaVal,
+    facrev:      facrevVal
   };
 
   // Estado de carga — deshabilitar botón
