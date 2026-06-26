@@ -3711,10 +3711,16 @@ async function _autoImportarHistRobledo() {
   if (localStorage.getItem(_robHistKey) === '1') return;
   _importROBCurso = true;
   try {
-    // 1. Borrar todos los registros existentes de Robledo
-    await fetch(SB_URL+'/rest/v1/gastos?obra=eq.robledo',
-      {method:'DELETE',headers:Object.assign({},SB_H,{'Prefer':'return=minimal'})});
-    // 2. Insertar en lotes de 50
+    // 1. Verificar si ya existen registros en Robledo - si existen, NO tocar nada
+    var check = await fetch(SB_URL+'/rest/v1/gastos?obra=eq.robledo&select=id&limit=1', {headers:SB_H});
+    var existing = await check.json();
+    if (Array.isArray(existing) && existing.length > 0) {
+      console.log('[Robledo] Ya existen registros - import cancelado para proteger datos');
+      localStorage.setItem(_robHistKey, '1');
+      _importROBCurso = false;
+      return;
+    }
+    // 2. Insertar en lotes de 50 (solo si tabla vacía)
     var batch = 50;
     for (var i = 0; i < ROBLEDO_HIST.length; i += batch) {
       var chunk = ROBLEDO_HIST.slice(i, i + batch);
