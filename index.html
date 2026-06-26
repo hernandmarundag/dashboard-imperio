@@ -3352,22 +3352,18 @@ const DEF = {
     {id:'as-17',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Materiales',monto:11200000,fecha:'2026-02-01',desc:'San Pío — pago TC Hernán → Weliving'},
     /* ── SUFI → LA PLAYA ($5,000,000) ── */
     {id:'as-18',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Alquiler',monto:5000000, fecha:'2026-02-01',desc:'Abono alquiler La Playa'},
-    /* ── SUFI → ADMINISTRACIÓN ($49,912,400) ── */
-    {id:'as-19',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:24050000,fecha:'2026-02-01',desc:'Nómina general'},
-    {id:'as-20',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Seguridad social',monto:10133000,fecha:'2026-04-01',desc:'Seguridad social abril'},
-    {id:'as-21',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Impuestos',monto:2835000,fecha:'2026-02-01',desc:'Impuestos Imperio'},
-    {id:'as-22',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:3125000, fecha:'2026-02-01',desc:'Nómina Hernán'},
-    {id:'as-23',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:2373000, fecha:'2026-02-01',desc:'Nómina Lina'},
-    {id:'as-24',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:1500000, fecha:'2026-02-01',desc:'Puerta nómina'},
-    {id:'as-25',fuenteId:'f-sufi',proyecto:'administracion',categoria:'SISO',    monto:1000000, fecha:'2026-02-01',desc:'SISO'},
-    {id:'as-26',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Varios',  monto:1000000, fecha:'2026-02-01',desc:'Cuenta Hernán'},
-    {id:'as-27',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Varios',  monto:700000,  fecha:'2026-02-01',desc:'Porones'},
-    {id:'as-28',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:37400,   fecha:'2026-02-01',desc:'Diferencia planilla'},
-    {id:'as-29',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Impuestos',monto:59000,  fecha:'2026-02-01',desc:'4x1000'},
-    {id:'as-30',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Varios',  monto:3100000, fecha:'2026-02-01',desc:'Pago deuda empresa con la casa'},
+    /* ── SUFI → NÓMINA + GASTOS OBRA ($49,912,400) — split 50% WL / 45% RB / 5% NV ──
+       Detalle: Nómina gral $24.05M + SS abril $10.133M + Hernán $3.125M + Lina $2.373M +
+       Puerta $1.5M + planilla $37.4K + Impuestos $2.835M + SISO $1M + Cuenta Hernán $1M +
+       Porones $700K + 4x1000 $59K + Pago deuda casa $3.1M
+       ⚠️ Nómina Hernán: usar $3.125M (pendiente validar vs $4.5M)              ── */
+    {id:'as-nom-wl',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Nómina/Operación',monto:24956200,fecha:'2026-02-01',desc:'Nómina + gastos operativos WL (50% de $49,912,400) — incluye nómina gral, SS, Hernán, Lina, impuestos, SISO'},
+    {id:'as-nom-rb',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Nómina/Operación',monto:22460580,fecha:'2026-02-01',desc:'Nómina + gastos operativos RB (45% de $49,912,400) — incluye nómina gral, SS, Hernán, Lina, impuestos, SISO'},
+    {id:'as-nom-nv',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Nómina/Operación',monto:2495620, fecha:'2026-02-01',desc:'Nómina + gastos operativos NV (5% de $49,912,400) — incluye nómina gral, SS, Hernán, Lina, impuestos, SISO'},
     /* ── SUFI → ANTICIPOS ($3,434,000) ── */
-    {id:'as-31',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Anticipos',monto:2434000,fecha:'2026-02-01',desc:'Anticipo Ana'},
-    {id:'as-32',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Anticipos',monto:1000000,fecha:'2026-02-01',desc:'Avance adicional'},
+    {id:'as-31',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Anticipos',monto:1717000,fecha:'2026-02-01',desc:'Anticipo Ana + avance (50% WL)'},
+    {id:'as-32',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Anticipos',monto:1545600,fecha:'2026-02-01',desc:'Anticipo Ana + avance (45% RB)'},
+    {id:'as-32b',fuenteId:'f-sufi',proyecto:'novaeva',    categoria:'Anticipos',monto:171400, fecha:'2026-02-01',desc:'Anticipo Ana + avance (5% NV)'},
     /* ══════════════════════════════════════════════════════════════
        VENTA APARTAMENTO JUN 22 → $148M bruto / $4.274M disponible
        Fuente: spreadsheet conciliación 22 jun 2026
@@ -6406,17 +6402,15 @@ function rTesoreria(tab,detFuente){
       },
       {
         titulo:'🏦 $124,090,000 — Préstamo SUFI',
-        subtitulo:'Garantía Mercedes · Desembolsado Ene 2026',
+        subtitulo:'Garantía Mercedes · Ene 2026 · Nómina: 50% Weliving / 45% Robledo / 5% Novaeva',
         total: 124090000,
         color:'#8b5cf6',
         partes:[
-          {key:'robledo',   label:'Robledo (materiales)',     monto:26648100},
-          {key:'novaeva',   label:'Novaeva (materiales)',     monto:13515100},
-          {key:'weliving',  label:'Weliving (directa + TC/San Pío)',monto:20978000},
-          {key:'otros',     label:'La Playa alquiler',        monto: 5000000},
-          {key:'nominas',   label:'Anticipos empleados',      monto: 3434000},
-          {key:'otros',     label:'Administración general',   monto:49912400},
-          {key:'disponible',label:'SIN IDENTIFICAR',          monto: 4602400},
+          {key:'robledo',   label:'Robledo — materiales + nómina 45%', monto:50654280},
+          {key:'weliving',  label:'Weliving — materiales + nómina 50%',monto:47651200},
+          {key:'novaeva',   label:'Novaeva — materiales + nómina 5%',  monto:16182120},
+          {key:'otros',     label:'La Playa alquiler',                  monto: 5000000},
+          {key:'disponible',label:'SIN IDENTIFICAR',                    monto: 4602400},
         ]
       },
       {
