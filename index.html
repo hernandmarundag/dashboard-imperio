@@ -2865,15 +2865,9 @@ canvas{border-radius:4px}
           <input id="eg-etapa" class="inp" placeholder="Ej: Cimientos" style="width:100%">
         </label>
         <label>
-          <span class="lbl">Método de pago</span>
-          <select id="eg-mp" class="inp" style="width:100%">
-            <option value="">-- Método --</option>
-            <option>Efectivo</option>
-            <option>Transferencia</option>
-            <option>Nequi</option>
-            <option>Daviplata</option>
-            <option>Cheque</option>
-          </select>
+          <span class="lbl">Cuenta / Método de pago</span>
+          <input id="eg-mp" class="inp" list="dl-eg-mp" style="width:100%" placeholder="Ej: BCol Grupo, TC Paulina..." autocomplete="off">
+          <datalist id="dl-eg-mp"></datalist>
         </label>
         <label>
           <span class="lbl">Monto ($)</span>
@@ -5063,8 +5057,9 @@ function renderLedger(o) {
         +'<td style="white-space:nowrap;font-size:12px;font-weight:600;padding:7px 10px">'+fmtFecha(e.f)+'</td>'
         +'<td style="font-weight:700;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+(S.provMap&&S.provMap[e.a]?S.provMap[e.a]+' ↩':e.a)+'">'+((S.provMap&&S.provMap[e.a])||e.a)+'</td>'
         +'<td style="font-size:11px;color:var(--tx2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+(e.desc||'')+'">'+descTxt+'</td>'
+        +'<td style="padding:4px 8px;min-width:90px">'+ (function(){ var tNm={}; (S.tcs||[]).forEach(function(t){tNm[t.id]='💳 '+t.nm;}); var rawCta=e.ctaId||e.ctaCargo||''; var rawMet=e.metodoPago||''; var normCta=ACCT_ALIAS[(rawCta||'').toLowerCase().trim()]||cNm[rawCta]||rawCta; var normMet=ACCT_ALIAS[(rawMet||'').toLowerCase().trim()]||rawMet; var label=tNm[rawCta]||normCta||normMet||(e.mp&&e.mp.split('—').pop().trim())||'—'; var col=rawMet==='TC'||tNm[rawCta]?'#8b5cf6':rawMet==='Efectivo'?'#22c55e':'#3b82f6'; return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+col+'18;border-radius:6px;padding:2px 6px">'+label+'</span>'; })()+'</td>'
         +'<td style="padding:7px 10px"><span style="background:'+clr+'20;color:'+clr+';border:1px solid '+clr+'40;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">'+areaShort.toUpperCase()+'</span></td>'
-        +'<td style="padding:4px 8px;min-width:90px">'+ (function(){ var tNm={}; (S.tcs||[]).forEach(function(t){tNm[t.id]='💳 '+t.nm;}); var rawCta=e.ctaId||e.ctaCargo||''; var rawMet=e.metodoPago||''; var normCta=ACCT_ALIAS[(rawCta||'').toLowerCase().trim()]||cNm[rawCta]||rawCta; var normMet=ACCT_ALIAS[(rawMet||'').toLowerCase().trim()]||rawMet; var label=tNm[rawCta]||normCta||normMet||'—'; var col=rawMet==='TC'||tNm[rawCta]?'#8b5cf6':rawMet==='Efectivo'?'#22c55e':'#3b82f6'; return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+col+'18;border-radius:6px;padding:2px 6px">'+label+'</span>'; })()+'</td>'+'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
+        +'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
         +'<td style="padding:5px 6px"><div style="display:flex;gap:3px">'+editBtn+delBtn+'</div></td>'
         +'</tr>';
     });
@@ -5221,16 +5216,52 @@ function delGasto(o,id){
 }
 
 function delGastoSB(o, sbId){
-  if(!confirm('¿Eliminar este gasto de la base de datos?\n\nEsta acción no se puede deshacer.')) return;
+  // Buscar entry antes de eliminar para poder restaurar billetera
+  var entry = (LIVE[o]||[]).find(function(e){ return e.id === sbId; });
+  if(!entry) return;
+
+  var ctaId = entry.ctaId || '';
+  var monto = entry.monto || 0;
+  var isTC = ['p1','p2','p3','h1','h2','h3'].indexOf(ctaId) >= 0;
+  var cNm={'bc-grupo':'BCol Grupo','dv-lib':'Davivienda','bb-lib':'Banco Bogotá','bc-hernan':'BCol Hernán','bc-paulina':'BCol Paulina','wlt-emp':'Efectivo'};
+  var tNm={}; (S.tcs||[]).forEach(function(t){tNm[t.id]=t.nm;});
+  var ctaNombre = isTC ? ('TC: '+(tNm[ctaId]||ctaId)) : (cNm[ctaId]||ctaId);
+
+  // Solo preguntar por billetera si el ctaId es un account conocido (fue ingresado por el app)
+  var ctaConocida = isTC || !!cNm[ctaId];
+  var restaurar = false;
+  if(ctaConocida && monto > 0) {
+    restaurar = confirm('¿Eliminar este gasto de la base de datos?\n\n'
+      +'Monto: $'+monto.toLocaleString('es-CO')+'\n'
+      +'Cuenta: '+ctaNombre+'\n\n'
+      +'¿Devolver el monto a "'+ctaNombre+'"?\n'
+      +'(OK = sí devolver · Cancelar = solo borrar el registro)');
+  } else {
+    if(!confirm('¿Eliminar este gasto de la base de datos?\n\nEsta acción no se puede deshacer.')) return;
+  }
+
   fetch(SB_URL+'/rest/v1/gastos?id=eq.'+sbId, {
     method:'DELETE',
     headers: Object.assign({}, SB_H, {'Prefer':'return=minimal'})
   }).then(function(r){
     if(r.ok || r.status===204){
+      // Restaurar billetera si el usuario confirmó
+      if(restaurar && monto > 0) {
+        if(isTC){
+          var tc = S.tcs.find(function(x){ return x.id === ctaId; });
+          if(tc) tc.cupoUsado = Math.max(0, tc.cupoUsado - monto);
+        } else {
+          var cta = S.cuentas.find(function(x){ return x.id === ctaId; });
+          if(cta) {
+            var sal = cta.saldoReal !== undefined ? cta.saldoReal : (cta.saldo || 0);
+            cta.saldoReal = sal + monto;
+          }
+        }
+        saveS();
+      }
       // Remover de caché local
       if(LIVE[o]) LIVE[o] = LIVE[o].filter(function(e){ return e.id !== sbId; });
       renderLedger(o);
-      // Refrescar totales
       rBudgets(); rDesface();
     } else {
       r.text().then(function(t){ alert('Error eliminando ('+r.status+'): '+t.substring(0,200)); });
@@ -7722,6 +7753,19 @@ function saveGasto() {
 ═══════════════════════════════════════════════════ */
 var _editObra=null, _editId=null, _editSupabaseId=null;
 
+function _fillEgMpOpts() {
+  var dl = document.getElementById('dl-eg-mp'); if(!dl) return;
+  var opts = [];
+  // Cuentas bancarias
+  var cNm={'bc-grupo':'BCol Grupo — Grupo Imperio','dv-lib':'Davivienda — Libertad','bb-lib':'Banco Bogotá — Libertad','bc-hernan':'BCol Hernán 5583','bc-paulina':'BCol Paulina 6022','wlt-emp':'Efectivo caja'};
+  Object.values(cNm).forEach(function(l){ opts.push(l); });
+  // TCs
+  (S.tcs||[]).forEach(function(t){ opts.push('💳 TC: '+t.nm); });
+  // Predefinidos comunes
+  ['Efectivo','Nequi','Daviplata','Externo / Socio'].forEach(function(v){ if(opts.indexOf(v)<0) opts.push(v); });
+  dl.innerHTML = opts.map(function(v){ return '<option value="'+v.replace(/"/g,'&quot;')+'">'; }).join('');
+}
+
 function openEditGasto(obra, idOrNull, isDash, renderedIdx) {
   _editObra = obra;
   _editId = null;
@@ -7758,9 +7802,16 @@ function openEditGasto(obra, idOrNull, isDash, renderedIdx) {
   document.getElementById('eg-desc').value = entry.desc || '';
   document.getElementById('eg-area').value = entry.areaLabel || entry.area || '';
   document.getElementById('eg-etapa').value = entry.etapa || '';
-  document.getElementById('eg-mp').value = entry.mp || '';
+  // Mostrar billetera real: mp almacenado, o mapear ctaId a nombre legible
+  var _cNm={'bc-grupo':'BCol Grupo — Grupo Imperio','dv-lib':'Davivienda — Libertad','bb-lib':'Banco Bogotá — Libertad','bc-hernan':'BCol Hernán 5583','bc-paulina':'BCol Paulina 6022','wlt-emp':'Efectivo caja'};
+  var _tNm={}; (S.tcs||[]).forEach(function(t){_tNm[t.id]='💳 TC: '+t.nm;});
+  var storedMp = entry.mp || '';
+  var ctaId = entry.ctaId || '';
+  var mpDisplay = storedMp || _tNm[ctaId] || _cNm[ctaId] || ctaId || '';
+  document.getElementById('eg-mp').value = mpDisplay;
   document.getElementById('eg-monto').value = entry.monto || '';
   document.getElementById('eg-titulo').textContent = '✏️ Editar gasto';
+  _fillEgMpOpts();
   _refreshNombresDatalist();
   openOv('ov-edit-gasto');
 }
