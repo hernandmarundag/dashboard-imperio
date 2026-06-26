@@ -7016,17 +7016,40 @@ function rCronograma() {
     +'<span style="margin-left:12px">Clic en estado para actualizar</span>'
     +'</div>';
 
-  // ── Gantt header (month markers)
-  var months=['Jun 2026','Jul 2026','Ago 2026'];
-  var monthStarts=[new Date('2026-06-01'),new Date('2026-07-01'),new Date('2026-08-01')];
-  var monthLabels=monthStarts.map(function(ms,i){
-    var off=Math.max(0,Math.ceil((ms-PROJ_START)/86400000));
-    var pct=(off/TOTAL_DAYS*100).toFixed(1);
-    return '<span style="position:absolute;left:'+pct+'%;font-size:10px;font-weight:700;color:var(--tx3);white-space:nowrap;transform:translateX(-50%)">'+months[i]+'</span>';
-  }).join('');
+  // ── Gantt header: líneas de mes + marcadores semanales
+  // Generar lunes de cada semana dentro del proyecto
+  var weekMarkers=(function(){
+    var marks=[];
+    // Mes banners
+    var meses=['Jun','Jul','Ago','Sep'];
+    var mesStarts=[new Date('2026-06-01'),new Date('2026-07-01'),new Date('2026-08-01'),new Date('2026-09-01')];
+    var mesBanners=mesStarts.map(function(ms){
+      var off=Math.max(0,Math.ceil((ms-PROJ_START)/86400000));
+      var pct=(off/TOTAL_DAYS*100);
+      if(pct<0||pct>100) return '';
+      return '<div style="position:absolute;left:'+pct.toFixed(1)+'%;top:0;bottom:0;width:1px;background:rgba(99,102,241,.25);z-index:1"></div>'
+           + '<span style="position:absolute;left:'+pct.toFixed(1)+'%;top:0;font-size:9px;font-weight:800;color:#6366f1;white-space:nowrap;transform:translateX(2px)">'+meses[mesStarts.indexOf(ms)+0]+'</span>';
+    }).join('');
+    // Lunes de cada semana
+    var cur=new Date(PROJ_START.getFullYear(), PROJ_START.getMonth(), PROJ_START.getDate());
+    // Retroceder al lunes anterior si no es lunes
+    var wd=cur.getDay()||7; cur.setDate(cur.getDate()-(wd-1));
+    var weekLabels='';
+    while(cur<=PROJ_END){
+      var off=Math.ceil((cur-PROJ_START)/86400000);
+      var pct=(off/TOTAL_DAYS*100);
+      if(pct>=0&&pct<=103){
+        var d=cur.getDate(), m=cur.getMonth()+1;
+        var lbl=('0'+d).slice(-2)+'/'+(('0'+m).slice(-2));
+        weekLabels+='<span style="position:absolute;left:'+pct.toFixed(1)+'%;bottom:0;font-size:8.5px;font-weight:700;color:var(--tx3);white-space:nowrap;transform:translateX(-50%);z-index:2">'+lbl+'</span>';
+      }
+      cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+7);
+    }
+    return mesBanners+weekLabels;
+  })();
 
-  var ganttHdr='<div style="position:relative;height:22px;border-bottom:1px solid var(--br);margin-bottom:4px">'
-    +monthLabels+'</div>';
+  var ganttHdr='<div style="position:relative;height:28px;border-bottom:1px solid var(--br);margin-bottom:4px">'
+    +weekMarkers+'</div>';
 
   // ── Gantt rows
   function ganttRow(a,i){
@@ -7043,9 +7066,19 @@ function rCronograma() {
 
     return '<div style="display:grid;grid-template-columns:220px 110px 1fr 100px;align-items:center;gap:0;'
       +'border-bottom:1px solid var(--br);min-height:36px;'+(isToday?'background:rgba(99,102,241,.06)':'')+'">'
-      // Nombre actividad
-      +'<div style="padding:4px 8px;font-size:11px;font-weight:'+(a.estado==='completado'?'500':'700')+';color:'+(a.estado==='completado'?'var(--tx3)':'var(--tx1)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
-      +(a.estado==='completado'?'<span style="text-decoration:line-through">':'')+a.act+(a.estado==='completado'?'</span>':'')+'</div>'
+      // Nombre actividad + fechas fi→ff
+      +(function(){
+        var fi2=dDate(a.fi),ff2=dDate(a.ff);
+        var meses2=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        var fiStr=fi2.getDate()+' '+meses2[fi2.getMonth()];
+        var ffStr=ff2.getDate()+' '+meses2[ff2.getMonth()];
+        var nameStyle='font-size:11px;font-weight:'+(a.estado==='completado'?'500':'700')+';color:'+(a.estado==='completado'?'var(--tx3)':'var(--tx1)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        var dateStyle='font-size:9px;color:var(--tx3);font-weight:500;white-space:nowrap';
+        return '<div style="padding:3px 8px;display:flex;flex-direction:column;justify-content:center;min-width:0">'
+          +'<div style="'+nameStyle+'">'+(a.estado==='completado'?'<span style="text-decoration:line-through">':'')+a.act+(a.estado==='completado'?'</span>':'')+'</div>'
+          +'<div style="'+dateStyle+'">📅 '+fiStr+' → '+ffStr+'</div>'
+          +'</div>';
+      })()
       // Estado chip (clickable)
       +'<div style="padding:4px 6px">'
       +'<span onclick="lp_toggleEstado(\''+a.id+'\')" style="cursor:pointer;font-size:9px;font-weight:700;padding:3px 7px;border-radius:20px;white-space:nowrap;background:'+ec.bg+';color:'+ec.col+'">'
@@ -7054,11 +7087,24 @@ function rCronograma() {
       +'<div style="position:relative;height:100%;min-height:36px">'
       // Hoy line
       +(todayOffset>=0&&todayOffset<=TOTAL_DAYS?'<div style="position:absolute;left:'+todayPct+'%;top:0;bottom:0;width:2px;background:#ef4444;z-index:5;opacity:.7"></div>':'')
-      // Bar
-      +'<div style="position:absolute;left:'+leftPct+'%;width:'+widPct+'%;top:50%;transform:translateY(-50%);height:16px;border-radius:6px;'
-      +'background:'+col+';opacity:'+barOpacity+';display:flex;align-items:center;justify-content:center">'
-      +(a.avance>0&&a.avance<100?'<div style="position:absolute;left:0;top:0;bottom:0;width:'+a.avance+'%;background:rgba(255,255,255,.3);border-radius:6px 0 0 6px"></div>':'')
-      +'</div>'
+      // Bar + grid lines semanales
+      +(function(){
+        // Weekly grid lines (faint vertical)
+        var wgl='';
+        var wCur=new Date(PROJ_START.getFullYear(),PROJ_START.getMonth(),PROJ_START.getDate());
+        var wday=wCur.getDay()||7; wCur.setDate(wCur.getDate()-(wday-1));
+        while(wCur<=PROJ_END){
+          var wOff=Math.ceil((wCur-PROJ_START)/86400000);
+          var wPct=(wOff/TOTAL_DAYS*100);
+          if(wPct>=0&&wPct<=100) wgl+='<div style="position:absolute;left:'+wPct.toFixed(1)+'%;top:0;bottom:0;width:1px;background:rgba(148,163,184,.15);z-index:0"></div>';
+          wCur=new Date(wCur.getFullYear(),wCur.getMonth(),wCur.getDate()+7);
+        }
+        var avanceDiv=a.avance>0&&a.avance<100?'<div style="position:absolute;left:0;top:0;bottom:0;width:'+a.avance+'%;background:rgba(255,255,255,.3);border-radius:6px 0 0 6px"></div>':'';
+        return wgl+'<div style="position:absolute;left:'+leftPct+'%;width:'+widPct+'%;top:50%;transform:translateY(-50%);height:16px;border-radius:6px;z-index:2;'
+          +'background:'+col+';opacity:'+barOpacity+';display:flex;align-items:center;justify-content:center">'
+          +avanceDiv
+          +'</div>';
+      })()
       +'</div>'
       // Costo
       +'<div style="padding:4px 8px;text-align:right;font-size:10px;font-weight:700;color:var(--tx2)">'+fM(totalA)+'</div>'
