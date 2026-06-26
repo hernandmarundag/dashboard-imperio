@@ -7091,31 +7091,39 @@ function rCronograma() {
     var NOM_Q = 14425000; // quincenal Weliving
     var events = []; // {fecha, label, tipo, monto, actId}
 
+    var HOY_TP = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
     acts.forEach(function(a){
       var fi = dDate(a.fi);
       var TIPO_ICO = {acero:'🔩', encofrado:'🪚', vaciado:'🏗'};
       var ico = TIPO_ICO[a.tipo] || '🔨';
 
-      // Actividad misma
+      // Actividad misma (siempre visible, dimmed si pasó)
       events.push({fecha:fi, label: ico+' '+a.act,
                    tipo:'obra', monto:0, actId:a.id, estado:a.estado});
 
-      // Pago material
-      if(a.tipo==='acero' && !a.matPagado){
+      // Pago material — solo si NO pagado y fecha de pago >= HOY
+      if(a.matPagado) return; // ya pagado explícitamente
+      if(a.tipo==='acero'){
         var pd = new Date(fi.getTime()-12*86400000);
+        var pdN = new Date(pd.getFullYear(),pd.getMonth(),pd.getDate());
+        if(pdN < HOY_TP) return; // ya pagado
         events.push({fecha:pd, label:'💰 Pagar hierro — '+a.act,
                      tipo:'pago-mat', monto:a.mat, actId:a.id});
       } else if(a.tipo==='vaciado'){
         var pd2 = new Date(fi.getTime()-86400000);
+        var pd2N = new Date(pd2.getFullYear(),pd2.getMonth(),pd2.getDate());
+        if(pd2N < HOY_TP) return; // ya pagado
         events.push({fecha:pd2, label:'💰 Pagar concreto+bomba — '+a.act,
                      tipo:'pago-mat', monto:a.mat, actId:a.id});
       } else if(a.tipo==='encofrado'){
+        var pFi = new Date(fi.getFullYear(),fi.getMonth(),fi.getDate());
+        if(pFi < HOY_TP) return; // ya pagado
         events.push({fecha:fi, label:'💰 Pagar formaleta — '+a.act,
                      tipo:'pago-mat', monto:a.mat, actId:a.id});
       }
     });
 
-    // Nómina quincenales en el rango
+    // Nómina quincenales — solo futuras (>= HOY)
     var firstFi = acts.reduce(function(mn,a){var d=dDate(a.fi);return d<mn?d:mn;},dDate(acts[0].fi));
     var lastFf  = acts.reduce(function(mx,a){var d=dDate(a.ff);return d>mx?d:mx;},dDate(acts[0].ff));
     var cur = new Date(firstFi.getFullYear(), firstFi.getMonth(), 1);
@@ -7124,7 +7132,8 @@ function rCronograma() {
       var d15 = new Date(y,m,15);
       var d30 = new Date(y,m+1,0);
       [d15,d30].forEach(function(pd){
-        if(pd>=firstFi && pd<=lastFf)
+        var pdN=new Date(pd.getFullYear(),pd.getMonth(),pd.getDate());
+        if(pdN >= HOY_TP && pd <= lastFf)
           events.push({fecha:pd, label:'💸 Nómina quincenal Weliving',
                        tipo:'nomina', monto:NOM_Q});
       });
@@ -7240,25 +7249,27 @@ function rCronograma() {
       weekFlowMap[wk].label=('0'+mon.getDate()).slice(-2)+'/'+(('0'+(mon.getMonth()+1)).slice(-2));
     }
   }
+  var HOY = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
   acts.forEach(function(a){
+    if(a.matPagado) return; // ya pagado explícitamente
     var fi=dDate(a.fi),ff=dDate(a.ff);
-    var dur=Math.ceil((ff-fi)/86400000)+1;
     if(a.tipo==='acero'){
-      // Acero: pagar 12 días hábiles antes del amarre (skip si ya pagado)
-      if(!a.matPagado){
-        var pagoDia=new Date(fi.getTime()-12*86400000);
-        addToWeek(pagoDia,a.mat,0);
-      }
+      var pagoDia=new Date(fi.getTime()-12*86400000);
+      pagoDia=new Date(pagoDia.getFullYear(),pagoDia.getMonth(),pagoDia.getDate());
+      if(pagoDia < HOY) return; // ya pagado (fecha pasada)
+      addToWeek(pagoDia,a.mat,0);
     } else if(a.tipo==='vaciado'){
-      // Concreto + bomba: pagar 1 día antes del vaciado
       var diaConcreto=new Date(fi.getTime()-86400000);
+      diaConcreto=new Date(diaConcreto.getFullYear(),diaConcreto.getMonth(),diaConcreto.getDate());
+      if(diaConcreto < HOY) return; // ya pagado
       addToWeek(diaConcreto,a.mat,0);
     } else {
-      // Encofrado (formaleta): pagar al inicio
+      // Encofrado (formaleta): pagar al inicio de la actividad
+      var pFi=new Date(fi.getFullYear(),fi.getMonth(),fi.getDate());
+      if(pFi < HOY) return; // ya pagado
       addToWeek(fi,a.mat,0);
     }
-    // Nómina APU: se mantiene como referencia en tabla pero NO va al flujo de caja
-    // (reemplazada por nómina real quincenal abajo)
+    // Nómina APU: reemplazada por nómina real quincenal abajo
   });
 
   /* ── Nómina real quincenal Weliving ──────────────────────────────────
@@ -7279,7 +7290,8 @@ function rCronograma() {
       var d15  = new Date(y, m, 15);
       var d30  = new Date(y, m+1, 0); // último día del mes
       [d15, d30].forEach(function(pd){
-        if(pd >= firstFi && pd <= lastFf) addToWeek(pd, 0, NOM_WL_QUINCENAL);
+        var pdN=new Date(pd.getFullYear(),pd.getMonth(),pd.getDate());
+        if(pdN >= HOY && pd <= lastFf) addToWeek(pd, 0, NOM_WL_QUINCENAL);
       });
       cur = new Date(y, m+1, 1);
     }
