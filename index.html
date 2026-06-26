@@ -2563,6 +2563,7 @@ canvas{border-radius:4px}
 <div class="bn-more-panel" id="bn-more-panel">
   <div class="bn-more-grid">
     <div class="bn-more-item" onclick="gotoViewMobile('analisis');toggleMorePanel()"><span class="bn-more-ico">📈</span><span class="bn-more-lbl">Análisis</span></div>
+    <div class="bn-more-item" onclick="gotoViewMobile('tesoreria');toggleMorePanel()"><span class="bn-more-ico">💎</span><span class="bn-more-lbl">Tesorería</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('cobrar');toggleMorePanel()"><span class="bn-more-ico">💰</span><span class="bn-more-lbl">Cobrar</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Abonos</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('plan');toggleMorePanel()"><span class="bn-more-ico">📋</span><span class="bn-more-lbl">Plan</span></div>
@@ -2585,6 +2586,7 @@ canvas{border-radius:4px}
     <div class="sb-sect">Finanzas</div>
     <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
     <div class="ni" data-v="flujo" onclick="gotoView('flujo')"><span class="ni-ico">💸</span><span>Flujo & Pagos</span><span class="ni-b" id="badge-pagos"></span></div>
+    <div class="ni" data-v="tesoreria" onclick="gotoView('tesoreria')"><span class="ni-ico">💎</span><span>Tesorería</span></div>
     <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobrar</span></div>
     <div class="sb-sect">Análisis</div>
     <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
@@ -2664,6 +2666,9 @@ canvas{border-radius:4px}
   
   <div class="view" id="v-plan">
     <div id="plan-content"></div>
+  </div>
+  <div class="view" id="v-tesoreria">
+    <div id="tesoreria-content"></div>
   </div>
   <div class="view" id="v-cobrar">
     <div id="cobrar-content"></div>
@@ -3313,6 +3318,64 @@ const DEF = {
     {id:'p1',nombre:'Mercedes Benz (SUFI)',concepto:'Préstamo sobre vehículo — entró a cuentas y se pagaron gastos operativos',monto:125000000,fecha:'2026-01-01',estado:'vigente',tipo:'banco',cuota:0,notas:'Conciliado en libro contable. Garantía: carro Mercedes.'},
     {id:'p2',nombre:'Mamá — Puerta',concepto:'Préstamo familiar para puerta / obra — ya desembolsado y gastado',monto:50000000,fecha:'2026-01-01',estado:'vigente',tipo:'familiar',cuota:0,notas:'Registrado en libro contable. Sin fecha fija de pago.'},
   ],
+  /* ══ TESORERÍA: FUENTES DE FONDOS ══════════════════════════════ */
+  fuentes:[
+    {id:'f-sufi',   nombre:'Préstamo SUFI',          tipo:'prestamo', montoInicial:124090000, fecha:'2026-01-01',proyecto:'—',    color:'#8b5cf6',notas:'Garantía: vehículo Mercedes. Desembolso Banco de Bogotá.'},
+    {id:'f-wl9',    nombre:'Clientes Weliving Jun 9', tipo:'cliente',  montoInicial:110000000, fecha:'2026-06-09',proyecto:'weliving', color:'#6366f1',notas:'Abono socios — ingresó a Bancolombia Grupo.'},
+    {id:'f-rb9',    nombre:'Clientes Robledo Jun 9',  tipo:'cliente',  montoInicial:145000000, fecha:'2026-06-09',proyecto:'robledo',  color:'#10b981',notas:'Abono Yulied Morales — ingresó a Bancolombia Grupo.'},
+    {id:'f-nv9',    nombre:'Novaeva Jun 9',            tipo:'cliente',  montoInicial:20000000,  fecha:'2026-06-09',proyecto:'novaeva',  color:'#f59e0b',notas:'Abono cliente Novaeva.'},
+    {id:'f-apt',    nombre:'Venta Apartamento Jun 22', tipo:'venta',    montoInicial:79490000,  fecha:'2026-06-22',proyecto:'—',    color:'#ef4444',notas:'Venta neta después de hipoteca nana ($16M), intereses ($22.5M), comisión agencia ($17.957M). Total bruto $148M.'},
+    {id:'f-mama',   nombre:'Mamá — Puerta',            tipo:'prestamo', montoInicial:50000000,  fecha:'2026-05-01',proyecto:'—',    color:'#ec4899',notas:'Préstamo familiar. Sin cuotas fijas. Registrado en libro contable.'},
+  ],
+  /* ══ TESORERÍA: ASIGNACIONES (con qué dinero se pagó qué) ══════ */
+  asignaciones:[
+    /* ── SUFI → ROBLEDO ($26,648,100) ── */
+    {id:'as-01',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Materiales',monto:22110000,fecha:'2026-02-01',desc:'Concreto losa Robledo'},
+    {id:'as-02',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Materiales',monto:2725100, fecha:'2026-02-01',desc:'Concreto ajuste Robledo'},
+    {id:'as-03',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Varios',    monto:1300000, fecha:'2026-02-01',desc:'Tránsito Robledo'},
+    {id:'as-04',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Herramientas',monto:345000,fecha:'2026-02-01',desc:'Arreglo vibrador'},
+    {id:'as-05',fuenteId:'f-sufi',proyecto:'robledo',     categoria:'Materiales',monto:168000,  fecha:'2026-02-01',desc:'Cañas y clavo Robledo'},
+    /* ── SUFI → NOVAEVA ($13,515,100) ── */
+    {id:'as-06',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Materiales',monto:4726000, fecha:'2026-05-28',desc:'Madecentro — piso Novaeva'},
+    {id:'as-07',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Materiales',monto:606200,  fecha:'2026-02-01',desc:'Hidrosanitario Novaeva'},
+    {id:'as-08',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Materiales',monto:70000,   fecha:'2026-02-01',desc:'Arena Novaeva'},
+    {id:'as-09',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Varios',    monto:100000,  fecha:'2026-02-01',desc:'Transporte empleados Novaeva'},
+    {id:'as-10',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Materiales',monto:994900,  fecha:'2026-02-01',desc:'Arena y revoque Novaeva'},
+    {id:'as-11',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Materiales',monto:6470000, fecha:'2026-06-01',desc:'Remodelarte — piso Novaeva'},
+    {id:'as-12',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'MO',        monto:490000,  fecha:'2026-06-01',desc:'José Alberto — transporte y escombros'},
+    {id:'as-13',fuenteId:'f-sufi',proyecto:'novaeva',     categoria:'Varios',    monto:58000,   fecha:'2026-02-01',desc:'Gasto menor Novaeva'},
+    /* ── SUFI → WELIVING ($3,778,000) ── */
+    {id:'as-14',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Materiales',monto:2093000, fecha:'2026-02-01',desc:'Depósito Botero Weliving'},
+    {id:'as-15',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Materiales',monto:1685000, fecha:'2026-02-01',desc:'Suministros epóxica Weliving'},
+    /* ── SUFI → WELIVING vía TC ($17,200,000) ── */
+    {id:'as-16',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Materiales',monto:6000000, fecha:'2026-02-01',desc:'San Pío — pago TC Paulina → Weliving'},
+    {id:'as-17',fuenteId:'f-sufi',proyecto:'weliving',    categoria:'Materiales',monto:11200000,fecha:'2026-02-01',desc:'San Pío — pago TC Hernán → Weliving'},
+    /* ── SUFI → LA PLAYA ($5,000,000) ── */
+    {id:'as-18',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Alquiler',monto:5000000, fecha:'2026-02-01',desc:'Abono alquiler La Playa'},
+    /* ── SUFI → ADMINISTRACIÓN ($49,912,400) ── */
+    {id:'as-19',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:24050000,fecha:'2026-02-01',desc:'Nómina general'},
+    {id:'as-20',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Seguridad social',monto:10133000,fecha:'2026-04-01',desc:'Seguridad social abril'},
+    {id:'as-21',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Impuestos',monto:2835000,fecha:'2026-02-01',desc:'Impuestos Imperio'},
+    {id:'as-22',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:3125000, fecha:'2026-02-01',desc:'Nómina Hernán'},
+    {id:'as-23',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:2373000, fecha:'2026-02-01',desc:'Nómina Lina'},
+    {id:'as-24',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:1500000, fecha:'2026-02-01',desc:'Puerta nómina'},
+    {id:'as-25',fuenteId:'f-sufi',proyecto:'administracion',categoria:'SISO',    monto:1000000, fecha:'2026-02-01',desc:'SISO'},
+    {id:'as-26',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Varios',  monto:1000000, fecha:'2026-02-01',desc:'Cuenta Hernán'},
+    {id:'as-27',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Varios',  monto:700000,  fecha:'2026-02-01',desc:'Porones'},
+    {id:'as-28',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Nómina',  monto:37400,   fecha:'2026-02-01',desc:'Diferencia planilla'},
+    {id:'as-29',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Impuestos',monto:59000,  fecha:'2026-02-01',desc:'4x1000'},
+    {id:'as-30',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Varios',  monto:3100000, fecha:'2026-02-01',desc:'Pago deuda empresa con la casa'},
+    /* ── SUFI → ANTICIPOS ($3,434,000) ── */
+    {id:'as-31',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Anticipos',monto:2434000,fecha:'2026-02-01',desc:'Anticipo Ana'},
+    {id:'as-32',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Anticipos',monto:1000000,fecha:'2026-02-01',desc:'Avance adicional'},
+    /* ── VENTA APT → WELIVING ($20,000,000) ── */
+    {id:'as-33',fuenteId:'f-apt', proyecto:'weliving',    categoria:'Materiales',monto:20000000,fecha:'2026-06-22',desc:'Concreto losa P4 — financiado con venta apartamento'},
+    /* ── MAMÁ PUERTA → VARIOS ($50,000,000 total — Mayo 2026) ── */
+    /* Nota: registrar asignaciones reales a medida que se concilien */
+    {id:'as-m1',fuenteId:'f-mama',proyecto:'weliving',     categoria:'Materiales',monto:15000000,fecha:'2026-05-01',desc:'Materiales Weliving — préstamo Mamá mayo'},
+    {id:'as-m2',fuenteId:'f-mama',proyecto:'robledo',      categoria:'Materiales',monto:10000000,fecha:'2026-05-01',desc:'Materiales Robledo — préstamo Mamá mayo'},
+    {id:'as-m3',fuenteId:'f-mama',proyecto:'administracion',categoria:'Varios',   monto:25000000,fecha:'2026-05-01',desc:'Gastos administración/operación — préstamo Mamá mayo (pendiente conciliar)'},
+  ],
   hist:{weliving:[],robledo:[],novaeva:[]},
   abonos:[
     // ── NOVAEVA (4 abonos) ──────────────────────────────────────────────────
@@ -3379,6 +3442,8 @@ function loadS() {
   if (!S.deudores)  S.deudores  = JSON.parse(JSON.stringify(DEF.deudores));
   if (!S.pasivos)   S.pasivos   = JSON.parse(JSON.stringify(DEF.pasivos));
   if (!S.provMap)   S.provMap   = {};  // {rawName: canonicalName} — normalización de proveedores
+  if (!S.fuentes)   S.fuentes   = JSON.parse(JSON.stringify(DEF.fuentes));
+  if (!S.asignaciones) S.asignaciones = JSON.parse(JSON.stringify(DEF.asignaciones));
   // Fusionar nuevos DEF.pagos que no existan en S.pagos ni hayan sido borrados/pagados por el usuario
   var existIds = S.pagos.map(function(p){return p.id;}).concat(S.pagosPaid);
   DEF.pagos.forEach(function(p){ if(existIds.indexOf(p.id)===-1){ S.pagos.push(JSON.parse(JSON.stringify(p))); } });
@@ -3648,6 +3713,7 @@ function renderView(v, skipHistory) {
   else if (v === 'flujo')   { rFlujo(); }
   else if (v === 'pagos')   { rPagos(); }
   else if (v === 'plan')    { rPlan(); }
+  else if (v === 'tesoreria'){ rTesoreria(); }
   else if (v === 'cobrar')  { rCobrar(); }
   else if (v === 'analisis'){ rAnalisis(); }
   else if (v === 'abonos')  { rAbonos(); }
@@ -5981,6 +6047,353 @@ function kpiMini(val,lbl,col){
     +'<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-top:2px">'+lbl+'</div>'
     +'</div>';
 }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   TESORERÍA INTELIGENTE — trazabilidad de fondos por fuente
+════════════════════════════════════════════════════════════════════ */
+function _tsrSaldoFuente(fId){
+  var f=(S.fuentes||[]).find(function(x){return x.id===fId;});
+  if(!f) return 0;
+  var usado=_tsrAsigByFuente(fId).reduce(function(s,a){return s+(a.monto||0);},0);
+  return f.montoInicial - usado;
+}
+function _tsrAsigByFuente(fId){
+  return (S.asignaciones||[]).filter(function(a){return a.fuenteId===fId;});
+}
+function _tsrAsigByProyecto(proy){
+  return (S.asignaciones||[]).filter(function(a){return a.proyecto===proy;});
+}
+
+function rTesoreria(tab,detFuente){
+  var el=document.getElementById('tesoreria-content'); if(!el) return;
+  if(!S.fuentes)      S.fuentes      = JSON.parse(JSON.stringify(DEF.fuentes));
+  if(!S.asignaciones) S.asignaciones = JSON.parse(JSON.stringify(DEF.asignaciones));
+  tab = tab || window._tsrTab || 'fuentes';
+  window._tsrTab = tab;
+  if(detFuente !== undefined) window._tsrDet = detFuente;
+  else if(tab !== 'fuentes')  window._tsrDet = undefined;
+  var showDet = window._tsrDet;
+
+  var fM2=function(n){
+    return n>=1e9?'$'+(n/1e9).toFixed(2)+'B'
+          :n>=1e6?'$'+(n/1e6).toFixed(1)+'M'
+          :n>=1e3?'$'+(n/1e3).toFixed(0)+'K'
+          :'$'+n;
+  };
+
+  var fuentes    = S.fuentes      || [];
+  var asigs      = S.asignaciones || [];
+  var totalIni   = fuentes.reduce(function(s,f){return s+f.montoInicial;},0);
+  var totalAsig  = asigs.reduce(function(s,a){return s+(a.monto||0);},0);
+  var totalDisp  = totalIni - totalAsig;
+  var pctGlobal  = totalIni>0 ? Math.round(totalAsig/totalIni*100) : 0;
+
+  var TIPO_ICO = {prestamo:'🏦',cliente:'💼',venta:'🏠',socio:'🤝',otro:'📄'};
+  var PROY_COL = {weliving:'#6366f1',robledo:'#10b981',novaeva:'#f59e0b',administracion:'#8b5cf6',otro:'#6b7280'};
+  var PROY_NM  = {weliving:'Weliving',robledo:'Robledo',novaeva:'Novaeva',administracion:'Admin/General',otro:'Otro'};
+
+  /* ─── HEADER GLOBAL ─── */
+  var header =
+    '<div style="background:linear-gradient(135deg,#1e1b4b,#312e81,#4338ca);border-radius:16px;padding:20px 22px;margin-bottom:14px;color:#fff">'
+   +'<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#a5b4fc;margin-bottom:8px">💎 TESORERÍA INTELIGENTE — TRAZABILIDAD DE FONDOS</div>'
+   +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center">'
+   +'<div style="font-size:10px;color:#a5b4fc;font-weight:700;margin-bottom:4px">TOTAL RECURSOS</div>'
+   +'<div style="font-size:18px;font-weight:900">'+fM2(totalIni)+'</div>'
+   +'</div>'
+   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center">'
+   +'<div style="font-size:10px;color:#fca5a5;font-weight:700;margin-bottom:4px">ASIGNADO</div>'
+   +'<div style="font-size:18px;font-weight:900;color:#fca5a5">'+fM2(totalAsig)+'</div>'
+   +'</div>'
+   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center">'
+   +'<div style="font-size:10px;color:#86efac;font-weight:700;margin-bottom:4px">DISPONIBLE</div>'
+   +'<div style="font-size:18px;font-weight:900;color:#86efac">'+fM2(totalDisp)+'</div>'
+   +'</div>'
+   +'</div>'
+   +'<div style="background:rgba(255,255,255,.15);border-radius:8px;height:8px;overflow:hidden">'
+   +'<div style="height:100%;border-radius:8px;background:linear-gradient(90deg,#ef4444,#f59e0b);width:'+pctGlobal+'%;transition:.4s"></div>'
+   +'</div>'
+   +'<div style="font-size:10px;color:#a5b4fc;margin-top:5px;text-align:right">'+pctGlobal+'% de fondos rastreado</div>'
+   +'</div>';
+
+  /* ─── TABS ─── */
+  var tabs =
+    '<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">'
+   +[['fuentes','🏛 Fuentes'],['proyectos','📊 Proyectos'],['flujo','🔀 Flujo']]
+    .map(function(t){
+      var a=tab===t[0];
+      return '<button onclick="rTesoreria(\''+t[0]+'\',undefined)" style="padding:8px 16px;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer;'
+        +(a?'background:#6366f1;color:#fff':'background:var(--sf2);color:var(--tx2)')+'">'+t[1]+'</button>';
+    }).join('')
+   +'<button onclick="openNuevaFuente()" style="margin-left:auto;padding:8px 14px;border-radius:10px;border:2px dashed rgba(99,102,241,.4);background:transparent;color:#6366f1;font-size:12px;font-weight:800;cursor:pointer">+ Fuente</button>'
+   +'</div>';
+
+  var body = '';
+
+  /* ══════════════════════════════════════════════════
+     TAB: FUENTES
+  ══════════════════════════════════════════════════ */
+  if(tab === 'fuentes'){
+
+    /* ── DETALLE FUENTE ── */
+    if(showDet !== undefined){
+      var f = fuentes[showDet];
+      if(f){
+        var fAsigs = _tsrAsigByFuente(f.id);
+        var fUsado = fAsigs.reduce(function(s,a){return s+(a.monto||0);},0);
+        var fDisp  = f.montoInicial - fUsado;
+        var fPct   = f.montoInicial>0 ? Math.round(fUsado/f.montoInicial*100) : 0;
+        /* por proyecto */
+        var byProy = {};
+        fAsigs.forEach(function(a){byProy[a.proyecto]=(byProy[a.proyecto]||0)+a.monto;});
+        var proyList = Object.keys(byProy).sort(function(a,b){return byProy[b]-byProy[a];});
+
+        body =
+          '<button onclick="window._tsrDet=undefined;rTesoreria(\'fuentes\')" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid var(--br);background:var(--sf2);color:var(--tx);font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">← Volver</button>'
+         +'<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);overflow:hidden;margin-bottom:12px">'
+         +'<div style="background:'+f.color+';padding:16px 18px;color:#fff">'
+         +'<div style="font-size:10px;font-weight:800;letter-spacing:1px;opacity:.8;margin-bottom:4px">'+TIPO_ICO[f.tipo]+' '+(f.tipo||'').toUpperCase()+'</div>'
+         +'<div style="font-size:18px;font-weight:900;margin-bottom:2px">'+f.nombre+'</div>'
+         +'<div style="font-size:11px;opacity:.8">📅 '+f.fecha+'</div>'
+         +'</div>'
+         +'<div style="padding:14px 18px">'
+         +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">'
+         +'<div style="text-align:center"><div style="font-size:14px;font-weight:900">'+fM2(f.montoInicial)+'</div><div style="font-size:9px;color:var(--tx3);font-weight:700">INICIAL</div></div>'
+         +'<div style="text-align:center"><div style="font-size:14px;font-weight:900;color:#ef4444">'+fM2(fUsado)+'</div><div style="font-size:9px;color:var(--tx3);font-weight:700">ASIGNADO</div></div>'
+         +'<div style="text-align:center"><div style="font-size:14px;font-weight:900;color:#22c55e">'+fM2(fDisp)+'</div><div style="font-size:9px;color:var(--tx3);font-weight:700">DISPONIBLE</div></div>'
+         +'</div>'
+         +'<div style="background:var(--sf2);border-radius:8px;height:8px;overflow:hidden;margin-bottom:12px">'
+         +'<div style="height:100%;border-radius:8px;background:'+f.color+';width:'+fPct+'%"></div>'
+         +'</div>'
+         +(f.notas?'<div style="font-size:10px;color:var(--tx2);background:var(--sf2);border-radius:8px;padding:8px 10px;margin-bottom:12px">📝 '+f.notas+'</div>':'')
+         +(proyList.length?
+            '<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Distribución por proyecto</div>'
+           +proyList.map(function(p){
+              var m=byProy[p]; var pp=f.montoInicial>0?Math.round(m/f.montoInicial*100):0;
+              var col=PROY_COL[p]||'#6b7280';
+              return '<div style="margin-bottom:8px">'
+                +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
+                +'<span style="font-weight:700;color:'+col+'">'+(PROY_NM[p]||p)+'</span>'
+                +'<span style="font-weight:800">'+fM2(m)+' <span style="color:var(--tx3)">('+pp+'%)</span></span>'
+                +'</div>'
+                +'<div style="background:var(--sf2);border-radius:4px;height:5px;overflow:hidden">'
+                +'<div style="height:100%;border-radius:4px;background:'+col+';width:'+pp+'%"></div>'
+                +'</div></div>';
+           }).join('')
+          :'')
+         +'</div>'
+         +'</div>'
+         /* tabla asignaciones */
+         +'<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);overflow:hidden">'
+         +'<div style="padding:12px 16px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center">'
+         +'<div style="font-size:12px;font-weight:800;color:var(--tx)">📋 Asignaciones ('+fAsigs.length+')</div>'
+         +'<button onclick="openNuevaAsignacion(\''+f.id+'\')" style="padding:5px 12px;border-radius:8px;border:none;background:#6366f1;color:#fff;font-size:11px;font-weight:700;cursor:pointer">+ Asignar</button>'
+         +'</div>'
+         +(fAsigs.length===0
+           ? '<div style="padding:24px;text-align:center;color:var(--tx2);font-size:12px">Sin asignaciones todavía</div>'
+           : '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:360px">'
+            +'<thead><tr style="background:var(--sf2)">'
+            +'<th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--tx3);font-weight:800">PROYECTO</th>'
+            +'<th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--tx3);font-weight:800">DESCRIPCIÓN</th>'
+            +'<th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--tx3);font-weight:800">CATEG.</th>'
+            +'<th style="padding:6px 10px;text-align:right;font-size:9px;color:var(--tx3);font-weight:800">MONTO</th>'
+            +'<th style="padding:6px 4px;width:40px"></th>'
+            +'</tr></thead><tbody>'
+            +fAsigs.slice().sort(function(a,b){return (b.monto||0)-(a.monto||0);}).map(function(a){
+              var col=PROY_COL[a.proyecto]||'#6b7280';
+              return '<tr style="border-bottom:1px solid var(--br)">'
+                +'<td style="padding:7px 10px"><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+col+'20;color:'+col+'">'+(PROY_NM[a.proyecto]||a.proyecto)+'</span></td>'
+                +'<td style="padding:7px 10px;font-size:11px;color:var(--tx)">'+a.desc+'</td>'
+                +'<td style="padding:7px 10px;font-size:10px;color:var(--tx2)">'+a.categoria+'</td>'
+                +'<td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:var(--tx)">'+fM2(a.monto)+'</td>'
+                +'<td style="padding:4px 6px;text-align:center">'
+                +'<button onclick="deleteAsig(\''+a.id+'\')" style="padding:3px 7px;border-radius:6px;border:none;background:rgba(239,68,68,.12);color:#ef4444;font-size:10px;cursor:pointer">✕</button>'
+                +'</td></tr>';
+            }).join('')
+            +'</tbody></table></div>')
+         +'</div>';
+
+        el.innerHTML = header + tabs + body;
+        return;
+      }
+    }
+
+    /* ── LISTA DE FUENTES ── */
+    body = fuentes.map(function(f,fi){
+      var fAsigs = _tsrAsigByFuente(f.id);
+      var fUsado = fAsigs.reduce(function(s,a){return s+(a.monto||0);},0);
+      var fDisp  = f.montoInicial - fUsado;
+      var fPct   = f.montoInicial>0 ? Math.round(fUsado/f.montoInicial*100) : 0;
+      var byProy = {};
+      fAsigs.forEach(function(a){byProy[a.proyecto]=(byProy[a.proyecto]||0)+a.monto;});
+      var pills = Object.keys(byProy).sort(function(a,b){return byProy[b]-byProy[a];}).slice(0,3).map(function(p){
+        var col=PROY_COL[p]||'#6b7280';
+        return '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:'+col+'20;color:'+col+';margin-right:3px">'+(PROY_NM[p]||p)+' '+fM2(byProy[p])+'</span>';
+      }).join('');
+      return '<div onclick="rTesoreria(\'fuentes\','+fi+')" style="background:var(--sf);border-radius:14px;border-left:4px solid '+f.color+';padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh);cursor:pointer">'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">'
+        +'<div style="min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">'
+        +'<span style="font-size:15px">'+TIPO_ICO[f.tipo]+'</span>'
+        +'<span style="font-size:14px;font-weight:800;color:var(--tx)">'+f.nombre+'</span>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--tx3)">📅 '+f.fecha+' · '+(f.tipo||'').toUpperCase()+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-size:10px;color:var(--tx3);font-weight:700">INICIAL</div>'
+        +'<div style="font-size:14px;font-weight:900;color:var(--tx)">'+fM2(f.montoInicial)+'</div>'
+        +'</div>'
+        +'</div>'
+        +'<div style="background:var(--sf2);border-radius:6px;height:8px;overflow:hidden;margin-bottom:8px">'
+        +'<div style="height:100%;border-radius:6px;background:'+f.color+';width:'+fPct+'%;transition:.4s"></div>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'
+        +'<div style="font-size:10px;color:var(--tx3)">'
+        +'<span style="color:#ef4444;font-weight:700">'+fM2(fUsado)+'</span> asignado · '
+        +'<span style="color:#22c55e;font-weight:700">'+fM2(fDisp)+'</span> disponible · '
+        +'<span>'+fPct+'%</span>'
+        +'</div>'
+        +'<div>'+pills+'</div>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+
+  /* ══════════════════════════════════════════════════
+     TAB: POR PROYECTO
+  ══════════════════════════════════════════════════ */
+  } else if(tab === 'proyectos'){
+    var PROYECTOS = ['weliving','robledo','novaeva','administracion','otro'];
+    body = PROYECTOS.map(function(p){
+      var pAsigs = _tsrAsigByProyecto(p);
+      var pTotal = pAsigs.reduce(function(s,a){return s+(a.monto||0);},0);
+      if(pTotal === 0) return '';
+      var col    = PROY_COL[p]||'#6b7280';
+      var byF    = {};
+      pAsigs.forEach(function(a){byF[a.fuenteId]=(byF[a.fuenteId]||0)+a.monto;});
+      var fList  = Object.keys(byF).sort(function(a,b){return byF[b]-byF[a];});
+      return '<div style="background:var(--sf);border-radius:14px;border-left:4px solid '+col+';padding:14px 16px;margin-bottom:12px;box-shadow:var(--sh)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+        +'<span style="font-size:15px;font-weight:900;color:'+col+'">'+(PROY_NM[p]||p)+'</span>'
+        +'<span style="font-size:16px;font-weight:900;color:var(--tx)">'+fM2(pTotal)+'</span>'
+        +'</div>'
+        +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Financiado por:</div>'
+        +fList.map(function(fId){
+          var src=(S.fuentes||[]).find(function(x){return x.id===fId;});
+          if(!src) return '';
+          var m=byF[fId]; var pp=pTotal>0?Math.round(m/pTotal*100):0;
+          return '<div style="margin-bottom:8px">'
+            +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
+            +'<span style="font-weight:700;color:'+src.color+'">'+TIPO_ICO[src.tipo]+' '+src.nombre+'</span>'
+            +'<span style="font-weight:800">'+fM2(m)+' ('+pp+'%)</span>'
+            +'</div>'
+            +'<div style="background:var(--sf2);border-radius:4px;height:5px;overflow:hidden">'
+            +'<div style="height:100%;border-radius:4px;background:'+src.color+';width:'+pp+'%"></div>'
+            +'</div></div>';
+        }).join('')
+        +'</div>';
+    }).join('');
+
+  /* ══════════════════════════════════════════════════
+     TAB: FLUJO (matriz origen→destino)
+  ══════════════════════════════════════════════════ */
+  } else if(tab === 'flujo'){
+    var COLS_P = ['weliving','robledo','novaeva','administracion','otro'];
+    var matrix = {};
+    asigs.forEach(function(a){
+      if(!matrix[a.fuenteId]) matrix[a.fuenteId]={};
+      matrix[a.fuenteId][a.proyecto]=(matrix[a.fuenteId][a.proyecto]||0)+a.monto;
+    });
+
+    body =
+      '<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);overflow:hidden;margin-bottom:14px">'
+     +'<div style="padding:12px 16px;border-bottom:1px solid var(--br);font-size:12px;font-weight:800;color:var(--tx)">🔀 Matriz de Flujo — Origen → Destino</div>'
+     +'<div style="overflow-x:auto">'
+     +'<table style="width:100%;border-collapse:collapse;min-width:520px">'
+     +'<thead><tr style="background:var(--sf2)">'
+     +'<th style="padding:8px 12px;text-align:left;font-size:10px;color:var(--tx3);font-weight:800;min-width:130px">FUENTE</th>'
+     +COLS_P.map(function(p){var c=PROY_COL[p]||'#6b7280';return '<th style="padding:8px 8px;text-align:center;font-size:10px;color:'+c+';font-weight:800">'+(PROY_NM[p]||p)+'</th>';}).join('')
+     +'<th style="padding:8px 8px;text-align:right;font-size:10px;color:#ef4444;font-weight:800">ASIG.</th>'
+     +'<th style="padding:8px 8px;text-align:right;font-size:10px;color:#22c55e;font-weight:800">DISP.</th>'
+     +'</tr></thead><tbody>'
+     +fuentes.map(function(f){
+       var fU=_tsrAsigByFuente(f.id).reduce(function(s,a){return s+(a.monto||0);},0);
+       var fD=f.montoInicial-fU;
+       return '<tr style="border-bottom:1px solid var(--br)">'
+         +'<td style="padding:8px 12px"><div style="font-size:11px;font-weight:800;color:'+f.color+'">'+f.nombre+'</div>'
+         +'<div style="font-size:9px;color:var(--tx3)">'+fM2(f.montoInicial)+' inicial</div></td>'
+         +COLS_P.map(function(p){
+           var m=(matrix[f.id]&&matrix[f.id][p])||0;
+           var c=PROY_COL[p]||'#6b7280';
+           return '<td style="padding:8px;text-align:center;font-size:11px;font-weight:'+(m?'800':'400')+';color:'+(m?c:'var(--tx3)')+'">'+( m ? fM2(m) : '—')+'</td>';
+         }).join('')
+         +'<td style="padding:8px;text-align:right;font-size:11px;font-weight:800;color:#ef4444">'+fM2(fU)+'</td>'
+         +'<td style="padding:8px;text-align:right;font-size:11px;font-weight:800;color:#22c55e">'+fM2(fD)+'</td>'
+         +'</tr>';
+     }).join('')
+     +'<tr style="background:var(--sf2);border-top:2px solid var(--br)">'
+     +'<td style="padding:8px 12px;font-size:11px;font-weight:800;color:var(--tx)">TOTAL</td>'
+     +COLS_P.map(function(p){
+       var tot=asigs.filter(function(a){return a.proyecto===p;}).reduce(function(s,a){return s+(a.monto||0);},0);
+       var c=PROY_COL[p]||'#6b7280';
+       return '<td style="padding:8px;text-align:center;font-size:12px;font-weight:900;color:'+c+'">'+fM2(tot)+'</td>';
+     }).join('')
+     +'<td style="padding:8px;text-align:right;font-size:12px;font-weight:900;color:#ef4444">'+fM2(totalAsig)+'</td>'
+     +'<td style="padding:8px;text-align:right;font-size:12px;font-weight:900;color:#22c55e">'+fM2(totalDisp)+'</td>'
+     +'</tr></tbody></table></div></div>'
+     +'<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);padding:14px 16px">'
+     +'<div style="font-size:11px;font-weight:800;color:var(--tx);margin-bottom:8px">⚠️ Nota metodológica</div>'
+     +'<div style="font-size:11px;color:var(--tx2);line-height:1.6">'
+     +'Las <strong>fuentes</strong> representan orígenes específicos de fondos (préstamos, ventas, abonos de clientes), '
+     +'no ingresos operacionales. Las <strong>asignaciones</strong> rastrean con qué dinero se pagó cada gasto '
+     +'—sin duplicar los registros del libro de gastos. Esto permite saber en cualquier momento '
+     +'cuánto queda de cada fuente y qué proyectos financió.'
+     +'</div>'
+     +'</div>';
+  }
+
+  el.innerHTML = header + tabs + body;
+}
+
+/* ─────────────────────────────────────────────────────
+   HELPERS TESORERÍA
+───────────────────────────────────────────────────── */
+function openNuevaFuente(){
+  var nm = prompt('Nombre de la fuente (ej: Préstamo Banco X):');
+  if(!nm) return;
+  var ti = (prompt('Tipo (prestamo / cliente / venta / socio / otro):') || 'otro').toLowerCase();
+  var mtRaw = prompt('Monto inicial ($):') || '0';
+  var mt = parseInt(mtRaw.replace(/\D/g,''));
+  if(!mt){ alert('Monto inválido'); return; }
+  var fe = prompt('Fecha (YYYY-MM-DD):') || new Date().toISOString().slice(0,10);
+  var nt = prompt('Notas:') || '';
+  var COLS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+  var col  = COLS[Math.floor(Math.random()*COLS.length)];
+  if(!S.fuentes) S.fuentes = [];
+  S.fuentes.push({id:'f-'+Date.now(),nombre:nm,tipo:ti,montoInicial:mt,fecha:fe,proyecto:'—',color:col,notas:nt});
+  saveS(); rTesoreria('fuentes');
+}
+
+function openNuevaAsignacion(fuenteId){
+  var proy = (prompt('Proyecto (weliving / robledo / novaeva / administracion / otro):') || 'administracion').toLowerCase();
+  var desc = prompt('Descripción del uso/gasto:');
+  if(!desc) return;
+  var cat  = prompt('Categoría (Materiales / MO / Nómina / Impuestos / Anticipos / Varios):') || 'Varios';
+  var mtRaw= prompt('Monto ($):') || '0';
+  var mt   = parseInt(mtRaw.replace(/\D/g,''));
+  if(!mt){ alert('Monto inválido'); return; }
+  var fe   = prompt('Fecha (YYYY-MM-DD):') || new Date().toISOString().slice(0,10);
+  if(!S.asignaciones) S.asignaciones = [];
+  S.asignaciones.push({id:'as-'+Date.now(),fuenteId:fuenteId,proyecto:proy,categoria:cat,monto:mt,fecha:fe,desc:desc});
+  saveS(); rTesoreria('fuentes', window._tsrDet);
+}
+
+function deleteAsig(id){
+  if(!confirm('¿Eliminar esta asignación?')) return;
+  S.asignaciones = (S.asignaciones||[]).filter(function(a){return a.id!==id;});
+  saveS(); rTesoreria('fuentes', window._tsrDet);
+}
+
 
 function rCobrar(tab) {
   var el = document.getElementById('cobrar-content'); if(!el) return;
