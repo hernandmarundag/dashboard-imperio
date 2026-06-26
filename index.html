@@ -3324,7 +3324,7 @@ const DEF = {
     {id:'f-wl9',    nombre:'Clientes Weliving Jun 9', tipo:'cliente',  montoInicial:110000000, fecha:'2026-06-09',proyecto:'weliving', color:'#6366f1',notas:'Abono socios — ingresó a Bancolombia Grupo.'},
     {id:'f-rb9',    nombre:'Clientes Robledo Jun 9',  tipo:'cliente',  montoInicial:145000000, fecha:'2026-06-09',proyecto:'robledo',  color:'#10b981',notas:'Abono Yulied Morales — ingresó a Bancolombia Grupo.'},
     {id:'f-nv9',    nombre:'Novaeva Jun 9',            tipo:'cliente',  montoInicial:20000000,  fecha:'2026-06-09',proyecto:'novaeva',  color:'#f59e0b',notas:'Abono cliente Novaeva.'},
-    {id:'f-apt',    nombre:'Venta Apartamento Jun 22', tipo:'venta',    montoInicial:79490000,  fecha:'2026-06-22',proyecto:'—',    color:'#ef4444',notas:'Venta neta después de hipoteca nana ($16M), intereses ($22.5M), comisión agencia ($17.957M). Total bruto $148M.'},
+    {id:'f-apt',    nombre:'Venta Apartamento Jun 22', tipo:'venta',    montoInicial:148000000, fecha:'2026-06-22',proyecto:'—',    color:'#ef4444',notas:'Bruto $148M. Gastos obligatorios: hipoteca Nana $16M, intereses $22.5M, comisión $17.957M, TC Black $44.215M, TC 1% $33.73M, deuda admin $3.42M, otros $5.904M. Disponible: $4.274M.'},
     {id:'f-mama',   nombre:'Mamá — Puerta',            tipo:'prestamo', montoInicial:50000000,  fecha:'2026-05-01',proyecto:'—',    color:'#ec4899',notas:'Préstamo familiar. Sin cuotas fijas. Registrado en libro contable.'},
   ],
   /* ══ TESORERÍA: ASIGNACIONES (con qué dinero se pagó qué) ══════ */
@@ -3368,13 +3368,68 @@ const DEF = {
     /* ── SUFI → ANTICIPOS ($3,434,000) ── */
     {id:'as-31',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Anticipos',monto:2434000,fecha:'2026-02-01',desc:'Anticipo Ana'},
     {id:'as-32',fuenteId:'f-sufi',proyecto:'administracion',categoria:'Anticipos',monto:1000000,fecha:'2026-02-01',desc:'Avance adicional'},
-    /* ── VENTA APT → WELIVING ($20,000,000) ── */
-    {id:'as-33',fuenteId:'f-apt', proyecto:'weliving',    categoria:'Materiales',monto:20000000,fecha:'2026-06-22',desc:'Concreto losa P4 — financiado con venta apartamento'},
-    /* ── MAMÁ PUERTA → VARIOS ($50,000,000 total — Mayo 2026) ── */
-    /* Nota: registrar asignaciones reales a medida que se concilien */
-    {id:'as-m1',fuenteId:'f-mama',proyecto:'weliving',     categoria:'Materiales',monto:15000000,fecha:'2026-05-01',desc:'Materiales Weliving — préstamo Mamá mayo'},
-    {id:'as-m2',fuenteId:'f-mama',proyecto:'robledo',      categoria:'Materiales',monto:10000000,fecha:'2026-05-01',desc:'Materiales Robledo — préstamo Mamá mayo'},
-    {id:'as-m3',fuenteId:'f-mama',proyecto:'administracion',categoria:'Varios',   monto:25000000,fecha:'2026-05-01',desc:'Gastos administración/operación — préstamo Mamá mayo (pendiente conciliar)'},
+    /* ══════════════════════════════════════════════════════════════
+       VENTA APARTAMENTO JUN 22 → $148M bruto / $4.274M disponible
+       Fuente: spreadsheet conciliación 22 jun 2026
+    ═══════════════════════════════════════════════════════════════ */
+    /* ── Deudas banco / hipoteca ── */
+    {id:'as-apt01',fuenteId:'f-apt',proyecto:'administracion',categoria:'Deuda banco',    monto:16000000, fecha:'2026-06-22',desc:'Pago hipoteca Nana (cierre venta)'},
+    {id:'as-apt02',fuenteId:'f-apt',proyecto:'administracion',categoria:'Deuda banco',    monto:22500000, fecha:'2026-06-22',desc:'Intereses hipoteca banco'},
+    /* ── Tarjetas de crédito ── */
+    {id:'as-apt03',fuenteId:'f-apt',proyecto:'administracion',categoria:'Tarjeta crédito',monto:44215000, fecha:'2026-06-22',desc:'Pago TC Black (saldo total)'},
+    {id:'as-apt04',fuenteId:'f-apt',proyecto:'administracion',categoria:'Tarjeta crédito',monto:33730000, fecha:'2026-06-22',desc:'Pago TC 1% (saldo total)'},
+    /* ── Gastos cierre / comerciales ── */
+    {id:'as-apt05',fuenteId:'f-apt',proyecto:'administracion',categoria:'Comercial',      monto:17957000, fecha:'2026-06-22',desc:'Comisión agencia inmobiliaria'},
+    {id:'as-apt06',fuenteId:'f-apt',proyecto:'administracion',categoria:'Deuda admin',    monto:3420000,  fecha:'2026-06-22',desc:'Deuda administración edificio'},
+    /* ── Préstamos familiares pagados ── */
+    {id:'as-apt07',fuenteId:'f-apt',proyecto:'administracion',categoria:'Préstamo fam.',  monto:3600000,  fecha:'2026-06-22',desc:'Abono préstamo Mamá — Puerta'},
+    {id:'as-apt08',fuenteId:'f-apt',proyecto:'administracion',categoria:'Préstamo fam.',  monto:445000,   fecha:'2026-06-22',desc:'Préstamo Nana (varios)'},
+    {id:'as-apt09',fuenteId:'f-apt',proyecto:'administracion',categoria:'Préstamo',       monto:752000,   fecha:'2026-06-22',desc:'Préstamo Lu'},
+    /* ── Otros pagos día cierre ── */
+    {id:'as-apt10',fuenteId:'f-apt',proyecto:'administracion',categoria:'Varios',         monto:500000,   fecha:'2026-06-22',desc:'Producto Ciro'},
+    {id:'as-apt11',fuenteId:'f-apt',proyecto:'administracion',categoria:'Nómina',         monto:216000,   fecha:'2026-06-22',desc:'Nómina Hernán (2 pagos día cierre)'},
+    {id:'as-apt12',fuenteId:'f-apt',proyecto:'administracion',categoria:'Impuestos',      monto:391000,   fecha:'2026-06-22',desc:'Impuesto 4×1000 cierre'},
+    /* ── Inversión en obra con remanente ── */
+    {id:'as-apt13',fuenteId:'f-rb9',proyecto:'weliving',     categoria:'Materiales',      monto:20000000, fecha:'2026-06-22',desc:'Concreto losa P4 Weliving (financiado desde pool Jun 9 / Robledo)'},
+    /* Total asignado: $163,726,000 → nota: $15.7M financiados con caja de Jun 9 */
+
+    /* ══════════════════════════════════════════════════════════════
+       CLIENTES JUN 9 — $275M (WL $110M + Robledo $145M + NV $20M)
+       Total gastado Jun 9-24: $234,149,724 → saldo ~$40M
+       Distribución proporcional pendiente de conciliar en detalle
+    ═══════════════════════════════════════════════════════════════ */
+    /* ── f-wl9 ($110M) → cuota proporcional gastos Jun 9-24 ── */
+    {id:'as-wl01',fuenteId:'f-wl9',proyecto:'weliving',     categoria:'Nómina',           monto:12500000, fecha:'2026-06-13',desc:'Nóminas Camilo+Andrés+equipo WL (cuota proporcional Jun 9-24)'},
+    {id:'as-wl02',fuenteId:'f-wl9',proyecto:'weliving',     categoria:'Materiales',       monto:12000000, fecha:'2026-06-10',desc:'Alquiler equipos + EPM + Ferrocables + materiales WL'},
+    {id:'as-wl03',fuenteId:'f-wl9',proyecto:'weliving',     categoria:'Materiales',       monto:10000000, fecha:'2026-06-23',desc:'Maquinaria + Poroneros + Bombeo WL'},
+    {id:'as-wl04',fuenteId:'f-wl9',proyecto:'administracion',categoria:'Tarjeta crédito', monto:9046000,  fecha:'2026-06-13',desc:'TC Scotiabank ESP3'},
+    {id:'as-wl05',fuenteId:'f-wl9',proyecto:'administracion',categoria:'Tarjeta crédito', monto:9000000,  fecha:'2026-06-14',desc:'TC Hernán Bancolombia (2 pagos × $4.5M)'},
+    {id:'as-wl06',fuenteId:'f-wl9',proyecto:'administracion',categoria:'Tarjeta crédito', monto:24721623, fecha:'2026-06-16',desc:'Pago TC Paulina'},
+    {id:'as-wl07',fuenteId:'f-wl9',proyecto:'administracion',categoria:'Tarjeta crédito', monto:12120000, fecha:'2026-06-18',desc:'Falabella Hernán'},
+    {id:'as-wl08',fuenteId:'f-wl9',proyecto:'administracion',categoria:'Nómina/SS',       monto:11480000, fecha:'2026-06-16',desc:'Planilla salud y pensión mayo'},
+    /* ── f-rb9 ($145M) → cuota proporcional gastos Jun 9-24 ── */
+    {id:'as-rb01',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Materiales',       monto:12302400, fecha:'2026-06-11',desc:'Concreto contrapiso Robledo'},
+    {id:'as-rb02',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Materiales',       monto:3962000,  fecha:'2026-06-10',desc:'Red hidráulica Robledo'},
+    {id:'as-rb03',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Materiales',       monto:2830000,  fecha:'2026-06-16',desc:'Ladrillo mampostería Robledo'},
+    {id:'as-rb04',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Materiales',       monto:2186000,  fecha:'2026-06-23',desc:'Mampostería Robledo'},
+    {id:'as-rb05',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'MO',               monto:3000000,  fecha:'2026-06-17',desc:'Poroneros Robledo'},
+    {id:'as-rb06',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'MO',               monto:1918000,  fecha:'2026-06-12',desc:'Transporte bomba Robledo'},
+    {id:'as-rb07',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Nómina',           monto:15000000, fecha:'2026-06-09',desc:'Nómina Andrés (cuota Robledo Jun 9)'},
+    {id:'as-rb08',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Nómina',           monto:10000000, fecha:'2026-06-09',desc:'Nómina Camilo (cuota Robledo Jun 9)'},
+    {id:'as-rb09',fuenteId:'f-rb9',proyecto:'administracion',categoria:'Préstamo banco',   monto:5224000,  fecha:'2026-06-24',desc:'Abono cuota SUFI (deuda carro 124)'},
+    {id:'as-rb10',fuenteId:'f-rb9',proyecto:'robledo',      categoria:'Varios',           monto:4000000,  fecha:'2026-06-13',desc:'Liquidaciones + depósitos + ferretería Robledo'},
+    /* ── f-nv9 ($20M) → cuota proporcional gastos Jun 9-24 ── */
+    {id:'as-nv01',fuenteId:'f-nv9',proyecto:'novaeva',      categoria:'Materiales',       monto:5000000,  fecha:'2026-06-11',desc:'Abono madera Novaeva (2 pagos)'},
+    {id:'as-nv02',fuenteId:'f-nv9',proyecto:'novaeva',      categoria:'MO',               monto:5000000,  fecha:'2026-06-17',desc:'Carpintero HDM Novaeva (2 pagos)'},
+    {id:'as-nv03',fuenteId:'f-nv9',proyecto:'novaeva',      categoria:'MO',               monto:1600000,  fecha:'2026-06-15',desc:'Nómina Novaeva'},
+    {id:'as-nv04',fuenteId:'f-nv9',proyecto:'novaeva',      categoria:'Varios',           monto:1824000,  fecha:'2026-06-13',desc:'Piso + carpintero Julián + pegante + basura Novaeva'},
+
+    /* ══════════════════════════════════════════════════════════════
+       MAMÁ — PUERTA → $50M mayo 2026 (pendiente conciliar detalle)
+    ═══════════════════════════════════════════════════════════════ */
+    {id:'as-m1',fuenteId:'f-mama',proyecto:'weliving',      categoria:'Materiales',       monto:15000000, fecha:'2026-05-01',desc:'Materiales obra Weliving — mayo (pendiente conciliar)'},
+    {id:'as-m2',fuenteId:'f-mama',proyecto:'robledo',       categoria:'Materiales',       monto:10000000, fecha:'2026-05-01',desc:'Materiales obra Robledo — mayo (pendiente conciliar)'},
+    {id:'as-m3',fuenteId:'f-mama',proyecto:'administracion',categoria:'Varios',           monto:25000000, fecha:'2026-05-01',desc:'Gastos admin/operación mayo — pendiente conciliar con libro'},
   ],
   hist:{weliving:[],robledo:[],novaeva:[]},
   abonos:[
