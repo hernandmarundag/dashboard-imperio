@@ -2588,7 +2588,7 @@ canvas{border-radius:4px}
     <div class="ni" data-v="tesoreria" onclick="gotoView('tesoreria')"><span class="ni-ico">💎</span><span>Tesorería</span></div>
     <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobrar</span></div>
     <div class="sb-sect">Análisis</div>
-    <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div
+    <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
   </nav>
   <div class="sb-foot">
@@ -2616,6 +2616,8 @@ canvas{border-radius:4px}
     <div class="sec">🏗 Estado por obra</div>
     <div id="obras-resumen"></div>
     <div id="bud-section"></div>
+    <!-- DESFACE EMPRESA -->
+    <div id="desface-section" style="margin:18px 0 0"></div>
 
 
     <div class="sec">🏦 Cuentas bancarias</div>
@@ -3069,7 +3071,7 @@ function fetchLive(obra) {
         if (tot > 0) try { localStorage.setItem('imp_'+obra+'_live', String(tot)); } catch(e){}
       }
       if (curV === obra) rProjView(obra);
-      if (curV === 'inicio') { rKpi(); rObrasChart(); rCajaJun9Chart(); rBudgets(); rObrasResumen(); }
+      if (curV === 'inicio') { rKpi(); rObrasChart(); rCajaJun9Chart(); rBudgets(); rObrasResumen(); rDesface(); }
     })
     .catch(function(e){ console.warn('fetchLive supabase ' + obra + ':', e); });
 }
@@ -3844,7 +3846,7 @@ function gotoView(v) {
 function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
-  if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rWallets('wallets-i'); rTCs('tcs-i'); }
+  if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rDesface(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (v === 'obras')   { rObrasView(); }
   else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
@@ -4070,22 +4072,57 @@ function rBudgets(){
     var rows='';
     rows+='<div class="bud-row"><span class="bud-lbl">'+fuenteNm+'</span><span class="bud-val c-bl">'+fmtM(sumAbonos(o))+'</span></div>';
     if(porCobrar) rows+='<div class="bud-row"><span class="bud-lbl">Por cobrar (no recibido)</span><span class="bud-val c-or">'+fmtM(porCobrar)+'</span></div>';
-    rows+='<div class="bud-row"><span class="bud-lbl">Gastos ejecutados (Jun 9+)</span><span class="bud-val c-rd">-'+fmtM(sumLiveDesdeJun9(o)+sumHist(o))+'</span></div>';
+    rows+='<div class="bud-row"><span class="bud-lbl">Total gastado</span><span class="bud-val c-rd">-'+fmtM(gastosT(o))+'</span></div>';
     if(comp>0) rows+='<div class="bud-row" style="opacity:0.75"><span class="bud-lbl">⚠️ Compromisos (aún sin pagar)</span><span class="bud-val c-or">'+fmtM(comp)+'</span></div>';
     return '<div class="bud-card" style="border-left-color:'+col+'">'
       +'<div class="bud-nm">'+nm+'</div>'
       +rows
       +'<div class="bud-tot">'
-        +'<span class="bud-tot-lbl">Saldo disponible</span>'
+        +'<span class="bud-tot-lbl">Saldo real</span>'
         +'<span class="bud-tot-val" style="color:'+(saldoReal>=0?'var(--gr)':'var(--rd)')+'">'+fmtM(saldoReal)+'</span>'
       +'</div>'
       +'<div class="bud-alert '+cls+'">'+icon+' '+(saldoReal>10000000?'Margen saludable':saldoReal>0?'Margen ajustado — monitorear':'Déficit · requiere fondeo')+'</div>'
       +'</div>';
   }
   el.innerHTML='<div class="bud-grid">'
-    +card('weliving','🏗 Weliving','#007AFF',sumAbonos('weliving'),'Recibido Jun 9 (Juan)',0)
-    +card('robledo', '🏠 Robledo', '#FF9500',sumAbonos('robledo'), 'Recibido Jun 9 (Yulied)',BASE.robledo.porCobrar)
-    +card('novaeva', '🏢 Novaeva', '#34C759',sumAbonos('novaeva'), 'Abono Jun 10 (NOVAEVA)',BASE.novaeva.cartera-BASE.novaeva.abonos)
+    +card('weliving','🏗 Weliving','#007AFF',sumAbonos('weliving'),'Total recibido',0)
+    +card('robledo', '🏠 Robledo', '#FF9500',sumAbonos('robledo'), 'Total recibido',BASE.robledo.porCobrar)
+    +card('novaeva', '🏢 Novaeva', '#34C759',sumAbonos('novaeva'), 'Total recibido',BASE.novaeva.cartera-BASE.novaeva.abonos)
+    +'</div>';
+}
+function rDesface(){
+  var el=document.getElementById('desface-section');
+  if(!el)return;
+  var wA=sumAbonos('weliving'), rA=sumAbonos('robledo'), nA=sumAbonos('novaeva');
+  var wG=gastosT('weliving'),   rG=gastosT('robledo'),   nG=gastosT('novaeva');
+  var socios    = wA+rA+nA;
+  var prestSufi = 124090000;
+  var prestOtros= 50000000;
+  var totalIn   = socios+prestSufi+prestOtros;
+  var totalGast = wG+rG+nG;
+  var desface   = totalIn-totalGast;
+  var col       = desface>=0?'var(--gr)':'var(--rd)';
+  var icon      = desface>=0?'✅':'🔴';
+  el.innerHTML=
+    '<div style="background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(16,185,129,.04));border:1.5px solid rgba(99,102,241,.18);border-radius:16px;padding:16px 18px;margin-bottom:18px">'
+    +'<div style="font-size:10px;font-weight:800;color:rgba(99,102,241,.8);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">🏛️ Posición financiera empresa — total acumulado</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;margin-bottom:14px">'
+      +'<div><div style="font-size:10px;color:var(--tx2)">Socios (3 obras)</div><div style="font-size:16px;font-weight:800;color:var(--bl)">'+fmtM(socios)+'</div></div>'
+      +'<div style="font-size:16px;color:var(--tx3);align-self:center">+</div>'
+      +'<div><div style="font-size:10px;color:var(--tx2)">Préstamo SUFI</div><div style="font-size:16px;font-weight:800;color:var(--bl)">'+fmtM(prestSufi)+'</div></div>'
+      +'<div style="font-size:16px;color:var(--tx3);align-self:center">+</div>'
+      +'<div><div style="font-size:10px;color:var(--tx2)">Otros préstamos</div><div style="font-size:16px;font-weight:800;color:var(--bl)">'+fmtM(prestOtros)+'</div></div>'
+      +'<div style="font-size:16px;color:var(--tx3);align-self:center">−</div>'
+      +'<div><div style="font-size:10px;color:var(--tx2)">Total gastado (3 obras)</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(totalGast)+'</div></div>'
+      +'<div style="font-size:16px;color:var(--tx3);align-self:center">=</div>'
+      +'<div style="padding-left:14px;border-left:2px solid '+(desface>=0?'rgba(16,185,129,.4)':'rgba(239,68,68,.4)')+'"><div style="font-size:10px;color:var(--tx2)">DESFACE NETO</div><div style="font-size:26px;font-weight:900;color:'+col+'">'+icon+' '+fmtM(desface)+'</div></div>'
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:11px;color:var(--tx2);padding-top:10px;border-top:1px solid rgba(99,102,241,.08)">'
+      +'<span>Weliving: <strong style="color:'+(wA-wG>=0?'var(--gr)':'var(--rd)')+'">'+fmtM(wA-wG)+'</strong></span>'
+      +'<span>Robledo: <strong style="color:'+(rA-rG>=0?'var(--gr)':'var(--rd)')+'">'+fmtM(rA-rG)+'</strong></span>'
+      +'<span>Novaeva: <strong style="color:'+(nA-nG>=0?'var(--gr)':'var(--rd)')+'">'+fmtM(nA-nG)+'</strong></span>'
+      +'<span style="margin-left:auto;color:var(--tx3)">Incluye SUFI $124.09M + Préstamos $50M</span>'
+    +'</div>'
     +'</div>';
 }
 function rKpi() {
@@ -4148,7 +4185,7 @@ function rObrasResumen() {
         +(extraB?'<div class="obra-stat"><div class="obra-sl">'+extraB[0]+'</div><div class="obra-sv '+extraB[2]+'">'+extraB[1]+'</div></div>':'')
       +'</div>'
       +'<div class="obra-saldo-bar" style="background:'+sbg+'">'
-        +'<span class="obra-snm" style="color:'+stc+'">Saldo operativo</span>'
+        +'<span class="obra-snm" style="color:'+stc+'">Saldo real</span>'
         +'<span class="obra-sv2" style="color:'+sco+'">'+fmtM(sal)+'</span>'
       +'</div>'
       +(com>0?'<div class="obra-warn">⚠️ Compromisos sin pagar: '+fmtM(com)+'</div>':'')
@@ -4156,8 +4193,8 @@ function rObrasResumen() {
   }
   el.innerHTML = '<div class="obras-grid">'
     + oCard('weliving','🏗 Weliving','#007AFF',
-        ['Inversión total socios', fmtM(BASE.weliving.inversion), 'c-gy'],
-        ['Margen vs inversión', fmtM(BASE.weliving.inversion - gastosT('weliving')), gastosT('weliving')<=BASE.weliving.inversion?'c-gr':'c-rd'])
+        ['Total aportado socios', fmtM(sumAbonos('weliving')), 'c-bl'],
+        ['Saldo real', fmtM(sumAbonos('weliving') - gastosT('weliving')), sumAbonos('weliving')>=gastosT('weliving')?'c-gr':'c-rd'])
     + oCard('robledo','🏠 Robledo','#FF9500',
         ['Por cobrar · Yulied', fmtM(BASE.robledo.porCobrar), 'c-or'],
         ['Precio venta total', fmtM(BASE.robledo.precio), 'c-gy'])
@@ -4318,14 +4355,14 @@ function rProjHeader(o) {
   var comp  = pagosXObra(o);
 
   // ── CAJA OPERACIONAL (Jun 9+): lo recibido en Jun 9 vs lo gastado DESDE Jun 9
-  var gastosJun9 = sumLiveDesdeJun9(o) + sumHist(o);
+  var gastosJun9 = g;  // all-time total gastado (was Jun9-only)
   var cajaDisp   = abo - gastosJun9;
   var cajaCol    = cajaDisp >= 0 ? 'var(--gr)' : 'var(--rd)';
   var cajaIcon   = cajaDisp >= 5000000 ? '✅' : cajaDisp >= 0 ? '⚠️' : '🔴';
 
   // ── POSICIÓN TOTAL PROYECTO: presupuesto vs ejecución histórica
   var presupuesto, presNm;
-  if (o==='weliving') { presupuesto=BASE.weliving.inversion; presNm='Inversión socios'; }
+  if (o==='weliving') { presupuesto=abo; presNm='Total recibido socios'; }
   else if (o==='robledo') { presupuesto=BASE.robledo.precio; presNm='Precio venta'; }
   else { presupuesto=BASE.novaeva.cartera; presNm='Cartera total'; }
   var posTotal  = presupuesto - g;
@@ -4335,19 +4372,19 @@ function rProjHeader(o) {
 
   var stats='<div class="k2g">';
   if(o==='weliving'){
-    stats+=sb('Inversión total socios','bl',fmtM(BASE.weliving.inversion));
-    stats+=sb('Recibido Jun 9','gr',fmtM(abo));
-    stats+=sb('Gastado desde Jun 9','rd',fmtM(gastosJun9));
+    stats+=sb('Total recibido socios','bl',fmtM(abo));
+    stats+=sb('Total gastado','rd',fmtM(g));
+    stats+=sb('Saldo real',abo-g>=0?'gr':'rd',fmtM(abo-g));
     stats+=sb('Inversionistas','gy','3 socios');
   } else if(o==='robledo'){
-    stats+=sb('Precio venta','bl',fmtM(BASE.robledo.precio));
-    stats+=sb('Recibido Jun 9','gr',fmtM(abo));
-    stats+=sb('Gastado desde Jun 9','rd',fmtM(gastosJun9));
-    stats+=sb('Por cobrar','or',fmtM(BASE.robledo.porCobrar));
+    stats+=sb('Total recibido','bl',fmtM(abo));
+    stats+=sb('Total gastado','rd',fmtM(g));
+    stats+=sb('Saldo real',abo-g>=0?'gr':'rd',fmtM(abo-g));
+    stats+=sb('Por cobrar · Yulied','or',fmtM(BASE.robledo.porCobrar));
   } else {
     stats+=sb('Cartera total','bl',fmtM(BASE.novaeva.cartera));
-    stats+=sb('Abono Jun 10','gr',fmtM(abo));
-    stats+=sb('Gastado desde Jun 9','rd',fmtM(gastosJun9));
+    stats+=sb('Total recibido','gr',fmtM(abo));
+    stats+=sb('Total gastado','rd',fmtM(g));
     stats+=sb('Por cobrar','or',fmtM(BASE.novaeva.cartera - BASE.novaeva.abonos));
   }
   stats+='</div>';
@@ -4356,14 +4393,14 @@ function rProjHeader(o) {
   var bud=''
     // ── CAJA OPERACIONAL — número GRANDE que el usuario necesita
     +'<div style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(59,130,246,.06));border:1px solid '+(cajaDisp>=0?'rgba(16,185,129,.25)':'rgba(239,68,68,.25)')+';border-radius:14px;padding:14px 16px;margin-top:14px">'
-      +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">💰 Caja operacional — desde Jun 9</div>'
+      +'<div style="font-size:10px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">💰 Balance financiero acumulado</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end">'
-        +'<div><div style="font-size:10px;color:var(--tx2)">Recibido Jun 9</div><div style="font-size:16px;font-weight:800;color:var(--gr)">+'+fmtM(abo)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--tx2)">Total recibido</div><div style="font-size:16px;font-weight:800;color:var(--gr)">+'+fmtM(abo)+'</div></div>'
         +'<div style="font-size:18px;color:var(--tx3);align-self:center">−</div>'
-        +'<div><div style="font-size:10px;color:var(--tx2)">Gastado desde Jun 9</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(gastosJun9)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--tx2)">Total gastado</div><div style="font-size:16px;font-weight:800;color:var(--rd)">'+fmtM(gastosJun9)+'</div></div>'
         +'<div style="font-size:18px;color:var(--tx3);align-self:center">=</div>'
         +'<div style="padding-left:12px;border-left:2px solid '+(cajaDisp>=0?'rgba(16,185,129,.4)':'rgba(239,68,68,.4)')+'">'+
-          '<div style="font-size:10px;color:var(--tx2)">CAJA DISPONIBLE</div>'
+          '<div style="font-size:10px;color:var(--tx2)">SALDO REAL</div>'
           +'<div style="font-size:26px;font-weight:900;color:'+cajaCol+'">'+cajaIcon+' '+fmtM(cajaDisp)+'</div>'
         +'</div>'
       +'</div>'
