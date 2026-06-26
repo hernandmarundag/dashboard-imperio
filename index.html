@@ -6356,61 +6356,154 @@ function rTesoreria(tab,detFuente){
     }).join('');
 
   /* ══════════════════════════════════════════════════
-     TAB: FLUJO (matriz origen→destino)
+     TAB: FLUJO — VISUAL POR BARRAS
   ══════════════════════════════════════════════════ */
   } else if(tab === 'flujo'){
-    var COLS_P = ['weliving','robledo','novaeva','administracion','otro'];
-    var matrix = {};
-    asigs.forEach(function(a){
-      if(!matrix[a.fuenteId]) matrix[a.fuenteId]={};
-      matrix[a.fuenteId][a.proyecto]=(matrix[a.fuenteId][a.proyecto]||0)+a.monto;
-    });
 
-    body =
-      '<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);overflow:hidden;margin-bottom:14px">'
-     +'<div style="padding:12px 16px;border-bottom:1px solid var(--br);font-size:12px;font-weight:800;color:var(--tx)">🔀 Matriz de Flujo — Origen → Destino</div>'
-     +'<div style="overflow-x:auto">'
-     +'<table style="width:100%;border-collapse:collapse;min-width:520px">'
-     +'<thead><tr style="background:var(--sf2)">'
-     +'<th style="padding:8px 12px;text-align:left;font-size:10px;color:var(--tx3);font-weight:800;min-width:130px">FUENTE</th>'
-     +COLS_P.map(function(p){var c=PROY_COL[p]||'#6b7280';return '<th style="padding:8px 8px;text-align:center;font-size:10px;color:'+c+';font-weight:800">'+(PROY_NM[p]||p)+'</th>';}).join('')
-     +'<th style="padding:8px 8px;text-align:right;font-size:10px;color:#ef4444;font-weight:800">ASIG.</th>'
-     +'<th style="padding:8px 8px;text-align:right;font-size:10px;color:#22c55e;font-weight:800">DISP.</th>'
-     +'</tr></thead><tbody>'
-     +fuentes.map(function(f){
-       var fU=_tsrAsigByFuente(f.id).reduce(function(s,a){return s+(a.monto||0);},0);
-       var fD=f.montoInicial-fU;
-       return '<tr style="border-bottom:1px solid var(--br)">'
-         +'<td style="padding:8px 12px"><div style="font-size:11px;font-weight:800;color:'+f.color+'">'+f.nombre+'</div>'
-         +'<div style="font-size:9px;color:var(--tx3)">'+fM2(f.montoInicial)+' inicial</div></td>'
-         +COLS_P.map(function(p){
-           var m=(matrix[f.id]&&matrix[f.id][p])||0;
-           var c=PROY_COL[p]||'#6b7280';
-           return '<td style="padding:8px;text-align:center;font-size:11px;font-weight:'+(m?'800':'400')+';color:'+(m?c:'var(--tx3)')+'">'+( m ? fM2(m) : '—')+'</td>';
-         }).join('')
-         +'<td style="padding:8px;text-align:right;font-size:11px;font-weight:800;color:#ef4444">'+fM2(fU)+'</td>'
-         +'<td style="padding:8px;text-align:right;font-size:11px;font-weight:800;color:#22c55e">'+fM2(fD)+'</td>'
-         +'</tr>';
-     }).join('')
-     +'<tr style="background:var(--sf2);border-top:2px solid var(--br)">'
-     +'<td style="padding:8px 12px;font-size:11px;font-weight:800;color:var(--tx)">TOTAL</td>'
-     +COLS_P.map(function(p){
-       var tot=asigs.filter(function(a){return a.proyecto===p;}).reduce(function(s,a){return s+(a.monto||0);},0);
-       var c=PROY_COL[p]||'#6b7280';
-       return '<td style="padding:8px;text-align:center;font-size:12px;font-weight:900;color:'+c+'">'+fM2(tot)+'</td>';
-     }).join('')
-     +'<td style="padding:8px;text-align:right;font-size:12px;font-weight:900;color:#ef4444">'+fM2(totalAsig)+'</td>'
-     +'<td style="padding:8px;text-align:right;font-size:12px;font-weight:900;color:#22c55e">'+fM2(totalDisp)+'</td>'
-     +'</tr></tbody></table></div></div>'
-     +'<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);padding:14px 16px">'
-     +'<div style="font-size:11px;font-weight:800;color:var(--tx);margin-bottom:8px">⚠️ Nota metodológica</div>'
-     +'<div style="font-size:11px;color:var(--tx2);line-height:1.6">'
-     +'Las <strong>fuentes</strong> representan orígenes específicos de fondos (préstamos, ventas, abonos de clientes), '
-     +'no ingresos operacionales. Las <strong>asignaciones</strong> rastrean con qué dinero se pagó cada gasto '
-     +'—sin duplicar los registros del libro de gastos. Esto permite saber en cualquier momento '
-     +'cuánto queda de cada fuente y qué proyectos financió.'
-     +'</div>'
-     +'</div>';
+    /* Categorías de destino con colores */
+    var CAT_DEF = [
+      {key:'weliving',    label:'Weliving',       col:'#6366f1'},
+      {key:'robledo',     label:'Robledo',         col:'#10b981'},
+      {key:'novaeva',     label:'Novaeva',         col:'#f59e0b'},
+      {key:'nominas',     label:'Nóminas/SS',      col:'#8b5cf6'},
+      {key:'tc',          label:'Tarjetas crédito',col:'#ef4444'},
+      {key:'banco',       label:'Banco/Hipoteca',  col:'#dc2626'},
+      {key:'prestamos',   label:'Préstamos fam.',  col:'#ec4899'},
+      {key:'otros',       label:'Otros/Caja',      col:'#6b7280'},
+      {key:'disponible',  label:'DISPONIBLE HOY',  col:'#22c55e'},
+    ];
+
+    /* Eventos de ingreso con breakdown manual basado en conciliación */
+    var EVENTOS = [
+      {
+        titulo:'💰 $275,000,000 — Clientes Jun 9',
+        subtitulo:'Weliving $110M + Robledo $145M + Novaeva $20M · Ingresó 9 Jun 2026',
+        total: 275000000,
+        color:'#6366f1',
+        partes:[
+          {key:'weliving',  label:'Weliving (obra)',         monto: 44500000},
+          {key:'robledo',   label:'Robledo (obra)',          monto: 39198400},
+          {key:'novaeva',   label:'Novaeva (obra)',          monto: 13424000},
+          {key:'nominas',   label:'Nóminas + SS',            monto: 48180000},
+          {key:'tc',        label:'TC Paulina+Falabella+otros', monto:54867623},
+          {key:'banco',     label:'Abono SUFI Jun 24',       monto:  5224000},
+          {key:'disponible',label:'DISPONIBLE HOY',          monto: 39977999},
+        ]
+      },
+      {
+        titulo:'🏠 $148,000,000 — Venta Apartamento Jun 22',
+        subtitulo:'Bruto hipoteca incluida · Cierre 22 Jun 2026',
+        total: 148000000,
+        color:'#ef4444',
+        partes:[
+          {key:'banco',     label:'Hipoteca Nana + intereses',monto:38500000},
+          {key:'tc',        label:'TC Black + TC 1%',         monto:77945000},
+          {key:'banco',     label:'Comisión agencia',         monto:17957000},
+          {key:'prestamos', label:'Deuda admin + préstamos',  monto: 8828000},
+          {key:'weliving',  label:'Losa P4 Weliving',         monto:  500000},
+          {key:'disponible',label:'DISPONIBLE',               monto: 4274000},
+        ]
+      },
+      {
+        titulo:'🏦 $124,090,000 — Préstamo SUFI',
+        subtitulo:'Garantía Mercedes · Desembolsado Ene 2026',
+        total: 124090000,
+        color:'#8b5cf6',
+        partes:[
+          {key:'robledo',   label:'Robledo (materiales)',     monto:26648100},
+          {key:'novaeva',   label:'Novaeva (materiales)',     monto:13515100},
+          {key:'weliving',  label:'Weliving (directa + TC/San Pío)',monto:20978000},
+          {key:'otros',     label:'La Playa alquiler',        monto: 5000000},
+          {key:'nominas',   label:'Anticipos empleados',      monto: 3434000},
+          {key:'otros',     label:'Administración general',   monto:49912400},
+          {key:'disponible',label:'SIN IDENTIFICAR',          monto: 4602400},
+        ]
+      },
+      {
+        titulo:'👩 $50,000,000 — Mamá Puerta',
+        subtitulo:'Préstamo familiar · Mayo 2026 · ⚠️ PROVISIONAL',
+        total: 50000000,
+        color:'#ec4899',
+        partes:[
+          {key:'weliving',  label:'Weliving mayo',            monto:15000000},
+          {key:'robledo',   label:'Robledo mayo',             monto:10000000},
+          {key:'otros',     label:'Admin/operación mayo*',    monto:25000000},
+        ]
+      },
+    ];
+
+    var COL_MAP={};
+    CAT_DEF.forEach(function(c){COL_MAP[c.key]=c.col;});
+
+    body = EVENTOS.map(function(ev){
+      var total = ev.total;
+      var sumaPartes = ev.partes.reduce(function(s,p){return s+(p.monto||0);},0);
+
+      /* barra stacked */
+      var barraHTML = ev.partes.map(function(p){
+        var pct = total>0 ? (p.monto/total*100) : 0;
+        var col = COL_MAP[p.key]||'#6b7280';
+        return '<div title="'+p.label+' — $'+(p.monto/1e6).toFixed(2)+'M ('+pct.toFixed(1)+'%)" '
+          +'style="height:100%;width:'+pct+'%;background:'+col+';flex-shrink:0;transition:.4s" ></div>';
+      }).join('');
+
+      /* leyenda detallada */
+      var leyenda = ev.partes.map(function(p){
+        var pct = total>0 ? (p.monto/total*100) : 0;
+        var col = COL_MAP[p.key]||'#6b7280';
+        var isDisp = p.key==='disponible';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--br);'+(isDisp?'background:rgba(34,197,94,.06)':'')+'">'
+          +'<div style="display:flex;align-items:center;gap:8px;min-width:0">'
+          +'<div style="width:12px;height:12px;border-radius:3px;background:'+col+';flex-shrink:0"></div>'
+          +'<span style="font-size:11px;color:var(--tx);font-weight:'+(isDisp?'800':'500')+'">'+(isDisp?'✅ ':'')+p.label+'</span>'
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'
+          +'<span style="font-size:13px;font-weight:800;color:'+col+'">$'+(p.monto/1e6).toFixed(2)+'M</span>'
+          +'<span style="font-size:10px;color:var(--tx3);margin-left:5px">'+(pct.toFixed(1))+'%</span>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+
+      var dispParte = ev.partes.find(function(p){return p.key==='disponible';});
+      var dispMonto = dispParte ? dispParte.monto : 0;
+      var dispPct   = total>0 ? (dispMonto/total*100).toFixed(1) : '0';
+
+      return '<div style="background:var(--sf);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:16px">'
+        /* Header */
+        +'<div style="background:'+ev.color+';padding:14px 16px;color:#fff">'
+        +'<div style="font-size:14px;font-weight:900;margin-bottom:2px">'+ev.titulo+'</div>'
+        +'<div style="font-size:10px;opacity:.85">'+ev.subtitulo+'</div>'
+        +'</div>'
+        /* Barra */
+        +'<div style="padding:12px 14px 0">'
+        +'<div style="display:flex;gap:0;border-radius:8px;overflow:hidden;height:28px;margin-bottom:10px">'
+        +barraHTML
+        +'</div>'
+        /* Disponible highlight */
+        +(dispMonto>0
+          ?'<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(34,197,94,.1);border-radius:8px;padding:7px 12px;margin-bottom:8px">'
+           +'<span style="font-size:11px;font-weight:700;color:#15803d">💵 '+(dispParte.key==='disponible'&&dispParte.label==='SIN IDENTIFICAR'?'Sin identificar':'Disponible hoy')+'</span>'
+           +'<span style="font-size:14px;font-weight:900;color:#15803d">$'+(dispMonto/1e6).toFixed(2)+'M <span style="font-size:10px;font-weight:600">('+dispPct+'%)</span></span>'
+           +'</div>'
+          :'')
+        +'</div>'
+        /* Leyenda */
+        +'<div>'+leyenda+'</div>'
+        +'</div>';
+    }).join('');
+
+    /* Legenda global de categorías */
+    body += '<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);padding:14px 16px;margin-top:4px">'
+      +'<div style="font-size:10px;font-weight:800;color:var(--tx3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px">Referencias de color</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      +CAT_DEF.map(function(c){
+        return '<div style="display:flex;align-items:center;gap:5px">'
+          +'<div style="width:10px;height:10px;border-radius:2px;background:'+c.col+'"></div>'
+          +'<span style="font-size:10px;color:var(--tx2)">'+c.label+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
   }
 
   } else if(tab === 'alertas'){
