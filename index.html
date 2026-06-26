@@ -5043,20 +5043,28 @@ function renderLedger(o) {
     var startN = (p-1)*sz;
     page.forEach(function(e, i){
       var isDash = e.src==='dash';
+      var isLive = e.src==='live';
       var clr = catColor(e.area);
       var areaShort = (e.area||'var2').replace(' general','').replace(' equipos','eq.');
       var editBtn = '<button type="button" class="del-btn" title="Editar" style="background:var(--bl);color:#fff;border-color:var(--bl)" '
         +'onclick="openEditGasto(\''+o+'\','+(isDash?('\''+e.id+'\''):('null'))+','+isDash+','+(startN+i)+')">✏</button>';
-      var delBtn = isDash ? '<button type="button" class="del-btn" onclick="delGasto(\''+o+'\',\''+e.id+'\')">✕</button>' : '';
+      var delBtn = isDash
+        ? '<button type="button" class="del-btn" onclick="delGasto(\''+o+'\',\''+e.id+'\')" title="Borrar">🗑</button>'
+        : (isLive && e.id
+          ? '<button type="button" class="del-btn" onclick="delGastoSB(\''+o+'\','+e.id+')" title="Borrar de BD">🗑</button>'
+          : '');
       // Descripción compacta: desc o material
       var descTxt = (e.desc||e.mat||'').substring(0,50);
+      // Normalizar nombre de cuenta/método de pago
+      var ACCT_ALIAS={'grupo imperio':'BCol Grupo','bcolgrupo':'BCol Grupo','bcol grupo':'BCol Grupo','bancolombia grupo':'BCol Grupo','grupo_imperio':'BCol Grupo','bancolombia grupo imp':'BCol Grupo','grupo imp':'BCol Grupo'};
+      var cNm={'bc-grupo':'BCol Grupo','dv-lib':'Davivienda','bb-lib':'B.Bogotá','bc-hernan':'BCol Hernán','bc-paulina':'BCol Paulina','wlt-emp':'Efectivo'};
       rowsH += '<tr class="'+(isDash?'rd':'rs')+'" style="border-left:3px solid '+clr+'">'
         +'<td style="color:var(--tx3);font-size:10px;padding-left:8px;text-align:center">'+(startN+i+1)+'</td>'
         +'<td style="white-space:nowrap;font-size:12px;font-weight:600;padding:7px 10px">'+fmtFecha(e.f)+'</td>'
         +'<td style="font-weight:700;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+(S.provMap&&S.provMap[e.a]?S.provMap[e.a]+' ↩':e.a)+'">'+((S.provMap&&S.provMap[e.a])||e.a)+'</td>'
         +'<td style="font-size:11px;color:var(--tx2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px" title="'+(e.desc||'')+'">'+descTxt+'</td>'
         +'<td style="padding:7px 10px"><span style="background:'+clr+'20;color:'+clr+';border:1px solid '+clr+'40;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">'+areaShort.toUpperCase()+'</span></td>'
-        +'<td style="padding:4px 8px;min-width:90px">'+ (function(){  var cNm={'bc-grupo':'BCol Grupo','dv-lib':'Davivienda','bb-lib':'B.Bogotá','bc-hernan':'BCol Hernán','bc-paulina':'BCol Paulina','wlt-emp':'Efectivo'};  var tNm={}; (S.tcs||[]).forEach(function(t){tNm[t.id]='💳 '+t.nm;});  var rawCta=e.ctaId||e.ctaCargo||'';  var rawMet=e.metodoPago||'';  var label=tNm[rawCta]||cNm[rawCta]||rawCta||rawMet||'—';  var col=rawMet==='TC'||tNm[rawCta]?'#8b5cf6':rawMet==='Efectivo'?'#22c55e':'#3b82f6';  return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+col+'18;border-radius:6px;padding:2px 6px">'+label+'</span>';})()+'</td>'+'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
+        +'<td style="padding:4px 8px;min-width:90px">'+ (function(){ var tNm={}; (S.tcs||[]).forEach(function(t){tNm[t.id]='💳 '+t.nm;}); var rawCta=e.ctaId||e.ctaCargo||''; var rawMet=e.metodoPago||''; var normCta=ACCT_ALIAS[(rawCta||'').toLowerCase().trim()]||cNm[rawCta]||rawCta; var normMet=ACCT_ALIAS[(rawMet||'').toLowerCase().trim()]||rawMet; var label=tNm[rawCta]||normCta||normMet||'—'; var col=rawMet==='TC'||tNm[rawCta]?'#8b5cf6':rawMet==='Efectivo'?'#22c55e':'#3b82f6'; return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+col+'18;border-radius:6px;padding:2px 6px">'+label+'</span>'; })()+'</td>'+'<td class="monto" style="font-weight:800;font-size:13px;padding:7px 10px">'+fmt(e.monto)+'</td>'
         +'<td style="padding:5px 6px"><div style="display:flex;gap:3px">'+editBtn+delBtn+'</div></td>'
         +'</tr>';
     });
@@ -5210,6 +5218,24 @@ function delGasto(o,id){
   }
   S.hist[o]=S.hist[o].filter(function(x){return x.id!==id;});
   saveS(); renderLedger(o);
+}
+
+function delGastoSB(o, sbId){
+  if(!confirm('¿Eliminar este gasto de la base de datos?\n\nEsta acción no se puede deshacer.')) return;
+  fetch(SB_URL+'/rest/v1/gastos?id=eq.'+sbId, {
+    method:'DELETE',
+    headers: Object.assign({}, SB_H, {'Prefer':'return=minimal'})
+  }).then(function(r){
+    if(r.ok || r.status===204){
+      // Remover de caché local
+      if(LIVE[o]) LIVE[o] = LIVE[o].filter(function(e){ return e.id !== sbId; });
+      renderLedger(o);
+      // Refrescar totales
+      rBudgets(); rDesface();
+    } else {
+      r.text().then(function(t){ alert('Error eliminando ('+r.status+'): '+t.substring(0,200)); });
+    }
+  }).catch(function(err){ alert('Error de conexión: '+err.message); });
 }
 
 
