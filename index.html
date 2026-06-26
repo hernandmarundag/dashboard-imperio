@@ -4761,7 +4761,15 @@ function saveAbono() {
   }
   saveS(); closeOv('ov-abono'); rKpi(); rBudgets(); rWallets('wallets-i'); rWallets('wallets-c'); renderView(curV);
   insertMovimiento({fecha:fStr,tipo:'ingreso',obra:obra,cta_id:ctaId,descripcion:desc,monto:monto});
-  sbPost('abonos',{legacy_id:_abonoId,obra_id:obra,fecha:fStr,descripcion:desc,monto:monto,cuenta_id:ctaId}).catch(function(e){console.warn('[saveAbono] SB:',e);});
+  sbPost('abonos',{legacy_id:_abonoId,obra_id:obra,fecha:fStr,descripcion:desc,monto:monto,cuenta_id:ctaId})
+    .catch(function(e){
+      console.warn('[saveAbono] SB error:', e);
+      // El abono quedó en localStorage pero puede no haber llegado a Supabase
+      // Muestra advertencia — NO cierre ya ocurrió arriba
+      setTimeout(function(){
+        alert('⚠️ El abono se registró localmente pero hubo un error al sincronizar con la base de datos.\nVerifica en la sección Abonos que aparezca correctamente.\nError: ' + (e && e.message ? e.message : e));
+      }, 300);
+    });
 }
 function _poblarSelectsTraspaso() {
   // Cuentas bancarias → select origen
@@ -7664,6 +7672,11 @@ function saveGasto() {
   var areaVal   = document.getElementById('gf-area')  ? document.getElementById('gf-area').value  : '';
   var etapaVal  = document.getElementById('gf-etapa') ? document.getElementById('gf-etapa').value : '';
   var matVal    = document.getElementById('gf-mat')   ? document.getElementById('gf-mat').value   : '';
+  // ACTIVAR_CAMPOS_FACTURA — descomentar después de ejecutar MIGRATION_gastos_campos_factura.sql en Supabase
+  // var cotizVal  = (document.getElementById('gf-cotiz')  ? document.getElementById('gf-cotiz').value.trim()  : '') || null;
+  // var cantVal   = parseFloat(document.getElementById('gf-cant')  ? document.getElementById('gf-cant').value  : '') || null;
+  // var ivaVal    = parseFloat(document.getElementById('gf-iva')   ? document.getElementById('gf-iva').value   : '') || null;
+  // var facrevVal = document.getElementById('gf-facrev') ? document.getElementById('gf-facrev').checked : false;
 
   // Payload directo a Supabase (fuente única de verdad)
   var sbData = {
@@ -7677,6 +7690,11 @@ function saveGasto() {
     monto:       total,
     material:    matVal,
     cuenta:      ctaV
+    // ACTIVAR_CAMPOS_FACTURA — agregar estas 4 líneas después del SQL:
+    // ,cotiz:   cotizVal
+    // ,cantidad: cantVal
+    // ,iva:     ivaVal
+    // ,facrev:  facrevVal
   };
 
   // Estado de carga — deshabilitar botón
