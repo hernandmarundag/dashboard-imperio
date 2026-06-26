@@ -6152,18 +6152,24 @@ function rTesoreria(tab,detFuente){
   var header =
     '<div style="background:linear-gradient(135deg,#1e1b4b,#312e81,#4338ca);border-radius:16px;padding:20px 22px;margin-bottom:14px;color:#fff">'
    +'<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#a5b4fc;margin-bottom:8px">💎 TESORERÍA INTELIGENTE — TRAZABILIDAD DE FONDOS</div>'
-   +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
-   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center">'
-   +'<div style="font-size:10px;color:#a5b4fc;font-weight:700;margin-bottom:4px">TOTAL RECURSOS</div>'
-   +'<div style="font-size:18px;font-weight:900">'+fM2(totalIni)+'</div>'
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px;text-align:center">'
+   +'<div style="font-size:9px;color:#a5b4fc;font-weight:700;margin-bottom:3px">TOTAL RECURSOS</div>'
+   +'<div style="font-size:16px;font-weight:900">'+fM2(totalIni)+'</div>'
    +'</div>'
-   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center">'
-   +'<div style="font-size:10px;color:#fca5a5;font-weight:700;margin-bottom:4px">ASIGNADO</div>'
-   +'<div style="font-size:18px;font-weight:900;color:#fca5a5">'+fM2(totalAsig)+'</div>'
+   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px;text-align:center">'
+   +'<div style="font-size:9px;color:#fca5a5;font-weight:700;margin-bottom:3px">ASIGNADO</div>'
+   +'<div style="font-size:16px;font-weight:900;color:#fca5a5">'+fM2(totalAsig)+'</div>'
    +'</div>'
-   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center">'
-   +'<div style="font-size:10px;color:#86efac;font-weight:700;margin-bottom:4px">DISPONIBLE</div>'
-   +'<div style="font-size:18px;font-weight:900;color:#86efac">'+fM2(totalDisp)+'</div>'
+   +'</div>'
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+   +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px;text-align:center">'
+   +'<div style="font-size:9px;color:#86efac;font-weight:700;margin-bottom:3px">DISPONIBLE (TESORERÍA)</div>'
+   +'<div style="font-size:16px;font-weight:900;color:#86efac">'+fM2(totalDisp)+'</div>'
+   +'</div>'
+   +'<div style="background:rgba(34,197,94,.2);border-radius:12px;padding:10px;text-align:center;border:1px solid rgba(134,239,172,.3)">'
+   +'<div style="font-size:9px;color:#86efac;font-weight:700;margin-bottom:3px">💵 CAJA REAL HOY</div>'
+   +'<div style="font-size:16px;font-weight:900;color:#4ade80">$39,977,999</div>'
    +'</div>'
    +'</div>'
    +'<div style="background:rgba(255,255,255,.15);border-radius:8px;height:8px;overflow:hidden">'
@@ -6175,7 +6181,7 @@ function rTesoreria(tab,detFuente){
   /* ─── TABS ─── */
   var tabs =
     '<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">'
-   +[['fuentes','🏛 Fuentes'],['proyectos','📊 Proyectos'],['flujo','🔀 Flujo']]
+   +[['fuentes','🏛 Fuentes'],['proyectos','📊 Proyectos'],['flujo','🔀 Flujo'],['alertas','🚨 Alertas']]
     .map(function(t){
       var a=tab===t[0];
       return '<button onclick="rTesoreria(\''+t[0]+'\',undefined)" style="padding:8px 16px;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer;'
@@ -6404,6 +6410,96 @@ function rTesoreria(tab,detFuente){
      +'—sin duplicar los registros del libro de gastos. Esto permite saber en cualquier momento '
      +'cuánto queda de cada fuente y qué proyectos financió.'
      +'</div>'
+     +'</div>';
+  }
+
+  } else if(tab === 'alertas'){
+    /* ══════════════════════════════════════════════════
+       TAB: ALERTAS Y DEUDAS
+    ══════════════════════════════════════════════════ */
+    var DEUDA_SUFI  = 118866000;
+    var DEUDA_MAMA  = 46400000;
+    var CAJA_REAL   = 39977999;
+    var DEUDA_TOTAL = DEUDA_SUFI + DEUDA_MAMA;
+    var RATIO_DEUDA = CAJA_REAL > 0 ? DEUDA_TOTAL / CAJA_REAL : 0;
+
+    body =
+      /* ── KPIs deuda ── */
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+     +'<div style="background:var(--sf);border-radius:14px;padding:14px;box-shadow:var(--sh);border-left:4px solid #ef4444">'
+     +'<div style="font-size:9px;color:var(--tx3);font-weight:800;margin-bottom:4px">🏦 DEUDA SUFI (MERCEDES)</div>'
+     +'<div style="font-size:18px;font-weight:900;color:#ef4444">'+fM2(DEUDA_SUFI)+'</div>'
+     +'<div style="font-size:10px;color:var(--tx3);margin-top:4px">Abono Jun 24: $5,224,000 ✓</div>'
+     +'</div>'
+     +'<div style="background:var(--sf);border-radius:14px;padding:14px;box-shadow:var(--sh);border-left:4px solid #ec4899">'
+     +'<div style="font-size:9px;color:var(--tx3);font-weight:800;margin-bottom:4px">👩 DEUDA MAMÁ — PUERTA</div>'
+     +'<div style="font-size:18px;font-weight:900;color:#ec4899">'+fM2(DEUDA_MAMA)+'</div>'
+     +'<div style="font-size:10px;color:var(--tx3);margin-top:4px">Abono $3.6M venta apt ✓ · Resto sin fecha</div>'
+     +'</div>'
+     +'<div style="background:var(--sf);border-radius:14px;padding:14px;box-shadow:var(--sh);border-left:4px solid #f59e0b">'
+     +'<div style="font-size:9px;color:var(--tx3);font-weight:800;margin-bottom:4px">📊 RATIO DEUDA / CAJA</div>'
+     +'<div style="font-size:18px;font-weight:900;color:#f59e0b">'+RATIO_DEUDA.toFixed(1)+'x</div>'
+     +'<div style="font-size:10px;color:var(--tx3);margin-top:4px">Por cada $1 en caja, debes $'+RATIO_DEUDA.toFixed(1)+'</div>'
+     +'</div>'
+     +'<div style="background:var(--sf);border-radius:14px;padding:14px;box-shadow:var(--sh);border-left:4px solid #22c55e">'
+     +'<div style="font-size:9px;color:var(--tx3);font-weight:800;margin-bottom:4px">💵 CAJA REAL HOY</div>'
+     +'<div style="font-size:18px;font-weight:900;color:#22c55e">'+fM2(CAJA_REAL)+'</div>'
+     +'<div style="font-size:10px;color:var(--tx3);margin-top:4px">Spreadsheet Jun 9-24 · Corte Jun 25</div>'
+     +'</div>'
+     +'</div>'
+
+      /* ── Alertas ── */
+     +'<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);overflow:hidden;margin-bottom:14px">'
+     +'<div style="padding:12px 16px;border-bottom:1px solid var(--br);font-size:12px;font-weight:800;color:var(--tx)">⚠️ Alertas Prioritarias</div>'
+     +[
+       ['🔴','CRÍTICO','Mamá $50M: asignaciones provisionales',
+        'Los $25M de "administración" son estimados. Conciliar con libro de gastos mayo antes de tomar decisiones sobre esta deuda.','#fef2f2','#dc2626'],
+       ['🔴','CRÍTICO','SUFI $118.9M: deuda más alta del sistema',
+        'Garantía: vehículo Mercedes. Riesgo de embargo si hay incumplimiento. Confirmar fecha y monto de próxima cuota.','#fef2f2','#dc2626'],
+       ['🟡','MEDIO','Robledo Jun9: $64.58M "disponible" es estimado',
+        'El disponible teórico es alto porque las asignaciones de Robledo son parciales. El número real está por debajo. No tomar decisiones basado en ese margen.','#fffbeb','#d97706'],
+       ['🟡','MEDIO','Diferencia $872,277 en spreadsheet Jun 9-24',
+        'El saldo que debería haber es $40.85M pero hay $39.98M. $872K no identificados. Revisar transacciones pequeñas.','#fffbeb','#d97706'],
+       ['🟢','INFO','TC Black + TC 1% pagadas en cierre venta',
+        '$77.9M en tarjetas saldadas el 22 Jun. Sin deuda TC vigente de estas. Verificar Falabella ($12.1M) y Scotiabank ($9M).','#f0fdf4','#16a34a'],
+       ['🟡','MEDIO','Remanente venta apt $4.27M',
+        'Verificar si ya está en cuenta operacional o en cuenta separada. Si está separado, la caja real es $44.25M.','#fffbeb','#d97706'],
+     ].map(function(a){
+       return '<div style="padding:12px 14px;border-bottom:1px solid var(--br);background:'+a[5]+'10">'
+         +'<div style="display:flex;align-items:flex-start;gap:10px">'
+         +'<span style="font-size:16px;flex-shrink:0">'+a[0]+'</span>'
+         +'<div style="min-width:0">'
+         +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+         +'<span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:'+a[5]+'20;color:'+a[5]+'">'+a[1]+'</span>'
+         +'<span style="font-size:11px;font-weight:800;color:var(--tx)">'+a[2]+'</span>'
+         +'</div>'
+         +'<div style="font-size:10px;color:var(--tx2);line-height:1.5">'+a[3]+'</div>'
+         +'</div>'
+         +'</div>'
+         +'</div>';
+     }).join('')
+     +'</div>'
+
+      /* ── Próximos pasos ── */
+     +'<div style="background:var(--sf);border-radius:14px;box-shadow:var(--sh);overflow:hidden">'
+     +'<div style="padding:12px 16px;border-bottom:1px solid var(--br);font-size:12px;font-weight:800;color:var(--tx)">✅ Próximos Pasos para Desenredar</div>'
+     +[
+       ['1','Conciliar Mamá $50M','Abrir libro de gastos mayo e identificar exactamente qué se pagó con ese dinero'],
+       ['2','Confirmar saldo SUFI','Pedir extracto banco — verificar saldo exacto y fecha próxima cuota'],
+       ['3','Completar asignaciones Robledo','Los $64.58M "disponibles" deben reducirse con gastos reales rastreados'],
+       ['4','Verificar TC Falabella + Scotiabank','Confirmar si quedaron con saldo $0 o hay saldo pendiente todavía'],
+       ['5','Ubicar remanente venta apt $4.27M','¿Está en cuenta operacional o en cuenta separada del negocio?'],
+       ['6','Registrar gastos mayo en libro','Para que Tesorería refleje la realidad de mayo, no solo junio'],
+     ].map(function(p,i){
+       var done=(i<0);
+       return '<div style="padding:11px 14px;border-bottom:1px solid var(--br);display:flex;align-items:flex-start;gap:10px">'
+         +'<div style="width:24px;height:24px;border-radius:50%;background:#6366f1;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+p[0]+'</div>'
+         +'<div>'
+         +'<div style="font-size:11px;font-weight:800;color:var(--tx);margin-bottom:2px">'+p[1]+'</div>'
+         +'<div style="font-size:10px;color:var(--tx2)">'+p[2]+'</div>'
+         +'</div>'
+         +'</div>';
+     }).join('')
      +'</div>';
   }
 
