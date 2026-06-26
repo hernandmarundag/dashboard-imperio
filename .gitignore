@@ -1,0 +1,47 @@
+# Archivos de trabajo que NO van a producción
+dashboard-imperio-index-ACTUALIZADO.html
+index_dashboard_FIXED.html
+Dashboard\ Imperio.html.bak
+Dashboard\ Imperio.BACKUP.html
+
+# Credenciales locales
+.gh_token
+.gh_remote
+
+# Lock files de Office
+.~lock.*
+
+# Scripts locales de automatización
+ACTUALIZAR_DASHBOARD.command
+ACTUALIZAR_DASHBOARD.py
+DEPLOY_DASHBOARD.command
+PUSH_DASHBOARD.command
+run_process.command
+run_process.sh
+run_process.applescript
+patch_dashboard_imperio.py
+process_sheet.py
+
+# Archivos de análisis (no van a producción)
+AUDITORIA_RESUMEN.txt
+Estado_Proyecto_Pausa_Segura.md
+HOJA_DE_RUTA_CONTABLE.md
+PROMPT_AUDITORIA_SUPABASE.md
+
+# SQL files — se ejecutan directamente en Supabase, no se despliegan
+*.sql
+
+# Documentos de trabajo
+*.xlsx
+*.docx
+Analisis\ Financiero\ Consolidado.html
+Memoria_Dinero_Imperio.html
+
+# Archivos de AppScript (código diferente, repo diferente)
+Imperio_AppScript_*.gs
+Imperio_AppScript_*.js
+apps_script_imperio.js
+GAS_doGet_addon.js
+
+# Informes generados
+"Informe Gastos Jun 9-15.html"
