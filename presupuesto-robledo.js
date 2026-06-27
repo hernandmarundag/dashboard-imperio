@@ -643,64 +643,17 @@
     }
   }
 
-  // ── BLOQUE DE DATOS REALES (caja + correcciones) — se AGREGA arriba, no reemplaza ──
-  function sbReal(p){ var K=window.SB_KEY||''; return fetch((window.SB_URL||'https://dghmgaaprlzpfnpsqzav.supabase.co')+'/rest/v1/'+p,{headers:{apikey:K,'Authorization':'Bearer '+K}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return[];}); }
-  function finBlock(ajustes, abonos, gastos, caps){
-    var ab=(abonos||[]).reduce(function(a,b){return a+(b.monto||0);},0);
-    var ga=(gastos||[]).reduce(function(a,b){return a+(b.monto||0);},0);
-    var ut=0;(ajustes||[]).forEach(function(a){if(a.tipo==='utilidad_anticipada')ut+=(a.monto||0);});
-    var caja=ab-ga-ut;
-    var fmt2=function(v){return '$'+Math.round(v||0).toLocaleString('es-CO');};
-    var EL={pendiente:['#8892b0','Pendiente'],en_curso:['#f39c12','En curso'],ejecutado:['#2ecc71','Ejecutado']};
-    var rows=(caps||[]).map(function(c){
-      var p=+c.pagado_manual||0, pp=+c.ppto||0, est=c.estado||'pendiente';
-      if(est==='ejecutado'){p=pp;}
-      var fa=pp-p; var e=EL[est]||EL.pendiente;
-      return '<tr><td style="padding:7px 10px">'+c.num+'. '+c.nombre+'</td>'
-        +'<td style="padding:7px 10px;text-align:right">'+fmt2(pp)+'</td>'
-        +'<td style="padding:7px 10px;text-align:right;color:#f39c12">'+(p>0?fmt2(p):'—')+'</td>'
-        +'<td style="padding:7px 10px;text-align:right">'+fmt2(fa)+'</td>'
-        +'<td style="padding:7px 10px;text-align:center"><span style="font-size:10px;font-weight:700;color:'+e[0]+'">'+e[1]+'</span></td></tr>';
-    }).join('');
-    var totP=(caps||[]).reduce(function(a,c){return a+(+c.ppto||0);},0);
-    var totPag=(caps||[]).reduce(function(a,c){var est=c.estado||'pendiente';return a+(est==='ejecutado'?(+c.ppto||0):(+c.pagado_manual||0));},0);
-    return '<div style="font-family:sans-serif;margin-bottom:18px">'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">'
-      +'<div style="background:#1a1e2e;border-radius:9px;padding:12px 14px;border-left:4px solid #3b82f6"><div style="font-size:9px;color:#8892b0;text-transform:uppercase;font-weight:700">Abonos recibidos</div><div style="font-size:18px;font-weight:800;color:#e8eaf6">'+fmt2(ab)+'</div></div>'
-      +'<div style="background:#1a1e2e;border-radius:9px;padding:12px 14px;border-left:4px solid #f39c12"><div style="font-size:9px;color:#8892b0;text-transform:uppercase;font-weight:700">Gastos ejecutados</div><div style="font-size:18px;font-weight:800;color:#e8eaf6">'+fmt2(ga)+'</div></div>'
-      +'<div style="background:#1a1e2e;border-radius:9px;padding:12px 14px;border-left:4px solid #e74c3c"><div style="font-size:9px;color:#8892b0;text-transform:uppercase;font-weight:700">Utilidad anticipada</div><div style="font-size:18px;font-weight:800;color:#e8eaf6">'+fmt2(ut)+'</div></div>'
-      +'<div style="background:#1a1e2e;border-radius:9px;padding:12px 14px;border-left:4px solid #2ecc71"><div style="font-size:9px;color:#8892b0;text-transform:uppercase;font-weight:700">Caja real disponible</div><div style="font-size:18px;font-weight:800;color:#2ecc71">'+fmt2(caja)+'</div></div>'
-      +'</div>'
-      +'<div style="font-size:12px;font-weight:800;color:#4f8ef7;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 8px">📋 Presupuesto con tus correcciones reales (Pagado · Falta)</div>'
-      +'<table style="width:100%;border-collapse:collapse;font-size:12px;background:#161a28;border-radius:8px;overflow:hidden">'
-      +'<thead><tr style="background:#0d1117;color:#8892b0;font-size:10px;text-transform:uppercase"><th style="padding:8px 10px;text-align:left">Capítulo</th><th style="padding:8px 10px;text-align:right">Presupuesto</th><th style="padding:8px 10px;text-align:right">Pagado</th><th style="padding:8px 10px;text-align:right">Falta</th><th style="padding:8px 10px;text-align:center">Estado</th></tr></thead>'
-      +'<tbody>'+rows+'<tr style="background:#0d1117;font-weight:800"><td style="padding:8px 10px">TOTAL</td><td style="padding:8px 10px;text-align:right">'+fmt2(totP)+'</td><td style="padding:8px 10px;text-align:right;color:#f39c12">'+fmt2(totPag)+'</td><td style="padding:8px 10px;text-align:right">'+fmt2(totP-totPag)+'</td><td></td></tr></tbody></table>'
-      +'<div style="font-size:10px;color:#64748b;margin-top:6px">↑ Datos reales de la base · Abajo, tu tablero completo de 7 pestañas (intacto).</div>'
-      +'<hr style="border:none;border-top:1px solid #2a3050;margin:18px 0"></div>';
-  }
-
-  // ── MOUNT (enganche compatible + datos reales arriba) ──
+  // ── MOUNT (enganche compatible) ──
   let _rendered = false;
   function renderInto(container){
     container.innerHTML = '<div style="text-align:center;padding:28px;color:#8892b0;font-family:sans-serif;font-size:12px">⏳ Cargando presupuesto Robledo...</div>';
-    Promise.all([ fetchGastos(),
-      sbReal('ajustes_obra?obra_id=eq.robledo&select=tipo,monto'),
-      sbReal('abonos?obra_id=eq.robledo&select=monto'),
-      sbReal('presupuesto_caps?obra_id=eq.robledo&order=orden&select=num,nombre,ppto,estado,pagado_manual')
-    ]).then(function(res){
-      var gastos=res[0]||[];
-      container.innerHTML = finBlock(res[1],res[2],gastos,res[3]) + buildHTML(gastos);
-      setupTabs(container);
-      _rendered = true;
-    });
+    fetchGastos().then(function(gastos){ container.innerHTML = buildHTML(gastos); setupTabs(container); _rendered=true; });
   }
   function injectPresupuestoTab(){
     if (document.getElementById('otab-pre-robledo')) return;
-    var lastBtn = document.getElementById('otab-ldg-robledo'); if (!lastBtn) return;
-    injectStyles();
-    var btn = document.createElement('button'); btn.id='otab-pre-robledo'; btn.className='obra-tab';
-    btn.setAttribute('onclick',"obraTab('robledo','pre')"); btn.innerHTML='💰 Presupuesto';
-    lastBtn.parentElement.appendChild(btn);
+    var lastBtn=document.getElementById('otab-ldg-robledo'); if(!lastBtn)return; injectStyles();
+    var btn=document.createElement('button'); btn.id='otab-pre-robledo'; btn.className='obra-tab';
+    btn.setAttribute('onclick',"obraTab('robledo','pre')"); btn.innerHTML='💰 Presupuesto'; lastBtn.parentElement.appendChild(btn);
     var v=document.getElementById('v-robledo'); if(!v)return;
     var d=document.createElement('div'); d.id='otc-pre-robledo'; d.style.cssText='display:none;padding:12px 0'; v.appendChild(d);
     var _orig=window.obraTab;
@@ -710,7 +663,6 @@
     };
   }
   function waitAndInject(){ if(document.getElementById('otab-ldg-robledo')){injectPresupuestoTab();return;}
-    var ob=new MutationObserver(function(){if(document.getElementById('otab-ldg-robledo')){ob.disconnect();injectPresupuestoTab();}}); ob.observe(document.body,{childList:true,subtree:true});
-  }
+    var ob=new MutationObserver(function(){if(document.getElementById('otab-ldg-robledo')){ob.disconnect();injectPresupuestoTab();}}); ob.observe(document.body,{childList:true,subtree:true}); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitAndInject); else waitAndInject();
 })();
