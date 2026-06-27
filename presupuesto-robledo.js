@@ -124,7 +124,8 @@
     });
 
     const totalPpto = Object.values(CAPS).reduce((a, c) => a + c.ppto, 0);
-    const saldo = totalPpto - totalGastado;
+    // Saldo por pagar REAL = suma de lo que falta por capítulo (sin restar sobrecostos)
+    const saldo = Object.entries(CAPS).reduce((a, [nm, c]) => a + Math.max(0, c.ppto - (pagado[nm] || 0)), 0);
     const margen = DISPONIBLE - saldo;
 
     // Helpers
