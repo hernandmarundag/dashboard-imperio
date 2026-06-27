@@ -2701,23 +2701,55 @@ canvas{border-radius:4px}
           <div class="obra-opt" id="ow-n" onclick="selObra('novaeva')">🏢 Novaeva</div>
         </div>
       </div>
-      <div class="fdiv">Información del gasto</div>
+      <div class="fdiv">Clasificación</div>
       <div class="frow2">
-        <div class="fg"><label>Fecha *</label><input type="date" id="gf-fecha"></div>
-        <div class="fg"><label>Etapa general</label>
-          <select id="gf-etapa"><option>Preliminar</option><option>Cimentación</option><option>Losa</option><option>Estructura</option><option>Acabados</option><option>General</option></select>
+        <div class="fg"><label>Área (tipo de costo) *</label>
+          <select id="gf-area">
+            <option value="">— Selecciona —</option>
+            <option>Mano de obra</option>
+            <option>Materiales</option>
+            <option>Herramientas</option>
+            <option>Alquiler de equipos</option>
+            <option>Transporte</option>
+            <option>Excavación</option>
+            <option>Administración</option>
+            <option>Nómina</option>
+            <option>Seguridad social</option>
+            <option>Seguros</option>
+            <option>Planos</option>
+            <option>Activos</option>
+            <option>Varios</option>
+          </select>
+        </div>
+        <div class="fg"><label>Rubro de presupuesto *</label>
+          <select id="gf-rubro"><option value="">— Selecciona la obra primero —</option></select>
         </div>
       </div>
       <div class="frow2">
+        <div class="fg"><label>Etapa de obra</label>
+          <select id="gf-etapa">
+            <option value="">— Ninguna —</option>
+            <option>Preliminar</option>
+            <option>Cimentación</option>
+            <option>Pilas</option>
+            <option>Columnas</option>
+            <option>Vigas</option>
+            <option>Losas</option>
+            <option>Estructura</option>
+            <option>Acabados</option>
+            <option>General</option>
+          </select>
+        </div>
+        <div class="fg"><label>Detalle de etapa</label><input type="text" id="gf-eobra" placeholder="Pilas / Columnas..."></div>
+      </div>
+      <div class="fdiv">Información del gasto</div>
+      <div class="frow2">
+        <div class="fg"><label>Fecha *</label><input type="date" id="gf-fecha"></div>
         <div class="fg"><label>Pagado a *</label><input type="text" id="gf-nombre" placeholder="Proveedor o persona" list="dl-nombres" autocomplete="off"></div>
         <datalist id="dl-nombres"></datalist>
-        <div class="fg"><label>No. Cotización / Factura</label><input type="text" id="gf-cotiz"></div>
       </div>
-      <div class="fg" style="flex-direction:row;align-items:center;gap:8px">
-        <input type="checkbox" id="gf-facrev" style="width:15px;height:15px">
-        <label for="gf-facrev" style="font-size:13px;font-weight:400;cursor:pointer">Factura revisada ✓</label>
-      </div>
-      <div class="fdiv">Detalle</div>
+      <div class="fg"><label>Descripción *</label><textarea id="gf-desc" placeholder="Describe el gasto con detalle..."></textarea></div>
+      <div class="fdiv">Detalle y soporte</div>
       <div class="frow2">
         <div class="fg"><label>Material</label>
           <select id="gf-mat"><option>No aplica</option><option>Hierro</option><option>Cemento</option><option>Concreto/mixer</option><option>Material general</option><option>Material Hidro</option><option>Material Electrico</option><option>Madera General</option><option>Mixto</option></select>
@@ -2725,12 +2757,12 @@ canvas{border-radius:4px}
         <div class="fg"><label>Cantidad</label><input type="number" id="gf-cant" placeholder="Unidades"></div>
       </div>
       <div class="frow2">
-        <div class="fg"><label>Área / Ítem</label>
-          <select id="gf-area"><option>MO general</option><option>Materiales general</option><option>Excavacion</option><option>Herramientas</option><option>Seguros</option><option>Alquiler equipos</option><option>Administracion</option><option>Transporte</option><option>Varios</option><option>Activos</option><option>Seguridad social</option><option>Nomina ADM</option><option>nomina empleados</option></select>
+        <div class="fg"><label>No. Cotización / Factura</label><input type="text" id="gf-cotiz"></div>
+        <div class="fg" style="flex-direction:row;align-items:center;gap:8px;margin-top:22px">
+          <input type="checkbox" id="gf-facrev" style="width:15px;height:15px">
+          <label for="gf-facrev" style="font-size:13px;font-weight:400;cursor:pointer">Factura revisada ✓</label>
         </div>
-        <div class="fg"><label>Etapa / Obra detalle</label><input type="text" id="gf-eobra" placeholder="Pilas / Columnas..."></div>
       </div>
-      <div class="fg"><label>Descripción *</label><textarea id="gf-desc" placeholder="Describe el gasto con detalle..."></textarea></div>
       <div class="fdiv">Valores</div>
       <div class="frow2">
         <div class="fg"><label>Valor IVA incluido</label><input type="number" id="gf-iva" placeholder="0"></div>
@@ -2747,7 +2779,7 @@ canvas{border-radius:4px}
             <option value="Externo">Externo / Socio</option>
           </select>
         </div>
-        <div class="fg"><label>Cuenta / TC recurso</label><select id="gf-cta" onchange="updDed()"></select></div>
+        <div class="fg"><label>Cuenta / TC recurso *</label><select id="gf-cta" onchange="updDed()"></select></div>
       </div>
       <div class="ded-prev" id="ded-prev">Ingresa el valor total para ver el descuento automático.</div>
     </div>
@@ -7630,6 +7662,25 @@ function selObra(o) {
   document.getElementById('ow-w').className = 'obra-opt' + (o==='weliving' ? ' ow' : '');
   document.getElementById('ow-r').className = 'obra-opt' + (o==='robledo'  ? ' oor' : '');
   document.getElementById('ow-n').className = 'obra-opt' + (o==='novaeva'  ? ' on2' : '');
+  populateRubros(o);
+}
+
+// Carga los rubros de presupuesto de la obra en el menú Rubro (fuente: Supabase)
+function populateRubros(o){
+  var sel = document.getElementById('gf-rubro');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Cargando rubros… —</option>';
+  fetch(SB_URL+'/rest/v1/presupuesto_rubros?obra_id=eq.'+encodeURIComponent(o)+'&select=rubro&order=orden', {headers:SB_H})
+    .then(function(r){return r.json();})
+    .then(function(rows){
+      if(!Array.isArray(rows) || !rows.length){
+        sel.innerHTML = '<option value="">— Esta obra aún no tiene presupuesto —</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">— Selecciona rubro —</option>' +
+        rows.map(function(x){ var r=(x.rubro||''); return '<option value="'+r.replace(/"/g,'&quot;')+'">'+r+'</option>'; }).join('');
+    })
+    .catch(function(e){ sel.innerHTML='<option value="">— Error cargando rubros —</option>'; console.warn('populateRubros:',e); });
 }
 
 function updCtaOpts() {
@@ -7677,6 +7728,11 @@ function saveGasto() {
   var ivaVal    = parseFloat(document.getElementById('gf-iva')   ? document.getElementById('gf-iva').value   : '') || null;
   var facrevVal = document.getElementById('gf-facrev') ? document.getElementById('gf-facrev').checked : false;
 
+  var rubroEl  = document.getElementById('gf-rubro');
+  var rubroVal = rubroEl ? rubroEl.value : '';
+  if (metodo !== 'Externo' && (!ctaV || ctaV === '')) { alert('Selecciona la cuenta o tarjeta con que se pagó'); return; }
+  if (rubroEl && rubroEl.options.length > 1 && !rubroVal) { alert('Selecciona el rubro de presupuesto'); return; }
+
   // Payload directo a Supabase (fuente única de verdad)
   var sbData = {
     obra:        _selObra,
@@ -7692,7 +7748,8 @@ function saveGasto() {
     cotiz:       cotizVal,
     cantidad:    cantVal,
     iva:         ivaVal,
-    facrev:      facrevVal
+    facrev:      facrevVal,
+    rubro:       rubroVal || null
   };
 
   // Estado de carga — deshabilitar botón
