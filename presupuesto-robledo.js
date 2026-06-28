@@ -10,7 +10,8 @@
   const OBRA = 'robledo';
   const TAB  = 'presupuesto';
   const SB_URL_FB = 'https://dghmgaaprlzpfnpsqzav.supabase.co';
-  const DISPONIBLE = 226000000;
+  let DISPONIBLE = 215000000;
+  let ROB_CAJA=60000000, ROB_PORCOBRAR=155000000, ROB_AVANCE=60, ROB_ENTREGA='últ. sem ago';
 
   // ── CAPÍTULOS CON PRESUPUESTO CORRECTO ──────────────────────────────────
   const CAPS = {
@@ -124,7 +125,8 @@
     });
 
     const totalPpto = Object.values(CAPS).reduce((a, c) => a + c.ppto, 0);
-    const saldo = totalPpto - totalGastado;
+    // Saldo por pagar REAL = suma de lo que falta por capítulo (sin restar sobrecostos)
+    const saldo = Object.entries(CAPS).reduce((a, [nm, c]) => a + Math.max(0, c.ppto - (pagado[nm] || 0)), 0);
     const margen = DISPONIBLE - saldo;
 
     // Helpers
@@ -197,8 +199,8 @@
     <div class="rob-kpi y"><label>Ejecutado Supabase</label><div class="v" style="color:#f39c12">${fmt(totalGastado)}</div><div class="nt">${(gastos||[]).length} movimientos</div></div>
     <div class="rob-kpi"><label>Saldo por pagar</label><div class="v">${fmt(saldo)}</div><div class="nt">Ppto − gastado</div></div>
     <div class="rob-kpi ${margen < 5e6 ? 'r' : margen < 20e6 ? 'y' : 'g'}"><label>Margen de caja</label><div class="v" style="color:${margenColor}">${fmt(margen)}</div><div class="nt">${margen < 5e6 ? '⚠ MUY AJUSTADO' : margen < 20e6 ? 'AJUSTADO' : '✓ OK'}</div></div>
-    <div class="rob-kpi y"><label>Avance físico</label><div class="v" style="color:#f39c12">55%</div><div class="nt">Mampost.85% · Pisos✓</div></div>
-    <div class="rob-kpi"><label>Tiempo restante</label><div class="v">10 sem</div><div class="nt">Hasta fin Ago 2026</div></div>
+    <div class="rob-kpi y"><label>Avance físico</label><div class="v" style="color:#f39c12">${ROB_AVANCE}%</div><div class="nt">Real de obra</div></div>
+    <div class="rob-kpi"><label>Tiempo restante</label><div class="v">${ROB_ENTREGA}</div><div class="nt">Entrega agosto</div></div>
     <div class="rob-kpi"><label>Puntos eléctricos</label><div class="v">104</div><div class="nt">+ 9 puntos CAT6</div></div>
   </div>
   <div class="rob-c2">
@@ -207,8 +209,8 @@
       <div class="rob-card"><table>
         <thead><tr><th>Concepto</th><th>Valor</th><th>Estado</th></tr></thead>
         <tbody>
-          <tr><td>Cash disponible</td><td class="r">$60,000,000</td><td><span class="rob-tag rob-tb">Disponible</span></td></tr>
-          <tr><td>Por cobrar al cliente</td><td class="r">$166,000,000</td><td><span class="rob-tag rob-ty">Cobrar urgente</span></td></tr>
+          <tr><td>Cash disponible</td><td class="r">${fmt(ROB_CAJA)}</td><td><span class="rob-tag rob-tb">Disponible</span></td></tr>
+          <tr><td>Por cobrar al cliente (Julieth)</td><td class="r">${fmt(ROB_PORCOBRAR)}</td><td><span class="rob-tag rob-ty">Cobrar urgente</span></td></tr>
           <tr class="rob-sub"><td><b>TOTAL DISPONIBLE</b></td><td class="r"><b>${fmt(DISPONIBLE)}</b></td><td></td></tr>
           <tr><td>Presupuesto total obra</td><td class="r">${fmt(totalPpto)}</td><td><span class="rob-tag rob-tb">Total</span></td></tr>
           <tr style="color:#2ecc71"><td>✓ Gastado (Supabase)</td><td class="r">-${fmt(totalGastado)}</td><td><span class="rob-tag rob-tg">Confirmado</span></td></tr>
@@ -217,13 +219,12 @@
         </tbody>
       </table></div>
       <div class="rob-h">Alertas de obra</div>
-      <div class="rob-ao rob-al">✓ Pisos 250m² TERMINADOS · $22.2M pagado ✓</div>
-      <div class="rob-ao rob-al">✓ Ladrillo adobe 147m² — COMPRADO Y PAGADO $5M ✓</div>
-      <div class="rob-ar rob-al">🔴 URGENTE: Escaleras — armado+vaciado NO gestionado</div>
-      <div class="rob-ar rob-al">🔴 Red hidráulica en muros — sin iniciar</div>
-      <div class="rob-ar rob-al">🔴 Conduit eléctrico — 70% mat. comprado, sin instalar</div>
-      <div class="rob-aw rob-al">⚠ Terminar mampostería 15% restante</div>
-      <div class="rob-aw rob-al">⚠ Contratar electricista y carpintero externos</div>
+      <div class="rob-ao rob-al">✓ Mampostería: 90% comprada · 70% ejecutada</div>
+      <div class="rob-ao rob-al">✓ Losa de contrapiso terminada · falta mortero + cerámica</div>
+      <div class="rob-ar rob-al">🔴 Eléctrico: comprado tubería+cajas, FALTA EL CABLE (lo más caro)</div>
+      <div class="rob-ar rob-al">🔴 Escalera: hierro ✓, falta armar formaleta + vaciar</div>
+      <div class="rob-aw rob-al">⚠ Hidráulica (agua) por hacer · hidrosanitaria 90%</div>
+      <div class="rob-aw rob-al">⚠ Pendiente: drywall, ventanería, pintura, carpintería</div>
     </div>
     <div>
       <div class="rob-h">Capítulos vs Ejecución</div>
@@ -297,105 +298,9 @@
 
 <!-- ═══ PRESUPUESTO DETALLADO ══════════════════════════════════════════ -->
 <div id="rt-rpre" class="rob-pane2">
-  <div class="rob-kpis" style="grid-template-columns:repeat(3,1fr)">
-    <div class="rob-kpi y"><label>Total presupuestado</label><div class="v">${fmt(totalPpto)}</div></div>
-    <div class="rob-kpi"><label>Disponible</label><div class="v">${fmt(DISPONIBLE)}</div></div>
-    <div class="rob-kpi g"><label>Margen</label><div class="v" style="color:${margenColor}">${fmt(margen)}</div></div>
-  </div>
-  <div class="rob-card"><table>
-    <thead><tr><th>Ítem</th><th>Descripción</th><th>Und</th><th class="r">Cant.</th><th class="r">P.Unit.</th><th class="r">Desp.</th><th class="r">Presupuesto</th><th class="r">Gastado</th><th class="r">Saldo</th><th>Nota</th></tr></thead>
-    <tbody>
-      <tr class="rob-sr"><td colspan="10">1. PRELIMINARES</td></tr>
-      <tr><td>1.1</td><td>Campamento y bodega</td><td class="c">glb</td><td class="r">1</td><td class="r">$800,000</td><td class="r">1.00</td><td class="r">$800,000</td><td class="r">—</td><td class="r">—</td><td>✓ Ejecutado</td></tr>
-      <tr><td>1.2</td><td>Cerramiento provisional</td><td class="c">glb</td><td class="r">1</td><td class="r">$300,000</td><td class="r">1.00</td><td class="r">$300,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>1.3–4</td><td>Señalización + aseo final 247m²</td><td class="c">glb</td><td class="r">1</td><td class="r">$1,508,500</td><td class="r">1.00</td><td class="r">$1,508,500</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.1</b></td><td class="r"><b>$2,608,500</b></td><td class="r">${fmtGas('Preliminares')}</td><td class="r">${fmtSal(2608500,'Preliminares')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">3. MAMPOSTERÍA — 147m²</td></tr>
-      <tr class="rob-done"><td>3.1</td><td>Ladrillo adobe 147m² + mortero pega</td><td class="c">glb</td><td class="r">1</td><td class="r">$5,000,000</td><td class="r">1.00</td><td class="r">$5,000,000</td><td class="r" style="color:#2ecc71">$5,000,000</td><td class="r" style="color:#2ecc71">$0</td><td>✓ PAGADO</td></tr>
-      <tr><td>3.2</td><td>MO pegue mampostería 147m²</td><td class="c">m²</td><td class="r">147</td><td class="r">—</td><td class="r">—</td><td class="r">$0</td><td class="r">—</td><td class="r">—</td><td>MO en Cap.10</td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.3 — 85% ejecutado</b></td><td class="r"><b>$5,000,000</b></td><td class="r">${fmtGas('Mampostería')}</td><td class="r">${fmtSal(5000000,'Mampostería')}</td><td>MO en Cap.10</td></tr>
-
-      <tr class="rob-sr"><td colspan="10">4b. ESCALERAS — vaciado (hierro ya instalado)</td></tr>
-      <tr class="rob-done"><td>4b.0</td><td>Acero figurado escalera</td><td class="c">glb</td><td class="r">1</td><td class="r">—</td><td class="r">—</td><td class="r">$0</td><td class="r">—</td><td class="r">—</td><td>✓ YA INSTALADO</td></tr>
-      <tr><td>4b.1</td><td>Formaleta madera escalera</td><td class="c">m²</td><td class="r">12</td><td class="r">$32,000</td><td class="r">1.10</td><td class="r">$422,400</td><td class="r">—</td><td class="r">—</td><td>MO en Cap.10</td></tr>
-      <tr><td>4b.2</td><td>Concreto 21MPa vaciado escalera</td><td class="c">m³</td><td class="r">2</td><td class="r">$480,000</td><td class="r">1.00</td><td class="r">$960,000</td><td class="r">—</td><td class="r">—</td><td>MO en Cap.10</td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.4b</b></td><td class="r"><b>$1,382,400</b></td><td class="r">${fmtGas('Escaleras')}</td><td class="r">${fmtSal(1382400,'Escaleras')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">5. REVOQUES Y ESTUCOS</td></tr>
-      <tr><td>5.1</td><td>Mortero revoque interior (mat)</td><td class="c">m²</td><td class="r">320</td><td class="r">$15,000</td><td class="r">1.10</td><td class="r">$5,280,000</td><td class="r">—</td><td class="r">—</td><td>MO en Cap10</td></tr>
-      <tr><td>5.2</td><td>Mortero revoque exterior posterior (mat)</td><td class="c">m²</td><td class="r">35</td><td class="r">$18,000</td><td class="r">1.10</td><td class="r">$693,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>5.3</td><td>Estuco acrílico interior (mat)</td><td class="c">m²</td><td class="r">320</td><td class="r">$8,500</td><td class="r">1.05</td><td class="r">$2,856,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>5.4</td><td>Impermeabilizante muros baños (mat)</td><td class="c">m²</td><td class="r">23</td><td class="r">$12,000</td><td class="r">1.05</td><td class="r">$289,800</td><td class="r">—</td><td class="r">—</td><td>5 baños</td></tr>
-      <tr><td>5.5</td><td>Filos y dilataciones (mat)</td><td class="c">ml</td><td class="r">320</td><td class="r">$2,500</td><td class="r">1.00</td><td class="r">$800,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.5</b></td><td class="r"><b>$9,918,800</b></td><td class="r">${fmtGas('Revoques y Estucos')}</td><td class="r">${fmtSal(9918800,'Revoques y Estucos')}</td><td></td></tr>
-
-      <tr class="rob-done"><td colspan="10">6. IMPERMEABILIZACIÓN LOSA — ✓ YA EJECUTADA CON PLÁSTICO — $0 pendiente</td></tr>
-
-      <tr class="rob-sr"><td colspan="10">7. CONTRAPISO Y PISOS — 250m² TODOS CERÁMICOS</td></tr>
-      <tr><td>7.1</td><td>Contrapiso restante 10% (mat)</td><td class="c">m²</td><td class="r">25</td><td class="r">$27,500</td><td class="r">1.00</td><td class="r">$687,500</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>7.2</td><td>Mortero nivelación piso 3cm (mat)</td><td class="c">m²</td><td class="r">250</td><td class="r">$8,500</td><td class="r">1.05</td><td class="r">$2,231,250</td><td class="r">—</td><td class="r">—</td><td>MO en Cap10</td></tr>
-      <tr><td>7.3</td><td>Piso cerámico 30×30 + pega epóxica + lechada</td><td class="c">m²</td><td class="r">250</td><td class="r">$70,000</td><td class="r">1.03</td><td class="r">$18,025,000</td><td class="r">—</td><td class="r">—</td><td>250m² incl. locales</td></tr>
-      <tr><td>7.3b</td><td>Enchape pared baños 20×30 + pega</td><td class="c">m²</td><td class="r">75</td><td class="r">$45,000</td><td class="r">1.05</td><td class="r">$3,543,750</td><td class="r">—</td><td class="r">—</td><td>~15m² × 5 baños</td></tr>
-      <tr><td>7.4</td><td>Guardaescoba cerámica (CI + locales)</td><td class="c">ml</td><td class="r">140</td><td class="r">$8,500</td><td class="r">1.05</td><td class="r">$1,249,500</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.7</b></td><td class="r"><b>$25,737,000</b></td><td class="r">${fmtGas('Pisos y Enchapes')}</td><td class="r">${fmtSal(25737000,'Pisos y Enchapes')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">8. DRYWALL — PAREDES (85m²) + CIELOS (210m²)</td></tr>
-      <tr><td>8.1</td><td>Perfil Cal.20 pared (mat)</td><td class="c">m²</td><td class="r">85</td><td class="r">$22,000</td><td class="r">1.10</td><td class="r">$2,057,000</td><td class="r">—</td><td class="r">—</td><td>Paredes drywall</td></tr>
-      <tr><td>8.2</td><td>Placa drywall 1/2" pared doble cara</td><td class="c">m²</td><td class="r">85</td><td class="r">$28,000</td><td class="r">1.05</td><td class="r">$2,499,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>8.3–4</td><td>Masilla+cinta+tornillería pared</td><td class="c">m²</td><td class="r">85</td><td class="r">$7,500</td><td class="r">1.00</td><td class="r">$637,500</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>8.5</td><td>Estructura metálica cielorrasos (mat)</td><td class="c">m²</td><td class="r">210</td><td class="r">$19,000</td><td class="r">1.05</td><td class="r">$4,189,500</td><td class="r">—</td><td class="r">—</td><td>CI + locales</td></tr>
-      <tr><td>8.6</td><td>Placa drywall 1/2" cielo 1 cara</td><td class="c">m²</td><td class="r">210</td><td class="r">$21,000</td><td class="r">1.03</td><td class="r">$4,542,300</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>8.7</td><td>Masilla+cinta cielo (mat)</td><td class="c">m²</td><td class="r">210</td><td class="r">$5,500</td><td class="r">1.00</td><td class="r">$1,155,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.8</b></td><td class="r"><b>$15,080,300</b></td><td class="r">${fmtGas('Drywall')}</td><td class="r">${fmtSal(15080300,'Drywall')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">9. VENTANERÍA Y FACHADA</td></tr>
-      <tr><td>9.1</td><td>Vidrio 6mm + perfil alum. fachada Loc.01+02</td><td class="c">m²</td><td class="r">14</td><td class="r">$550,000</td><td class="r">1.00</td><td class="r">$7,700,000</td><td class="r">—</td><td class="r">—</td><td>Solo frente calle</td></tr>
-      <tr><td>9.2</td><td>Puertas vidrio templado acceso locales (2)</td><td class="c">und</td><td class="r">2</td><td class="r">$1,850,000</td><td class="r">1.00</td><td class="r">$3,700,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>9.3</td><td>Ventanas alum.+vidrio 4mm salones CI</td><td class="c">m²</td><td class="r">8</td><td class="r">$185,000</td><td class="r">1.00</td><td class="r">$1,480,000</td><td class="r">—</td><td class="r">—</td><td>Norma CI</td></tr>
-      <tr><td>9.4</td><td>Silicona estructural y sellado</td><td class="c">glb</td><td class="r">1</td><td class="r">$650,000</td><td class="r">1.00</td><td class="r">$650,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.9</b></td><td class="r"><b>$13,530,000</b></td><td class="r">${fmtGas('Ventanería')}</td><td class="r">${fmtSal(13530000,'Ventanería')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">10. MANO DE OBRA GENERAL EMPRESA</td></tr>
-      <tr><td>10.1</td><td>Cuadrilla empresa $23M/mes × 2.5 meses</td><td class="c">mes</td><td class="r">2.5</td><td class="r">$23,000,000</td><td class="r">1.00</td><td class="r">$57,500,000</td><td class="r">${fmtGas('Mano de Obra')}</td><td class="r">${fmtSal(57500000,'Mano de Obra')}</td><td>Maestro+2 of.+2 ay.</td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.10</b></td><td class="r"><b>$57,500,000</b></td><td class="r">${fmtGas('Mano de Obra')}</td><td class="r">${fmtSal(57500000,'Mano de Obra')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">11. ELÉCTRICO (104 pts) + RED DATOS CAT6 (9 pts)</td></tr>
-      <tr><td>11.1–13</td><td>Cables NLT + conduit + cajas + dispositivos + tablero</td><td class="c">glb</td><td class="r">1</td><td class="r">$8,898,000</td><td class="r">1.00</td><td class="r">$8,898,000</td><td class="r">—</td><td class="r">—</td><td>Materiales eléctrico</td></tr>
-      <tr><td>11.14–19</td><td>Red CAT6: cable UTP+keystone+cajas+patch panel+switch</td><td class="c">glb</td><td class="r">1</td><td class="r">$2,532,000</td><td class="r">1.00</td><td class="r">$2,532,000</td><td class="r">—</td><td class="r">—</td><td>9 puntos datos</td></tr>
-      <tr><td>11.20</td><td>MO electricista: 104 pts × $35,000</td><td class="c">glb</td><td class="r">1</td><td class="r">$3,640,000</td><td class="r">1.00</td><td class="r">$3,640,000</td><td class="r">—</td><td class="r">—</td><td>Externo</td></tr>
-      <tr><td>11.21</td><td>MO tablero + acometida + red datos</td><td class="c">glb</td><td class="r">1</td><td class="r">$850,000</td><td class="r">1.00</td><td class="r">$850,000</td><td class="r">—</td><td class="r">—</td><td>Externo</td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.11</b></td><td class="r"><b>$15,920,000</b></td><td class="r">${fmtGas('Eléctrico')}</td><td class="r">${fmtSal(15920000,'Eléctrico')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">12. HIDRO-SANITARIO</td></tr>
-      <tr><td>12.1–9</td><td>Tubería+sanitarios+lavamanos+duchas+griferías+tanque+MO</td><td class="c">glb</td><td class="r">1</td><td class="r">$10,310,000</td><td class="r">1.00</td><td class="r">$10,310,000</td><td class="r">${fmtGas('Hidráulico')}</td><td class="r">${fmtSal(10310000,'Hidráulico')}</td><td>Ver Excel hoja 2</td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.12</b></td><td class="r"><b>$10,310,000</b></td><td class="r">${fmtGas('Hidráulico')}</td><td class="r">${fmtSal(10310000,'Hidráulico')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">13. CARPINTERÍA COMPLETA</td></tr>
-      <tr><td>Coc.</td><td>Muebles cocina + mesón granito + lavaplatos + grifería</td><td class="c">glb</td><td class="r">1</td><td class="r">$3,460,000</td><td class="r">1.00</td><td class="r">$3,460,000</td><td class="r">—</td><td class="r">—</td><td>Cocineta empl.</td></tr>
-      <tr><td>Ptas</td><td>11 puertas HDF (CI+baños) con marcos y chapas</td><td class="c">glb</td><td class="r">1</td><td class="r">$5,475,000</td><td class="r">1.00</td><td class="r">$5,475,000</td><td class="r">—</td><td class="r">—</td><td>Desglose en tab</td></tr>
-      <tr><td>Bños</td><td>Mesones lavamanos + espejos + accesorios (5 baños)</td><td class="c">glb</td><td class="r">1</td><td class="r">$3,100,000</td><td class="r">1.00</td><td class="r">$3,100,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>Alm.</td><td>Lockers 6 puestos + estante didáctico</td><td class="c">glb</td><td class="r">1</td><td class="r">$1,400,000</td><td class="r">1.00</td><td class="r">$1,400,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>MO</td><td>MO carpintero externo (contrato global)</td><td class="c">glb</td><td class="r">1</td><td class="r">$4,500,000</td><td class="r">1.00</td><td class="r">$4,500,000</td><td class="r">—</td><td class="r">—</td><td>Externo</td></tr>
-      <tr class="rob-sub"><td colspan="6"><b>SUBTOTAL CAP.13</b></td><td class="r"><b>$17,935,000</b></td><td class="r">${fmtGas('Carpintería')}</td><td class="r">${fmtSal(17935000,'Carpintería')}</td><td></td></tr>
-
-      <tr class="rob-sr"><td colspan="10">14–19. PINTURA / EQUIPOS / METÁLICA / GAS / ASEO / ADMIN</td></tr>
-      <tr><td>14</td><td>Pintura int.+ext. (2 manos) + sellador</td><td class="c">glb</td><td class="r">1</td><td class="r">$5,980,000</td><td class="r">1.00</td><td class="r">$5,980,000</td><td class="r">${fmtGas('Pintura')}</td><td class="r">${fmtSal(5980000,'Pintura')}</td><td></td></tr>
-      <tr><td>15</td><td>Extintor×3 + gabinete inc. + CCTV + cerradura + señalización</td><td class="c">glb</td><td class="r">1</td><td class="r">$3,745,000</td><td class="r">1.00</td><td class="r">$3,745,000</td><td class="r">${fmtGas('Equipos y CCTV')}</td><td class="r">${fmtSal(3745000,'Equipos y CCTV')}</td><td></td></tr>
-      <tr><td>16</td><td>Carp. metálica (puerta, remates, pasamanos)</td><td class="c">glb</td><td class="r">1</td><td class="r">$2,070,000</td><td class="r">1.00</td><td class="r">$2,070,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>17</td><td>Gas EPM + conector estufa</td><td class="c">glb</td><td class="r">1</td><td class="r">$2,335,000</td><td class="r">1.00</td><td class="r">$2,335,000</td><td class="r">${fmtGas('Gas')}</td><td class="r">${fmtSal(2335000,'Gas')}</td><td></td></tr>
-      <tr><td>18</td><td>Retiro escombros + aseo final</td><td class="c">glb</td><td class="r">1</td><td class="r">$2,350,000</td><td class="r">1.00</td><td class="r">$2,350,000</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr><td>19</td><td>Residente 2.5m + EPP + servicios temp.</td><td class="c">glb</td><td class="r">1</td><td class="r">$8,900,000</td><td class="r">1.00</td><td class="r">$8,900,000</td><td class="r">${fmtGas('Administración')}</td><td class="r">${fmtSal(8900000,'Administración')}</td><td></td></tr>
-      <tr><td>13b</td><td>Electrodomésticos cocineta (nevera+estufa+micro+cafe)</td><td class="c">glb</td><td class="r">1</td><td class="r">$2,230,000</td><td class="r">1.00</td><td class="r">$2,230,000</td><td class="r">${fmtGas('Electrodomésticos')}</td><td class="r">${fmtSal(2230000,'Electrodomésticos')}</td><td></td></tr>
-      <tr><td>20</td><td>Imprevistos 1.5%</td><td class="c">glb</td><td class="r">1</td><td class="r">$2,848,053</td><td class="r">1.00</td><td class="r">$2,848,053</td><td class="r">—</td><td class="r">—</td><td></td></tr>
-      <tr style="background:#0d1a30"><td colspan="6" style="font-weight:700;font-size:12px;color:#4f8ef7">▶ TOTAL PRESUPUESTADO</td><td class="r" style="font-size:12px;font-weight:700;color:#4f8ef7">${fmt(totalPpto)}</td><td class="r" style="color:#2ecc71;font-weight:700">${fmt(totalGastado)}</td><td class="r" style="color:#f39c12;font-weight:700">${fmt(saldo)}</td><td></td></tr>
-      <tr style="background:#0d2a1a"><td colspan="6" style="font-weight:700;color:#2ecc71">DISPONIBLE</td><td class="r" style="color:#2ecc71;font-weight:700" colspan="3">${fmt(DISPONIBLE)}</td><td></td></tr>
-      <tr style="background:#0d3a1a"><td colspan="6" style="font-weight:700;color:${margenColor}">✓ MARGEN</td><td class="r" style="color:${margenColor};font-weight:700;font-size:12px" colspan="3">${fmt(margen)}</td><td></td></tr>
-    </tbody>
-  </table></div>
+  <div id="rob-pre-edit" style="font-family:sans-serif;color:#e8eaf6">⏳ Cargando presupuesto editable desde la base...</div>
 </div>
 
-<!-- ═══ CARPINTERÍA ══════════════════════════════════════════════════════ -->
 <div id="rt-rcar" class="rob-pane2">
   <div class="rob-c2">
     <div>
@@ -643,11 +548,80 @@
     }
   }
 
+
+  // ── PRESUPUESTO EDITABLE conectado a la base ──────────────────────────────
+  var _PC=[], _PI=[];
+  function _fmtP(v){ return '$'+Math.round(v||0).toLocaleString('es-CO'); }
+  function _sbu(){ return window.SB_URL||SB_URL_FB; }
+  function _hdr(){ var K=window.SB_KEY||''; return {'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'return=minimal'}; }
+  function loadPreEditable(){
+    var el=document.getElementById('rob-pre-edit'); if(!el) return;
+    var K=window.SB_KEY||''; var h={'apikey':K,'Authorization':'Bearer '+K};
+    Promise.all([
+      fetch(_sbu()+'/rest/v1/presupuesto_caps?obra_id=eq.robledo&order=orden',{headers:h}).then(function(r){return r.json();}),
+      fetch(_sbu()+'/rest/v1/presupuesto_items?obra_id=eq.robledo&order=orden',{headers:h}).then(function(r){return r.json();})
+    ]).then(function(res){ _PC=res[0]||[]; _PI=res[1]||[]; drawPre(); })
+    .catch(function(e){ el.innerHTML='<div style="padding:18px;color:#f87171">Error cargando presupuesto: '+e+'</div>'; });
+  }
+  function drawPre(){
+    var el=document.getElementById('rob-pre-edit'); if(!el) return;
+    var byCap={}; _PI.forEach(function(i){ (byCap[i.cap_num]=byCap[i.cap_num]||[]).push(i); });
+    var grand=_PC.reduce(function(a,c){return a+(+c.ppto||0);},0);
+    var h='<div style="margin-bottom:12px;font-size:12px;color:#fbbf24">✏️ Edita <b>Cant.</b> o <b>P.Unit</b> — recalcula y guarda solo. Total presupuesto: <b id="rob-grand" style="color:#fff;font-size:15px">'+_fmtP(grand)+'</b></div>';
+    h+='<div class="rob-card" style="padding:0;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+    h+='<thead><tr style="background:#0b0f1d;color:#8892b0;font-size:10px;text-transform:uppercase"><th style="text-align:left;padding:8px 10px">Ítem / Descripción</th><th style="padding:8px">Und</th><th style="padding:8px">Cant.</th><th style="padding:8px">P.Unit</th><th style="padding:8px;text-align:right">Total</th><th style="padding:8px;text-align:left">Nota</th></tr></thead><tbody>';
+    _PC.forEach(function(c){
+      var its=byCap[c.num]||[];
+      h+='<tr style="background:#1a2036"><td colspan="4" style="padding:8px 10px;font-weight:800;color:#a5b4fc">'+c.num+'. '+(c.nombre||'')+'</td><td style="padding:8px;text-align:right;font-weight:800;color:#fff" id="robcap-'+c.num+'">'+_fmtP(c.ppto)+'</td><td style="padding:8px;font-size:10px;color:#8892b0">'+(c.nota_obra||'')+'</td></tr>';
+      its.forEach(function(i){
+        h+='<tr style="border-bottom:1px solid rgba(255,255,255,.05)">'
+          +'<td style="padding:6px 10px;color:#cbd5e1">'+(i.item||'')+' '+(i.descripcion||'')+'</td>'
+          +'<td style="padding:6px;text-align:center;color:#64748b">'+(i.und||'')+'</td>'
+          +'<td style="padding:4px;text-align:center"><input type="number" data-id="'+i.id+'" data-f="cant" value="'+(i.cant||0)+'" style="width:72px;background:#0b0f1d;border:1px solid #2a3050;color:#fbbf24;border-radius:5px;padding:5px;text-align:right;font-weight:600"></td>'
+          +'<td style="padding:4px;text-align:center"><input type="number" data-id="'+i.id+'" data-f="punit" value="'+(i.punit||0)+'" style="width:92px;background:#0b0f1d;border:1px solid #2a3050;color:#fbbf24;border-radius:5px;padding:5px;text-align:right;font-weight:600"></td>'
+          +'<td style="padding:6px 10px;text-align:right;font-weight:600;color:#e8eaf6" id="robtot-'+i.id+'">'+_fmtP(i.total)+'</td><td></td></tr>';
+      });
+    });
+    h+='</tbody></table></div>';
+    el.innerHTML=h;
+    el.querySelectorAll('input[data-id]').forEach(function(inp){
+      inp.addEventListener('input', function(){ preUpd(parseInt(inp.getAttribute('data-id')), inp.getAttribute('data-f'), inp.value); });
+    });
+  }
+  var _saveTimers={};
+  function preUpd(id, field, val){
+    var it=_PI.find(function(x){return x.id===id;}); if(!it) return;
+    it[field]=parseFloat(val)||0; it.total=(+it.cant||0)*(+it.punit||0);
+    var tc=document.getElementById('robtot-'+id); if(tc) tc.textContent=_fmtP(it.total);
+    var cap=it.cap_num;
+    var capTot=_PI.filter(function(x){return x.cap_num===cap;}).reduce(function(a,x){return a+(+x.total||0);},0);
+    var co=_PC.find(function(c){return c.num===cap;}); if(co) co.ppto=capTot;
+    var cc=document.getElementById('robcap-'+cap); if(cc) cc.textContent=_fmtP(capTot);
+    var grand=_PC.reduce(function(a,c){return a+(+c.ppto||0);},0);
+    var gg=document.getElementById('rob-grand'); if(gg) gg.textContent=_fmtP(grand);
+    clearTimeout(_saveTimers[id]);
+    _saveTimers[id]=setTimeout(function(){
+      fetch(_sbu()+'/rest/v1/presupuesto_items?id=eq.'+id,{method:'PATCH',headers:_hdr(),body:JSON.stringify({cant:it.cant,punit:it.punit,total:it.total})});
+      fetch(_sbu()+'/rest/v1/presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{method:'PATCH',headers:_hdr(),body:JSON.stringify({ppto:capTot})});
+    },600);
+  }
+
   // ── MOUNT (enganche compatible) ──
   let _rendered = false;
   function renderInto(container){
     container.innerHTML = '<div style="text-align:center;padding:28px;color:#8892b0;font-family:sans-serif;font-size:12px">⏳ Cargando presupuesto Robledo...</div>';
-    fetchGastos().then(function(gastos){ container.innerHTML = buildHTML(gastos); setupTabs(container); _rendered=true; });
+    var SBU=window.SB_URL||SB_URL_FB, K=window.SB_KEY||'';
+    function g(p){return fetch(SBU+'/rest/v1/'+p,{headers:{apikey:K,'Authorization':'Bearer '+K}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return[];});}
+    Promise.all([fetchGastos(), g('ajustes_obra?obra_id=eq.robledo&select=tipo,monto'), g('abonos?obra_id=eq.robledo&select=monto'), g('obras?id=eq.robledo&select=pct_avance')]).then(function(res){
+      var gastos=res[0]||[], aj=res[1]||[], ab=res[2]||[], ob=(res[3]||[])[0]||{};
+      var abonos=ab.reduce(function(a,b){return a+(b.monto||0);},0);
+      var gtot=gastos.reduce(function(a,b){return a+(b.monto||0);},0);
+      var util=0, porc=0; aj.forEach(function(a){ if(a.tipo==='utilidad_anticipada')util+=(+a.monto||0); if(a.tipo==='por_cobrar')porc+=(+a.monto||0); });
+      ROB_CAJA = abonos - gtot - util; ROB_PORCOBRAR = porc;
+      if(ob.pct_avance!=null) ROB_AVANCE = Math.round(ob.pct_avance);
+      DISPONIBLE = ROB_CAJA + ROB_PORCOBRAR;
+      container.innerHTML = buildHTML(gastos); setupTabs(container); loadPreEditable(); _rendered=true;
+    });
   }
   function injectPresupuestoTab(){
     if (document.getElementById('otab-pre-robledo')) return;
