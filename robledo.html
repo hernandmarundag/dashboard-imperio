@@ -92,6 +92,17 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .gbar{height:13px;border-radius:3px;min-width:14px}
 .gnow{background:#eef0fe}
 .estd{cursor:pointer;font-size:13px;margin-right:6px;vertical-align:-1px}
+.ptoggle{display:inline-flex;gap:4px;background:#eef0f5;border-radius:9px;padding:3px;margin:6px 0 14px}
+.pv{border:none;background:transparent;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer}
+.pv.on{background:#fff;color:#4f46e5;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kcol{background:#f4f5f8;border-radius:12px;padding:10px;min-height:140px}
+.kcol.over{outline:2px dashed #4f46e5;outline-offset:-2px;background:#eef0fe}
+.kh{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;color:#4b5168;padding:2px 4px}
+.kcard{background:#fff;border:1px solid #e6e8f0;border-left:4px solid #4f46e5;border-radius:10px;padding:9px 11px;margin-bottom:8px;cursor:grab}
+.kcard:active{cursor:grabbing} .kcard .kt{font-size:12px;font-weight:600;color:#1b2030;line-height:1.35}
+.kcard .kd{font-size:10.5px;color:#8a90a6;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+.kadv{border:1px solid #e0e3ee;background:#fff;color:#4f46e5;border-radius:6px;cursor:pointer;font-size:11px;padding:1px 7px;font-weight:700}
 </style></head><body><div class="wrap">
 <div id="home">
 <div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
@@ -243,25 +254,50 @@ function presSec(){var gastado=gastadoTotal();
 var WEEKS=[['Jun','S3'],['Jun','S4'],['Jul','S1'],['Jul','S2'],['Jul','S3'],['Jul','S4'],['Ago','S1'],['Ago','S2'],['Ago','S3'],['Ago','S4']];
 function curWeek(){var ws=new Date(2026,5,15),t=new Date();t.setHours(0,0,0,0);var w=Math.floor((t-ws)/(7*86400000))+1;return Math.max(1,Math.min(10,w));}
 var ESTC={pendiente:{ic:'⚪',nx:'en_curso',op:0.4},en_curso:{ic:'🔵',nx:'completado',op:0.8},completado:{ic:'✅',nx:'pendiente',op:1},retrasado:{ic:'🔴',nx:'en_curso',op:0.65}};
-function renderPlanner(){var cw=curWeek();
- var total=CRONO.length,done=CRONO.filter(function(a){return a.estado==='completado';}).length,enc=CRONO.filter(function(a){return a.estado==='en_curso';}).length,ret=CRONO.filter(function(a){return a.estado==='retrasado';}).length;
- var pastDue=CRONO.filter(function(a){return (a.sem_ini+a.dur-1)<cw;}).length;var ppc=pastDue>0?Math.round(done/pastDue*100):100;
+var planView='tablero';
+function setPlanView(v){planView=v;document.getElementById('d-body').innerHTML=renderPlanner();attachPlanner();}
+function weekLabel(a){var s=a.sem_ini-1,e=a.sem_ini+a.dur-2;var L=WEEKS[s][0]+' '+WEEKS[s][1];if(a.dur>1&&WEEKS[e])L+=' – '+WEEKS[e][0]+' '+WEEKS[e][1];return L;}
+function ganttHTML(cw){
  var mrow='<tr><th class="gact"></th><th colspan="2" style="color:#c98109">JUNIO</th><th colspan="4" style="color:#2451b8">JULIO</th><th colspan="4" style="color:#1a7340">AGOSTO</th></tr>';
  var wrow='<tr><th class="gact">Actividad</th>'+WEEKS.map(function(w,i){return '<th'+(i+1===cw?' class="gnow"':'')+'>'+w[1]+'</th>';}).join('')+'</tr>';
  var rows=CRONO.map(function(a){var e=ESTC[a.estado]||ESTC.pendiente;var cells='';
   for(var w=1;w<=10;w++){var on=(w>=a.sem_ini&&w<a.sem_ini+a.dur);cells+='<td'+(w===cw?' class="gnow"':'')+'>'+(on?'<div class="gbar" style="background:'+a.color+';opacity:'+e.op+'"></div>':'')+'</td>';}
   return '<tr><td class="gact"><span class="estd" data-id="'+a.id+'" title="Clic para cambiar estado">'+e.ic+'</span>'+a.actividad+'</td>'+cells+'</tr>';}).join('');
+ return '<div class="dl" style="padding:0;overflow-x:auto"><table class="gtt">'+mrow+wrow+rows+'</table></div>';}
+function kanbanHTML(){
+ var cols=[['Por hacer','porhacer','⚪',['pendiente','retrasado']],['En curso','encurso','🔵',['en_curso']],['Hecho','hecho','✅',['completado']]];
+ var html='<div class="kanban">';
+ cols.forEach(function(c){var items=CRONO.filter(function(a){return c[3].indexOf(a.estado)>=0;});
+  html+='<div class="kcol" data-est="'+c[1]+'"><div class="kh"><span>'+c[2]+' '+c[0]+'</span><span>'+items.length+'</span></div>'+
+   items.map(function(a){var late=a.estado==='retrasado'?' 🔴':'';return '<div class="kcard" draggable="true" data-id="'+a.id+'" style="border-left-color:'+a.color+'"><div class="kt">'+a.actividad+late+'</div><div class="kd"><span>'+weekLabel(a)+'</span><button class="kadv" data-id="'+a.id+'" title="Avanzar estado">siguiente ▸</button></div></div>';}).join('')+'</div>';});
+ return html+'</div><div class="grpnote" style="margin-top:10px">Arrastra una tarjeta entre columnas para cambiar su estado — se guarda en tu base. O usa "siguiente ▸". En "Cronograma" ves las fechas.</div>';}
+function renderPlanner(){var cw=curWeek();
+ var total=CRONO.length,done=CRONO.filter(function(a){return a.estado==='completado';}).length,enc=CRONO.filter(function(a){return a.estado==='en_curso';}).length,ret=CRONO.filter(function(a){return a.estado==='retrasado';}).length;
+ var pastDue=CRONO.filter(function(a){return (a.sem_ini+a.dur-1)<cw;}).length;var ppc=pastDue>0?Math.round(done/pastDue*100):100;
+ var toggle='<div class="ptoggle"><button class="pv '+(planView==='tablero'?'on':'')+'" data-v="tablero">🗂 Tablero</button><button class="pv '+(planView==='gantt'?'on':'')+'" data-v="gantt">📅 Cronograma</button></div>';
+ var body=planView==='gantt'?ganttHTML(cw):kanbanHTML();
  return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · programación</h3></div>'+
   '<div class="sum">'+
    '<div class="sc to"><div class="l">PPC · cumplimiento</div><div class="v">'+ppc+'%</div><div class="n">de lo que ya debía estar</div></div>'+
-   '<div class="sc ej"><div class="l">✅ Completadas</div><div class="v">'+done+' / '+total+'</div></div>'+
+   '<div class="sc ej"><div class="l">✅ Hechas</div><div class="v">'+done+' / '+total+'</div></div>'+
    '<div class="sc fa"><div class="l">🔴 Retrasadas</div><div class="v">'+ret+'</div><div class="n">🔵 '+enc+' en curso</div></div></div>'+
-  '<div class="grpnote">Jun S3 → Ago S4 (10 semanas). Clic en el ícono ⚪🔵✅ para cambiar el estado; se guarda en tu base. La columna sombreada es la semana actual.</div>'+
-  '<div class="dl" style="padding:0;overflow-x:auto"><table class="gtt">'+mrow+wrow+rows+'</table></div>';}
-function attachPlanner(){document.querySelectorAll('#d-body .estd').forEach(function(x){x.onclick=function(){plannerEstado(+x.dataset.id);};});}
+  toggle+body;}
 function plannerEstado(id){var a=CRONO.find(function(x){return x.id===id;});if(!a)return;a.estado=(ESTC[a.estado]||ESTC.pendiente).nx;
  patch('cronograma?id=eq.'+id,{estado:a.estado}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});
  document.getElementById('d-body').innerHTML=renderPlanner();attachPlanner();}
+function moverEstado(id,colEst){var map={porhacer:'pendiente',encurso:'en_curso',hecho:'completado'};var ne=map[colEst];if(!ne)return;var a=CRONO.find(function(x){return x.id===id;});if(!a||a.estado===ne)return;a.estado=ne;
+ patch('cronograma?id=eq.'+id,{estado:ne}).then(function(){flash('Movido ✓');}).catch(function(){flash('Error al guardar',true);});
+ document.getElementById('d-body').innerHTML=renderPlanner();attachPlanner();}
+function attachPlanner(){
+ document.querySelectorAll('#d-body .pv').forEach(function(b){b.onclick=function(){setPlanView(b.dataset.v);};});
+ document.querySelectorAll('#d-body .estd').forEach(function(x){x.onclick=function(){plannerEstado(+x.dataset.id);};});
+ document.querySelectorAll('#d-body .kadv').forEach(function(b){b.onclick=function(ev){ev.stopPropagation();plannerEstado(+b.dataset.id);};});
+ var dragId=null;
+ document.querySelectorAll('#d-body .kcard').forEach(function(c){c.addEventListener('dragstart',function(e){dragId=+c.dataset.id;if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});});
+ document.querySelectorAll('#d-body .kcol').forEach(function(col){
+  col.addEventListener('dragover',function(e){e.preventDefault();col.classList.add('over');});
+  col.addEventListener('dragleave',function(){col.classList.remove('over');});
+  col.addEventListener('drop',function(e){e.preventDefault();col.classList.remove('over');if(dragId!=null){moverEstado(dragId,col.dataset.est);dragId=null;}});});}
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){b.innerHTML=presSec();attach();recompute();}
