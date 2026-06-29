@@ -182,11 +182,15 @@ function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=g
  window.scrollTo(0,0);}
 function backG(){return '<div class="subback" onclick="renderGeneral()">← Dashboard general</div>';}
 function hojaHTML(){var tot=gastadoTotal();
- var rows=GAS.map(function(g,ix){return '<tr><td class="mut" style="text-align:left">'+(ix+1)+'</td><td class="l mut">'+(g.fecha||'')+'</td><td class="l">'+(g.descripcion||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.etapa||'')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>';}).join('');
+ var rowsHtml='';
+ for(var i=GAS.length-1;i>=0;i--){var g=GAS[i];var num=i+1;
+  var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
+  rowsHtml+='<tr><td class="mut" style="text-align:left">'+num+'</td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+(g.descripcion||'')+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>';
+ }
  return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+
-  '<div class="notebar">Tus '+GAS.length+' gastos diarios, en orden, en vivo de tu hoja de Supabase. Total gastado: <b>'+fmt(tot)+'</b></div>'+
-  '<div class="dl" style="padding:0;overflow-x:auto"><table><tr><th style="text-align:left">#</th><th class="l">Fecha</th><th class="l">Descripción</th><th class="l">Categoría</th><th>Monto</th></tr>'+rows+
-  '<tr style="background:#f6f7fb"><td></td><td class="l"><b>'+GAS.length+' gastos</b></td><td></td><td></td><td><b>'+fmt(tot)+'</b></td></tr></table></div>';}
+  '<div class="notebar">Tus '+GAS.length+' gastos — el más reciente arriba, el primero abajo. En vivo de tu hoja de Supabase. Total gastado: <b>'+fmt(tot)+'</b></div>'+
+  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:820px"><tr><th style="text-align:left">#</th><th class="l">Fecha</th><th class="l">Proveedor</th><th class="l">Descripción</th><th class="l">Categoría</th><th class="l">Pagado con</th><th>Monto</th></tr>'+rowsHtml+
+  '<tr style="background:#f6f7fb"><td></td><td class="l"><b>'+GAS.length+'</b></td><td></td><td></td><td></td><td></td><td><b>'+fmt(tot)+'</b></td></tr></table></div>';}
 function presSec(){var gastado=gastadoTotal();
  return backG()+'<div class="itemh"><span class="nm0">💰</span><h3>Presupuesto general</h3></div><div class="sum">'+
   '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja</div></div>'+
@@ -217,7 +221,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.robledo&select=etapa,fecha,descripcion,monto&order=fecha&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden')]);
+  var res=await Promise.all([g('gastos?obra=eq.robledo&select=etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
