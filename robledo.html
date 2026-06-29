@@ -342,4 +342,5 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
 function verHome(){document.getElementById('detalle').classList.add('hidden');document.getElementById('home').classList.remove('hidden');}
 loadEstados();cardsHome();
+var _hash=(location.hash||'').replace('#','');if(_hash&&OBRAS.some(function(o){return o.id===_hash;})){verObra(_hash);}
 </script></body></html>

@@ -3859,7 +3859,6 @@ document.querySelectorAll('.tab').forEach(function(btn) {
 });
 
 function gotoView(v) {
-  if (v === 'robledo') { window.location.href = 'robledo.html'; return; }
   document.querySelectorAll('.view').forEach(function(el) { el.classList.remove('on'); });
   document.querySelectorAll('.tab').forEach(function(b) { b.classList.toggle('on', b.dataset.v === v); });
   document.querySelectorAll('.ni').forEach(function(n) { n.classList.toggle('on', n.dataset.v === v); });
@@ -3870,11 +3869,19 @@ function gotoView(v) {
   renderView(v);
 }
 
+function rRobledoEmbed(){
+  var el=document.getElementById('v-robledo');
+  if(!el) return;
+  if(!el.querySelector('iframe.rb-embed')){
+    el.innerHTML='<iframe class="rb-embed" src="robledo.html#robledo" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+  }
+}
 function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
   if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rDesface(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (v === 'obras')   { rObrasView(); }
+  else if (v === 'robledo') { rRobledoEmbed(); }
   else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
@@ -8726,7 +8733,6 @@ renderObrasNav();
 renderObraSelects();
 var _lastV = 'inicio';
 try { _lastV = localStorage.getItem('imp_curv') || 'inicio'; } catch(e){}
-if (_lastV === 'robledo') _lastV = 'inicio'; // Robledo abre robledo.html solo al hacer clic, no en auto-restore
 gotoView(_lastV);
 fetchSupabaseData(); // FASE 3C
 // Cargar datos de Supabase al iniciar
