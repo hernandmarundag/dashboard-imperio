@@ -199,12 +199,11 @@ function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.
  _toast.textContent=msg;_toast.style.background=err?'#a32020':'#1a7340';_toast.style.opacity='1';clearTimeout(_toast._t);_toast._t=setTimeout(function(){_toast.style.opacity='0';},1600);}
 function capFalta(c){var f=0;lineasOf(c).forEach(function(l){if(getE(l)!=='hecho')f+=l.total;});return f;}
 function faltaBars(){var tot=computeFalta();if(tot<=0)return '';
- var arr=ACP.map(function(c){return {nm:c.nombre,f:capFalta(c)};}).filter(function(x){return x.f>0;}).sort(function(a,b){return b.f-a.f;});
- var rows=arr.map(function(x){var pc=x.f/tot*100;var w=Math.max(pc,1.2);
-  return '<div class="barrow"><div class="bn" title="'+x.nm+'">'+x.nm+'</div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%"></div></div><div class="bv" style="width:178px">'+fmt(x.f)+' · <b style="color:#a5710a">'+pc.toFixed(1)+'%</b></div></div>';}).join('');
+ var cats=ACP.map(function(c){return {nm:c.nombre,v:capFalta(c)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;});
+ var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(1)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  return '<div class="grp"><span>Falta por etapa · % del pendiente</span><span class="gt">'+fmt(tot)+'</span></div>'+
-  '<div class="grpnote">Cuánto del presupuesto falta por ejecutar en cada etapa. Barras y % calculados en vivo desde tu presupuesto real — suman el 100% de la falta.</div>'+
-  '<div class="dl" style="padding:15px 17px">'+rows+'</div>';}
+  '<div class="grpnote">Cuánto del presupuesto falta por ejecutar en cada etapa. % calculado en vivo desde tu presupuesto real — suman el 100% de la falta.</div>'+
+  '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>';}
 function bloque2(){return faltaBars()+'<div class="grp" style="margin-top:24px"><span>Falta por ejecutar · detalle editable</span><span class="gt" id="grp-falta">—</span></div>'+
  '<div class="grpnote">Lo que viene. Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base. El estado baja la Falta al marcar Hecho.</div>'+ACP.map(capHTML).join('');}
 function cajaHTML(){var disp=CAJA+PORRECIBIR;
