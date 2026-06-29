@@ -79,6 +79,12 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .pgb{padding:7px 13px;border:1px solid #e0e3ee;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#4b5168;font-weight:600}
 .pgb:hover{border-color:#4f46e5;color:#4f46e5} .pgb:disabled{opacity:.4;cursor:default}
 .pgi{font-size:12px;color:#8a90a6}
+.donutwrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.legend{flex:1;min-width:240px}
+.lgrow{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid #f1f2f6}
+.lgrow .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.lgrow .ln{flex:1;color:#1b2030} .lgrow .lp{width:46px;text-align:right;color:#8a90a6;font-weight:600} .lgrow .lv{width:115px;text-align:right;font-weight:700}
+.edt{width:auto!important;min-width:160px;text-align:left!important}
 </style></head><body><div class="wrap">
 <div id="home">
 <div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
@@ -149,13 +155,18 @@ function capHTML(c){var ls=lineasOf(c);
  var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+rows+'</table>';
  return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub" id="capsub-'+c.num+'">'+fmt(c.ppto)+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
 function liveUpd(inp){var cap=inp.dataset.cap;
+ if(inp.dataset.kind==='gasto'){var gid=+inp.dataset.gid,gg=GAS.find(function(x){return x.id===gid;});if(gg){gg[inp.dataset.f]=(inp.dataset.f==='monto')?(parseFloat(inp.value)||0):inp.value;}return;}
  if(inp.dataset.kind==='item'){var id=+inp.dataset.id,f=inp.dataset.f,it=ITEMS.find(x=>x.id===id);if(!it)return;it[f]=parseFloat(inp.value)||0;it.total=(+it.cant||0)*(+it.punit||0);var tc=document.getElementById('ittot-'+id);if(tc)tc.textContent=fmt(it.total);var its=ITEMS.filter(x=>x.cap_num===cap);if(capByNum[cap])capByNum[cap].ppto=its.reduce((a,x)=>a+(+x.total||0),0);}
  else{if(capByNum[cap])capByNum[cap].ppto=parseFloat(inp.value)||0;}
  var cs=document.getElementById('capsub-'+cap);if(cs&&capByNum[cap])cs.textContent=fmt(capByNum[cap].ppto);
  recompute();}
 function patch(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'};return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:h,body:JSON.stringify(body)});}
-function saveRow(rid){var inp=document.querySelector('.ed[data-row="'+rid+'"]');if(!inp)return;var cap=inp.dataset.cap;
- if(inp.dataset.kind==='item'){var id=+inp.dataset.id,it=ITEMS.find(x=>x.id===id);if(!it)return;
+function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');if(!ins.length)return;var f0=ins[0],kind=f0.dataset.kind;
+ if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseFloat(x.value)||0):x.value;});
+  var g=GAS.find(function(x){return x.id===gid;});if(g){for(var k in body){g[k]=body[k];}}
+  patch('gastos?id=eq.'+gid,body).then(function(){flash('Guardado ✓');document.getElementById('d-body').innerHTML=hojaHTML();attach();}).catch(function(){flash('Error al guardar',true);});return;}
+ var cap=f0.dataset.cap;
+ if(kind==='item'){var id=+f0.dataset.id,it=ITEMS.find(function(x){return x.id===id;});if(!it)return;
   Promise.all([patch('presupuesto_items?id=eq.'+id,{cant:it.cant,punit:it.punit,total:it.total}),patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto})]).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}
  else{patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}}
 function toggleEdit(rid,btn){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');
@@ -191,22 +202,31 @@ function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=g
  window.scrollTo(0,0);}
 function backG(){return '<div class="subback" onclick="renderGeneral()">← Dashboard general</div>';}
 var hojaPage=0;var HPP=50;
-function hojaRow(g,num){var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
- return '<tr><td class="mut" style="text-align:left">'+num+'</td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+(g.descripcion||'')+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>';}
+var fmtM=function(v){return '$'+((v||0)/1e6).toFixed(1)+'M';};
+var PAL=['#36b37e','#5b53d6','#3ba9f4','#9aa0b4','#e2574c','#f59324','#7c5cf0','#f2b01e','#1ab59b','#a78bfa','#c2c7d6'];
+function col(i){return PAL[i%PAL.length];}
+function donut(cats,total){var C=2*Math.PI*58,off=0,segs='';
+ cats.forEach(function(c,i){var len=(total?c.v/total:0)*C;segs+='<circle cx="80" cy="80" r="58" fill="none" stroke="'+col(i)+'" stroke-width="20" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 80 80)"/>';off+=len;});
+ return '<svg width="160" height="160" viewBox="0 0 160 160">'+segs+'<text x="80" y="74" text-anchor="middle" font-size="9" fill="#8a90a6" letter-spacing="1">TOTAL</text><text x="80" y="93" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2030">'+fmtM(total)+'</text></svg>';}
+function hojaRow(g,num){var rid='g'+g.id;
+ var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
+ var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
+ var mto='<input class="ed" readonly type="number" step="any" value="'+g.monto+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
+ return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
 function hojaHTML(){var tot=gastadoTotal();
  var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});
- var maxv=cats.length?cats[0].v:1;
- var bars=cats.map(function(c){var p=tot?(c.v/tot*100):0;return '<div class="barrow"><div class="bn">'+c.nm+'</div><div class="bt"><div class="bf" style="width:'+(c.v/maxv*100).toFixed(1)+'%"></div></div><div class="bv">'+fmt(c.v)+' · '+p.toFixed(1)+'%</div></div>';}).join('');
+ var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var n=GAS.length,pages=Math.max(1,Math.ceil(n/HPP));if(hojaPage>=pages)hojaPage=0;
  var start=hojaPage*HPP,rowsHtml='';
  for(var k=0;k<HPP;k++){var idx=n-1-(start+k);if(idx<0)break;rowsHtml+=hojaRow(GAS[idx],idx+1);}
  var pag='<div class="pag"><button class="pgb"'+(hojaPage<=0?' disabled':'')+' onclick="hojaPg('+(hojaPage-1)+')">← Anteriores</button><span class="pgi">Página '+(hojaPage+1)+' de '+pages+' · '+(start+1)+'–'+Math.min(start+HPP,n)+' de '+n+'</span><button class="pgb"'+(hojaPage>=pages-1?' disabled':'')+' onclick="hojaPg('+(hojaPage+1)+')">Siguientes →</button></div>';
  return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+
   '<div class="grp"><span>Resumen por categoría · % del gasto</span><span class="gt">'+fmt(tot)+'</span></div>'+
-  '<div class="dl" style="padding:14px 16px">'+bars+'</div>'+
+  '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>'+
   '<div class="grp"><span>Gastos diarios · el más reciente arriba</span><span class="gt">'+n+' gastos</span></div>'+
-  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:820px"><tr><th style="text-align:left">#</th><th class="l">Fecha</th><th class="l">Proveedor</th><th class="l">Descripción</th><th class="l">Categoría</th><th class="l">Pagado con</th><th>Monto</th></tr>'+rowsHtml+'</table></div>'+pag;}
-function hojaPg(p){hojaPage=p;document.getElementById('d-body').innerHTML=hojaHTML();window.scrollTo(0,300);}
+  '<div class="grpnote">Toca el lápiz ✎ para editar la descripción o el monto de un gasto; se guarda en tu hoja.</div>'+
+  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:860px"><tr><th style="text-align:left">#</th><th class="l">Fecha</th><th class="l">Proveedor</th><th class="l">Descripción</th><th class="l">Categoría</th><th class="l">Pagado con</th><th>Monto</th></tr>'+rowsHtml+'</table></div>'+pag;}
+function hojaPg(p){hojaPage=p;document.getElementById('d-body').innerHTML=hojaHTML();attach();window.scrollTo(0,300);}
 function presSec(){var gastado=gastadoTotal();
  return backG()+'<div class="itemh"><span class="nm0">💰</span><h3>Presupuesto general</h3></div><div class="sum">'+
   '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja</div></div>'+
@@ -214,7 +234,7 @@ function presSec(){var gastado=gastadoTotal();
   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v" id="sum-to">—</div><div class="n">ejecutado + falta</div></div></div>'+
   '<div class="notebar">El Ejecutado sale de tu hoja. Toca el lápiz ✎ en "Falta por ejecutar" para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+bloque1()+bloque2();}
 function goSection(sec){var b=document.getElementById('d-body');
- if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();}
+ if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){b.innerHTML=presSec();attach();recompute();}
  else if(sec==='planner'){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner</b><br>Lo construimos paso a paso. Dime qué quieres ver aquí: programación semanal de actividades, fechas de pago, etc.</div>';}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
@@ -237,7 +257,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.robledo&select=etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden')]);
+  var res=await Promise.all([g('gastos?obra=eq.robledo&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
