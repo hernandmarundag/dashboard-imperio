@@ -82,6 +82,17 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .pgn:hover{border-color:#4f46e5;color:#4f46e5}
 .pgn.on{background:#4f46e5;color:#fff;border-color:#4f46e5;box-shadow:0 2px 8px rgba(79,70,229,.25)}
 .paginfo{text-align:center;font-size:11.5px;color:#a7adbf;margin-top:12px}
+.addg{border:1px solid #e6e8f0;border-radius:12px;background:#fff;margin-bottom:14px}
+.addg>summary{list-style:none;cursor:pointer;padding:12px 15px;font-weight:700;color:#4f46e5;font-size:13px}
+.addg>summary::-webkit-details-marker{display:none}
+.addgbody{padding:4px 15px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:11px;color:#8a90a6;font-weight:600}
+.fld input,.fld select{border:1px solid #e0e3ee;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;color:#1b2030;background:#fff}
+.fld input:focus,.fld select:focus{outline:none;border-color:#4f46e5;box-shadow:0 0 0 2px #e7eefc}
+.savebtn{grid-column:1/-1;background:#4f46e5;color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer}
+.savebtn:hover{background:#4338ca}
 .pgi{font-size:12px;color:#8a90a6}
 .donutwrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
 .legend{flex:1;min-width:240px}
@@ -175,7 +186,7 @@ function capHTML(c){var ls=lineasOf(c);
    return '<tr><td class="l">'+l.desc+' <button class="pen" data-target="'+rid+'" title="Editar">✎</button></td><td class="mut">'+(l.und||'')+'</td><td class="mut">—</td><td class="mut">global</td><td>'+pe+'</td><td class="l">'+ctrl(l.key,getE(l))+'</td></tr>';
   }}).join('');
  var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+rows+'</table>';
- return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub" id="capsub-'+c.num+'">'+fmt(c.ppto)+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
+ return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub" id="capsub-'+c.num+'">'+(capPagado(c)>0?('Pag. '+fmt(capPagado(c))+' · Saldo '+fmt(capFalta(c))):fmt(capPresup(c)))+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
 function liveUpd(inp){var cap=inp.dataset.cap;
  if(inp.dataset.kind==='gasto'){var gid=+inp.dataset.gid,gg=GAS.find(function(x){return x.id===gid;});if(gg){gg[inp.dataset.f]=(inp.dataset.f==='monto')?(parseInt(String(inp.value).replace(/[^0-9]/g,''))||0):inp.value;}return;}
  if(inp.dataset.kind==='item'){var id=+inp.dataset.id,f=inp.dataset.f,it=ITEMS.find(x=>x.id===id);if(!it)return;it[f]=parseFloat(inp.value)||0;it.total=(+it.cant||0)*(+it.punit||0);var tc=document.getElementById('ittot-'+id);if(tc)tc.textContent=fmt(it.total);var its=ITEMS.filter(x=>x.cap_num===cap);if(capByNum[cap])capByNum[cap].ppto=its.reduce((a,x)=>a+(+x.total||0),0);}
@@ -183,6 +194,8 @@ function liveUpd(inp){var cap=inp.dataset.cap;
  var cs=document.getElementById('capsub-'+cap);if(cs&&capByNum[cap])cs.textContent=fmt(capByNum[cap].ppto);
  recompute();}
 function patch(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'};return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:h,body:JSON.stringify(body)});}
+function post(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=representation'};return fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:h,body:JSON.stringify(body)});}
+function saveNewGasto(){var fecha=(document.getElementById('ng-fecha')||{}).value||'';var prov=((document.getElementById('ng-prov')||{}).value||'').trim();var desc=((document.getElementById('ng-desc')||{}).value||'').trim();var monto=parseInt(String((document.getElementById('ng-monto')||{}).value||'').replace(/[^0-9]/g,''))||0;var mp=((document.getElementById('ng-mp')||{}).value||'').trim();var cap=(document.getElementById('ng-cap')||{}).value||'';if(!monto){flash('Escribe el monto',true);return;}if(!fecha){fecha=new Date().toISOString().slice(0,10);}var body={obra:'robledo',fecha:fecha,nombre:prov||null,descripcion:desc||null,monto:monto,mp:mp||null};if(cap){body.cap_num=cap;if(capByNum[cap])body.etapa=capByNum[cap].nombre;}flash('Guardando…');post('gastos',body).then(function(r){return r.json();}).then(function(rows){var ng=(rows&&rows[0])?rows[0]:body;GAS.push(ng);flash('Gasto guardado ✓');hojaPage=0;goSection('hoja');}).catch(function(){flash('Error al guardar',true);});}
 function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');if(!ins.length)return;var f0=ins[0],kind=f0.dataset.kind;
  if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseInt(String(x.value).replace(/[^0-9]/g,''))||0):x.value;});
   var g=GAS.find(function(x){return x.id===gid;});if(g){for(var k in body){g[k]=body[k];}}
@@ -197,7 +210,9 @@ function toggleEdit(rid,btn){var ins=document.querySelectorAll('.ed[data-row="'+
 var _toast;
 function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.style.cssText='position:fixed;bottom:20px;right:20px;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:99;transition:opacity .3s';document.body.appendChild(_toast);}
  _toast.textContent=msg;_toast.style.background=err?'#a32020':'#1a7340';_toast.style.opacity='1';clearTimeout(_toast._t);_toast._t=setTimeout(function(){_toast.style.opacity='0';},1600);}
-function capFalta(c){var f=0;lineasOf(c).forEach(function(l){if(getE(l)!=='hecho')f+=l.total;});return f;}
+function capPagado(c){return GAS.reduce(function(a,g){return (g.cap_num&&g.cap_num===c.num)?a+(+g.monto||0):a;},0);}
+function capPresup(c){return lineasOf(c).reduce(function(a,l){return (getE(l)!=='hecho')?a+l.total:a;},0);}
+function capFalta(c){var f=capPresup(c)-capPagado(c);return f>0?f:0;}
 function faltaBars(){var tot=computeFalta();if(tot<=0)return '';
  var cats=ACP.map(function(c){return {nm:c.nombre,v:capFalta(c)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;});
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(1)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
@@ -212,10 +227,11 @@ function cajaHTML(){var disp=CAJA+PORRECIBIR;
   '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · se libera al 80%</div></div>'+
   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(disp)+'</div><div class="n">caja + por recibir</div></div></div>'+
   '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
-function computeFalta(){var fa=0;ACP.forEach(function(c){lineasOf(c).forEach(function(l){if(getE(l)!=='hecho')fa+=l.total;});});return fa;}
+function computeFalta(){return ACP.reduce(function(a,c){return a+capFalta(c);},0);}
+function gastoCats(){var tot=gastadoTotal();var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;});var sum=cats.reduce(function(a,c){return a+c.v;},0);var rest=tot-sum;if(rest>1)cats.push({nm:'Acabados / nuevos',v:rest});return cats.sort(function(a,b){return b.v-a.v;});}
 function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=gastado+falta;
  var av=(OBRAS.find(function(x){return x.id==='robledo';})||{}).avance||60;
- var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});
+ var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var html='<div class="itemh"><span class="nm0">📊</span><h3>Dashboard general</h3></div>'+
   '<div class="sum">'+
@@ -252,14 +268,14 @@ function hojaRow(g,num){var rid='g'+g.id;
  var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
  var mto='<input class="ed montoed" readonly type="text" value="'+fmt(g.monto)+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
  return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
-function hojaHTML(){var tot=gastadoTotal();
- var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});
+function hojaHTML(){var tot=gastadoTotal();var capOpts=CAPS.map(function(c){return '<option value="'+c.num+'">'+c.num+' · '+c.nombre+'</option>';}).join('');
+ var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var n=GAS.length,pages=Math.max(1,Math.ceil(n/HPP));if(hojaPage>=pages)hojaPage=0;
  var start=hojaPage*HPP,rowsHtml='';
  for(var k=0;k<HPP;k++){var idx=n-1-(start+k);if(idx<0)break;rowsHtml+=hojaRow(GAS[idx],idx+1);}
  var nums='';for(var pp=0;pp<pages;pp++){nums+='<button class="pgn'+(pp===hojaPage?' on':'')+'" onclick="hojaPg('+pp+')">'+(pp+1)+'</button>';}var pag='<div class="pag"><button class="pgb"'+(hojaPage<=0?' disabled':'')+' onclick="hojaPg('+(hojaPage-1)+')">‹</button>'+nums+'<button class="pgb"'+(hojaPage>=pages-1?' disabled':'')+' onclick="hojaPg('+(hojaPage+1)+')">›</button></div><div class="paginfo">Mostrando '+(start+1)+'–'+Math.min(start+HPP,n)+' de '+n+' gastos</div>';
- return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+
+ return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+'<details class="addg"><summary>➕ Agregar gasto nuevo</summary><div class="addgbody">'+'<div class="fld"><label>Fecha</label><input type="date" id="ng-fecha" value="'+(new Date().toISOString().slice(0,10))+'"></div>'+'<div class="fld"><label>Monto</label><input type="text" id="ng-monto" placeholder="$ 0"></div>'+'<div class="fld"><label>Proveedor</label><input type="text" id="ng-prov" placeholder="Nombre"></div>'+'<div class="fld"><label>Pagado con</label><input type="text" id="ng-mp" placeholder="Cuenta / método"></div>'+'<div class="fld full"><label>Descripción</label><input type="text" id="ng-desc" placeholder="Qué se pagó"></div>'+'<div class="fld full"><label>Capítulo del presupuesto — baja su saldo</label><select id="ng-cap"><option value="">— Sin asignar a capítulo —</option>'+capOpts+'</select></div>'+'<button class="savebtn" onclick="saveNewGasto()">Guardar gasto</button>'+'</div></details>'+
   '<div class="grp"><span>Resumen por categoría · % del gasto</span><span class="gt">'+fmt(tot)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>'+
   '<div class="grp"><span>Gastos diarios · el más reciente arriba</span><span class="gt">'+n+' gastos</span></div>'+
@@ -343,7 +359,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.robledo&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden'),g('cronograma?obra=eq.robledo&order=orden')]);
+  var res=await Promise.all([g('gastos?obra=eq.robledo&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden'),g('cronograma?obra=eq.robledo&order=orden')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
