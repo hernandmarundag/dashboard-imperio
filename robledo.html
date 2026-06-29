@@ -60,6 +60,11 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .canvas{background:#fff;border:1px dashed #c9cee0;border-radius:14px;padding:24px;text-align:center;color:#8a90a6;margin-top:14px}
 .canvas b{color:#4f46e5} .hidden{display:none}
 .loading{text-align:center;color:#8a90a6;padding:50px}
+.ed{width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;text-align:right;background:transparent;color:#1b2030;font-family:inherit}
+.ed.on{border-color:#4f46e5;background:#fff;box-shadow:0 0 0 2px #e7eefc}
+.ed:focus{outline:none}
+.pen{border:none;background:transparent;cursor:pointer;color:#c2c7d6;font-size:13px;margin-left:4px;padding:1px 5px;border-radius:5px}
+.pen:hover{color:#4f46e5;background:#eef0fe} .pen.done{color:#1a7340}
 </style></head><body><div class="wrap">
 <div id="home">
 <div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
@@ -100,7 +105,7 @@ function saveEstados(){try{localStorage.setItem('imp_estados_robledo',JSON.strin
 function defE(cap,desc){if(/aseo|final|entrega|limpieza/i.test(desc||''))return 'sininiciar';var e=cap?cap.estado:'';if(e==='en_curso')return 'proceso';return 'sininiciar';}
 function getE(l){return ESTADOS[l.key]||defE(capByNum[l.cap],l.desc);}
 function lineasOf(c){var its=ITEMS.filter(i=>i.cap_num===c.num);
- if(its.length)return its.map(i=>({key:c.num+'|'+i.item,item:i.item,desc:i.descripcion,und:i.und,cant:i.cant,pu:i.punit,total:i.total,cap:c.num}));
+ if(its.length)return its.map(i=>({id:i.id,key:c.num+'|'+i.item,item:i.item,desc:i.descripcion,und:i.und,cant:i.cant,pu:i.punit,total:i.total,cap:c.num}));
  return [{key:c.num+'|__',item:'',desc:c.nota_obra||c.nombre,und:'glb',cant:1,pu:c.ppto,total:c.ppto,cap:c.num}];}
 function gastosDe(ets){return GAS.filter(g=>ets.indexOf(g.etapa||'(sin etapa)')>=0);}
 function catTotal(ets){return gastosDe(ets).reduce((a,g)=>a+(+g.monto||0),0);}
@@ -118,11 +123,35 @@ function bloque1(){var rows=DIST.map(d=>{var v=catTotal(d.ets);
  return '<div class="grp"><span>Ya ejecutado · de tu hoja de gastos</span><span class="gt">'+fmt(gastadoTotal())+'</span></div>'+
   '<div class="grpnote">Calculado en vivo desde tu hoja ('+GAS.length+' gastos). Abre cada categoría para ver sus facturas.</div><div class="dl">'+rows+'</div>';}
 function capHTML(c){var ls=lineasOf(c);
- var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+
-  ls.map(l=>'<tr><td class="l">'+(l.item?l.item+' ':'')+l.desc+'</td><td class="mut">'+(l.und||'')+'</td><td>'+qfmt(l.cant)+'</td><td>'+fmt(l.pu)+'</td><td><b>'+fmt(l.total)+'</b></td><td class="l">'+ctrl(l.key,getE(l))+'</td></tr>').join('')+'</table>';
- return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub">'+fmt(c.ppto)+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
+ var rows=ls.map(function(l){
+  if(l.id){var rid='i'+l.id;
+   var ci='<input class="ed" readonly type="number" step="any" value="'+l.cant+'" data-row="'+rid+'" data-kind="item" data-id="'+l.id+'" data-cap="'+l.cap+'" data-f="cant">';
+   var pi='<input class="ed" readonly type="number" step="any" value="'+l.pu+'" data-row="'+rid+'" data-kind="item" data-id="'+l.id+'" data-cap="'+l.cap+'" data-f="punit">';
+   return '<tr><td class="l">'+(l.item?l.item+' ':'')+l.desc+' <button class="pen" data-target="'+rid+'" title="Editar">✎</button></td><td class="mut">'+(l.und||'')+'</td><td>'+ci+'</td><td>'+pi+'</td><td><b id="ittot-'+l.id+'">'+fmt(l.total)+'</b></td><td class="l">'+ctrl(l.key,getE(l))+'</td></tr>';
+  } else {var rid='c'+l.cap;
+   var pe='<input class="ed" readonly type="number" step="any" value="'+c.ppto+'" data-row="'+rid+'" data-kind="cap" data-cap="'+l.cap+'">';
+   return '<tr><td class="l">'+l.desc+' <button class="pen" data-target="'+rid+'" title="Editar">✎</button></td><td class="mut">'+(l.und||'')+'</td><td class="mut">—</td><td class="mut">global</td><td>'+pe+'</td><td class="l">'+ctrl(l.key,getE(l))+'</td></tr>';
+  }}).join('');
+ var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+rows+'</table>';
+ return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub" id="capsub-'+c.num+'">'+fmt(c.ppto)+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
+function liveUpd(inp){var cap=inp.dataset.cap;
+ if(inp.dataset.kind==='item'){var id=+inp.dataset.id,f=inp.dataset.f,it=ITEMS.find(x=>x.id===id);if(!it)return;it[f]=parseFloat(inp.value)||0;it.total=(+it.cant||0)*(+it.punit||0);var tc=document.getElementById('ittot-'+id);if(tc)tc.textContent=fmt(it.total);var its=ITEMS.filter(x=>x.cap_num===cap);if(capByNum[cap])capByNum[cap].ppto=its.reduce((a,x)=>a+(+x.total||0),0);}
+ else{if(capByNum[cap])capByNum[cap].ppto=parseFloat(inp.value)||0;}
+ var cs=document.getElementById('capsub-'+cap);if(cs&&capByNum[cap])cs.textContent=fmt(capByNum[cap].ppto);
+ recompute();}
+function patch(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'};return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:h,body:JSON.stringify(body)});}
+function saveRow(rid){var inp=document.querySelector('.ed[data-row="'+rid+'"]');if(!inp)return;var cap=inp.dataset.cap;
+ if(inp.dataset.kind==='item'){var id=+inp.dataset.id,it=ITEMS.find(x=>x.id===id);if(!it)return;
+  Promise.all([patch('presupuesto_items?id=eq.'+id,{cant:it.cant,punit:it.punit,total:it.total}),patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto})]).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}
+ else{patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}}
+function toggleEdit(rid,btn){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');
+ if(btn.dataset.on!=='1'){ins.forEach(function(i){i.readOnly=false;i.classList.add('on');});btn.dataset.on='1';btn.textContent='✓';btn.classList.add('done');if(ins[0]){ins[0].focus();ins[0].select();}}
+ else{ins.forEach(function(i){i.readOnly=true;i.classList.remove('on');});btn.dataset.on='0';btn.textContent='✎';btn.classList.remove('done');saveRow(rid);}}
+var _toast;
+function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.style.cssText='position:fixed;bottom:20px;right:20px;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:99;transition:opacity .3s';document.body.appendChild(_toast);}
+ _toast.textContent=msg;_toast.style.background=err?'#a32020':'#1a7340';_toast.style.opacity='1';clearTimeout(_toast._t);_toast._t=setTimeout(function(){_toast.style.opacity='0';},1600);}
 function bloque2(){return '<div class="grp"><span>Falta por ejecutar · presupuesto pendiente</span><span class="gt" id="grp-falta">—</span></div>'+
- '<div class="grpnote">Lo que viene. Marca cada actividad; al marcar Hecho baja la Falta.</div>'+ACP.map(capHTML).join('');}
+ '<div class="grpnote">Lo que viene. Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base. El estado baja la Falta al marcar Hecho.</div>'+ACP.map(capHTML).join('');}
 function cajaHTML(){var disp=CAJA+PORRECIBIR;
  return '<div class="itemh"><span class="nm0">💰</span><h3>Caja y financiación</h3></div><div class="sum">'+
   '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+fmt(CAJA)+'</div><div class="n">efectivo hoy</div></div>'+
@@ -145,7 +174,7 @@ function recompute(){var fa=0;
  g('sum-fa',fa);g('grp-falta',fa);g('sum-to',gastadoTotal()+fa);}
 function setE(key,st){ESTADOS[key]=st;saveEstados();
  document.querySelectorAll('.sg[data-key="'+key+'"]').forEach(b=>b.classList.toggle('on',b.dataset.st===st));recompute();}
-function attach(){document.querySelectorAll('#d-body .sg').forEach(b=>b.onclick=()=>setE(b.dataset.key,b.dataset.st));}
+function attach(){document.querySelectorAll('#d-body .sg').forEach(b=>b.onclick=()=>setE(b.dataset.key,b.dataset.st));document.querySelectorAll('#d-body input.ed').forEach(function(inp){inp.addEventListener('input',function(){liveUpd(inp);});});document.querySelectorAll('#d-body .pen').forEach(function(b){b.onclick=function(){toggleEdit(b.dataset.target,b);};});}
 function cardsHome(){document.getElementById('obras').innerHTML=OBRAS.map(o=>'<div class="obra" onclick="verObra(\''+o.id+'\')"><div class="nm">'+o.nombre+'<span class="est">'+o.estado+'</span></div><div class="gl">Abrir dashboard</div><div class="gv" style="font-size:15px;color:#4f46e5;margin-top:8px">Ver →</div></div>').join('');}
 async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('home').classList.add('hidden');document.getElementById('detalle').classList.remove('hidden');
