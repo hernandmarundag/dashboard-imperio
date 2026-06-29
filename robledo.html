@@ -204,7 +204,7 @@ function faltaBars(){var tot=computeFalta();if(tot<=0)return '';
  return '<div class="grp"><span>Falta por etapa · % del pendiente</span><span class="gt">'+fmt(tot)+'</span></div>'+
   '<div class="grpnote">Cuánto del presupuesto falta por ejecutar en cada etapa. % calculado en vivo desde tu presupuesto real — suman el 100% de la falta.</div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>';}
-function bloque2(){return faltaBars()+'<div class="grp" style="margin-top:24px"><span>Falta por ejecutar · detalle editable</span><span class="gt" id="grp-falta">—</span></div>'+
+function bloque2(){return '<div class="grp"><span>Falta por ejecutar · detalle editable</span><span class="gt" id="grp-falta">—</span></div>'+
  '<div class="grpnote">Lo que viene. Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base. El estado baja la Falta al marcar Hecho.</div>'+ACP.map(capHTML).join('');}
 function cajaHTML(){var disp=CAJA+PORRECIBIR;
  return '<div class="itemh"><span class="nm0">💰</span><h3>Caja y financiación</h3></div><div class="sum">'+
@@ -261,7 +261,7 @@ function presSec(){var gastado=gastadoTotal();
   '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja</div></div>'+
   '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v" id="sum-fa">—</div><div class="n">presupuesto pendiente</div></div>'+
   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v" id="sum-to">—</div><div class="n">ejecutado + falta</div></div></div>'+
-  '<div class="notebar">El Ejecutado sale de tu hoja. Toca el lápiz ✎ en "Falta por ejecutar" para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+bloque1()+bloque2();}
+  '<div class="notebar">El Ejecutado sale de tu hoja. Toca el lápiz ✎ en "Falta por ejecutar" para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+faltaBars()+bloque1()+bloque2();}
 var WEEKS=[['Jun','S3'],['Jun','S4'],['Jul','S1'],['Jul','S2'],['Jul','S3'],['Jul','S4'],['Ago','S1'],['Ago','S2'],['Ago','S3'],['Ago','S4']];
 function curWeek(){var ws=new Date(2026,5,15),t=new Date();t.setHours(0,0,0,0);var w=Math.floor((t-ws)/(7*86400000))+1;return Math.max(1,Math.min(10,w));}
 var ESTC={pendiente:{ic:'⚪',nx:'en_curso',op:0.4},en_curso:{ic:'🔵',nx:'completado',op:0.8},completado:{ic:'✅',nx:'pendiente',op:1},retrasado:{ic:'🔴',nx:'en_curso',op:0.65}};
@@ -341,6 +341,5 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
   renderGeneral();
  }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
 function verHome(){document.getElementById('detalle').classList.add('hidden');document.getElementById('home').classList.remove('hidden');}
-loadEstados();cardsHome();
-var _hash=(location.hash||'').replace('#','');if(_hash&&OBRAS.some(function(o){return o.id===_hash;})){verObra(_hash);}
+loadEstados();cardsHome();verObra('robledo');
 </script></body></html>
