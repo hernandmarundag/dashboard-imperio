@@ -65,6 +65,11 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .ed:focus{outline:none}
 .pen{border:none;background:transparent;cursor:pointer;color:#c2c7d6;font-size:13px;margin-left:4px;padding:1px 5px;border-radius:5px}
 .pen:hover{color:#4f46e5;background:#eef0fe} .pen.done{color:#1a7340}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.navc{background:#fff;border:1px solid #e6e8f0;border-radius:14px;padding:18px;cursor:pointer;transition:.15s}
+.navc:hover{border-color:#4f46e5;transform:translateY(-2px);box-shadow:0 6px 18px rgba(79,70,229,.08)}
+.navic{font-size:24px} .navt{font-size:15px;font-weight:700;margin-top:8px;color:#1b2030} .navs{font-size:12px;color:#8a90a6;margin-top:3px}
+.subback{display:inline-flex;align-items:center;gap:6px;color:#4f46e5;font-weight:600;cursor:pointer;margin-bottom:14px;font-size:13px}
 </style></head><body><div class="wrap">
 <div id="home">
 <div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
@@ -158,13 +163,38 @@ function cajaHTML(){var disp=CAJA+PORRECIBIR;
   '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · se libera al 80%</div></div>'+
   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(disp)+'</div><div class="n">caja + por recibir</div></div></div>'+
   '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
-function presupuestoHTML(){var gastado=gastadoTotal();
- return '<div class="itemh"><span class="nm0">1</span><h3>Presupuesto</h3></div><div class="sum">'+
-  '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja ('+GAS.length+' gastos)</div></div>'+
+function computeFalta(){var fa=0;ACP.forEach(function(c){lineasOf(c).forEach(function(l){if(getE(l)!=='hecho')fa+=l.total;});});return fa;}
+function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=gastado+falta;
+ var html='<div class="itemh"><span class="nm0">📊</span><h3>Dashboard general</h3></div>'+
+  '<div class="sum">'+
+   '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+fmt(CAJA)+'</div><div class="n">efectivo hoy</div></div>'+
+   '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · al 80%</div></div>'+
+   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(CAJA+PORRECIBIR)+'</div><div class="n">caja + por recibir</div></div></div>'+
+  '<div class="grp"><span>Secciones</span></div>'+
+  '<div class="cards">'+
+   '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
+   '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">Falta '+fmt(falta)+' · Total '+fmt(total)+'</div></div>'+
+   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">Programación de obra</div></div>'+
+   '<div class="navc" data-sec="informe"><div class="navic">📊</div><div class="navt">Informe general</div><div class="navs">Resumen ejecutivo</div></div>'+
+  '</div>';
+ document.getElementById('d-body').innerHTML=html;
+ document.querySelectorAll('#d-body .navc').forEach(function(n){n.onclick=function(){goSection(n.dataset.sec);};});
+ window.scrollTo(0,0);}
+function backG(){return '<div class="subback" onclick="renderGeneral()">← Dashboard general</div>';}
+function hojaHTML(){return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+
+  '<div class="notebar">Tu gasto real en vivo, por categoría. Abre cada una para ver sus facturas.</div>'+bloque1();}
+function presSec(){var gastado=gastadoTotal();
+ return backG()+'<div class="itemh"><span class="nm0">💰</span><h3>Presupuesto general</h3></div><div class="sum">'+
+  '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja</div></div>'+
   '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v" id="sum-fa">—</div><div class="n">presupuesto pendiente</div></div>'+
   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v" id="sum-to">—</div><div class="n">ejecutado + falta</div></div></div>'+
-  '<div class="notebar">El <b>Ejecutado</b> ($'+Math.round(gastado).toLocaleString("es-CO")+') sale en vivo de tu hoja. La <b>Falta</b> es el presupuesto de acabados que no está Hecho.</div>'+
-  bloque1()+bloque2()+'<div class="canvas">Dime el siguiente ítem (Flujo de caja, Pagos, Cronograma…) y lo agrego.</div>';}
+  '<div class="notebar">Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+bloque2();}
+function goSection(sec){var b=document.getElementById('d-body');
+ if(sec==='hoja'){b.innerHTML=hojaHTML();attach();}
+ else if(sec==='presupuesto'){b.innerHTML=presSec();attach();recompute();}
+ else if(sec==='planner'){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner</b><br>Lo construimos paso a paso. Dime qué quieres ver aquí: programación semanal de actividades, fechas de pago, etc.</div>';}
+ else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
+ window.scrollTo(0,0);}
 function recompute(){var fa=0;
  ACP.forEach(c=>{lineasOf(c).forEach(l=>{if(getE(l)!=='hecho')fa+=l.total;});
   var sts=lineasOf(c).map(getE),b;
@@ -188,7 +218,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
   document.getElementById('d-meta').textContent='Avance '+o.avance+'% · '+GAS.length+' gastos reales (en vivo)';
-  document.getElementById('d-body').innerHTML=cajaHTML()+presupuestoHTML();attach();recompute();
+  renderGeneral();
  }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
 function verHome(){document.getElementById('detalle').classList.add('hidden');document.getElementById('home').classList.remove('hidden');}
 loadEstados();cardsHome();
