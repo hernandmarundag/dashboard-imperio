@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imperio · Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f5f8;color:#1b2030;font-size:14px}
+.wrap{max-width:1040px;margin:0 auto;padding:24px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c5cf0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.top h1{font-size:20px;font-weight:700} .top .sub{font-size:12px;color:#8a90a6}
+.obras{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.obra{background:#fff;border:1px solid #e6e8f0;border-radius:14px;padding:18px 20px;cursor:pointer;transition:.15s}
+.obra:hover{border-color:#4f46e5;transform:translateY(-2px);box-shadow:0 6px 18px rgba(79,70,229,.08)}
+.obra .nm{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.obra .est{font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;background:#e7eefc;color:#2451b8}
+.obra .gl{font-size:12px;color:#8a90a6;margin-top:12px} .obra .gv{font-size:22px;font-weight:700}
+.obra .barw{height:6px;background:#eceef4;border-radius:4px;margin-top:12px;overflow:hidden}
+.obra .bar{height:100%;background:#4f46e5;border-radius:4px} .obra .pct{font-size:11px;color:#8a90a6;margin-top:5px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#4f46e5;font-weight:600;cursor:pointer;margin-bottom:16px;font-size:13px}
+.dhead{background:linear-gradient(120deg,#4f46e5,#7c5cf0);color:#fff;border-radius:16px;padding:22px 26px;margin-bottom:18px}
+.dhead h2{font-size:24px;font-weight:700} .dhead .m{font-size:13px;opacity:.9;margin-top:4px}
+.live{display:inline-block;font-size:10px;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:20px;margin-left:8px}
+.itemh{display:flex;align-items:baseline;gap:10px;margin:0 0 12px}
+.itemh .nm0{width:26px;height:26px;border-radius:8px;background:#4f46e5;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.itemh h3{font-size:18px;font-weight:700}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+.sc{border-radius:12px;padding:13px 15px;border:1px solid #e6e8f0;background:#fff}
+.sc .l{font-size:11px;color:#8a90a6} .sc .v{font-size:19px;font-weight:700;margin-top:2px} .sc .n{font-size:10px;color:#a7adbf;margin-top:2px}
+.sc.ej{background:#e9f7ef;border-color:#b3e0c6} .sc.ej .v{color:#1a7340}
+.sc.fa{background:#fef6e7;border-color:#f3dca5} .sc.fa .v{color:#a5710a}
+.sc.to{background:#eef0fe;border-color:#c8caf6} .sc.to .v{color:#4f46e5}
+.notebar{font-size:12px;color:#8a90a6;margin:2px 0 16px;line-height:1.5}
+.grp{font-size:14px;font-weight:700;color:#1b2030;margin:20px 0 8px;display:flex;justify-content:space-between;align-items:center}
+.grp .gt{color:#4f46e5}
+.grpnote{font-size:11.5px;color:#a7adbf;margin:-4px 0 10px}
+.dl{background:#fff;border:1px solid #e6e8f0;border-radius:12px;overflow:hidden}
+.det{border:none!important} .det>summary{list-style:none;cursor:pointer} .det>summary .srow{display:flex;align-items:center;gap:10px;padding:11px 15px;border-top:1px solid #f0f1f6}
+.det:first-child>summary .srow{border-top:none}
+.det>summary::-webkit-details-marker{display:none} .det .chev{color:#b3b8c9;font-size:11px} .det[open] .chev{transform:rotate(90deg)}
+.ck{color:#1a7340;font-weight:700} .rn{flex:1} .rv{font-weight:700}
+.subt{padding:4px 15px 12px;background:#fafbfd;overflow-x:auto}
+.et{border:1px solid #e6e8f0;border-radius:12px;margin-bottom:8px;overflow:hidden;background:#fff}
+.et>summary{list-style:none;cursor:pointer} .et>summary .srow{display:flex;align-items:center;gap:10px;padding:12px 15px}
+.et>summary::-webkit-details-marker{display:none}
+.et .chev{color:#b3b8c9;font-size:12px} .et[open] .chev{transform:rotate(90deg)}
+.et .nm{flex:1;font-weight:700;font-size:14px} .et .sub{font-weight:700;min-width:100px;text-align:right}
+.badge{font-size:10.5px;border-radius:20px;padding:2px 9px;font-weight:600;white-space:nowrap}
+.b-ej{background:#e9f7ef;color:#1a7340} .b-cur{background:#e7eefc;color:#2451b8} .b-pen{background:#f1f2f6;color:#7a8093}
+.et .body{padding:0 15px 12px;overflow-x:auto} .note{font-size:12px;color:#8a90a6;padding:8px 4px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+th{font-size:10px;text-transform:uppercase;color:#a7adbf;text-align:right;padding:6px 6px;font-weight:600}
+th.l,td.l{text-align:left} td{padding:7px 6px;text-align:right;border-top:1px solid #f0f1f6;vertical-align:middle}
+td.l{color:#4b5168} .mut{color:#a7adbf}
+.seg{display:inline-flex;gap:3px}
+.sg{font-size:10px;padding:4px 8px;border:1px solid #e0e3ee;background:#fff;color:#9aa0b4;border-radius:6px;cursor:pointer;white-space:nowrap}
+.sg:hover{border-color:#c2c7d6}
+.sg.on.s0{background:#eef0f5;color:#5f6473;border-color:#d4d8e4}
+.sg.on.s1{background:#e7eefc;color:#2451b8;border-color:#bcd0f5}
+.sg.on.s2{background:#e9f7ef;color:#1a7340;border-color:#b3e0c6}
+.canvas{background:#fff;border:1px dashed #c9cee0;border-radius:14px;padding:24px;text-align:center;color:#8a90a6;margin-top:14px}
+.canvas b{color:#4f46e5} .hidden{display:none}
+.loading{text-align:center;color:#8a90a6;padding:50px}
+</style></head><body><div class="wrap">
+<div id="home">
+<div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
+<div class="obras" id="obras"></div></div>
+<div id="detalle" class="hidden">
+<div class="back" onclick="verHome()">← Obras</div>
+<div class="dhead"><h2 id="d-nm"></h2><div class="m" id="d-meta"></div></div>
+<div id="d-body"></div></div>
+</div>
+<script>
+const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+const CAJA=50000000,PORRECIBIR=155000000;
+const DIST=[
+ {nm:'Estructura · acero, concreto, formaleta',ets:['02 Cimentación/Zapatas','03 Acero/Hierro','04 Concreto/Vaciados','05 Formaleta/Encofrado','07 Vigas']},
+ {nm:'Mano de obra (estructura)',ets:['12 Mano de obra']},
+ {nm:'Materiales generales',ets:['15 Materiales generales']},
+ {nm:'Administración / indirectos',ets:['13 Administración/Indirectos']},
+ {nm:'Excavación',ets:['01 Excavación']},
+ {nm:'Transporte y equipos',ets:['14 Transporte/Equipos']},
+ {nm:'Preliminares y diseños',ets:['00 Preliminares/Diseños']},
+ {nm:'Acabados iniciados (varios)',ets:['11 Acabados']},
+ {nm:'Otros / varios',ets:['99 Otros','(sin etapa)']},
+ {nm:'Mampostería (inicio)',ets:['09 Mampostería']},
+ {nm:'Cubierta',ets:['10 Cubierta']}];
+const PEND=['7','8','9','10','11','12','13','13b','13c','14','15','16','17','18','20'];
+const OBRAS=[
+ {id:'robledo',nombre:'Robledo · Piso 1',estado:'En ejecución',avance:60},
+ {id:'weliving',nombre:'Weliving',estado:'En ejecución',avance:null},
+ {id:'novaeva',nombre:'Novaeva',estado:'En ejecución',avance:null}];
+const fmt=v=>(v==null?'—':'$'+Math.round(v).toLocaleString('es-CO'));
+const qfmt=v=>(+v).toLocaleString('es-CO',{maximumFractionDigits:2});
+let GAS=[],CAPS=[],ITEMS=[],capByNum={},ON=[],ACP=[];
+let ESTADOS={};
+function loadEstados(){try{ESTADOS=JSON.parse(localStorage.getItem('imp_estados_robledo')||'{}');}catch(e){ESTADOS={};}}
+function saveEstados(){try{localStorage.setItem('imp_estados_robledo',JSON.stringify(ESTADOS));}catch(e){}}
+function defE(cap,desc){if(/aseo|final|entrega|limpieza/i.test(desc||''))return 'sininiciar';var e=cap?cap.estado:'';if(e==='en_curso')return 'proceso';return 'sininiciar';}
+function getE(l){return ESTADOS[l.key]||defE(capByNum[l.cap],l.desc);}
+function lineasOf(c){var its=ITEMS.filter(i=>i.cap_num===c.num);
+ if(its.length)return its.map(i=>({key:c.num+'|'+i.item,item:i.item,desc:i.descripcion,und:i.und,cant:i.cant,pu:i.punit,total:i.total,cap:c.num}));
+ return [{key:c.num+'|__',item:'',desc:c.nota_obra||c.nombre,und:'glb',cant:1,pu:c.ppto,total:c.ppto,cap:c.num}];}
+function gastosDe(ets){return GAS.filter(g=>ets.indexOf(g.etapa||'(sin etapa)')>=0);}
+function catTotal(ets){return gastosDe(ets).reduce((a,g)=>a+(+g.monto||0),0);}
+function gastadoTotal(){return GAS.reduce((a,g)=>a+(+g.monto||0),0);}
+function ctrl(key,st){return '<span class="seg">'+
+ [['sininiciar','Sin iniciar','s0'],['proceso','En proceso','s1'],['hecho','Hecho','s2']].map(o=>
+  '<button class="sg '+o[2]+(st===o[0]?' on':'')+'" data-key="'+key+'" data-st="'+o[0]+'">'+o[1]+'</button>').join('')+'</span>';}
+function detTabla(ets){var gs=gastosDe(ets);if(!gs.length)return '<div class="note">Sin gastos en tu hoja.</div>';
+ var tot=gs.reduce((a,g)=>a+(+g.monto||0),0);
+ return '<table><tr><th class="l">Fecha</th><th class="l">Descripción</th><th>Monto</th></tr>'+
+  gs.map(g=>'<tr><td class="l mut">'+(g.fecha||'')+'</td><td class="l">'+(g.descripcion||'')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>').join('')+
+  '<tr style="background:#f6f7fb"><td class="l"><b>'+gs.length+' gastos</b></td><td></td><td><b>'+fmt(tot)+'</b></td></tr></table>';}
+function bloque1(){var rows=DIST.map(d=>{var v=catTotal(d.ets);
+  return '<details class="det"><summary><div class="srow"><span class="chev">▶</span><span class="ck">✓</span><span class="rn">'+d.nm+'</span><span class="rv">'+fmt(v)+'</span></div></summary><div class="subt">'+detTabla(d.ets)+'</div></details>';}).join('');
+ return '<div class="grp"><span>Ya ejecutado · de tu hoja de gastos</span><span class="gt">'+fmt(gastadoTotal())+'</span></div>'+
+  '<div class="grpnote">Calculado en vivo desde tu hoja ('+GAS.length+' gastos). Abre cada categoría para ver sus facturas.</div><div class="dl">'+rows+'</div>';}
+function capHTML(c){var ls=lineasOf(c);
+ var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+
+  ls.map(l=>'<tr><td class="l">'+(l.item?l.item+' ':'')+l.desc+'</td><td class="mut">'+(l.und||'')+'</td><td>'+qfmt(l.cant)+'</td><td>'+fmt(l.pu)+'</td><td><b>'+fmt(l.total)+'</b></td><td class="l">'+ctrl(l.key,getE(l))+'</td></tr>').join('')+'</table>';
+ return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub">'+fmt(c.ppto)+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
+function bloque2(){return '<div class="grp"><span>Falta por ejecutar · presupuesto pendiente</span><span class="gt" id="grp-falta">—</span></div>'+
+ '<div class="grpnote">Lo que viene. Marca cada actividad; al marcar Hecho baja la Falta.</div>'+ACP.map(capHTML).join('');}
+function cajaHTML(){var disp=CAJA+PORRECIBIR;
+ return '<div class="itemh"><span class="nm0">💰</span><h3>Caja y financiación</h3></div><div class="sum">'+
+  '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+fmt(CAJA)+'</div><div class="n">efectivo hoy</div></div>'+
+  '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · se libera al 80%</div></div>'+
+  '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(disp)+'</div><div class="n">caja + por recibir</div></div></div>'+
+  '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
+function presupuestoHTML(){var gastado=gastadoTotal();
+ return '<div class="itemh"><span class="nm0">1</span><h3>Presupuesto</h3></div><div class="sum">'+
+  '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja ('+GAS.length+' gastos)</div></div>'+
+  '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v" id="sum-fa">—</div><div class="n">presupuesto pendiente</div></div>'+
+  '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v" id="sum-to">—</div><div class="n">ejecutado + falta</div></div></div>'+
+  '<div class="notebar">El <b>Ejecutado</b> ($'+Math.round(gastado).toLocaleString("es-CO")+') sale en vivo de tu hoja. La <b>Falta</b> es el presupuesto de acabados que no está Hecho.</div>'+
+  bloque1()+bloque2()+'<div class="canvas">Dime el siguiente ítem (Flujo de caja, Pagos, Cronograma…) y lo agrego.</div>';}
+function recompute(){var fa=0;
+ ACP.forEach(c=>{lineasOf(c).forEach(l=>{if(getE(l)!=='hecho')fa+=l.total;});
+  var sts=lineasOf(c).map(getE),b;
+  if(sts.every(s=>s==='hecho'))b=['b-ej','✓ hecha'];else if(sts.every(s=>s==='sininiciar'))b=['b-pen','pendiente'];else b=['b-cur','en proceso'];
+  var el=document.getElementById('bdg-'+c.num);if(el){el.className='badge '+b[0];el.textContent=b[1];}});
+ var g=(id,v)=>{var e=document.getElementById(id);if(e)e.textContent=fmt(v);};
+ g('sum-fa',fa);g('grp-falta',fa);g('sum-to',gastadoTotal()+fa);}
+function setE(key,st){ESTADOS[key]=st;saveEstados();
+ document.querySelectorAll('.sg[data-key="'+key+'"]').forEach(b=>b.classList.toggle('on',b.dataset.st===st));recompute();}
+function attach(){document.querySelectorAll('#d-body .sg').forEach(b=>b.onclick=()=>setE(b.dataset.key,b.dataset.st));}
+function cardsHome(){document.getElementById('obras').innerHTML=OBRAS.map(o=>'<div class="obra" onclick="verObra(\''+o.id+'\')"><div class="nm">'+o.nombre+'<span class="est">'+o.estado+'</span></div><div class="gl">Abrir dashboard</div><div class="gv" style="font-size:15px;color:#4f46e5;margin-top:8px">Ver →</div></div>').join('');}
+async function verObra(id){var o=OBRAS.find(x=>x.id===id);
+ document.getElementById('home').classList.add('hidden');document.getElementById('detalle').classList.remove('hidden');
+ document.getElementById('d-nm').innerHTML=o.nombre+'<span class="live">● en vivo</span>';document.getElementById('d-meta').textContent='Conectando con tu hoja de gastos…';window.scrollTo(0,0);
+ if(id!=='robledo'){document.getElementById('d-body').innerHTML='<div class="canvas">Aquí construimos el dashboard de <b>'+o.nombre+'</b> paso a paso. Empezamos por Robledo.</div>';document.getElementById('d-meta').textContent='';return;}
+ document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
+ try{
+  var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
+  var res=await Promise.all([g('gastos?obra=eq.robledo&select=etapa,fecha,descripcion,monto&order=fecha&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden')]);
+  GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];
+  capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
+  ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
+  document.getElementById('d-meta').textContent='Avance '+o.avance+'% · '+GAS.length+' gastos reales (en vivo)';
+  document.getElementById('d-body').innerHTML=cajaHTML()+presupuestoHTML();attach();recompute();
+ }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
+function verHome(){document.getElementById('detalle').classList.add('hidden');document.getElementById('home').classList.remove('hidden');}
+loadEstados();cardsHome();
+</script></body></html>
