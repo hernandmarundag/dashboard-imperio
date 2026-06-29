@@ -70,6 +70,15 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .navc:hover{border-color:#4f46e5;transform:translateY(-2px);box-shadow:0 6px 18px rgba(79,70,229,.08)}
 .navic{font-size:24px} .navt{font-size:15px;font-weight:700;margin-top:8px;color:#1b2030} .navs{font-size:12px;color:#8a90a6;margin-top:3px}
 .subback{display:inline-flex;align-items:center;gap:6px;color:#4f46e5;font-weight:600;cursor:pointer;margin-bottom:14px;font-size:13px}
+.barrow{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.barrow .bn{width:150px;flex-shrink:0;color:#4b5168;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barrow .bt{flex:1;background:#eceef4;border-radius:6px;height:13px;overflow:hidden}
+.barrow .bf{height:100%;background:linear-gradient(90deg,#4f46e5,#7c5cf0);border-radius:6px}
+.barrow .bv{width:150px;text-align:right;flex-shrink:0;color:#1b2030;font-weight:600;font-size:11px}
+.pag{display:flex;gap:10px;align-items:center;justify-content:center;margin:14px 0}
+.pgb{padding:7px 13px;border:1px solid #e0e3ee;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#4b5168;font-weight:600}
+.pgb:hover{border-color:#4f46e5;color:#4f46e5} .pgb:disabled{opacity:.4;cursor:default}
+.pgi{font-size:12px;color:#8a90a6}
 </style></head><body><div class="wrap">
 <div id="home">
 <div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
@@ -181,16 +190,23 @@ function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=g
  document.querySelectorAll('#d-body .navc').forEach(function(n){n.onclick=function(){goSection(n.dataset.sec);};});
  window.scrollTo(0,0);}
 function backG(){return '<div class="subback" onclick="renderGeneral()">← Dashboard general</div>';}
+var hojaPage=0;var HPP=50;
+function hojaRow(g,num){var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
+ return '<tr><td class="mut" style="text-align:left">'+num+'</td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+(g.descripcion||'')+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>';}
 function hojaHTML(){var tot=gastadoTotal();
- var rowsHtml='';
- for(var i=GAS.length-1;i>=0;i--){var g=GAS[i];var num=i+1;
-  var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
-  rowsHtml+='<tr><td class="mut" style="text-align:left">'+num+'</td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+(g.descripcion||'')+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>';
- }
+ var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});
+ var maxv=cats.length?cats[0].v:1;
+ var bars=cats.map(function(c){var p=tot?(c.v/tot*100):0;return '<div class="barrow"><div class="bn">'+c.nm+'</div><div class="bt"><div class="bf" style="width:'+(c.v/maxv*100).toFixed(1)+'%"></div></div><div class="bv">'+fmt(c.v)+' · '+p.toFixed(1)+'%</div></div>';}).join('');
+ var n=GAS.length,pages=Math.max(1,Math.ceil(n/HPP));if(hojaPage>=pages)hojaPage=0;
+ var start=hojaPage*HPP,rowsHtml='';
+ for(var k=0;k<HPP;k++){var idx=n-1-(start+k);if(idx<0)break;rowsHtml+=hojaRow(GAS[idx],idx+1);}
+ var pag='<div class="pag"><button class="pgb"'+(hojaPage<=0?' disabled':'')+' onclick="hojaPg('+(hojaPage-1)+')">← Anteriores</button><span class="pgi">Página '+(hojaPage+1)+' de '+pages+' · '+(start+1)+'–'+Math.min(start+HPP,n)+' de '+n+'</span><button class="pgb"'+(hojaPage>=pages-1?' disabled':'')+' onclick="hojaPg('+(hojaPage+1)+')">Siguientes →</button></div>';
  return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+
-  '<div class="notebar">Tus '+GAS.length+' gastos — el más reciente arriba, el primero abajo. En vivo de tu hoja de Supabase. Total gastado: <b>'+fmt(tot)+'</b></div>'+
-  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:820px"><tr><th style="text-align:left">#</th><th class="l">Fecha</th><th class="l">Proveedor</th><th class="l">Descripción</th><th class="l">Categoría</th><th class="l">Pagado con</th><th>Monto</th></tr>'+rowsHtml+
-  '<tr style="background:#f6f7fb"><td></td><td class="l"><b>'+GAS.length+'</b></td><td></td><td></td><td></td><td></td><td><b>'+fmt(tot)+'</b></td></tr></table></div>';}
+  '<div class="grp"><span>Resumen por categoría · % del gasto</span><span class="gt">'+fmt(tot)+'</span></div>'+
+  '<div class="dl" style="padding:14px 16px">'+bars+'</div>'+
+  '<div class="grp"><span>Gastos diarios · el más reciente arriba</span><span class="gt">'+n+' gastos</span></div>'+
+  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:820px"><tr><th style="text-align:left">#</th><th class="l">Fecha</th><th class="l">Proveedor</th><th class="l">Descripción</th><th class="l">Categoría</th><th class="l">Pagado con</th><th>Monto</th></tr>'+rowsHtml+'</table></div>'+pag;}
+function hojaPg(p){hojaPage=p;document.getElementById('d-body').innerHTML=hojaHTML();window.scrollTo(0,300);}
 function presSec(){var gastado=gastadoTotal();
  return backG()+'<div class="itemh"><span class="nm0">💰</span><h3>Presupuesto general</h3></div><div class="sum">'+
   '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja</div></div>'+
@@ -198,7 +214,7 @@ function presSec(){var gastado=gastadoTotal();
   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v" id="sum-to">—</div><div class="n">ejecutado + falta</div></div></div>'+
   '<div class="notebar">El Ejecutado sale de tu hoja. Toca el lápiz ✎ en "Falta por ejecutar" para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+bloque1()+bloque2();}
 function goSection(sec){var b=document.getElementById('d-body');
- if(sec==='hoja'){b.innerHTML=hojaHTML();attach();}
+ if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();}
  else if(sec==='presupuesto'){b.innerHTML=presSec();attach();recompute();}
  else if(sec==='planner'){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner</b><br>Lo construimos paso a paso. Dime qué quieres ver aquí: programación semanal de actividades, fechas de pago, etc.</div>';}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
