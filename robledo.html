@@ -214,17 +214,27 @@ function cajaHTML(){var disp=CAJA+PORRECIBIR;
   '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
 function computeFalta(){var fa=0;ACP.forEach(function(c){lineasOf(c).forEach(function(l){if(getE(l)!=='hecho')fa+=l.total;});});return fa;}
 function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=gastado+falta;
+ var av=(OBRAS.find(function(x){return x.id==='robledo';})||{}).avance||60;
+ var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});
+ var legend=cats.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var html='<div class="itemh"><span class="nm0">📊</span><h3>Dashboard general</h3></div>'+
   '<div class="sum">'+
    '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+fmt(CAJA)+'</div><div class="n">efectivo hoy</div></div>'+
    '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · al 80%</div></div>'+
    '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(CAJA+PORRECIBIR)+'</div><div class="n">caja + por recibir</div></div></div>'+
-  '<div class="grp"><span>Secciones</span></div>'+
+  '<div class="grp"><span>Resumen ejecutivo · en vivo</span><span class="gt">'+fmt(total)+'</span></div>'+
+  '<div class="sum">'+
+   '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja ('+GAS.length+' gastos)</div></div>'+
+   '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v">'+fmt(falta)+'</div><div class="n">presupuesto pendiente</div></div>'+
+   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v">'+fmt(total)+'</div><div class="n">ejecutado + falta</div></div></div>'+
+  '<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de obra</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% ejecutado</div></div>'+
+  '<div class="grp"><span>Distribución del gasto · % por categoría</span><span class="gt">'+fmt(gastado)+'</span></div>'+
+  '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,gastado)+'</div><div class="legend">'+legend+'</div></div></div>'+
+  '<div class="grp"><span>Entrar al detalle</span></div>'+
   '<div class="cards">'+
    '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
    '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">Falta '+fmt(falta)+' · Total '+fmt(total)+'</div></div>'+
    '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">Programación de obra</div></div>'+
-   '<div class="navc" data-sec="informe"><div class="navic">📊</div><div class="navt">Informe general</div><div class="navs">Resumen ejecutivo</div></div>'+
   '</div>';
  document.getElementById('d-body').innerHTML=html;
  document.querySelectorAll('#d-body .navc').forEach(function(n){n.onclick=function(){goSection(n.dataset.sec);};});
