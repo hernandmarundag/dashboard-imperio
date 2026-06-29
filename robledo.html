@@ -75,9 +75,13 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .barrow .bt{flex:1;background:#eceef4;border-radius:6px;height:13px;overflow:hidden}
 .barrow .bf{height:100%;background:linear-gradient(90deg,#4f46e5,#7c5cf0);border-radius:6px}
 .barrow .bv{width:150px;text-align:right;flex-shrink:0;color:#1b2030;font-weight:600;font-size:11px}
-.pag{display:flex;gap:10px;align-items:center;justify-content:center;margin:14px 0}
-.pgb{padding:7px 13px;border:1px solid #e0e3ee;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#4b5168;font-weight:600}
-.pgb:hover{border-color:#4f46e5;color:#4f46e5} .pgb:disabled{opacity:.4;cursor:default}
+.pag{display:flex;gap:6px;align-items:center;justify-content:center;margin:12px 0 0;flex-wrap:wrap}
+.pgb{min-width:32px;height:32px;border:1px solid #e6e8f0;border-radius:9px;background:#fff;cursor:pointer;font-size:14px;color:#4b5168;font-weight:700}
+.pgb:hover{border-color:#4f46e5;color:#4f46e5} .pgb:disabled{opacity:.35;cursor:default}
+.pgn{min-width:32px;height:32px;border:1px solid #e6e8f0;background:#fff;color:#4b5168;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:600;transition:.12s}
+.pgn:hover{border-color:#4f46e5;color:#4f46e5}
+.pgn.on{background:#4f46e5;color:#fff;border-color:#4f46e5;box-shadow:0 2px 8px rgba(79,70,229,.25)}
+.paginfo{text-align:center;font-size:11.5px;color:#a7adbf;margin-top:12px}
 .pgi{font-size:12px;color:#8a90a6}
 .donutwrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
 .legend{flex:1;min-width:240px}
@@ -173,14 +177,14 @@ function capHTML(c){var ls=lineasOf(c);
  var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+rows+'</table>';
  return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub" id="capsub-'+c.num+'">'+fmt(c.ppto)+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
 function liveUpd(inp){var cap=inp.dataset.cap;
- if(inp.dataset.kind==='gasto'){var gid=+inp.dataset.gid,gg=GAS.find(function(x){return x.id===gid;});if(gg){gg[inp.dataset.f]=(inp.dataset.f==='monto')?(parseFloat(inp.value)||0):inp.value;}return;}
+ if(inp.dataset.kind==='gasto'){var gid=+inp.dataset.gid,gg=GAS.find(function(x){return x.id===gid;});if(gg){gg[inp.dataset.f]=(inp.dataset.f==='monto')?(parseInt(String(inp.value).replace(/[^0-9]/g,''))||0):inp.value;}return;}
  if(inp.dataset.kind==='item'){var id=+inp.dataset.id,f=inp.dataset.f,it=ITEMS.find(x=>x.id===id);if(!it)return;it[f]=parseFloat(inp.value)||0;it.total=(+it.cant||0)*(+it.punit||0);var tc=document.getElementById('ittot-'+id);if(tc)tc.textContent=fmt(it.total);var its=ITEMS.filter(x=>x.cap_num===cap);if(capByNum[cap])capByNum[cap].ppto=its.reduce((a,x)=>a+(+x.total||0),0);}
  else{if(capByNum[cap])capByNum[cap].ppto=parseFloat(inp.value)||0;}
  var cs=document.getElementById('capsub-'+cap);if(cs&&capByNum[cap])cs.textContent=fmt(capByNum[cap].ppto);
  recompute();}
 function patch(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'};return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:h,body:JSON.stringify(body)});}
 function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');if(!ins.length)return;var f0=ins[0],kind=f0.dataset.kind;
- if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseFloat(x.value)||0):x.value;});
+ if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseInt(String(x.value).replace(/[^0-9]/g,''))||0):x.value;});
   var g=GAS.find(function(x){return x.id===gid;});if(g){for(var k in body){g[k]=body[k];}}
   patch('gastos?id=eq.'+gid,body).then(function(){flash('Guardado ✓');document.getElementById('d-body').innerHTML=hojaHTML();attach();}).catch(function(){flash('Error al guardar',true);});return;}
  var cap=f0.dataset.cap;
@@ -193,7 +197,15 @@ function toggleEdit(rid,btn){var ins=document.querySelectorAll('.ed[data-row="'+
 var _toast;
 function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.style.cssText='position:fixed;bottom:20px;right:20px;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:99;transition:opacity .3s';document.body.appendChild(_toast);}
  _toast.textContent=msg;_toast.style.background=err?'#a32020':'#1a7340';_toast.style.opacity='1';clearTimeout(_toast._t);_toast._t=setTimeout(function(){_toast.style.opacity='0';},1600);}
-function bloque2(){return '<div class="grp"><span>Falta por ejecutar · presupuesto pendiente</span><span class="gt" id="grp-falta">—</span></div>'+
+function capFalta(c){var f=0;lineasOf(c).forEach(function(l){if(getE(l)!=='hecho')f+=l.total;});return f;}
+function faltaBars(){var tot=computeFalta();if(tot<=0)return '';
+ var arr=ACP.map(function(c){return {nm:c.nombre,f:capFalta(c)};}).filter(function(x){return x.f>0;}).sort(function(a,b){return b.f-a.f;});
+ var rows=arr.map(function(x){var pc=x.f/tot*100;var w=Math.max(pc,1.2);
+  return '<div class="barrow"><div class="bn" title="'+x.nm+'">'+x.nm+'</div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%"></div></div><div class="bv" style="width:178px">'+fmt(x.f)+' · <b style="color:#a5710a">'+pc.toFixed(1)+'%</b></div></div>';}).join('');
+ return '<div class="grp"><span>Falta por etapa · % del pendiente</span><span class="gt">'+fmt(tot)+'</span></div>'+
+  '<div class="grpnote">Cuánto del presupuesto falta por ejecutar en cada etapa. Barras y % calculados en vivo desde tu presupuesto real — suman el 100% de la falta.</div>'+
+  '<div class="dl" style="padding:15px 17px">'+rows+'</div>';}
+function bloque2(){return faltaBars()+'<div class="grp" style="margin-top:24px"><span>Falta por ejecutar · detalle editable</span><span class="gt" id="grp-falta">—</span></div>'+
  '<div class="grpnote">Lo que viene. Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base. El estado baja la Falta al marcar Hecho.</div>'+ACP.map(capHTML).join('');}
 function cajaHTML(){var disp=CAJA+PORRECIBIR;
  return '<div class="itemh"><span class="nm0">💰</span><h3>Caja y financiación</h3></div><div class="sum">'+
@@ -229,7 +241,7 @@ function donut(cats,total){var C=2*Math.PI*58,off=0,segs='';
 function hojaRow(g,num){var rid='g'+g.id;
  var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
  var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
- var mto='<input class="ed" readonly type="number" step="any" value="'+g.monto+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
+ var mto='<input class="ed montoed" readonly type="text" value="'+fmt(g.monto)+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
  return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
 function hojaHTML(){var tot=gastadoTotal();
  var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});
@@ -237,7 +249,7 @@ function hojaHTML(){var tot=gastadoTotal();
  var n=GAS.length,pages=Math.max(1,Math.ceil(n/HPP));if(hojaPage>=pages)hojaPage=0;
  var start=hojaPage*HPP,rowsHtml='';
  for(var k=0;k<HPP;k++){var idx=n-1-(start+k);if(idx<0)break;rowsHtml+=hojaRow(GAS[idx],idx+1);}
- var pag='<div class="pag"><button class="pgb"'+(hojaPage<=0?' disabled':'')+' onclick="hojaPg('+(hojaPage-1)+')">← Anteriores</button><span class="pgi">Página '+(hojaPage+1)+' de '+pages+' · '+(start+1)+'–'+Math.min(start+HPP,n)+' de '+n+'</span><button class="pgb"'+(hojaPage>=pages-1?' disabled':'')+' onclick="hojaPg('+(hojaPage+1)+')">Siguientes →</button></div>';
+ var nums='';for(var pp=0;pp<pages;pp++){nums+='<button class="pgn'+(pp===hojaPage?' on':'')+'" onclick="hojaPg('+pp+')">'+(pp+1)+'</button>';}var pag='<div class="pag"><button class="pgb"'+(hojaPage<=0?' disabled':'')+' onclick="hojaPg('+(hojaPage-1)+')">‹</button>'+nums+'<button class="pgb"'+(hojaPage>=pages-1?' disabled':'')+' onclick="hojaPg('+(hojaPage+1)+')">›</button></div><div class="paginfo">Mostrando '+(start+1)+'–'+Math.min(start+HPP,n)+' de '+n+' gastos</div>';
  return backG()+'<div class="itemh"><span class="nm0">📒</span><h3>Hoja de gasto</h3></div>'+
   '<div class="grp"><span>Resumen por categoría · % del gasto</span><span class="gt">'+fmt(tot)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>'+
