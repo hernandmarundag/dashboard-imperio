@@ -3873,7 +3873,7 @@ function rRobledoEmbed(){
   var el=document.getElementById('v-robledo');
   if(!el) return;
   if(!el.querySelector('iframe.rb-embed')){
-    el.innerHTML='<iframe class="rb-embed" src="robledo.html#robledo" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+    el.innerHTML='<iframe class="rb-embed" src="robledo.html?t='+Date.now()+'#robledo" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
   }
 }
 function renderView(v, skipHistory) {
