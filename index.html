@@ -8726,6 +8726,7 @@ renderObrasNav();
 renderObraSelects();
 var _lastV = 'inicio';
 try { _lastV = localStorage.getItem('imp_curv') || 'inicio'; } catch(e){}
+if (_lastV === 'robledo') _lastV = 'inicio'; // Robledo abre robledo.html solo al hacer clic, no en auto-restore
 gotoView(_lastV);
 fetchSupabaseData(); // FASE 3C
 // Cargar datos de Supabase al iniciar
