@@ -3859,6 +3859,7 @@ document.querySelectorAll('.tab').forEach(function(btn) {
 });
 
 function gotoView(v) {
+  if (v === 'robledo') { window.location.href = 'robledo.html'; return; }
   document.querySelectorAll('.view').forEach(function(el) { el.classList.remove('on'); });
   document.querySelectorAll('.tab').forEach(function(b) { b.classList.toggle('on', b.dataset.v === v); });
   document.querySelectorAll('.ni').forEach(function(n) { n.classList.toggle('on', n.dataset.v === v); });
@@ -7762,6 +7763,15 @@ function saveGasto() {
     .then(function(res) {
       // ── Registro paralelo en movimientos (libro diario ERP) ──
       var gastosId = (Array.isArray(res) && res[0]) ? res[0].id : null;
+      // ── Conexión con presupuesto: cada pago baja el "Falta" del capítulo (en vivo) ──
+      var _R2C = {'Preliminares':'1','Mampostería':'5','Revoques y Estucos':'5','Pisos y Enchapes':'7','Drywall':'8','Ventanería':'9','Mano de Obra':'10','Eléctrico':'11','Hidráulico':'12','Carpintería':'13','Electrodomésticos':'13b','Pintura':'14','Equipos y CCTV':'15','Gas':'17'};
+      var _capN = _R2C[rubroVal];
+      if (_capN && obra === 'robledo' && total > 0) {
+        fetch(SB_URL+'/rest/v1/presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(_capN)+'&select=id,pagado_manual', {headers:SB_H})
+          .then(function(r){ return r.json(); })
+          .then(function(rows){ if(rows && rows[0]){ var _np=(parseFloat(rows[0].pagado_manual)||0)+total; sbPatch('presupuesto_caps','id=eq.'+rows[0].id,{pagado_manual:_np}); } })
+          .catch(function(e){ console.warn('link presupuesto:', e); });
+      }
       var isTC = ['p1','p2','p3','h1','h2','h3'].indexOf(ctaV) >= 0;
       sbPost('movimientos', [{
         fecha:            fStr,
