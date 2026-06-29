@@ -152,9 +152,11 @@ const OBRAS=[
 const fmt=v=>(v==null?'—':'$'+Math.round(v).toLocaleString('es-CO'));
 const qfmt=v=>(+v).toLocaleString('es-CO',{maximumFractionDigits:2});
 let GAS=[],CAPS=[],ITEMS=[],CRONO=[],capByNum={},ON=[],ACP=[];
+var CUR='robledo';
+const CFG={robledo:{caja:50000000,porrecibir:155000000}};
 let ESTADOS={};
-function loadEstados(){try{ESTADOS=JSON.parse(localStorage.getItem('imp_estados_robledo')||'{}');}catch(e){ESTADOS={};}}
-function saveEstados(){try{localStorage.setItem('imp_estados_robledo',JSON.stringify(ESTADOS));}catch(e){}}
+function loadEstados(){try{ESTADOS=JSON.parse(localStorage.getItem('imp_estados_'+CUR)||'{}');}catch(e){ESTADOS={};}}
+function saveEstados(){try{localStorage.setItem('imp_estados_'+CUR,JSON.stringify(ESTADOS));}catch(e){}}
 function defE(cap,desc){if(/aseo|final|entrega|limpieza/i.test(desc||''))return 'sininiciar';var e=cap?cap.estado:'';if(e==='en_curso')return 'proceso';return 'sininiciar';}
 function getE(l){return ESTADOS[l.key]||defE(capByNum[l.cap],l.desc);}
 function lineasOf(c){var its=ITEMS.filter(i=>i.cap_num===c.num);
@@ -195,7 +197,7 @@ function liveUpd(inp){var cap=inp.dataset.cap;
  recompute();}
 function patch(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'};return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:h,body:JSON.stringify(body)});}
 function post(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=representation'};return fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:h,body:JSON.stringify(body)});}
-function saveNewGasto(){var fecha=(document.getElementById('ng-fecha')||{}).value||'';var prov=((document.getElementById('ng-prov')||{}).value||'').trim();var desc=((document.getElementById('ng-desc')||{}).value||'').trim();var monto=parseInt(String((document.getElementById('ng-monto')||{}).value||'').replace(/[^0-9]/g,''))||0;var mp=((document.getElementById('ng-mp')||{}).value||'').trim();var cap=(document.getElementById('ng-cap')||{}).value||'';if(!monto){flash('Escribe el monto',true);return;}if(!fecha){fecha=new Date().toISOString().slice(0,10);}var body={obra:'robledo',fecha:fecha,nombre:prov||null,descripcion:desc||null,monto:monto,mp:mp||null};if(cap){body.cap_num=cap;if(capByNum[cap])body.etapa=capByNum[cap].nombre;}flash('Guardando…');post('gastos',body).then(function(r){return r.json();}).then(function(rows){var ng=(rows&&rows[0])?rows[0]:body;GAS.push(ng);flash('Gasto guardado ✓');hojaPage=0;goSection('hoja');}).catch(function(){flash('Error al guardar',true);});}
+function saveNewGasto(){var fecha=(document.getElementById('ng-fecha')||{}).value||'';var prov=((document.getElementById('ng-prov')||{}).value||'').trim();var desc=((document.getElementById('ng-desc')||{}).value||'').trim();var monto=parseInt(String((document.getElementById('ng-monto')||{}).value||'').replace(/[^0-9]/g,''))||0;var mp=((document.getElementById('ng-mp')||{}).value||'').trim();var cap=(document.getElementById('ng-cap')||{}).value||'';if(!monto){flash('Escribe el monto',true);return;}if(!fecha){fecha=new Date().toISOString().slice(0,10);}var body={obra:CUR,fecha:fecha,nombre:prov||null,descripcion:desc||null,monto:monto,mp:mp||null};if(cap){body.cap_num=cap;if(capByNum[cap])body.etapa=capByNum[cap].nombre;}flash('Guardando…');post('gastos',body).then(function(r){return r.json();}).then(function(rows){var ng=(rows&&rows[0])?rows[0]:body;GAS.push(ng);flash('Gasto guardado ✓');hojaPage=0;goSection('hoja');}).catch(function(){flash('Error al guardar',true);});}
 function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');if(!ins.length)return;var f0=ins[0],kind=f0.dataset.kind;
  if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseInt(String(x.value).replace(/[^0-9]/g,''))||0):x.value;});
   var g=GAS.find(function(x){return x.id===gid;});if(g){for(var k in body){g[k]=body[k];}}
@@ -228,29 +230,31 @@ function cajaHTML(){var disp=CAJA+PORRECIBIR;
   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(disp)+'</div><div class="n">caja + por recibir</div></div></div>'+
   '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
 function computeFalta(){return ACP.reduce(function(a,c){return a+capFalta(c);},0);}
-function gastoCats(){var tot=gastadoTotal();var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;});var sum=cats.reduce(function(a,c){return a+c.v;},0);var rest=tot-sum;if(rest>1)cats.push({nm:'Acabados / nuevos',v:rest});return cats.sort(function(a,b){return b.v-a.v;});}
-function renderGeneral(){var gastado=gastadoTotal(),falta=computeFalta(),total=gastado+falta;
- var av=(OBRAS.find(function(x){return x.id==='robledo';})||{}).avance||60;
+function gastoCats(){var tot=gastadoTotal();if(CUR==='robledo'){var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;});var sum=cats.reduce(function(a,c){return a+c.v;},0);var rest=tot-sum;if(rest>1)cats.push({nm:'Acabados / nuevos',v:rest});return cats.sort(function(a,b){return b.v-a.v;});}var m={};GAS.forEach(function(g){var k=(g.etapa||'Sin categoría').replace(/^\d+\s*/,'')||'Sin categoría';m[k]=(m[k]||0)+(+g.monto||0);});return Object.keys(m).map(function(k){return {nm:k,v:m[k]};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});}
+function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,falta=hasPres?computeFalta():null,total=hasPres?(gastado+falta):null;
+ var o=OBRAS.find(function(x){return x.id===CUR;})||{},av=o.avance;
+ var cfg=CFG[CUR]||{},caja=(cfg.caja!=null?cfg.caja:null),prc=(cfg.porrecibir!=null?cfg.porrecibir:null);
+ var pd=function(v){return v==null?'<span style="color:#a7adbf;font-weight:600">Por definir</span>':fmt(v);};
  var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var html='<div class="itemh"><span class="nm0">📊</span><h3>Dashboard general</h3></div>'+
   '<div class="sum">'+
-   '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+fmt(CAJA)+'</div><div class="n">efectivo hoy</div></div>'+
-   '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · al 80%</div></div>'+
-   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(CAJA+PORRECIBIR)+'</div><div class="n">caja + por recibir</div></div></div>'+
-  '<div class="grp"><span>Resumen ejecutivo · en vivo</span><span class="gt">'+fmt(total)+'</span></div>'+
+   '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+pd(caja)+'</div><div class="n">'+(caja!=null?'efectivo hoy':'sin cargar')+'</div></div>'+
+   '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+pd(prc)+'</div><div class="n">'+(prc!=null?'al 80%':'sin cargar')+'</div></div>'+
+   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+pd((caja!=null&&prc!=null)?(caja+prc):null)+'</div><div class="n">caja + por recibir</div></div></div>'+
+  '<div class="grp"><span>Resumen ejecutivo · en vivo</span><span class="gt">'+pd(total)+'</span></div>'+
   '<div class="sum">'+
    '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja ('+GAS.length+' gastos)</div></div>'+
-   '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v">'+fmt(falta)+'</div><div class="n">presupuesto pendiente</div></div>'+
-   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v">'+fmt(total)+'</div><div class="n">ejecutado + falta</div></div></div>'+
-  '<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de obra</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% ejecutado</div></div>'+
+   '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v">'+pd(falta)+'</div><div class="n">'+(hasPres?'presupuesto pendiente':'presupuesto por definir')+'</div></div>'+
+   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v">'+pd(total)+'</div><div class="n">ejecutado + falta</div></div></div>'+
+  (av!=null?'<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de obra</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% ejecutado</div></div>':'')+
   '<div class="grp"><span>Distribución del gasto · % por categoría</span><span class="gt">'+fmt(gastado)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,gastado)+'</div><div class="legend">'+legend+'</div></div></div>'+
   '<div class="grp"><span>Entrar al detalle</span></div>'+
   '<div class="cards">'+
    '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
-   '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">Falta '+fmt(falta)+' · Total '+fmt(total)+'</div></div>'+
-   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">Programación de obra</div></div>'+
+   '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">'+(hasPres?('Falta '+fmt(falta)+' · Total '+fmt(total)):'Por definir')+'</div></div>'+
+   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CRONO.length?'Programación de obra':'Por definir')+'</div></div>'+
   '</div>';
  document.getElementById('d-body').innerHTML=html;
  document.querySelectorAll('#d-body .navc').forEach(function(n){n.onclick=function(){goSection(n.dataset.sec);};});
@@ -337,8 +341,8 @@ function attachPlanner(){
   col.addEventListener('drop',function(e){e.preventDefault();col.classList.remove('over');if(dragId!=null){moverEstado(dragId,col.dataset.est);dragId=null;}});});}
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
- else if(sec==='presupuesto'){b.innerHTML=presSec();attach();recompute();}
- else if(sec==='planner'){b.innerHTML=renderPlanner();attachPlanner();}
+ else if(sec==='presupuesto'){if(!CAPS.length){b.innerHTML=backG()+'<div class="canvas">💰 <b>Presupuesto por definir</b><br>Cada obra tiene sus propios capítulos e ítems. Cuando tengas el presupuesto de esta obra lo cargamos con la misma lógica que Robledo.</div>';}else{b.innerHTML=presSec();attach();recompute();}}
+ else if(sec==='planner'){if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b><br>Programación de obra pendiente de cargar para esta obra.</div>';}else{b.innerHTML=renderPlanner();attachPlanner();}}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
  window.scrollTo(0,0);}
 function recompute(){var fa=0;
@@ -355,17 +359,17 @@ function cardsHome(){document.getElementById('obras').innerHTML=OBRAS.map(o=>'<d
 async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('home').classList.add('hidden');document.getElementById('detalle').classList.remove('hidden');
  document.getElementById('d-nm').innerHTML=o.nombre+'<span class="live">● en vivo</span>';document.getElementById('d-meta').textContent='Conectando con tu hoja de gastos…';window.scrollTo(0,0);
- if(id!=='robledo'){document.getElementById('d-body').innerHTML='<div class="canvas">Aquí construimos el dashboard de <b>'+o.nombre+'</b> paso a paso. Empezamos por Robledo.</div>';document.getElementById('d-meta').textContent='';return;}
+ CUR=id;loadEstados();
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.robledo&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.robledo&order=orden'),g('presupuesto_items?obra_id=eq.robledo&order=orden'),g('cronograma?obra=eq.robledo&order=orden')]);
+  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden'),g('cronograma?obra=eq.'+id+'&order=orden')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
-  document.getElementById('d-meta').textContent='Avance '+o.avance+'% · '+GAS.length+' gastos reales (en vivo)';
+  document.getElementById('d-meta').textContent=(o.avance!=null?('Avance '+o.avance+'% · '):'')+GAS.length+' gastos reales (en vivo)';
   renderGeneral();
  }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
 function verHome(){document.getElementById('detalle').classList.add('hidden');document.getElementById('home').classList.remove('hidden');}
-loadEstados();cardsHome();verObra('robledo');
+cardsHome();var _h=(location.hash||'').replace('#','');verObra(OBRAS.some(function(o){return o.id===_h;})?_h:'robledo');
 </script></body></html>

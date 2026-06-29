@@ -3869,11 +3869,11 @@ function gotoView(v) {
   renderView(v);
 }
 
-function rRobledoEmbed(){
-  var el=document.getElementById('v-robledo');
+function rObraEmbed(id){
+  var el=document.getElementById('v-'+id);
   if(!el) return;
   if(!el.querySelector('iframe.rb-embed')){
-    el.innerHTML='<iframe class="rb-embed" src="robledo.html?t='+Date.now()+'#robledo" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+    el.innerHTML='<iframe class="rb-embed" src="robledo.html?t='+Date.now()+'#'+id+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
   }
 }
 function renderView(v, skipHistory) {
@@ -3881,7 +3881,7 @@ function renderView(v, skipHistory) {
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
   if (v === 'inicio')  { rKpi(); rObrasChart(); rCajaJun9Chart(); rObrasResumen(); rBudgets(); rDesface(); rWallets('wallets-i'); rTCs('tcs-i'); }
   else if (v === 'obras')   { rObrasView(); }
-  else if (v === 'robledo') { rRobledoEmbed(); }
+  else if (v === 'robledo' || v === 'weliving' || v === 'novaeva') { rObraEmbed(v); }
   else if (obrasIds().indexOf(v) >= 0) { rProjView(v); }
   else if (v === 'cuentas') { rWallets('wallets-c'); rTCs('tcs-c'); rMovsLedger(); }
   else if (v === 'flujo')   { rFlujo(); }
