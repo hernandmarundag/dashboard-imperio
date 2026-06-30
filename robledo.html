@@ -67,6 +67,7 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .pen:hover{color:#4f46e5;background:#eef0fe} .pen.done{color:#1a7340}
 .capsel{border:1px solid transparent;background:transparent;color:#8a90a6;font-size:10.5px;padding:3px 5px;border-radius:7px;max-width:160px;font-family:inherit;cursor:default}
 .capsel:not(:disabled){border-color:#4f46e5;background:#fff;box-shadow:0 0 0 2px #e7eefc;color:#1b2030;cursor:pointer}
+.mpd{width:auto!important;min-width:130px;text-align:left!important;font-size:10.5px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .navc{background:#fff;border:1px solid #e6e8f0;border-radius:14px;padding:18px;cursor:pointer;transition:.15s}
 .navc:hover{border-color:#4f46e5;transform:translateY(-2px);box-shadow:0 6px 18px rgba(79,70,229,.08)}
@@ -333,7 +334,8 @@ function hojaRow(g,num){var rid='g'+g.id;
  var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
  var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
  var mto='<input class="ed montoed" readonly type="text" value="'+fmt(g.monto)+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
- return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px">'+capselHTML(g,rid)+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
+ var mpi='<input class="ed mpd" readonly value="'+((g.mp||g.cuenta||'')).replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="mp">';
+ return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px">'+capselHTML(g,rid)+'</td><td class="l">'+mpi+'</td><td>'+mto+'</td></tr>';}
 function hojaHTML(){var tot=gastadoTotal();var capOpts=(function(){var byg={},ordr=[];CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'Capítulos';if(!byg[gr]){byg[gr]=[];ordr.push(gr);}byg[gr].push(c);});return ordr.map(function(gr){return '<optgroup label="'+gr+'">'+byg[gr].map(function(c){var nm=c.nombre.indexOf(' · ')>=0?c.nombre.split(' · ').slice(1).join(' · '):c.nombre;return '<option value="'+c.num+'">'+nm+'</option>';}).join('')+'</optgroup>';}).join('');})();
  var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
