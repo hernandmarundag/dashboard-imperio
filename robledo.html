@@ -65,6 +65,8 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .ed:focus{outline:none}
 .pen{border:none;background:transparent;cursor:pointer;color:#c2c7d6;font-size:13px;margin-left:4px;padding:1px 5px;border-radius:5px}
 .pen:hover{color:#4f46e5;background:#eef0fe} .pen.done{color:#1a7340}
+.capsel{border:1px solid transparent;background:transparent;color:#8a90a6;font-size:10.5px;padding:3px 5px;border-radius:7px;max-width:160px;font-family:inherit;cursor:default}
+.capsel:not(:disabled){border-color:#4f46e5;background:#fff;box-shadow:0 0 0 2px #e7eefc;color:#1b2030;cursor:pointer}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .navc{background:#fff;border:1px solid #e6e8f0;border-radius:14px;padding:18px;cursor:pointer;transition:.15s}
 .navc:hover{border-color:#4f46e5;transform:translateY(-2px);box-shadow:0 6px 18px rgba(79,70,229,.08)}
@@ -228,7 +230,7 @@ function capHTML(c){var ls=lineasOf(c);
  var body='<table><tr><th class="l">Ítem · actividad</th><th>Und</th><th>Cant.</th><th>V. Unit</th><th>Presupuesto</th><th class="l">Estado</th></tr>'+rows+'</table>';
  return '<details class="et"><summary><div class="srow"><span class="chev">▶</span><span class="badge b-pen" id="bdg-'+c.num+'">…</span><span class="nm">'+c.num+'. '+c.nombre+'</span><span class="sub" id="capsub-'+c.num+'">'+(capPagado(c)>0?('Pag. '+fmt(capPagado(c))+' · Saldo '+fmt(capFalta(c))):fmt(capPresup(c)))+'</span></div></summary><div class="body">'+(c.nota_obra?'<div class="note">'+c.nota_obra+'</div>':'')+body+'</div></details>';}
 function liveUpd(inp){var cap=inp.dataset.cap;
- if(inp.dataset.kind==='gasto'){var gid=+inp.dataset.gid,gg=GAS.find(function(x){return x.id===gid;});if(gg){gg[inp.dataset.f]=(inp.dataset.f==='monto')?(parseInt(String(inp.value).replace(/[^0-9]/g,''))||0):inp.value;}return;}
+ if(inp.dataset.kind==='gasto'){if(inp.dataset.f==='cap')return;var gid=+inp.dataset.gid,gg=GAS.find(function(x){return x.id===gid;});if(gg){gg[inp.dataset.f]=(inp.dataset.f==='monto')?(parseInt(String(inp.value).replace(/[^0-9]/g,''))||0):inp.value;}return;}
  if(inp.dataset.kind==='item'){var id=+inp.dataset.id,f=inp.dataset.f,it=ITEMS.find(x=>x.id===id);if(!it)return;it[f]=parseFloat(inp.value)||0;it.total=(+it.cant||0)*(+it.punit||0);var tc=document.getElementById('ittot-'+id);if(tc)tc.textContent=fmt(it.total);var its=ITEMS.filter(x=>x.cap_num===cap);if(capByNum[cap])capByNum[cap].ppto=its.reduce((a,x)=>a+(+x.total||0),0);}
  else{if(capByNum[cap])capByNum[cap].ppto=parseFloat(inp.value)||0;}
  var cs=document.getElementById('capsub-'+cap);if(cs&&capByNum[cap])cs.textContent=fmt(capByNum[cap].ppto);
@@ -237,7 +239,7 @@ function patch(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'C
 function post(path,body){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=representation'};return fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:h,body:JSON.stringify(body)});}
 function saveNewGasto(){var fecha=(document.getElementById('ng-fecha')||{}).value||'';var prov=((document.getElementById('ng-prov')||{}).value||'').trim();var desc=((document.getElementById('ng-desc')||{}).value||'').trim();var monto=parseInt(String((document.getElementById('ng-monto')||{}).value||'').replace(/[^0-9]/g,''))||0;var mp=((document.getElementById('ng-mp')||{}).value||'').trim();var cap=(document.getElementById('ng-cap')||{}).value||'';if(!monto){flash('Escribe el monto',true);return;}if(!fecha){fecha=new Date().toISOString().slice(0,10);}var body={obra:CUR,fecha:fecha,nombre:prov||null,descripcion:desc||null,monto:monto,mp:mp||null};if(cap){body.cap_num=cap;if(capByNum[cap])body.etapa=capByNum[cap].nombre;}flash('Guardando…');post('gastos',body).then(function(r){return r.json();}).then(function(rows){var ng=(rows&&rows[0])?rows[0]:body;GAS.push(ng);flash('Gasto guardado ✓');hojaPage=0;goSection('hoja');}).catch(function(){flash('Error al guardar',true);});}
 function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');if(!ins.length)return;var f0=ins[0],kind=f0.dataset.kind;
- if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseInt(String(x.value).replace(/[^0-9]/g,''))||0):x.value;});
+ if(kind==='gasto'){var gid=+f0.dataset.gid,body={};ins.forEach(function(x){body[x.dataset.f]=(x.dataset.f==='monto')?(parseInt(String(x.value).replace(/[^0-9]/g,''))||0):x.value;});if('cap' in body){var cn=body.cap;delete body.cap;var g0=GAS.find(function(x){return x.id===gid;});if(g0&&(cn||'')!==(g0.cap_num||'')){body.cap_num=cn||null;if(cn&&capByNum[cn]){body.etapa=capShort(capByNum[cn].nombre);}else{body.etapa=null;}}}
   var g=GAS.find(function(x){return x.id===gid;});if(g){for(var k in body){g[k]=body[k];}}
   patch('gastos?id=eq.'+gid,body).then(function(){flash('Guardado ✓');document.getElementById('d-body').innerHTML=hojaHTML();attach();}).catch(function(){flash('Error al guardar',true);});return;}
  var cap=f0.dataset.cap;
@@ -245,8 +247,8 @@ function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]
   Promise.all([patch('presupuesto_items?id=eq.'+id,{cant:it.cant,punit:it.punit,total:it.total}),patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto})]).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}
  else{patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}}
 function toggleEdit(rid,btn){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');
- if(btn.dataset.on!=='1'){ins.forEach(function(i){i.readOnly=false;i.classList.add('on');});btn.dataset.on='1';btn.textContent='✓';btn.classList.add('done');if(ins[0]){ins[0].focus();ins[0].select();}}
- else{ins.forEach(function(i){i.readOnly=true;i.classList.remove('on');});btn.dataset.on='0';btn.textContent='✎';btn.classList.remove('done');saveRow(rid);}}
+ if(btn.dataset.on!=='1'){ins.forEach(function(i){if(i.tagName==='SELECT'){i.disabled=false;}else{i.readOnly=false;}i.classList.add('on');});btn.dataset.on='1';btn.textContent='✓';btn.classList.add('done');if(ins[0]){ins[0].focus();ins[0].select();}}
+ else{ins.forEach(function(i){if(i.tagName==='SELECT'){i.disabled=true;}else{i.readOnly=true;}i.classList.remove('on');});btn.dataset.on='0';btn.textContent='✎';btn.classList.remove('done');saveRow(rid);}}
 var _toast;
 function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.style.cssText='position:fixed;bottom:20px;right:20px;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:99;transition:opacity .3s';document.body.appendChild(_toast);}
  _toast.textContent=msg;_toast.style.background=err?'#a32020':'#1a7340';_toast.style.opacity='1';clearTimeout(_toast._t);_toast._t=setTimeout(function(){_toast.style.opacity='0';},1600);}
@@ -325,11 +327,13 @@ function col(i){return PAL[i%PAL.length];}
 function donut(cats,total){var C=2*Math.PI*58,off=0,segs='';
  cats.forEach(function(c,i){var len=(total?c.v/total:0)*C;segs+='<circle cx="80" cy="80" r="58" fill="none" stroke="'+col(i)+'" stroke-width="20" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 80 80)"/>';off+=len;});
  return '<svg width="160" height="160" viewBox="0 0 160 160">'+segs+'<text x="80" y="74" text-anchor="middle" font-size="9" fill="#8a90a6" letter-spacing="1">TOTAL</text><text x="80" y="93" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2030">'+fmtM(total)+'</text></svg>';}
+function capShort(nm){return (nm||'').indexOf(' · ')>=0?nm.split(' · ').slice(1).join(' · '):nm;}
+function capselHTML(g,rid){var cur='<option value="'+(g.cap_num||'')+'" selected>'+((g.etapa||'sin categoría')).replace(/"/g,'&quot;')+'</option>';return '<select class="ed capsel" disabled data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="cap">'+cur+'<option value="">— sin categoría —</option>'+capOptsHTML()+'</select>';}
 function hojaRow(g,num){var rid='g'+g.id;
  var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
  var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
  var mto='<input class="ed montoed" readonly type="text" value="'+fmt(g.monto)+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
- return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
+ return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px">'+capselHTML(g,rid)+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
 function hojaHTML(){var tot=gastadoTotal();var capOpts=(function(){var byg={},ordr=[];CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'Capítulos';if(!byg[gr]){byg[gr]=[];ordr.push(gr);}byg[gr].push(c);});return ordr.map(function(gr){return '<optgroup label="'+gr+'">'+byg[gr].map(function(c){var nm=c.nombre.indexOf(' · ')>=0?c.nombre.split(' · ').slice(1).join(' · '):c.nombre;return '<option value="'+c.num+'">'+nm+'</option>';}).join('')+'</optgroup>';}).join('');})();
  var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
