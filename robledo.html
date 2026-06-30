@@ -93,6 +93,23 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .fld input:focus,.fld select:focus{outline:none;border-color:#4f46e5;box-shadow:0 0 0 2px #e7eefc}
 .savebtn{grid-column:1/-1;background:#4f46e5;color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer}
 .savebtn:hover{background:#4338ca}
+.erow{display:flex;align-items:center;gap:10px;padding:11px 15px;border-top:1px solid #f0f1f6;font-size:13.5px}
+.erow:first-child{border-top:none}
+.erow .ck{color:#1a7340;font-weight:700}
+.erow .rn{flex:1;color:#1b2030}
+.erow .rv{font-weight:700}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.fcard{background:#fff;border:1px solid #e6e8f0;border-radius:14px;padding:14px 16px}
+.fc-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.fc-nm{font-size:14px;font-weight:800;letter-spacing:.3px}
+.fc-pp{font-size:13px;font-weight:700;color:#4f46e5}
+.fc-bar{display:flex;align-items:center;gap:8px;margin:5px 0}
+.fc-lb{font-size:10.5px;color:#8a90a6;width:52px;font-weight:600}
+.fc-track{flex:1;background:#eceef4;border-radius:6px;height:9px;overflow:hidden}
+.fc-fill{height:100%;border-radius:6px;transition:width .4s}
+.fc-pc{font-size:11.5px;font-weight:700;width:44px;text-align:right;color:#4b5168}
+.fc-foot{font-size:11.5px;color:#8a90a6;margin-top:9px;border-top:1px solid #f1f2f6;padding-top:8px}
+.fa-alert{display:block;margin-top:5px;color:#a5710a;font-weight:700;font-size:11px}
 .pgi{font-size:12px;color:#8a90a6}
 .donutwrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
 .legend{flex:1;min-width:240px}
@@ -174,7 +191,7 @@ function detTabla(ets){var gs=gastosDe(ets);if(!gs.length)return '<div class="no
   gs.map(g=>'<tr><td class="l mut">'+(g.fecha||'')+'</td><td class="l">'+(g.descripcion||'')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>').join('')+
   '<tr style="background:#f6f7fb"><td class="l"><b>'+gs.length+' gastos</b></td><td></td><td><b>'+fmt(tot)+'</b></td></tr></table>';}
 function bloque1(){
- if(CUR!=='robledo'){var gc=gastoCats();var grows=gc.map(function(c){return '<div class="det"><div class="srow"><span class="ck">✓</span><span class="rn">'+c.nm+'</span><span class="rv">'+fmt(c.v)+'</span></div></div>';}).join('');
+ if(CUR!=='robledo'){var gc=gastoCats();var grows=gc.map(function(c){return '<div class="erow"><span class="ck">✓</span><span class="rn">'+c.nm+'</span><span class="rv">'+fmt(c.v)+'</span></div>';}).join('');
   return '<div class="grp"><span>Ya ejecutado · de tu hoja de gastos</span><span class="gt">'+fmt(gastadoTotal())+'</span></div>'+'<div class="grpnote">Calculado en vivo desde tu hoja ('+GAS.length+' gastos), por las etapas reales de esta obra.</div><div class="dl">'+grows+'</div>';}
  var rows=DIST.map(d=>{var v=catTotal(d.ets);
   return '<details class="det"><summary><div class="srow"><span class="chev">▶</span><span class="ck">✓</span><span class="rn">'+d.nm+'</span><span class="rv">'+fmt(v)+'</span></div></summary><div class="subt">'+detTabla(d.ets)+'</div></details>';}).join('');
@@ -219,13 +236,17 @@ function capPagado(c){return GAS.reduce(function(a,g){return (g.cap_num&&g.cap_n
 function capPresup(c){return lineasOf(c).reduce(function(a,l){return (getE(l)!=='hecho')?a+l.total:a;},0);}
 function capFalta(c){var f=capPresup(c)-capPagado(c);return f>0?f:0;}
 function hasGroups(){return CAPS.some(function(c){return /·/.test(c.nombre||'');});}
-function obraGrupos(){var P={},G={},ord={};CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'(otros)';P[gr]=(P[gr]||0)+(+c.ppto||0);if(ord[gr]==null)ord[gr]=+c.orden||999;});GAS.forEach(function(g){var c=capByNum[g.cap_num];var gr=c?(((c.nombre||'').split(' · ')[0])||'(otros)'):'Sin asignar';G[gr]=(G[gr]||0)+(+g.monto||0);});var keys={};Object.keys(P).forEach(function(k){keys[k]=1;});Object.keys(G).forEach(function(k){keys[k]=1;});return Object.keys(keys).map(function(k){return {grupo:k,presup:P[k]||0,gastado:G[k]||0,saldo:(P[k]||0)-(G[k]||0),ord:(ord[k]!=null?ord[k]:998)};}).sort(function(a,b){return b.presup-a.presup;});}
+function obraGrupos(){var P={},G={},ord={},AV={},AD={};CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'(otros)';P[gr]=(P[gr]||0)+(+c.ppto||0);if(ord[gr]==null)ord[gr]=+c.orden||999;if(c.avance!=null){AV[gr]=(AV[gr]||0)+(+c.ppto||0)*(+c.avance);AD[gr]=(AD[gr]||0)+(+c.ppto||0);}});GAS.forEach(function(g){var c=capByNum[g.cap_num];var gr=c?(((c.nombre||'').split(' · ')[0])||'(otros)'):'Sin asignar';G[gr]=(G[gr]||0)+(+g.monto||0);});var keys={};Object.keys(P).forEach(function(k){keys[k]=1;});Object.keys(G).forEach(function(k){keys[k]=1;});return Object.keys(keys).map(function(k){return {grupo:k,presup:P[k]||0,gastado:G[k]||0,saldo:(P[k]||0)-(G[k]||0),avance:(AD[k]?Math.round(AV[k]/AD[k]):null),ord:(ord[k]!=null?ord[k]:998)};}).sort(function(a,b){return b.presup-a.presup;});}
 function grupoView(){var rows=obraGrupos();var totP=rows.reduce(function(a,r){return a+r.presup;},0);var totG=rows.reduce(function(a,r){return a+r.gastado;},0);
- var tr=rows.map(function(r){var pct=r.presup?Math.round(r.gastado/r.presup*100):(r.gastado>0?null:0);var neg=r.saldo<0;var bw=r.presup?Math.min(100,pct):100;var bc=neg?'#e2574c':'#36b37e';
-  return '<tr><td class="l"><b>'+r.grupo+'</b></td><td>'+fmt(r.presup)+'</td><td>'+fmt(r.gastado)+'</td><td style="'+(neg?'color:#a32020;font-weight:700':'color:#1a7340;font-weight:600')+'">'+(neg?'-':'')+fmt(Math.abs(r.saldo))+'</td><td style="min-width:120px"><div style="background:#eceef4;border-radius:5px;height:8px;overflow:hidden"><div style="height:100%;width:'+bw+'%;background:'+bc+'"></div></div><span style="font-size:10px;color:#8a90a6">'+(pct==null?'s/p':pct+'%')+'</span></td></tr>';}).join('');
- return '<div class="grp"><span>Presupuesto por fase · gastado vs presupuesto</span><span class="gt">'+fmt(totG)+' / '+fmt(totP)+'</span></div>'+
-  '<div class="grpnote">Cada fase: lo gastado contra lo presupuestado. Saldo en rojo = se pasó del presupuesto de esa fase.</div>'+
-  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:620px"><tr><th class="l">Fase</th><th>Presupuesto</th><th>Gastado</th><th>Saldo</th><th class="l">Avance</th></tr>'+tr+'</table></div>';}
+ var cards=rows.map(function(r){var pctG=r.presup?Math.round(r.gastado/r.presup*100):null;var pctF=r.avance;var over=pctG!=null&&pctG>100;var gbar=pctG==null?0:Math.min(100,pctG);var gcol=over?'#e2574c':'#4f46e5';
+  var alert='';
+  return '<div class="fcard"><div class="fc-top"><span class="fc-nm">'+r.grupo+'</span><span class="fc-pp">'+fmt(r.presup)+'</span></div>'+
+   (pctF!=null?'<div class="fc-bar"><span class="fc-lb">Físico</span><div class="fc-track"><div class="fc-fill" style="width:'+pctF+'%;background:#36b37e"></div></div><span class="fc-pc">'+pctF+'%</span></div>':'<div class="fc-bar"><span class="fc-lb">Físico</span><div class="fc-track"></div><span class="fc-pc" style="color:#c2c7d6">s/d</span></div>')+
+   '<div class="fc-bar"><span class="fc-lb">Gastado</span><div class="fc-track"><div class="fc-fill" style="width:'+gbar+'%;background:'+gcol+'"></div></div><span class="fc-pc" style="'+(over?'color:#a32020;font-weight:800':'')+'">'+(pctG==null?'s/p':pctG+'%')+'</span></div>'+
+   '<div class="fc-foot">Gastado '+fmt(r.gastado)+' · Saldo <b style="color:'+(r.saldo<0?'#a32020':'#1a7340')+'">'+(r.saldo<0?'-':'')+fmt(Math.abs(r.saldo))+'</b>'+alert+'</div></div>';}).join('');
+ return '<div class="grp"><span>Presupuesto por fase · físico vs gastado</span><span class="gt">'+fmt(totG)+' / '+fmt(totP)+'</span></div>'+
+  '<div class="grpnote">Avance físico (verde) vs lo gastado (morado; rojo si pasó el presupuesto). Si el gastado va muy por delante del físico, se está pagando más rápido que lo que avanza la obra.</div>'+
+  '<div class="fgrid">'+cards+'</div>';}
 function faltaBars(){var whole=isWhole();var tot=whole?presuTotal():faltaTotal();if(!tot||tot<=0)return '';
  var cats=ACP.map(function(c){return {nm:c.nombre,v:whole?capPresup(c):capFalta(c)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;});
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(1)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
@@ -289,7 +310,7 @@ function hojaRow(g,num){var rid='g'+g.id;
  var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
  var mto='<input class="ed montoed" readonly type="text" value="'+fmt(g.monto)+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
  return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px;white-space:nowrap">'+(g.etapa||'')+'</td><td class="l mut" style="font-size:10.5px">'+(g.mp||g.cuenta||'—')+'</td><td>'+mto+'</td></tr>';}
-function hojaHTML(){var tot=gastadoTotal();var capOpts=CAPS.map(function(c){return '<option value="'+c.num+'">'+c.num+' · '+c.nombre+'</option>';}).join('');
+function hojaHTML(){var tot=gastadoTotal();var capOpts=(function(){var byg={},ordr=[];CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'Capítulos';if(!byg[gr]){byg[gr]=[];ordr.push(gr);}byg[gr].push(c);});return ordr.map(function(gr){return '<optgroup label="'+gr+'">'+byg[gr].map(function(c){var nm=c.nombre.indexOf(' · ')>=0?c.nombre.split(' · ').slice(1).join(' · '):c.nombre;return '<option value="'+c.num+'">'+nm+'</option>';}).join('')+'</optgroup>';}).join('');})();
  var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var n=GAS.length,pages=Math.max(1,Math.ceil(n/HPP));if(hojaPage>=pages)hojaPage=0;
