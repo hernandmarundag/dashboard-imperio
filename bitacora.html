@@ -4,9 +4,12 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f5f8;color:#1b2030;font-size:15px;padding-bottom:90px}
-.top{background:linear-gradient(120deg,#4f46e5,#7c5cf0);color:#fff;padding:18px 18px 22px;position:sticky;top:0;z-index:5}
-.top h1{font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px}
-.top .d{font-size:12.5px;opacity:.9;margin-top:3px}
+.top{background:linear-gradient(120deg,#4f46e5,#7c5cf0);color:#fff;padding:16px 18px;position:sticky;top:0;z-index:5}
+.top h1{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+.top .d{font-size:12px;opacity:.9;margin-top:2px}
+.tabs{display:flex;gap:8px;margin-top:12px}
+.tab{flex:1;text-align:center;padding:9px;border-radius:11px;background:rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}
+.tab.on{background:#fff;color:#4f46e5}
 .wrap{max-width:620px;margin:0 auto;padding:16px}
 .sec{background:#fff;border:1px solid #e6e8f0;border-radius:16px;padding:16px;margin-bottom:14px}
 .sec h2{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:4px}
@@ -24,11 +27,13 @@ input,textarea,select{width:100%;border:1.5px solid #e0e3ee;border-radius:12px;p
 input:focus,textarea:focus,select:focus{outline:none;border-color:#4f46e5;box-shadow:0 0 0 3px #e7eefc}
 textarea{min-height:64px;resize:vertical}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.numwrap{display:flex;align-items:center;gap:12px;margin-top:4px}
-.numbtn{width:42px;height:42px;border-radius:12px;border:1.5px solid #e0e3ee;background:#fff;font-size:22px;font-weight:700;color:#4f46e5;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.numbtn{width:40px;height:40px;border-radius:11px;border:1.5px solid #e0e3ee;background:#fff;font-size:22px;font-weight:700;color:#4f46e5;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .numbtn:active{background:#eef0fe}
-.numval{font-size:24px;font-weight:800;min-width:48px;text-align:center}
-.unit{font-size:11px;color:#a7adbf;font-weight:600;margin-left:2px}
+.numval{font-size:21px;font-weight:800;min-width:34px;text-align:center}
+.rolrow{display:flex;align-items:center;gap:10px;margin:8px 0}
+.rollbl{flex:1;font-size:14px;font-weight:600;color:#3a4060}
+.roltot{margin-top:8px;font-size:13px;color:#8a90a6;text-align:right}
+.unit{font-size:11px;color:#a7adbf;font-weight:600}
 .savebar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e6e8f0;padding:12px 16px;z-index:6}
 .savebar .inner{max-width:620px;margin:0 auto}
 .savebtn{width:100%;background:#4f46e5;color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:800;cursor:pointer}
@@ -38,19 +43,34 @@ textarea{min-height:64px;resize:vertical}
 .done .ic{font-size:54px}
 .done h2{font-size:22px;font-weight:800;margin:10px 0 6px;color:#1a7340}
 .done p{color:#8a90a6;font-size:14px}
-.linkrow{font-size:12px;color:#8a90a6;text-align:center;margin-top:10px}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a7340;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:.3s;z-index:9}
 .lbl{font-size:11px;color:#8a90a6;font-weight:600;display:block;margin-bottom:3px;margin-top:10px}
+/* chat */
+.chatbox{display:flex;flex-direction:column;gap:10px;min-height:200px}
+.bub{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+.bub.me{align-self:flex-end;background:#4f46e5;color:#fff;border-bottom-right-radius:4px}
+.bub.bot{align-self:flex-start;background:#fff;border:1px solid #e6e8f0;border-bottom-left-radius:4px}
+.bub.bot b{color:#4f46e5}
+.qchips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.qchip{border:1.5px solid #e0e3ee;background:#fff;color:#4f46e5;border-radius:20px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+.chatinput{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e6e8f0;padding:10px 14px;z-index:6}
+.chatinput .inner{max-width:620px;margin:0 auto;display:flex;gap:8px}
+.chatinput input{margin:0}
+.chatinput button{background:#4f46e5;color:#fff;border:none;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer;font-size:15px}
+.hidden{display:none}
 </style></head>
 <body>
-<div class="top"><h1>📒 Bitácora de Obra</h1><div class="d" id="topd">Parte diario · Constructora Imperio</div></div>
-<div class="wrap" id="form">
+<div class="top">
+  <h1>📒 Bitácora de Obra</h1><div class="d" id="topd">Constructora Imperio</div>
+  <div class="tabs"><div class="tab on" id="t-rep" onclick="tab('rep')">📝 Reportar</div><div class="tab" id="t-con" onclick="tab('con')">💬 Consultar</div></div>
+</div>
 
+<!-- ================= REPORTAR ================= -->
+<div class="wrap" id="view-rep">
   <div class="sec">
     <h2>📍 Datos del día</h2>
     <div class="hint">Confirma la obra y la fecha. Toca para seleccionar.</div>
-    <div class="q">Obra</div>
-    <div class="chips" id="obra"></div>
+    <div class="q">Obra</div><div class="chips" id="obra"></div>
     <div class="row2" style="margin-top:12px">
       <div><span class="lbl">Fecha</span><input type="date" id="fecha"></div>
       <div><span class="lbl">Reporta (tu nombre)</span><input type="text" id="reporta" placeholder="Ing. / Maestro"></div>
@@ -60,70 +80,71 @@ textarea{min-height:64px;resize:vertical}
   <div class="sec">
     <h2>🌅 Apertura del día</h2>
     <div class="hint">Cómo arranca la jornada.</div>
-    <div class="q">Clima</div>
-    <div class="chips" id="clima"></div>
-    <div class="q">¿Cuántos trabajadores hoy?</div>
-    <div class="numwrap"><button class="numbtn" onclick="bump('emp',-1)">–</button><span class="numval" id="empv">0</span><button class="numbtn" onclick="bump('emp',1)">+</button><span class="unit">personas</span></div>
-    <div class="q">Hora de inicio</div>
-    <input type="time" id="hini" value="07:00" style="max-width:160px">
-    <div class="q">Fase actual de la obra</div>
-    <div class="chips" id="fase"></div>
-    <div class="q">¿En qué piso / losa van?</div>
-    <div class="chips" id="piso"></div>
-    <div class="q">Actividad(es) planeada(s) para hoy</div>
-    <div class="chips" id="actplan"></div>
+    <div class="q">Clima</div><div class="chips" id="clima"></div>
+    <div class="q">Personal hoy (por rol)</div>
+    <div class="rolrow"><span class="rollbl">👷 Maestros</span><button class="numbtn" onclick="bump('maes',-1)">–</button><span class="numval" id="maesv">0</span><button class="numbtn" onclick="bump('maes',1)">+</button></div>
+    <div class="rolrow"><span class="rollbl">🔧 Oficiales</span><button class="numbtn" onclick="bump('ofi',-1)">–</button><span class="numval" id="ofiv">0</span><button class="numbtn" onclick="bump('ofi',1)">+</button></div>
+    <div class="rolrow"><span class="rollbl">🧱 Ayudantes</span><button class="numbtn" onclick="bump('ayu',-1)">–</button><span class="numval" id="ayuv">0</span><button class="numbtn" onclick="bump('ayu',1)">+</button></div>
+    <div class="roltot">Total: <b id="emptot">0</b> personas</div>
+    <div class="q">Hora de inicio</div><input type="time" id="hini" value="07:00" style="max-width:160px">
+    <div class="q">Fase actual de la obra</div><div class="chips" id="fase"></div>
+    <div class="q">¿En qué piso / losa van?</div><div class="chips" id="piso"></div>
+    <div class="q">Actividad(es) planeada(s) para hoy</div><div class="chips" id="actplan"></div>
     <textarea id="actplan_txt" placeholder="Detalle / otra actividad (opcional)" style="margin-top:8px"></textarea>
   </div>
 
   <div class="sec">
     <h2>🏗️ Durante la jornada</h2>
     <div class="hint">Novedades del día. Toca las que apliquen.</div>
-    <div class="q">Novedades</div>
-    <div class="chips" id="novedades"></div>
+    <div class="q">Novedades</div><div class="chips" id="novedades"></div>
     <textarea id="novedades_txt" placeholder="Describe la novedad (qué pasó, a qué hora, acción tomada)" style="margin-top:8px"></textarea>
   </div>
 
   <div class="sec">
     <h2>🌆 Cierre del día</h2>
     <div class="hint">Qué se logró y qué queda.</div>
-    <div class="q">Actividad(es) ejecutada(s)</div>
-    <div class="chips" id="ejec"></div>
+    <div class="q">Actividad(es) ejecutada(s)</div><div class="chips" id="ejec"></div>
     <div class="q">Cantidades ejecutadas <span class="unit">(m³ / m² / ml / kg / und)</span></div>
     <textarea id="cant" placeholder="Ej: Vaciado losa 45 m³ · Acero 320 kg · 6 columnas encofradas"></textarea>
-    <div class="q">% de avance de lo planeado hoy</div>
-    <div class="chips" id="avance"></div>
+    <div class="q">% de avance de lo planeado hoy</div><div class="chips" id="avance"></div>
     <div class="q">Materiales recibidos hoy</div>
     <textarea id="mat" placeholder="Ej: 10 m³ concreto 3000 PSI (San Pío) · 2 ton cemento"></textarea>
-    <div class="q">Hora de cierre</div>
-    <input type="time" id="hfin" value="17:00" style="max-width:160px">
+    <div class="q">Hora de cierre</div><input type="time" id="hfin" value="17:00" style="max-width:160px">
     <div class="q">Observaciones / pendientes para mañana</div>
     <textarea id="obs" placeholder="Lo que quedó pendiente, riesgos, qué se necesita para mañana"></textarea>
   </div>
-
 </div>
 
-<div class="done" id="done" style="display:none">
-  <div class="ic">✅</div>
-  <h2>Bitácora guardada</h2>
-  <p id="donep">El parte del día quedó registrado.</p>
+<div class="done hidden" id="done">
+  <div class="ic">✅</div><h2>Bitácora guardada</h2><p id="donep">El parte del día quedó registrado.</p>
   <button class="savebtn" style="max-width:280px;margin:22px auto 0" onclick="location.reload()">+ Nuevo parte</button>
+</div>
+
+<!-- ================= CONSULTAR ================= -->
+<div class="wrap hidden" id="view-con">
+  <div class="qchips" id="qchips"></div>
+  <div class="chatbox" id="chat"></div>
 </div>
 
 <div class="savebar" id="savebar"><div class="inner">
   <button class="savebtn" id="savebtn" onclick="guardar()">Guardar bitácora del día</button>
-  <div class="linkrow">Imperio ERP · se guarda en la base en vivo</div>
 </div></div>
+
+<div class="chatinput hidden" id="chatbar"><div class="inner">
+  <input id="chatq" placeholder="Pregunta: ¿qué se hizo el lunes? ¿losa P3?…" onkeydown="if(event.key==='Enter')consultar()">
+  <button onclick="consultar()">➤</button>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
 var OBRAS=[['weliving','Weliving'],['robledo','Robledo'],['novaeva','Novaeva']];
-var CLIMA=[['☀️ Soleado','s'],['⛅ Nublado','n'],['🌧️ Lluvia','ll'],['⛈️ Tormenta','t'],['🌫️ Neblina','ne']];
+var CLIMA=[['☀️ Soleado'],['⛅ Nublado'],['🌧️ Lluvia'],['⛈️ Tormenta'],['🌫️ Neblina']];
 var FASES=['Cimentación','Estructura','Mampostería','Instalaciones','Acabados'];
 var PISOS=['Sótano','Piso 1','Piso 2','Piso 3','Piso 4','Piso 5','Piso 6','Piso 7','Cubierta','Zonas comunes'];
-var ACT={
- 'Cimentación':['Excavación','Armado acero pila','Vaciado pila','Solado','Bombeo','Anclajes','Llenos'],
+var ACT={'Cimentación':['Excavación','Armado acero pila','Vaciado pila','Solado','Bombeo','Anclajes','Llenos'],
  'Estructura':['Armado columnas','Encofrado columnas','Vaciado columnas','Armado losa','Encofrado losa','Vaciado losa','Vigas','Desencofrado'],
  'Mampostería':['Pega de bloque','Dinteles','Mortero/pañete'],
  'Instalaciones':['Hidráulica','Sanitaria','Eléctrica','Gas','Red contra incendio'],
@@ -132,32 +153,23 @@ var NOV=[['✅ Sin novedad','green'],['⏳ Retraso material','amber'],['🔧 Fal
 var AV=['0%','25%','50%','75%','100%'];
 
 var sel={obra:'weliving',clima:'',fase:'',piso:'',actplan:[],novedades:[],ejec:[],avance:''};
-var emp=0;
+var rol={maes:0,ofi:0,ayu:0};
 
 function chip(txt,on,cls){return '<div class="chip'+(cls?' '+cls:'')+(on?' on':'')+'">'+txt+'</div>';}
-function renderChips(id,arr,key,multi,clsfn){
- var el=document.getElementById(id);
+function renderChips(id,arr,key,multi,clsfn){var el=document.getElementById(id);
  el.innerHTML=arr.map(function(a){var label=Array.isArray(a)?a[0]:a;var on=multi?sel[key].indexOf(label)>=0:sel[key]===label;return chip(label,on,clsfn?clsfn(a):'');}).join('');
- el.querySelectorAll('.chip').forEach(function(c,i){c.onclick=function(){
-   var label=Array.isArray(arr[i])?arr[i][0]:arr[i];
-   if(multi){var k=sel[key].indexOf(label);if(k>=0)sel[key].splice(k,1);else sel[key].push(label);}
-   else{sel[key]=(sel[key]===label?'':label);}
-   if(key==='fase')renderChips('actplan',ACT[sel.fase]||[],'actplan',true),renderChips('ejec',ACT[sel.fase]||[],'ejec',true);
-   renderChips(id,arr,key,multi,clsfn);
- };});
-}
-function bump(k,d){emp=Math.max(0,emp+d);document.getElementById('empv').textContent=emp;}
+ el.querySelectorAll('.chip').forEach(function(c,i){c.onclick=function(){var label=Array.isArray(arr[i])?arr[i][0]:arr[i];
+   if(multi){var k=sel[key].indexOf(label);if(k>=0)sel[key].splice(k,1);else sel[key].push(label);}else{sel[key]=(sel[key]===label?'':label);}
+   if(key==='fase'){renderChips('actplan',ACT[sel.fase]||[],'actplan',true);renderChips('ejec',ACT[sel.fase]||[],'ejec',true);}
+   renderChips(id,arr,key,multi,clsfn);};});}
+function bump(k,d){rol[k]=Math.max(0,rol[k]+d);document.getElementById(k+'v').textContent=rol[k];document.getElementById('emptot').textContent=rol.maes+rol.ofi+rol.ayu;}
 
 document.getElementById('fecha').value=new Date().toISOString().slice(0,10);
-renderChips('obra',OBRAS.map(function(o){return o[1];}),'obraLabel',false);
-// obra needs special handling (value vs label)
 (function(){var el=document.getElementById('obra');el.innerHTML=OBRAS.map(function(o){return '<div class="chip'+(o[0]===sel.obra?' on':'')+'" data-v="'+o[0]+'">'+o[1]+'</div>';}).join('');
- el.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){sel.obra=c.dataset.v;el.querySelectorAll('.chip').forEach(function(x){x.classList.toggle('on',x.dataset.v===sel.obra);});document.getElementById('topd').textContent=c.textContent+' · '+document.getElementById('fecha').value;};});})();
+ el.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){sel.obra=c.dataset.v;el.querySelectorAll('.chip').forEach(function(x){x.classList.toggle('on',x.dataset.v===sel.obra);});};});})();
 renderChips('clima',CLIMA.map(function(c){return c[0];}),'clima',false);
-renderChips('fase',FASES,'fase',false);
-renderChips('piso',PISOS,'piso',false);
-renderChips('actplan',[],'actplan',true);
-renderChips('ejec',[],'ejec',true);
+renderChips('fase',FASES,'fase',false);renderChips('piso',PISOS,'piso',false);
+renderChips('actplan',[],'actplan',true);renderChips('ejec',[],'ejec',true);
 renderChips('novedades',NOV,'novedades',true,function(a){return a[1];});
 renderChips('avance',AV,'avance',false);
 
@@ -167,32 +179,93 @@ function guardar(){
  var actplan=sel.actplan.slice();var ap=document.getElementById('actplan_txt').value.trim();if(ap)actplan.push(ap);
  var nov=sel.novedades.slice();var nt=document.getElementById('novedades_txt').value.trim();if(nt)nov.push(nt);
  if(!actplan.length && !sel.ejec.length){toast('Marca al menos una actividad',true);return;}
- var body={
-  obra:sel.obra,
-  fecha:document.getElementById('fecha').value||new Date().toISOString().slice(0,10),
-  fase:sel.fase||null,
-  piso:sel.piso||null,
-  clima:sel.clima||null,
-  empleados:emp||null,
-  hora_inicio:document.getElementById('hini').value||null,
-  hora_fin:document.getElementById('hfin').value||null,
-  actividad:actplan.join(' · ')||null,
-  ejecutado:sel.ejec.join(' · ')||null,
-  cantidades:document.getElementById('cant').value.trim()||null,
-  avance:sel.avance||null,
-  materiales:document.getElementById('mat').value.trim()||null,
-  novedades:nov.join(' · ')||null,
-  observaciones:document.getElementById('obs').value.trim()||null,
-  reporta:document.getElementById('reporta').value.trim()||null,
-  fuente:'app-campo'
- };
+ var tot=rol.maes+rol.ofi+rol.ayu;
+ var body={obra:sel.obra,fecha:document.getElementById('fecha').value||new Date().toISOString().slice(0,10),
+  fase:sel.fase||null,piso:sel.piso||null,clima:sel.clima||null,
+  maestros:rol.maes||null,oficiales:rol.ofi||null,ayudantes:rol.ayu||null,empleados:tot||null,
+  hora_inicio:document.getElementById('hini').value||null,hora_fin:document.getElementById('hfin').value||null,
+  actividad:actplan.join(' · ')||null,ejecutado:sel.ejec.join(' · ')||null,
+  cantidades:document.getElementById('cant').value.trim()||null,avance:sel.avance||null,
+  materiales:document.getElementById('mat').value.trim()||null,novedades:nov.join(' · ')||null,
+  observaciones:document.getElementById('obs').value.trim()||null,reporta:document.getElementById('reporta').value.trim()||null,fuente:'app-campo'};
  var btn=document.getElementById('savebtn');btn.disabled=true;btn.textContent='Guardando…';
  fetch(SB_URL+'/rest/v1/bitacora',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body)})
  .then(function(r){if(!r.ok)throw new Error(r.status);
-   document.getElementById('form').style.display='none';document.getElementById('savebar').style.display='none';
+   document.getElementById('view-rep').classList.add('hidden');document.getElementById('savebar').classList.add('hidden');
    document.getElementById('donep').textContent=body.obra.toUpperCase()+' · '+body.fecha+(body.reporta?(' · '+body.reporta):'');
-   document.getElementById('done').style.display='block';window.scrollTo(0,0);
+   document.getElementById('done').classList.remove('hidden');window.scrollTo(0,0);
  }).catch(function(e){btn.disabled=false;btn.textContent='Guardar bitácora del día';toast('Error al guardar. Revisa internet.',true);});
+}
+
+/* ============ TABS ============ */
+function tab(t){
+ document.getElementById('t-rep').classList.toggle('on',t==='rep');
+ document.getElementById('t-con').classList.toggle('on',t==='con');
+ document.getElementById('view-rep').classList.toggle('hidden',t!=='rep');
+ document.getElementById('done').classList.add('hidden');
+ document.getElementById('view-con').classList.toggle('hidden',t!=='con');
+ document.getElementById('savebar').classList.toggle('hidden',t!=='rep');
+ document.getElementById('chatbar').classList.toggle('hidden',t!=='con');
+ if(t==='con' && !window._chatInit){window._chatInit=1;initChat();}
+}
+
+/* ============ CONSULTAR (chat sobre bitácora) ============ */
+var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function fechaLarga(f){if(!f)return '';var p=f.split('-');return (+p[2])+' '+MES[(+p[1])-1];}
+function addBub(txt,me){var c=document.getElementById('chat');var d=document.createElement('div');d.className='bub '+(me?'me':'bot');d.innerHTML=txt;c.appendChild(d);window.scrollTo(0,document.body.scrollHeight);}
+function initChat(){
+ var qc=document.getElementById('qchips');
+ var opts=['Último parte','Esta semana','¿Qué se hizo ayer?','Resumen de personal','Novedades recientes'];
+ qc.innerHTML=opts.map(function(o){return '<span class="qchip">'+o+'</span>';}).join('');
+ qc.querySelectorAll('.qchip').forEach(function(c){c.onclick=function(){document.getElementById('chatq').value=c.textContent;consultar();};});
+ addBub('Hola 👋 Soy el asistente de bitácora de <b>'+sel.obra.toUpperCase()+'</b>. Pregúntame por los partes de días pasados: una fecha, un piso, novedades, personal… o usa los botones de arriba.',false);
+}
+function resumenParte(b){
+ var tot=(b.empleados||0);
+ var roles=[]; if(b.maestros)roles.push(b.maestros+' maestro'+(b.maestros>1?'s':'')); if(b.oficiales)roles.push(b.oficiales+' oficial'+(b.oficiales>1?'es':'')); if(b.ayudantes)roles.push(b.ayudantes+' ayudante'+(b.ayudantes>1?'s':''));
+ var s='<b>📅 '+fechaLarga(b.fecha)+'</b>'+(b.fase?(' · '+b.fase):'')+(b.piso?(' · '+b.piso):'')+'\n';
+ if(b.ejecutado)s+='✅ '+b.ejecutado+'\n'; else if(b.actividad)s+='🛠 '+b.actividad+'\n';
+ if(b.cantidades)s+='📏 '+b.cantidades+'\n';
+ if(tot)s+='👷 '+tot+' personas'+(roles.length?(' ('+roles.join(', ')+')'):'')+'\n';
+ if(b.clima)s+=b.clima+'  ';
+ if(b.avance)s+='· Avance '+b.avance+'\n'; else s+='\n';
+ if(b.novedades && b.novedades!=='✅ Sin novedad')s+='⚠️ '+b.novedades+'\n';
+ if(b.observaciones)s+='📝 '+b.observaciones+'\n';
+ if(b.reporta)s+='<span style="color:#a7adbf;font-size:11px">— '+b.reporta+'</span>';
+ return s.trim();
+}
+function consultar(){
+ var q=(document.getElementById('chatq').value||'').trim();if(!q)return;
+ addBub(q,true);document.getElementById('chatq').value='';
+ var url=SB_URL+'/rest/v1/bitacora?obra=eq.'+sel.obra+'&order=fecha.desc&limit=60';
+ fetch(url,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.json();}).then(function(rows){
+   rows=rows||[];if(!rows.length){addBub('Todavía no hay partes registrados para esta obra.',false);return;}
+   var ql=q.toLowerCase();
+   // intención por fecha relativa
+   var today=new Date();today.setHours(0,0,0,0);
+   function ds(f){return f?Math.round((new Date(f+'T00:00:00')-today)/86400000):-999;}
+   var res=null,intro='';
+   if(/ayer/.test(ql)){res=rows.filter(function(b){return ds(b.fecha)===-1;});intro='Ayer:';}
+   else if(/hoy/.test(ql)){res=rows.filter(function(b){return ds(b.fecha)===0;});intro='Hoy:';}
+   else if(/semana/.test(ql)){res=rows.filter(function(b){return ds(b.fecha)>=-7&&ds(b.fecha)<=0;});intro='Esta semana:';}
+   else if(/personal|gente|cuant|trabajador|empleado/.test(ql)){
+     var last=rows[0];var tot=0,m=0,o=0,a=0,n=0;rows.slice(0,7).forEach(function(b){if(b.empleados){tot+=b.empleados;m+=b.maestros||0;o+=b.oficiales||0;a+=b.ayudantes||0;n++;}});
+     addBub('<b>Personal (últimos partes)</b>\nÚltimo día ('+fechaLarga(last.fecha)+'): '+(last.empleados||0)+' personas'+((last.maestros||last.oficiales||last.ayudantes)?(' ('+[last.maestros?last.maestros+'M':'',last.oficiales?last.oficiales+'O':'',last.ayudantes?last.ayudantes+'A':''].filter(Boolean).join(' · ')+')'):'')+(n>1?('\nPromedio últimos '+n+' partes: '+Math.round(tot/n)+' personas/día'):''),false);return;
+   }
+   else if(/novedad|problema|accidente|retraso|falla/.test(ql)){
+     res=rows.filter(function(b){return b.novedades&&b.novedades!=='✅ Sin novedad';}).slice(0,6);intro='Novedades recientes:';
+     if(!res.length){addBub('Sin novedades reportadas en los partes recientes. Todo en orden ✅',false);return;}
+   }
+   else if(/último|ultimo|reciente/.test(ql)){res=[rows[0]];intro='Último parte:';}
+   else {
+     // buscar por piso/fase/palabra
+     res=rows.filter(function(b){var blob=((b.fase||'')+' '+(b.piso||'')+' '+(b.actividad||'')+' '+(b.ejecutado||'')+' '+(b.cantidades||'')+' '+(b.observaciones||'')).toLowerCase();return ql.split(/\s+/).some(function(w){return w.length>2 && blob.indexOf(w)>=0;});}).slice(0,6);
+     intro='Encontré:';
+   }
+   if(!res||!res.length){addBub('No encontré partes para eso. Prueba con una fecha, un piso (ej. "P3"), "novedades" o "esta semana".',false);return;}
+   addBub('<b>'+intro+'</b>',false);
+   res.slice(0,6).forEach(function(b){addBub(resumenParte(b),false);});
+ }).catch(function(){addBub('No pude consultar ahora. Revisa el internet.',false);});
 }
 </script>
 </body></html>
