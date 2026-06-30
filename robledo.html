@@ -434,10 +434,20 @@ function markPago(id){var p=PAGOS.find(function(x){return x.id===id;});if(p)p.es
 function plannerFechas(){var cr=CRONO.filter(function(c){return c.fecha_ini;}).slice().sort(function(a,b){return (a.fecha_ini||'')<(b.fecha_ini||'')?-1:1;});
  var MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
  function fd(f){if(!f)return '';var p=f.split('-');return (+p[2])+' '+MES[(+p[1])-1];}
- var rows=cr.map(function(c){var st=c.estado||'pendiente';var ic=st==='completado'||st==='hecho'?'✅':(st==='en_curso'?'🔵':'⚪');var pg=PAGOS.filter(function(p){return p.estado!=='pagado'&&p.fecha&&c.fecha_ini&&p.fecha>=c.fecha_ini&&p.fecha<=(c.fecha_fin||c.fecha_ini);}).reduce(function(a,p){return a+(+p.monto||0);},0);
-  return '<div class="lprow"><span class="lp-ic">'+ic+'</span><div class="lp-mid"><div class="lp-a">'+(c.actividad||'')+'</div><div class="lp-f">'+fd(c.fecha_ini)+(c.fecha_fin&&c.fecha_fin!==c.fecha_ini?(' → '+fd(c.fecha_fin)):'')+'</div></div>'+(pg>0?'<div class="lp-pg">'+fmt(pg)+'</div>':'')+'</div>';}).join('');
- var ini=cr[0]?fd(cr[0].fecha_ini):'',fin=cr.length?fd(cr[cr.length-1].fecha_fin||cr[cr.length-1].fecha_ini):'';
- return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner</h3></div>'+'<div class="grp"><span>Programación de obra</span><span class="gt">'+ini+' → '+fin+'</span></div><div class="grpnote">Actividades con fecha. El monto a la derecha = pagos programados en esa fecha.</div><div class="dl" style="padding:6px 0">'+rows+'</div>';}
+ function isInd(g){var c=capByNum[g.cap_num];return c && /^INDIRECTOS/.test(c.nombre||'');}
+ var totP=0;
+ var rows=cr.map(function(c,i){var st=c.estado||'pendiente';var ic=st==='completado'||st==='hecho'?'✅':(st==='en_curso'?'🔵':'⚪');
+  var ini=c.fecha_ini,nx=cr[i+1],end=nx?nx.fecha_ini:(c.fecha_fin||c.fecha_ini),last=!nx;
+  var gp=GAS.filter(function(g){if(!g.fecha)return false;return g.fecha>=ini && (last?g.fecha<=end:g.fecha<end);});
+  var dir=gp.filter(function(g){return !isInd(g);}).reduce(function(a,g){return a+(+g.monto||0);},0);
+  var ind=gp.filter(isInd).reduce(function(a,g){return a+(+g.monto||0);},0);
+  var tot=dir+ind;totP+=tot;
+  var pg=PAGOS.filter(function(p){return p.estado!=='pagado'&&p.fecha&&p.fecha>=ini&&(last?p.fecha<=end:p.fecha<end);}).reduce(function(a,p){return a+(+p.monto||0);},0);
+  var right=tot>0?('<div class="lp-pg" style="color:#1a7340">'+fmt(tot)+'</div>'):(pg>0?'<div class="lp-pg" style="color:#a5710a">prog '+fmt(pg)+'</div>':'');
+  var sub=tot>0?('<div class="lp-f" style="color:#a7adbf">Gastado: directo '+fmt(dir)+' · indirecto '+fmt(ind)+'</div>'):'';
+  return '<div class="lprow"><span class="lp-ic">'+ic+'</span><div class="lp-mid"><div class="lp-a">'+(c.actividad||'')+'</div><div class="lp-f">'+fd(c.fecha_ini)+(c.fecha_fin&&c.fecha_fin!==c.fecha_ini?(' → '+fd(c.fecha_fin)):'')+'</div>'+sub+'</div>'+right+'</div>';}).join('');
+ var iniL=cr[0]?fd(cr[0].fecha_ini):'',finL=cr.length?fd(cr[cr.length-1].fecha_fin||cr[cr.length-1].fecha_ini):'';
+ return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · gasto por periodo</h3></div>'+'<div class="grp"><span>Programación + gasto real por periodo ('+iniL+' → '+finL+')</span><span class="gt">'+fmt(totP)+'</span></div><div class="grpnote">Cada actividad muestra lo gastado en su periodo (por fecha): directo (a la obra) e indirecto (admin, servicios). Verde = gasto real; ámbar = pago programado.</div><div class="dl" style="padding:6px 0">'+rows+'</div>';}
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){if(!CAPS.length){b.innerHTML=backG()+'<div class="canvas">💰 <b>Presupuesto por definir</b><br>Cada obra tiene sus propios capítulos e ítems. Cuando tengas el presupuesto de esta obra lo cargamos con la misma lógica que Robledo.</div>';}else{b.innerHTML=presSec();attach();recompute();}}
