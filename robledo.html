@@ -173,7 +173,10 @@ function detTabla(ets){var gs=gastosDe(ets);if(!gs.length)return '<div class="no
  return '<table><tr><th class="l">Fecha</th><th class="l">Descripción</th><th>Monto</th></tr>'+
   gs.map(g=>'<tr><td class="l mut">'+(g.fecha||'')+'</td><td class="l">'+(g.descripcion||'')+'</td><td><b>'+fmt(g.monto)+'</b></td></tr>').join('')+
   '<tr style="background:#f6f7fb"><td class="l"><b>'+gs.length+' gastos</b></td><td></td><td><b>'+fmt(tot)+'</b></td></tr></table>';}
-function bloque1(){var rows=DIST.map(d=>{var v=catTotal(d.ets);
+function bloque1(){
+ if(CUR!=='robledo'){var gc=gastoCats();var grows=gc.map(function(c){return '<div class="det"><div class="srow"><span class="ck">✓</span><span class="rn">'+c.nm+'</span><span class="rv">'+fmt(c.v)+'</span></div></div>';}).join('');
+  return '<div class="grp"><span>Ya ejecutado · de tu hoja de gastos</span><span class="gt">'+fmt(gastadoTotal())+'</span></div>'+'<div class="grpnote">Calculado en vivo desde tu hoja ('+GAS.length+' gastos), por las etapas reales de esta obra.</div><div class="dl">'+grows+'</div>';}
+ var rows=DIST.map(d=>{var v=catTotal(d.ets);
   return '<details class="det"><summary><div class="srow"><span class="chev">▶</span><span class="ck">✓</span><span class="rn">'+d.nm+'</span><span class="rv">'+fmt(v)+'</span></div></summary><div class="subt">'+detTabla(d.ets)+'</div></details>';}).join('');
  return '<div class="grp"><span>Ya ejecutado · de tu hoja de gastos</span><span class="gt">'+fmt(gastadoTotal())+'</span></div>'+
   '<div class="grpnote">Calculado en vivo desde tu hoja ('+GAS.length+' gastos). Abre cada categoría para ver sus facturas.</div><div class="dl">'+rows+'</div>';}
@@ -215,11 +218,13 @@ function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.
 function capPagado(c){return GAS.reduce(function(a,g){return (g.cap_num&&g.cap_num===c.num)?a+(+g.monto||0):a;},0);}
 function capPresup(c){return lineasOf(c).reduce(function(a,l){return (getE(l)!=='hecho')?a+l.total:a;},0);}
 function capFalta(c){var f=capPresup(c)-capPagado(c);return f>0?f:0;}
-function faltaBars(){var tot=computeFalta();if(tot<=0)return '';
- var cats=ACP.map(function(c){return {nm:c.nombre,v:capFalta(c)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;});
+function faltaBars(){var whole=isWhole();var tot=whole?presuTotal():faltaTotal();if(!tot||tot<=0)return '';
+ var cats=ACP.map(function(c){return {nm:c.nombre,v:whole?capPresup(c):capFalta(c)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;});
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(1)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
- return '<div class="grp"><span>Falta por etapa · % del pendiente</span><span class="gt">'+fmt(tot)+'</span></div>'+
-  '<div class="grpnote">Cuánto del presupuesto falta por ejecutar en cada etapa. % calculado en vivo desde tu presupuesto real — suman el 100% de la falta.</div>'+
+ var ttl=whole?'Presupuesto por etapa · % del total':'Falta por etapa · % del pendiente';
+ var note=whole?'Distribución del presupuesto total del proyecto por etapa. A medida que etiquetes pagos a cada capítulo se irá descontando.':'Cuánto del presupuesto falta por ejecutar en cada etapa. % en vivo desde tu presupuesto real — suman el 100%.';
+ return '<div class="grp"><span>'+ttl+'</span><span class="gt">'+fmt(tot)+'</span></div>'+
+  '<div class="grpnote">'+note+'</div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>';}
 function bloque2(){return '<div class="grp"><span>Falta por ejecutar · detalle editable</span><span class="gt" id="grp-falta">—</span></div>'+
  '<div class="grpnote">Lo que viene. Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base. El estado baja la Falta al marcar Hecho.</div>'+ACP.map(capHTML).join('');}
@@ -229,10 +234,14 @@ function cajaHTML(){var disp=CAJA+PORRECIBIR;
   '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · se libera al 80%</div></div>'+
   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(disp)+'</div><div class="n">caja + por recibir</div></div></div>'+
   '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
-function computeFalta(){return ACP.reduce(function(a,c){return a+capFalta(c);},0);}
+function presuTotal(){return ACP.reduce(function(a,c){return a+capPresup(c);},0);}
+function isWhole(){return ACP.length>0&&presuTotal()>=gastadoTotal();}
+function faltaTotal(){if(!ACP.length)return 0;if(isWhole()){var f=presuTotal()-gastadoTotal();return f>0?f:0;}return ACP.reduce(function(a,c){return a+capFalta(c);},0);}
+function totalProy(){if(!ACP.length)return gastadoTotal();return isWhole()?presuTotal():(gastadoTotal()+faltaTotal());}
+function computeFalta(){return faltaTotal();}
 function gastoCats(){var tot=gastadoTotal();if(CUR==='robledo'){var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;});var sum=cats.reduce(function(a,c){return a+c.v;},0);var rest=tot-sum;if(rest>1)cats.push({nm:'Acabados / nuevos',v:rest});return cats.sort(function(a,b){return b.v-a.v;});}var m={};GAS.forEach(function(g){var k=(g.etapa||'Sin categoría').replace(/^\d+\s*/,'')||'Sin categoría';m[k]=(m[k]||0)+(+g.monto||0);});return Object.keys(m).map(function(k){return {nm:k,v:m[k]};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});}
-function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,falta=hasPres?computeFalta():null,total=hasPres?(gastado+falta):null;
- var o=OBRAS.find(function(x){return x.id===CUR;})||{},av=o.avance;
+function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,falta=hasPres?faltaTotal():null,total=hasPres?totalProy():null;
+ var o=OBRAS.find(function(x){return x.id===CUR;})||{},av=(o.avance!=null?o.avance:((hasPres&&total)?Math.round(gastado/total*100):null));
  var cfg=CFG[CUR]||{},caja=(cfg.caja!=null?cfg.caja:null),prc=(cfg.porrecibir!=null?cfg.porrecibir:null);
  var pd=function(v){return v==null?'<span style="color:#a7adbf;font-weight:600">Por definir</span>':fmt(v);};
  var cats=gastoCats();
@@ -345,13 +354,13 @@ function goSection(sec){var b=document.getElementById('d-body');
  else if(sec==='planner'){if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b><br>Programación de obra pendiente de cargar para esta obra.</div>';}else{b.innerHTML=renderPlanner();attachPlanner();}}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
  window.scrollTo(0,0);}
-function recompute(){var fa=0;
- ACP.forEach(c=>{lineasOf(c).forEach(l=>{if(getE(l)!=='hecho')fa+=l.total;});
+function recompute(){var fa=faltaTotal();
+ ACP.forEach(c=>{
   var sts=lineasOf(c).map(getE),b;
   if(sts.every(s=>s==='hecho'))b=['b-ej','✓ hecha'];else if(sts.every(s=>s==='sininiciar'))b=['b-pen','pendiente'];else b=['b-cur','en proceso'];
   var el=document.getElementById('bdg-'+c.num);if(el){el.className='badge '+b[0];el.textContent=b[1];}});
  var g=(id,v)=>{var e=document.getElementById(id);if(e)e.textContent=fmt(v);};
- g('sum-fa',fa);g('grp-falta',fa);g('sum-to',gastadoTotal()+fa);}
+ g('sum-fa',fa);g('grp-falta',fa);g('sum-to',totalProy());}
 function setE(key,st){ESTADOS[key]=st;saveEstados();
  document.querySelectorAll('.sg[data-key="'+key+'"]').forEach(b=>b.classList.toggle('on',b.dataset.st===st));recompute();}
 function attach(){document.querySelectorAll('#d-body .sg').forEach(b=>b.onclick=()=>setE(b.dataset.key,b.dataset.st));document.querySelectorAll('#d-body input.ed').forEach(function(inp){inp.addEventListener('input',function(){liveUpd(inp);});});document.querySelectorAll('#d-body .pen').forEach(function(b){b.onclick=function(){toggleEdit(b.dataset.target,b);};});}
@@ -366,7 +375,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
   var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden'),g('cronograma?obra=eq.'+id+'&order=orden')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
-  ACP=PEND.map(n=>capByNum[n]).filter(Boolean);
+  ACP=(CUR==='robledo')?PEND.map(function(n){return capByNum[n];}).filter(Boolean):CAPS.slice();
   document.getElementById('d-meta').textContent=(o.avance!=null?('Avance '+o.avance+'% · '):'')+GAS.length+' gastos reales (en vivo)';
   renderGeneral();
  }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
