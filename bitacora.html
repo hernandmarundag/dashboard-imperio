@@ -68,6 +68,8 @@ textarea{min-height:64px;resize:vertical}
     <input type="time" id="hini" value="07:00" style="max-width:160px">
     <div class="q">Fase actual de la obra</div>
     <div class="chips" id="fase"></div>
+    <div class="q">¿En qué piso / losa van?</div>
+    <div class="chips" id="piso"></div>
     <div class="q">Actividad(es) planeada(s) para hoy</div>
     <div class="chips" id="actplan"></div>
     <textarea id="actplan_txt" placeholder="Detalle / otra actividad (opcional)" style="margin-top:8px"></textarea>
@@ -119,6 +121,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var OBRAS=[['weliving','Weliving'],['robledo','Robledo'],['novaeva','Novaeva']];
 var CLIMA=[['☀️ Soleado','s'],['⛅ Nublado','n'],['🌧️ Lluvia','ll'],['⛈️ Tormenta','t'],['🌫️ Neblina','ne']];
 var FASES=['Cimentación','Estructura','Mampostería','Instalaciones','Acabados'];
+var PISOS=['Sótano','Piso 1','Piso 2','Piso 3','Piso 4','Piso 5','Piso 6','Piso 7','Cubierta','Zonas comunes'];
 var ACT={
  'Cimentación':['Excavación','Armado acero pila','Vaciado pila','Solado','Bombeo','Anclajes','Llenos'],
  'Estructura':['Armado columnas','Encofrado columnas','Vaciado columnas','Armado losa','Encofrado losa','Vaciado losa','Vigas','Desencofrado'],
@@ -128,7 +131,7 @@ var ACT={
 var NOV=[['✅ Sin novedad','green'],['⏳ Retraso material','amber'],['🔧 Falla equipo','amber'],['🌧️ Parada por lluvia','amber'],['⚠️ Accidente/incidente','red'],['👷 Visita técnica',''],['🙋 Falta personal','amber'],['🏠 Problema vecino','red'],['➕ Otro','']];
 var AV=['0%','25%','50%','75%','100%'];
 
-var sel={obra:'weliving',clima:'',fase:'',actplan:[],novedades:[],ejec:[],avance:''};
+var sel={obra:'weliving',clima:'',fase:'',piso:'',actplan:[],novedades:[],ejec:[],avance:''};
 var emp=0;
 
 function chip(txt,on,cls){return '<div class="chip'+(cls?' '+cls:'')+(on?' on':'')+'">'+txt+'</div>';}
@@ -152,6 +155,7 @@ renderChips('obra',OBRAS.map(function(o){return o[1];}),'obraLabel',false);
  el.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){sel.obra=c.dataset.v;el.querySelectorAll('.chip').forEach(function(x){x.classList.toggle('on',x.dataset.v===sel.obra);});document.getElementById('topd').textContent=c.textContent+' · '+document.getElementById('fecha').value;};});})();
 renderChips('clima',CLIMA.map(function(c){return c[0];}),'clima',false);
 renderChips('fase',FASES,'fase',false);
+renderChips('piso',PISOS,'piso',false);
 renderChips('actplan',[],'actplan',true);
 renderChips('ejec',[],'ejec',true);
 renderChips('novedades',NOV,'novedades',true,function(a){return a[1];});
@@ -167,6 +171,7 @@ function guardar(){
   obra:sel.obra,
   fecha:document.getElementById('fecha').value||new Date().toISOString().slice(0,10),
   fase:sel.fase||null,
+  piso:sel.piso||null,
   clima:sel.clima||null,
   empleados:emp||null,
   hora_inicio:document.getElementById('hini').value||null,
