@@ -62,7 +62,7 @@ textarea{min-height:64px;resize:vertical}
 <body>
 <div class="top">
   <h1>📒 Bitácora de Obra</h1><div class="d" id="topd">Constructora Imperio</div>
-  <div class="tabs"><div class="tab on" id="t-rep" onclick="tab('rep')">📝 Reportar</div><div class="tab" id="t-con" onclick="tab('con')">💬 Consultar</div></div>
+  <div class="tabs"><div class="tab on" id="t-rep" onclick="tab('rep')">📝 Reportar</div><div class="tab" id="t-con" onclick="tab('con')">💬 Consultar</div><div class="tab" id="t-chat" onclick="tab('chat')">🗣️ Reportar chat</div></div>
 </div>
 
 <!-- ================= REPORTAR ================= -->
@@ -132,8 +132,8 @@ textarea{min-height:64px;resize:vertical}
 </div></div>
 
 <div class="chatinput hidden" id="chatbar"><div class="inner">
-  <input id="chatq" placeholder="Pregunta: ¿qué se hizo el lunes? ¿losa P3?…" onkeydown="if(event.key==='Enter')consultar()">
-  <button onclick="consultar()">➤</button>
+  <input id="chatq" placeholder="Pregunta: ¿qué se hizo el lunes? ¿losa P3?…" onkeydown="if(event.key==='Enter')chatSend()">
+  <button onclick="chatSend()">➤</button>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -199,15 +199,17 @@ function guardar(){
 }
 
 /* ============ TABS ============ */
-function tab(t){
+function tab(t){var isC=(t==='con'||t==='chat');
  document.getElementById('t-rep').classList.toggle('on',t==='rep');
  document.getElementById('t-con').classList.toggle('on',t==='con');
+ document.getElementById('t-chat').classList.toggle('on',t==='chat');
  document.getElementById('view-rep').classList.toggle('hidden',t!=='rep');
  document.getElementById('done').classList.add('hidden');
- document.getElementById('view-con').classList.toggle('hidden',t!=='con');
+ document.getElementById('view-con').classList.toggle('hidden',!isC);
  document.getElementById('savebar').classList.toggle('hidden',t!=='rep');
- document.getElementById('chatbar').classList.toggle('hidden',t!=='con');
- if(t==='con' && !window._chatInit){window._chatInit=1;initChat();}
+ document.getElementById('chatbar').classList.toggle('hidden',!isC);
+ if(t==='con'){chatMode='consultar';document.getElementById('chat').innerHTML='';document.getElementById('qchips').innerHTML='';initChat();}
+ if(t==='chat'){chatMode='guiado';gcStart();}
 }
 
 /* ============ CONSULTAR (chat sobre bitácora) ============ */
@@ -269,5 +271,53 @@ function consultar(){
    res.slice(0,6).forEach(function(b){addBub(resumenParte(b),false);});
  }).catch(function(){addBub('No pude consultar ahora. Revisa el internet.',false);});
 }
+
+var chatMode='consultar';
+var gc={},gcStep=0,gcMulti=[];
+var GCSTEPS=[
+ {k:'clima',q:'¿Cómo está el clima hoy?',opts:CLIMA.map(function(c){return c[0];})},
+ {k:'maestros',q:'¿Cuántos MAESTROS hay hoy?',opts:['0','1','2','3','4','5','6']},
+ {k:'oficiales',q:'¿Cuántos OFICIALES?',opts:['0','1','2','3','4','5','6','8','10']},
+ {k:'ayudantes',q:'¿Cuántos AYUDANTES?',opts:['0','1','2','3','4','5','6','8','10','12']},
+ {k:'fase',q:'¿En qué FASE están?',opts:FASES},
+ {k:'piso',q:'¿En qué PISO o lugar? (toca uno o escríbelo)',opts:PISOS},
+ {k:'ejecutado',q:'¿Qué ACTIVIDADES hicieron hoy? (toca varias y luego "✓ Listo", o escríbelas)',multi:true,fromFase:true},
+ {k:'cantidades',q:'¿Qué CANTIDADES ejecutaron? (ej: "losa 45 m³, acero 300 kg") o "ninguna"',text:true},
+ {k:'avance',q:'¿Qué % de AVANCE de lo planeado hoy?',opts:AV},
+ {k:'novedades',q:'¿Hubo NOVEDADES? (toca las que apliquen y luego "✓ Listo", o escríbelas)',multi:true,opts:NOV.map(function(n){return n[0];})},
+ {k:'materiales',q:'¿Llegaron MATERIALES? (descríbelos o "ninguno")',text:true},
+ {k:'observaciones',q:'¿Algo PENDIENTE para mañana? (o "nada")',text:true},
+ {k:'reporta',q:'Por último, ¿tu NOMBRE para firmar el parte?',text:true}
+];
+function gcStart(){gc={obra:sel.obra};gcStep=0;gcMulti=[];document.getElementById('chat').innerHTML='';document.getElementById('qchips').innerHTML='';
+ addBub('¡Hola! 👷 Vamos a llenar el parte de <b>'+sel.obra.toUpperCase()+'</b> de hoy. Te voy preguntando, toca o escribe. Si algo falta te lo vuelvo a pedir.',false);gcAsk();}
+function gcAsk(){var st=GCSTEPS[gcStep];if(!st){gcSave();return;}addBub(st.q,false);gcOpts(st);}
+function gcOpts(st){var qc=document.getElementById('qchips');var opts=st.opts;if(st.fromFase)opts=(ACT[gc.fase]||[]);
+ var html='';
+ if(opts)html+=opts.map(function(o){return '<span class="qchip" data-v="'+String(o).replace(/"/g,'&quot;')+'">'+o+'</span>';}).join('');
+ if(st.multi)html+='<span class="qchip" style="background:#4f46e5;color:#fff" data-done="1">✓ Listo</span>';
+ if(st.text&&(st.k==='cantidades'||st.k==='materiales'||st.k==='observaciones'))html+='<span class="qchip" data-v="'+(st.k==='cantidades'?'ninguna':st.k==='materiales'?'ninguno':'nada')+'">Nada / ninguno</span>';
+ qc.innerHTML=html;
+ qc.querySelectorAll('.qchip').forEach(function(c){c.onclick=function(){if(c.dataset.done)gcAnswer('__done__');else gcAnswer(c.dataset.v);};});
+ document.getElementById('chatq').placeholder=st.text?'Escribe tu respuesta…':(st.multi?'…o escribe y toca ✓ Listo':'…o escríbelo');
+}
+function gcAnswer(val){var st=GCSTEPS[gcStep];if(!st)return;
+ if(st.multi){if(val==='__done__'){gc[st.k]=gcMulti.join(' · ');addBub(gc[st.k]||'(ninguna)',true);gcMulti=[];gcStep++;document.getElementById('qchips').innerHTML='';gcAsk();}else{gcMulti.push(val);addBub(val,true);}return;}
+ gc[st.k]=val;addBub(val,true);document.getElementById('qchips').innerHTML='';gcStep++;gcAsk();}
+function gcSend(t){var st=GCSTEPS[gcStep];if(!st)return;if(st.multi){gcMulti.push(t);addBub(t,true);}else{gcAnswer(t);}}
+function chatSend(){var t=(document.getElementById('chatq').value||'').trim();if(!t)return;if(chatMode==='guiado'){document.getElementById('chatq').value='';gcSend(t);}else{consultar();}}
+function gcSave(){var tot=(+gc.maestros||0)+(+gc.oficiales||0)+(+gc.ayudantes||0);
+ function clean(v,words){return (v&&!new RegExp('^('+words+')$','i').test(v))?v:null;}
+ var body={obra:gc.obra||sel.obra,fecha:new Date().toISOString().slice(0,10),clima:gc.clima||null,
+  maestros:+gc.maestros||null,oficiales:+gc.oficiales||null,ayudantes:+gc.ayudantes||null,empleados:tot||null,
+  fase:gc.fase||null,piso:gc.piso||null,ejecutado:gc.ejecutado||null,actividad:gc.ejecutado||null,
+  cantidades:clean(gc.cantidades,'ninguna|nada|no'),avance:gc.avance||null,novedades:gc.novedades||null,
+  materiales:clean(gc.materiales,'ninguno|nada|no'),observaciones:clean(gc.observaciones,'nada|no|ninguno'),
+  reporta:gc.reporta||null,fuente:'app-chat'};
+ addBub('Perfecto, guardando el parte… ⏳',false);
+ fetch(SB_URL+'/rest/v1/bitacora',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body)})
+ .then(function(r){if(!r.ok)throw 0;addBub('✅ ¡Listo! Parte de hoy guardado. Gracias '+(gc.reporta||'')+' 🙌',false);var qc=document.getElementById('qchips');qc.innerHTML='<span class="qchip" data-restart="1">+ Nuevo parte</span>';qc.querySelector('.qchip').onclick=function(){gcStart();};})
+ .catch(function(){addBub('❌ No pude guardar. Revisa el internet y toca "Reportar chat" otra vez.',false);});}
+
 </script>
 </body></html>
