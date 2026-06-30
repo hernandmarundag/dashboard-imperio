@@ -211,14 +211,14 @@ function tab(t){
 
 /* ============ CONSULTAR (chat sobre bitácora) ============ */
 var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-function fechaLarga(f){if(!f)return '';var p=f.split('-');return (+p[2])+' '+MES[(+p[1])-1];}
+function fechaLarga(f){if(!f)return '';var p=f.split('-');return (+p[2])+' '+MES[(+p[1])-1]+' '+p[0];}
 function addBub(txt,me){var c=document.getElementById('chat');var d=document.createElement('div');d.className='bub '+(me?'me':'bot');d.innerHTML=txt;c.appendChild(d);window.scrollTo(0,document.body.scrollHeight);}
 function initChat(){
  var qc=document.getElementById('qchips');
- var opts=['Último parte','Esta semana','¿Qué se hizo ayer?','Resumen de personal','Novedades recientes'];
+ var opts=['Último parte','Esta semana','Cimentación','Pilas','Novedades','Personal'];
  qc.innerHTML=opts.map(function(o){return '<span class="qchip">'+o+'</span>';}).join('');
  qc.querySelectorAll('.qchip').forEach(function(c){c.onclick=function(){document.getElementById('chatq').value=c.textContent;consultar();};});
- addBub('Hola 👋 Soy el asistente de bitácora de <b>'+sel.obra.toUpperCase()+'</b>. Pregúntame por los partes de días pasados: una fecha, un piso, novedades, personal… o usa los botones de arriba.',false);
+ addBub('Hola 👋 Soy el asistente de bitácora de <b>'+sel.obra.toUpperCase()+'</b>. Tengo la memoria de la obra (cimentación, pilas, estructura) y los partes diarios. Pregúntame por una fecha, un piso, "cimentación", "pilas", novedades, personal… o usa los botones.',false);
 }
 function resumenParte(b){
  var tot=(b.empleados||0);
@@ -231,6 +231,7 @@ function resumenParte(b){
  if(b.avance)s+='· Avance '+b.avance+'\n'; else s+='\n';
  if(b.novedades && b.novedades!=='✅ Sin novedad')s+='⚠️ '+b.novedades+'\n';
  if(b.observaciones)s+='📝 '+b.observaciones+'\n';
+ if(b.notas)s+='ℹ️ '+b.notas+'\n';
  if(b.reporta)s+='<span style="color:#a7adbf;font-size:11px">— '+b.reporta+'</span>';
  return s.trim();
 }
@@ -259,7 +260,7 @@ function consultar(){
    else if(/último|ultimo|reciente/.test(ql)){res=[rows[0]];intro='Último parte:';}
    else {
      // buscar por piso/fase/palabra
-     res=rows.filter(function(b){var blob=((b.fase||'')+' '+(b.piso||'')+' '+(b.actividad||'')+' '+(b.ejecutado||'')+' '+(b.cantidades||'')+' '+(b.observaciones||'')).toLowerCase();return ql.split(/\s+/).some(function(w){return w.length>2 && blob.indexOf(w)>=0;});}).slice(0,6);
+     res=rows.filter(function(b){var blob=((b.fase||'')+' '+(b.piso||'')+' '+(b.actividad||'')+' '+(b.ejecutado||'')+' '+(b.cantidades||'')+' '+(b.observaciones||'')+' '+(b.notas||'')+' '+(b.avance||'')).toLowerCase();return ql.split(/\s+/).some(function(w){return w.length>2 && blob.indexOf(w)>=0;});}).slice(0,8);
      intro='Encontré:';
    }
    if(!res||!res.length){addBub('No encontré partes para eso. Prueba con una fecha, un piso (ej. "P3"), "novedades" o "esta semana".',false);return;}
