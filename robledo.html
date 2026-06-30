@@ -110,6 +110,23 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .fc-pc{font-size:11.5px;font-weight:700;width:44px;text-align:right;color:#4b5168}
 .fc-foot{font-size:11.5px;color:#8a90a6;margin-top:9px;border-top:1px solid #f1f2f6;padding-top:8px}
 .fa-alert{display:block;margin-top:5px;color:#a5710a;font-weight:700;font-size:11px}
+.pgrow{display:flex;align-items:center;gap:11px;padding:11px 15px;border-top:1px solid #f0f1f6}
+.pgrow:first-child{border-top:none}
+.pg-u{font-size:15px}
+.pg-mid{flex:1;min-width:0}
+.pg-c{font-weight:700;font-size:13.5px}
+.pg-m{font-size:11px;color:#8a90a6;margin-top:2px}
+.pg-r{display:flex;align-items:center;gap:10px}
+.pg-v{font-weight:800;font-size:13.5px}
+.pg-ok{border:1px solid #b3e0c6;background:#e9f7ef;color:#1a7340;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.pg-ok:hover{background:#1a7340;color:#fff}
+.lprow{display:flex;align-items:center;gap:11px;padding:11px 15px;border-top:1px solid #f0f1f6}
+.lprow:first-child{border-top:none}
+.lp-ic{font-size:15px}
+.lp-mid{flex:1;min-width:0}
+.lp-a{font-weight:700;font-size:13.5px}
+.lp-f{font-size:11px;color:#8a90a6;margin-top:2px}
+.lp-pg{font-weight:800;font-size:12.5px;color:#a5710a;white-space:nowrap}
 .pgi{font-size:12px;color:#8a90a6}
 .donutwrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
 .legend{flex:1;min-width:240px}
@@ -169,6 +186,7 @@ const OBRAS=[
 const fmt=v=>(v==null?'—':'$'+Math.round(v).toLocaleString('es-CO'));
 const qfmt=v=>(+v).toLocaleString('es-CO',{maximumFractionDigits:2});
 let GAS=[],CAPS=[],ITEMS=[],CRONO=[],capByNum={},ON=[],ACP=[];
+let PAGOS=[];
 var CUR='robledo';
 const CFG={robledo:{caja:50000000,porrecibir:155000000}};
 let ESTADOS={};
@@ -292,10 +310,12 @@ function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,falta=h
   '<div class="cards">'+
    '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
    '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">'+(hasPres?('Falta '+fmt(falta)+' · Total '+fmt(total)):'Por definir')+'</div></div>'+
-   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CRONO.length?'Programación de obra':'Por definir')+'</div></div>'+
+   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CRONO.length?(CRONO.length+' actividades'):'Por definir')+'</div></div>'+
+   '<div class="navc" data-sec="flujo"><div class="navic">💸</div><div class="navt">Flujo y pagos</div><div class="navs">'+(PAGOS.filter(function(p){return p.estado!=='pagado';}).length||0)+' pagos programados</div></div>'+
+   '<a class="navc" href="bitacora.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="navic">📒</div><div class="navt">Bitácora del día</div><div class="navs">Reportar apertura · durante · cierre ↗</div></a>'+
   '</div>';
  document.getElementById('d-body').innerHTML=html;
- document.querySelectorAll('#d-body .navc').forEach(function(n){n.onclick=function(){goSection(n.dataset.sec);};});
+ document.querySelectorAll('#d-body .navc').forEach(function(n){if(n.dataset.sec)n.onclick=function(){goSection(n.dataset.sec);};});
  window.scrollTo(0,0);}
 function backG(){return '<div class="subback" onclick="renderGeneral()">← Dashboard general</div>';}
 var hojaPage=0;var HPP=50;
@@ -377,10 +397,46 @@ function attachPlanner(){
   col.addEventListener('dragover',function(e){e.preventDefault();col.classList.add('over');});
   col.addEventListener('dragleave',function(){col.classList.remove('over');});
   col.addEventListener('drop',function(e){e.preventDefault();col.classList.remove('over');if(dragId!=null){moverEstado(dragId,col.dataset.est);dragId=null;}});});}
+function capOptsHTML(){var byg={},ordr=[];CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'Capítulos';if(!byg[gr]){byg[gr]=[];ordr.push(gr);}byg[gr].push(c);});return ordr.map(function(gr){return '<optgroup label="'+gr+'">'+byg[gr].map(function(c){var nm=c.nombre.indexOf(' · ')>=0?c.nombre.split(' · ').slice(1).join(' · '):c.nombre;return '<option value="'+c.num+'">'+nm+'</option>';}).join('')+'</optgroup>';}).join('');}
+function diasA(f){if(!f)return 9999;var t=new Date();t.setHours(0,0,0,0);return Math.round((new Date(f+'T00:00:00')-t)/86400000);}
+function urg(d){if(d<0)return ['🔴','#a32020'];if(d<=7)return ['🟠','#a5710a'];if(d<=30)return ['🟡','#b58a00'];return ['⚪','#8a90a6'];}
+function flujoSec(){var pend=PAGOS.filter(function(p){return p.estado!=='pagado';});
+ var inm=pend.filter(function(p){return diasA(p.fecha)<=7;}).reduce(function(a,p){return a+(+p.monto||0);},0);
+ var p30=pend.filter(function(p){var d=diasA(p.fecha);return d>7&&d<=30;}).reduce(function(a,p){return a+(+p.monto||0);},0);
+ var tot=pend.reduce(function(a,p){return a+(+p.monto||0);},0);
+ var rows=pend.slice().sort(function(a,b){return (a.fecha||'9')<(b.fecha||'9')?-1:1;}).map(function(p){var d=diasA(p.fecha),u=urg(d);
+  return '<div class="pgrow"><span class="pg-u">'+u[0]+'</span><div class="pg-mid"><div class="pg-c">'+(p.concepto||'(sin concepto)')+'</div><div class="pg-m">'+(p.fecha||'sin fecha')+(p.fase?(' · '+p.fase):'')+(p.notas?(' · '+p.notas):'')+'</div></div><div class="pg-r"><div class="pg-v">'+fmt(p.monto)+'</div><button class="pg-ok" onclick="markPago('+p.id+')">✓ Pagado</button></div></div>';}).join('')||'<div class="note" style="padding:14px">No hay pagos programados. Usa “+ Programar pago”.</div>';
+ var bym={};pend.forEach(function(p){if(!p.fecha)return;var m=p.fecha.slice(0,7);bym[m]=(bym[m]||0)+(+p.monto||0);});var ms=Object.keys(bym).sort();var mx=Math.max.apply(null,ms.map(function(m){return bym[m];}).concat([1]));
+ var proj=ms.map(function(m){var w=Math.round(bym[m]/mx*100);return '<div class="barrow"><div class="bn">'+m+'</div><div class="bt"><div class="bf" style="width:'+w+'%"></div></div><div class="bv">'+fmt(bym[m])+'</div></div>';}).join('')||'<div class="note" style="padding:10px">Programa pagos con fecha para ver la proyección.</div>';
+ return backG()+'<div class="itemh"><span class="nm0">💸</span><h3>Flujo y pagos</h3></div>'+
+  '<div class="sum">'+
+   '<div class="sc fa"><div class="l">🔴 Pago inmediato (≤7 días)</div><div class="v">'+fmt(inm)+'</div><div class="n">caja que necesitas ya</div></div>'+
+   '<div class="sc"><div class="l">🟡 Próximos 30 días</div><div class="v">'+fmt(p30)+'</div><div class="n">a preparar</div></div>'+
+   '<div class="sc to"><div class="l">💰 Total programado</div><div class="v">'+fmt(tot)+'</div><div class="n">pendiente de pagar</div></div></div>'+
+  '<details class="addg"><summary>➕ Programar pago</summary><div class="addgbody">'+
+   '<div class="fld"><label>Concepto</label><input id="pg-con" placeholder="Ej: Concreto vaciado losa P4"></div>'+
+   '<div class="fld"><label>Monto</label><input id="pg-mto" placeholder="$ 0"></div>'+
+   '<div class="fld"><label>Fecha de pago</label><input type="date" id="pg-fec"></div>'+
+   '<div class="fld"><label>Área / fase</label><select id="pg-cap"><option value="">— Sin asignar —</option>'+capOptsHTML()+'</select></div>'+
+   '<div class="fld full"><label>Nota (proveedor, condición)</label><input id="pg-nota" placeholder="Opcional"></div>'+
+   '<button class="savebtn" onclick="saveNewPago()">Programar pago</button>'+
+  '</div></details>'+
+  '<div class="grp"><span>Pagos que vienen</span><span class="gt">'+pend.length+'</span></div><div class="dl" style="padding:6px 0">'+rows+'</div>'+
+  '<div class="grp"><span>Caja necesaria por mes</span></div><div class="dl" style="padding:14px 16px">'+proj+'</div>';}
+function saveNewPago(){var con=(document.getElementById('pg-con')||{}).value||'';var mto=parseInt(String((document.getElementById('pg-mto')||{}).value||'').replace(/[^0-9]/g,''))||0;var fec=(document.getElementById('pg-fec')||{}).value||'';var cap=(document.getElementById('pg-cap')||{}).value||'';var nota=(document.getElementById('pg-nota')||{}).value||'';if(!mto){flash('Pon el monto',true);return;}var fase=cap&&capByNum[cap]?((capByNum[cap].nombre||'').split(' · ')[0]):null;var body={obra:CUR,concepto:con.trim()||null,monto:mto,fecha:fec||null,cap_num:cap||null,fase:fase,notas:nota.trim()||null,estado:'pendiente'};flash('Guardando…');post('pagos_proyectados',body).then(function(r){return r.json();}).then(function(rows){PAGOS.push((rows&&rows[0])||body);flash('Pago programado ✓');goSection('flujo');}).catch(function(){flash('Error al guardar',true);});}
+function markPago(id){var p=PAGOS.find(function(x){return x.id===id;});if(p)p.estado='pagado';patch('pagos_proyectados?id=eq.'+id,{estado:'pagado'}).then(function(){flash('Marcado pagado ✓');goSection('flujo');}).catch(function(){flash('Error',true);});}
+function plannerFechas(){var cr=CRONO.filter(function(c){return c.fecha_ini;}).slice().sort(function(a,b){return (a.fecha_ini||'')<(b.fecha_ini||'')?-1:1;});
+ var MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+ function fd(f){if(!f)return '';var p=f.split('-');return (+p[2])+' '+MES[(+p[1])-1];}
+ var rows=cr.map(function(c){var st=c.estado||'pendiente';var ic=st==='completado'||st==='hecho'?'✅':(st==='en_curso'?'🔵':'⚪');var pg=PAGOS.filter(function(p){return p.estado!=='pagado'&&p.fecha&&c.fecha_ini&&p.fecha>=c.fecha_ini&&p.fecha<=(c.fecha_fin||c.fecha_ini);}).reduce(function(a,p){return a+(+p.monto||0);},0);
+  return '<div class="lprow"><span class="lp-ic">'+ic+'</span><div class="lp-mid"><div class="lp-a">'+(c.actividad||'')+'</div><div class="lp-f">'+fd(c.fecha_ini)+(c.fecha_fin&&c.fecha_fin!==c.fecha_ini?(' → '+fd(c.fecha_fin)):'')+'</div></div>'+(pg>0?'<div class="lp-pg">'+fmt(pg)+'</div>':'')+'</div>';}).join('');
+ var ini=cr[0]?fd(cr[0].fecha_ini):'',fin=cr.length?fd(cr[cr.length-1].fecha_fin||cr[cr.length-1].fecha_ini):'';
+ return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner</h3></div>'+'<div class="grp"><span>Programación de obra</span><span class="gt">'+ini+' → '+fin+'</span></div><div class="grpnote">Actividades con fecha. El monto a la derecha = pagos programados en esa fecha.</div><div class="dl" style="padding:6px 0">'+rows+'</div>';}
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){if(!CAPS.length){b.innerHTML=backG()+'<div class="canvas">💰 <b>Presupuesto por definir</b><br>Cada obra tiene sus propios capítulos e ítems. Cuando tengas el presupuesto de esta obra lo cargamos con la misma lógica que Robledo.</div>';}else{b.innerHTML=presSec();attach();recompute();}}
- else if(sec==='planner'){if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b><br>Programación de obra pendiente de cargar para esta obra.</div>';}else{b.innerHTML=renderPlanner();attachPlanner();}}
+ else if(sec==='planner'){if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b></div>';}else if(CRONO.some(function(c){return c.fecha_ini;})){b.innerHTML=plannerFechas();}else{b.innerHTML=renderPlanner();attachPlanner();}}
+ else if(sec==='flujo'){b.innerHTML=flujoSec();}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
  window.scrollTo(0,0);}
 function recompute(){var fa=faltaTotal();
@@ -401,8 +457,8 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden'),g('cronograma?obra=eq.'+id+'&order=orden')]);
-  GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];
+  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden'),g('cronograma?obra=eq.'+id+'&order=orden'),g('pagos_proyectados?obra=eq.'+id+'&order=fecha')]);
+  GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];PAGOS=res[4]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=(CUR==='robledo')?PEND.map(function(n){return capByNum[n];}).filter(Boolean):CAPS.slice();
   document.getElementById('d-meta').textContent=(o.avance!=null?('Avance '+o.avance+'% · '):'')+GAS.length+' gastos reales (en vivo)';
