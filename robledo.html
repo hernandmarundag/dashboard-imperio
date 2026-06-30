@@ -218,6 +218,14 @@ function flash(msg,err){if(!_toast){_toast=document.createElement('div');_toast.
 function capPagado(c){return GAS.reduce(function(a,g){return (g.cap_num&&g.cap_num===c.num)?a+(+g.monto||0):a;},0);}
 function capPresup(c){return lineasOf(c).reduce(function(a,l){return (getE(l)!=='hecho')?a+l.total:a;},0);}
 function capFalta(c){var f=capPresup(c)-capPagado(c);return f>0?f:0;}
+function hasGroups(){return CAPS.some(function(c){return /·/.test(c.nombre||'');});}
+function obraGrupos(){var P={},G={},ord={};CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'(otros)';P[gr]=(P[gr]||0)+(+c.ppto||0);if(ord[gr]==null)ord[gr]=+c.orden||999;});GAS.forEach(function(g){var c=capByNum[g.cap_num];var gr=c?(((c.nombre||'').split(' · ')[0])||'(otros)'):'Sin asignar';G[gr]=(G[gr]||0)+(+g.monto||0);});var keys={};Object.keys(P).forEach(function(k){keys[k]=1;});Object.keys(G).forEach(function(k){keys[k]=1;});return Object.keys(keys).map(function(k){return {grupo:k,presup:P[k]||0,gastado:G[k]||0,saldo:(P[k]||0)-(G[k]||0),ord:(ord[k]!=null?ord[k]:998)};}).sort(function(a,b){return b.presup-a.presup;});}
+function grupoView(){var rows=obraGrupos();var totP=rows.reduce(function(a,r){return a+r.presup;},0);var totG=rows.reduce(function(a,r){return a+r.gastado;},0);
+ var tr=rows.map(function(r){var pct=r.presup?Math.round(r.gastado/r.presup*100):(r.gastado>0?null:0);var neg=r.saldo<0;var bw=r.presup?Math.min(100,pct):100;var bc=neg?'#e2574c':'#36b37e';
+  return '<tr><td class="l"><b>'+r.grupo+'</b></td><td>'+fmt(r.presup)+'</td><td>'+fmt(r.gastado)+'</td><td style="'+(neg?'color:#a32020;font-weight:700':'color:#1a7340;font-weight:600')+'">'+(neg?'-':'')+fmt(Math.abs(r.saldo))+'</td><td style="min-width:120px"><div style="background:#eceef4;border-radius:5px;height:8px;overflow:hidden"><div style="height:100%;width:'+bw+'%;background:'+bc+'"></div></div><span style="font-size:10px;color:#8a90a6">'+(pct==null?'s/p':pct+'%')+'</span></td></tr>';}).join('');
+ return '<div class="grp"><span>Presupuesto por fase · gastado vs presupuesto</span><span class="gt">'+fmt(totG)+' / '+fmt(totP)+'</span></div>'+
+  '<div class="grpnote">Cada fase: lo gastado contra lo presupuestado. Saldo en rojo = se pasó del presupuesto de esa fase.</div>'+
+  '<div class="dl" style="padding:0;overflow-x:auto"><table style="min-width:620px"><tr><th class="l">Fase</th><th>Presupuesto</th><th>Gastado</th><th>Saldo</th><th class="l">Avance</th></tr>'+tr+'</table></div>';}
 function faltaBars(){var whole=isWhole();var tot=whole?presuTotal():faltaTotal();if(!tot||tot<=0)return '';
  var cats=ACP.map(function(c){return {nm:c.nombre,v:whole?capPresup(c):capFalta(c)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;});
  var legend=cats.map(function(c,i){var p=tot?(c.v/tot*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(1)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
@@ -300,7 +308,7 @@ function presSec(){var gastado=gastadoTotal();
   '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja</div></div>'+
   '<div class="sc fa"><div class="l">⚪ Falta por pagar</div><div class="v" id="sum-fa">—</div><div class="n">presupuesto pendiente</div></div>'+
   '<div class="sc to"><div class="l">📊 Total proyectado</div><div class="v" id="sum-to">—</div><div class="n">ejecutado + falta</div></div></div>'+
-  '<div class="notebar">El Ejecutado sale de tu hoja. Toca el lápiz ✎ en "Falta por ejecutar" para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+faltaBars()+bloque1()+bloque2();}
+  '<div class="notebar">El Ejecutado sale de tu hoja. Toca el lápiz ✎ en "Falta por ejecutar" para editar Cant. o V.Unit; recalcula y guarda en tu base.</div>'+(hasGroups()?grupoView():faltaBars())+bloque1()+bloque2();}
 var WEEKS=[['Jun','S3'],['Jun','S4'],['Jul','S1'],['Jul','S2'],['Jul','S3'],['Jul','S4'],['Ago','S1'],['Ago','S2'],['Ago','S3'],['Ago','S4']];
 function curWeek(){var ws=new Date(2026,5,15),t=new Date();t.setHours(0,0,0,0);var w=Math.floor((t-ws)/(7*86400000))+1;return Math.max(1,Math.min(10,w));}
 var ESTC={pendiente:{ic:'⚪',nx:'en_curso',op:0.4},en_curso:{ic:'🔵',nx:'completado',op:0.8},completado:{ic:'✅',nx:'pendiente',op:1},retrasado:{ic:'🔴',nx:'en_curso',op:0.65}};
