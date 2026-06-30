@@ -281,7 +281,7 @@ var GCSTEPS=[
  {k:'ayudantes',q:'¿Cuántos AYUDANTES?',opts:['0','1','2','3','4','5','6','8','10','12']},
  {k:'fase',q:'¿En qué FASE están?',opts:FASES},
  {k:'piso',q:'¿En qué PISO o lugar? (toca uno o escríbelo)',opts:PISOS},
- {k:'ejecutado',q:'¿Qué ACTIVIDADES hicieron hoy? (toca varias y luego "✓ Listo", o escríbelas)',multi:true,fromFase:true},
+ {k:'ncuad',q:'¿Cuántas CUADRILLAS trabajaron hoy? (cada cuadrilla = un grupo en una actividad)',opts:['1','2','3','4','5','6']},
  {k:'cantidades',q:'¿Qué CANTIDADES ejecutaron? (ej: "losa 45 m³, acero 300 kg") o "ninguna"',text:true},
  {k:'avance',q:'¿Qué % de AVANCE de lo planeado hoy?',opts:AV},
  {k:'novedades',q:'¿Hubo NOVEDADES? (toca las que apliquen y luego "✓ Listo", o escríbelas)',multi:true,opts:NOV.map(function(n){return n[0];})},
@@ -303,14 +303,14 @@ function gcOpts(st){var qc=document.getElementById('qchips');var opts=st.opts;if
 }
 function gcAnswer(val){var st=GCSTEPS[gcStep];if(!st)return;
  if(st.multi){if(val==='__done__'){gc[st.k]=gcMulti.join(' · ');addBub(gc[st.k]||'(ninguna)',true);gcMulti=[];gcStep++;document.getElementById('qchips').innerHTML='';gcAsk();}else{gcMulti.push(val);addBub(val,true);}return;}
- gc[st.k]=val;addBub(val,true);document.getElementById('qchips').innerHTML='';gcStep++;gcAsk();}
+ gc[st.k]=val;addBub(val,true);document.getElementById('qchips').innerHTML='';if(st.k==='ncuad'){var n=Math.max(1,Math.min(8,parseInt(val)||1));gc._ncuad=n;var ins=[];for(var i=1;i<=n;i++){ins.push({k:'cuad_act_'+i,q:'👷 Cuadrilla '+i+' — ¿qué actividad hizo?',fromFase:true});ins.push({k:'cuad_t_'+i,q:'⏱ Cuadrilla '+i+' — ¿cuánto tiempo en esa actividad?',opts:['1 h','2 h','3 h','4 h','5 h','6 h','7 h','8 h','Jornada completa']});}var args=[gcStep+1,0].concat(ins);Array.prototype.splice.apply(GCSTEPS,args);}gcStep++;gcAsk();}
 function gcSend(t){var st=GCSTEPS[gcStep];if(!st)return;if(st.multi){gcMulti.push(t);addBub(t,true);}else{gcAnswer(t);}}
 function chatSend(){var t=(document.getElementById('chatq').value||'').trim();if(!t)return;if(chatMode==='guiado'){document.getElementById('chatq').value='';gcSend(t);}else{consultar();}}
-function gcSave(){var tot=(+gc.maestros||0)+(+gc.oficiales||0)+(+gc.ayudantes||0);
+function gcSave(){var tot=(+gc.maestros||0)+(+gc.oficiales||0)+(+gc.ayudantes||0);var cu=[],acts=[];for(var i=1;i<=(gc._ncuad||0);i++){var a=gc['cuad_act_'+i],t=gc['cuad_t_'+i];if(a){cu.push('Cuad.'+i+': '+a+(t?(' — '+t):''));acts.push(a);}}var ejec=acts.length?acts.join(' · '):(gc.ejecutado||null);
  function clean(v,words){return (v&&!new RegExp('^('+words+')$','i').test(v))?v:null;}
  var body={obra:gc.obra||sel.obra,fecha:new Date().toISOString().slice(0,10),clima:gc.clima||null,
   maestros:+gc.maestros||null,oficiales:+gc.oficiales||null,ayudantes:+gc.ayudantes||null,empleados:tot||null,
-  fase:gc.fase||null,piso:gc.piso||null,ejecutado:gc.ejecutado||null,actividad:gc.ejecutado||null,
+  fase:gc.fase||null,piso:gc.piso||null,ejecutado:ejec,actividad:ejec,cuadrillas:cu.join(' · ')||null,
   cantidades:clean(gc.cantidades,'ninguna|nada|no'),avance:gc.avance||null,novedades:gc.novedades||null,
   materiales:clean(gc.materiales,'ninguno|nada|no'),observaciones:clean(gc.observaciones,'nada|no|ninguno'),
   reporta:gc.reporta||null,fuente:'app-chat'};
