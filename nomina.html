@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Nómina 16–30 Junio 2026</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--green:#16a34a;--greenbg:#dcfce7;--red:#dc2626;--redbg:#fee2e2;--blue:#2563eb}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;padding:14px 12px 40px}
+.wrap{max-width:540px;margin:0 auto}
+h1{font-size:19px;font-weight:800}
+.sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.4}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.kc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
+.kc .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
+.kc .v{font-size:19px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums}
+.kc.g .v{color:var(--green)}.kc.a .v{color:#d97706}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 15px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.catbar{color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:8px 14px;border-radius:10px;margin:16px 0 10px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.pcard.paid{background:var(--greenbg);border-color:#86efac}
+.prow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.nm{font-weight:700;font-size:15.5px;line-height:1.25}
+.pcard.paid .nm{text-decoration:line-through;color:var(--muted)}
+.mt{font-weight:800;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{color:var(--muted);font-size:13px;margin-top:5px;word-break:break-all}
+.badges{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px}
+.t-ins{background:var(--greenbg);color:var(--green)}.t-sin{background:var(--redbg);color:var(--red)}.t-nd{background:#f1f5f9;color:var(--muted)}
+.alert{display:block;width:100%;font-size:12px;color:var(--red);font-weight:600;margin-top:2px;line-height:1.35}
+.paybtn{margin-top:12px;width:100%;padding:12px;border:1.5px solid var(--green);background:#fff;color:var(--green);border-radius:10px;font-size:15px;font-weight:800;cursor:pointer}
+.paybtn.on{background:var(--green);color:#fff}
+.subt{text-align:right;color:var(--muted);font-size:13px;padding:2px 4px 4px}
+.subt b{color:var(--ink);font-variant-numeric:tabular-nums}
+.warn{background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:13px;margin-top:18px;font-size:12.5px;color:#92400e;line-height:1.5}
+.foot{display:flex;gap:10px;margin-top:16px}
+.btn{flex:1;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;font-weight:700}
+.btn.p{background:var(--blue);color:#fff;border-color:var(--blue)}
+@media print{.filters,.foot,.paybtn{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>💰 Nómina · 16–30 Junio 2026</h1>
+  <div class="sub">Imperio de Libertad S.A.S. · Consolidado de dispersión · 19 personas. Marque cada pago realizado; los totales se actualizan solos.</div></header>
+  <div class="cards">
+    <div class="kc"><div class="l">Total a pagar</div><div class="v" id="cT">$0</div></div>
+    <div class="kc g"><div class="l">Pagado</div><div class="v" id="cP">$0</div></div>
+    <div class="kc a"><div class="l">Pendiente</div><div class="v" id="cN">$0</div></div>
+    <div class="kc"><div class="l">Pagos hechos</div><div class="v" id="cC">0 / 19</div></div>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+  <div class="warn"><b>⚠️ Revisar antes de pagar:</b> 3 cuentas a nombre de terceros (Castro→Silveria González · Angulo→Dely Medina · Rendón→Emilsen Oquendo): pedir autorización firmada. 2 SIN INSCRIBIR (Wilmar García, José Rendón): riesgo laboral. Jeison y Mosco sin cédula. Marvin con PPT: verificar permiso.</div>
+  <div class="foot">
+    <button class="btn" onclick="resetAll()">Limpiar marcas</button>
+    <button class="btn p" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</div>
+<script>
+var data=[
+{c:"ADMINISTRACIÓN",n:"John Alexander Castro Betancur",d:"C.C. 1037622034",b:"Bancolombia Ahorros",ac:"01977649869",m:2500000,e:"INSCRITO",a:"Cuenta a nombre de tercero: Silveria González"},
+{c:"ADMINISTRACIÓN",n:"Vannesa (SISO profesional)",d:"C.C. 1053806849",b:"Bancolombia Ahorros",ac:"36860650015",m:1000000,e:"INSCRITO",a:""},
+{c:"ADMINISTRACIÓN",n:"María Fernanda García Bastidas",d:"C.C. 1238938433",b:"Bancolombia Ahorros",ac:"25597197627",m:1168208,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Eugenio Salgado",d:"C.C. 1045498790",b:"Nequi",ac:"3016146429",m:2093750,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Luis Alberto Coronado Prado",d:"C.C. 1001814691",b:"Nequi",ac:"3245550720",m:1471354,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Jose Alberto Batista",d:"C.C. 1001667687",b:"Bancolombia Ahorros",ac:"00296302554",m:1647917,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Johan Estiven Jaramillo",d:"C.C. 1037643375",b:"Nequi",ac:"3238062361",m:420833,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Daiber Valoyes",d:"C.C. 1001846747",b:"Bancolombia Ahorros",ac:"23881314576",m:946875,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Yorbis Borja",d:"C.C. 1046527267",b:"Nequi",ac:"3233368961",m:1046875,e:"INSCRITO",a:""},
+{c:"WELIVING",n:"Marvin Jose Matos",d:"PPT 5917988",b:"Bancolombia Ahorros",ac:"31600012581",m:1458333,e:"INSCRITO",a:"PPT migrante — verificar permiso de trabajo"},
+{c:"WELIVING",n:"Jesus Danobis Castro",d:"C.C. 1104404219",b:"Nequi",ac:"3005605551",m:894219,e:"INSCRITO",a:""},
+{c:"ROBLEDO",n:"Milton Herrera",d:"C.C. 71353708",b:"Bancolombia Ahorros",ac:"27274784003",m:2406250,e:"INSCRITO",a:""},
+{c:"ROBLEDO",n:"Carlos Angulo",d:"C.C. 32107120",b:"Nequi",ac:"3025613400",m:1311979,e:"INSCRITO",a:"Cuenta a nombre de tercero: Dely Medina (CC 11954255)"},
+{c:"ROBLEDO",n:"Wilmar García",d:"C.C. 71739802",b:"Bancolombia Ahorros",ac:"37725515988",m:1250000,e:"SIN INSCRIBIR",a:"No afiliado a seguridad social — riesgo laboral"},
+{c:"ROBLEDO",n:"John Palacios",d:"C.C. 1129365209",b:"Nequi",ac:"3018362978",m:1192708,e:"INSCRITO",a:""},
+{c:"ROBLEDO",n:"German Rueda",d:"C.C. 1098766335",b:"Nequi",ac:"3204082010",m:1189063,e:"INSCRITO",a:""},
+{c:"SIN CLASIFICAR",n:"Jeison",d:"Sin documento",b:"Llave",ac:"—",m:2000000,e:"SIN DATO",a:"Sin cédula ni categoría — falta soporte"},
+{c:"SIN CLASIFICAR",n:"Mosco",d:"Sin documento",b:"Nequi",ac:"—",m:1600000,e:"SIN DATO",a:"Sin cédula ni categoría — falta soporte"},
+{c:"SEGURIDAD",n:"Jose Rendón",d:"C.C. 70071887",b:"Nequi",ac:"3113730478",m:400000,e:"SIN INSCRIBIR",a:"Cuenta a nombre de tercero: Emilsen Oquendo (CC 43588182) · Sin inscribir"}
+];
+var catColor={"ADMINISTRACIÓN":"#3b82f6","WELIVING":"#22c55e","ROBLEDO":"#f59e0b","SEGURIDAD":"#8b5cf6","SIN CLASIFICAR":"#94a3b8"};
+var order=["ADMINISTRACIÓN","WELIVING","ROBLEDO","SEGURIDAD","SIN CLASIFICAR"];
+var KEY="nomina_16_30_jun2026_v2";
+var paid=JSON.parse(localStorage.getItem(KEY)||"{}");
+var curFilter="all";
+function fmt(n){return "$"+n.toLocaleString("es-CO");}
+function tag(e){var c=e==="INSCRITO"?"t-ins":e==="SIN INSCRIBIR"?"t-sin":"t-nd";return '<span class="tag '+c+'">'+e+'</span>';}
+function buildFilters(){var labels=[["all","Todos"],["ADMINISTRACIÓN","Admin"],["WELIVING","Weliving"],["ROBLEDO","Robledo"],["SEGURIDAD","Seguridad"],["SIN CLASIFICAR","Sin clasif."]];var h="";for(var i=0;i<labels.length;i++){h+='<div class="chip'+(labels[i][0]===curFilter?' active':'')+'" data-c="'+labels[i][0]+'">'+labels[i][1]+'</div>';}var f=document.getElementById("filters");f.innerHTML=h;var ch=f.querySelectorAll(".chip");for(var j=0;j<ch.length;j++){ch[j].onclick=function(){curFilter=this.getAttribute("data-c");render();};}}
+function render(){buildFilters();var list=document.getElementById("list");var out="";for(var oi=0;oi<order.length;oi++){var cat=order[oi];if(curFilter!=="all"&&curFilter!==cat)continue;var idxs=[];for(var i=0;i<data.length;i++){if(data[i].c===cat)idxs.push(i);}if(idxs.length===0)continue;var sub=0;out+='<div class="catbar" style="background:'+catColor[cat]+'">'+cat+' · '+idxs.length+'</div>';for(var r=0;r<idxs.length;r++){var k=idxs[r];var d=data[k];sub+=d.m;out+='<div class="pcard'+(paid[k]?' paid':'')+'">';out+='<div class="prow"><div class="nm">'+d.n+'</div><div class="mt">'+fmt(d.m)+'</div></div>';out+='<div class="meta">'+d.d+'</div>';out+='<div class="meta">'+d.b+' · '+d.ac+'</div>';out+='<div class="badges">'+tag(d.e);if(d.a)out+='<span class="alert">⚠ '+d.a+'</span>';out+='</div>';out+='<button class="paybtn'+(paid[k]?' on':'')+'" onclick="toggle('+k+')">'+(paid[k]?'✓ Pagado':'Marcar pagado')+'</button>';out+='</div>';}out+='<div class="subt">Subtotal '+cat+': <b>'+fmt(sub)+'</b></div>';}list.innerHTML=out;totals();}
+function totals(){var t=0,p=0,c=0;for(var i=0;i<data.length;i++){t+=data[i].m;if(paid[i]){p+=data[i].m;c++;}}document.getElementById("cT").textContent=fmt(t);document.getElementById("cP").textContent=fmt(p);document.getElementById("cN").textContent=fmt(t-p);document.getElementById("cC").textContent=c+" / "+data.length;}
+function toggle(i){paid[i]=!paid[i];localStorage.setItem(KEY,JSON.stringify(paid));render();}
+function resetAll(){if(confirm("¿Borrar todas las marcas de pagado?")){paid={};localStorage.setItem(KEY,"{}");render();}}
+render();
+</script>
+</body>
+</html>
