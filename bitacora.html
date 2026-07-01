@@ -58,11 +58,22 @@ textarea{min-height:64px;resize:vertical}
 .chatinput input{margin:0}
 .chatinput button{background:#4f46e5;color:#fff;border:none;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer;font-size:15px}
 .hidden{display:none}
+
+.cal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-mon{font-weight:800;font-size:15px}
+.cal-nav{width:36px;height:36px;border:1px solid #e6e8f0;border-radius:10px;background:#fff;font-size:18px;cursor:pointer;color:#4f46e5}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-wd{text-align:center;font-size:11px;color:#a7adbf;font-weight:700;padding:4px 0}
+.cal-c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;font-size:13px;border-radius:9px;color:#4b5168;background:#fff;border:1px solid #f0f1f6}
+.cal-c.empty{background:transparent;border:none}
+.cal-c.has{background:#eef0fe;color:#4f46e5;font-weight:800;cursor:pointer;border-color:#c8caf6}
+.cal-dot{position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:#4f46e5}
+.cal-deth{font-weight:800;margin:16px 0 8px;color:#1b2030}
 </style></head>
 <body>
 <div class="top">
   <h1>📒 Bitácora de Obra</h1><div class="d" id="topd">Constructora Imperio</div>
-  <div class="tabs"><div class="tab on" id="t-rep" onclick="tab('rep')">📝 Reportar</div><div class="tab" id="t-con" onclick="tab('con')">💬 Consultar</div><div class="tab" id="t-chat" onclick="tab('chat')">🗣️ Reportar chat</div></div>
+  <div class="tabs"><div class="tab on" id="t-rep" onclick="tab('rep')">📝 Reportar</div><div class="tab" id="t-con" onclick="tab('con')">💬 Preguntar</div><div class="tab" id="t-chat" onclick="tab('chat')">🗣️ Chat</div><div class="tab" id="t-hist" onclick="tab('hist')">📅 Historia</div></div>
 </div>
 
 <!-- ================= REPORTAR ================= -->
@@ -122,6 +133,7 @@ textarea{min-height:64px;resize:vertical}
 </div>
 
 <!-- ================= CONSULTAR ================= -->
+<div class="wrap hidden" id="view-hist"><div id="hist"></div></div>
 <div class="wrap hidden" id="view-con">
   <div class="qchips" id="qchips"></div>
   <div class="chatbox" id="chat"></div>
@@ -200,6 +212,9 @@ function guardar(){
 
 /* ============ TABS ============ */
 function tab(t){var isC=(t==='con'||t==='chat');
+ document.getElementById('t-hist').classList.toggle('on',t==='hist');
+ document.getElementById('view-hist').classList.toggle('hidden',t!=='hist');
+ if(t==='hist')initHist();
  document.getElementById('t-rep').classList.toggle('on',t==='rep');
  document.getElementById('t-con').classList.toggle('on',t==='con');
  document.getElementById('t-chat').classList.toggle('on',t==='chat');
@@ -318,6 +333,26 @@ function gcSave(){var tot=(+gc.maestros||0)+(+gc.oficiales||0)+(+gc.ayudantes||0
  fetch(SB_URL+'/rest/v1/bitacora',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body)})
  .then(function(r){if(!r.ok)throw 0;addBub('✅ ¡Listo! Parte de hoy guardado. Gracias '+(gc.reporta||'')+' 🙌',false);var qc=document.getElementById('qchips');qc.innerHTML='<span class="qchip" data-restart="1">+ Nuevo parte</span>';qc.querySelector('.qchip').onclick=function(){gcStart();};})
  .catch(function(){addBub('❌ No pude guardar. Revisa el internet y toca "Reportar chat" otra vez.',false);});}
+
+var histData=null,histMonth=null;
+function initHist(){var h=document.getElementById('hist');
+ if(histData){renderCal();return;}
+ h.innerHTML='<div class="bub bot">Cargando historia… ⏳</div>';
+ fetch(SB_URL+'/rest/v1/bitacora?obra=eq.'+sel.obra+'&order=fecha.desc&limit=300',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
+ .then(function(r){return r.json();}).then(function(rows){histData=rows||[];var last=histData[0];histMonth=(last&&last.fecha)?last.fecha.slice(0,7):new Date().toISOString().slice(0,7);renderCal();})
+ .catch(function(){h.innerHTML='<div class="bub bot">No pude cargar la historia. Revisa el internet.</div>';});}
+function histMove(d){var y=+histMonth.slice(0,4),m=+histMonth.slice(5,7)-1;var dt=new Date(y,m+d,1);histMonth=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');renderCal();}
+function renderCal(){var y=+histMonth.slice(0,4),m=+histMonth.slice(5,7)-1;
+ var MESN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+ var byDay={};histData.forEach(function(b){if(b.fecha&&b.fecha.slice(0,7)===histMonth){var d=+b.fecha.slice(8,10);(byDay[d]=byDay[d]||[]).push(b);}});
+ var first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+ var wd=['D','L','M','M','J','V','S'];var cells=wd.map(function(w){return '<div class="cal-wd">'+w+'</div>';}).join('');
+ for(var i=0;i<first;i++)cells+='<div class="cal-c empty"></div>';
+ for(var dd=1;dd<=days;dd++){var has=byDay[dd];cells+='<div class="cal-c'+(has?' has':'')+'" data-d="'+dd+'">'+dd+(has?'<span class="cal-dot"></span>':'')+'</div>';}
+ var nm=0;Object.keys(byDay).forEach(function(k){nm+=byDay[k].length;});
+ document.getElementById('hist').innerHTML='<div class="cal-top"><button class="cal-nav" onclick="histMove(-1)">‹</button><div class="cal-mon">'+MESN[m]+' '+y+'</div><button class="cal-nav" onclick="histMove(1)">›</button></div><div style="font-size:12px;color:#8a90a6;margin-bottom:10px">'+nm+' parte(s) este mes · toca un día marcado para verlo</div><div class="cal-grid">'+cells+'</div><div id="cal-det"></div>';
+ document.querySelectorAll('#hist .cal-c.has').forEach(function(c){c.onclick=function(){showDay(+c.dataset.d,byDay[+c.dataset.d]);};});}
+function showDay(d,arr){var det=document.getElementById('cal-det');det.innerHTML='<div class="cal-deth">📅 '+d+' de '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][(+histMonth.slice(5,7))-1]+' '+histMonth.slice(0,4)+'</div>'+arr.map(function(b){return '<div class="bub bot" style="max-width:100%;margin-bottom:8px">'+resumenParte(b)+'</div>';}).join('');det.scrollIntoView({behavior:'smooth',block:'nearest'});}
 
 </script>
 </body></html>
