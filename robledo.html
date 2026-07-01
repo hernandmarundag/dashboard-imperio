@@ -168,7 +168,7 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
 const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
-const CAJA=50000000,PORRECIBIR=155000000;
+/* caja y por-recibir: se mostrarán "Por definir" hasta leerlos de la base (nada quemado) */
 const DIST=[
  {nm:'Estructura · acero, concreto, formaleta',ets:['02 Cimentación/Zapatas','03 Acero/Hierro','04 Concreto/Vaciados','05 Formaleta/Encofrado','07 Vigas']},
  {nm:'Mano de obra (estructura)',ets:['12 Mano de obra']},
@@ -183,7 +183,7 @@ const DIST=[
  {nm:'Cubierta',ets:['10 Cubierta']}];
 const PEND=['7','8','9','10','11','12','13','13b','14','15','16','17','18','20'];
 const OBRAS=[
- {id:'robledo',nombre:'Robledo · Piso 1',estado:'En ejecución',avance:60},
+ {id:'robledo',nombre:'Robledo · Piso 1',estado:'En ejecución',avance:null},
  {id:'weliving',nombre:'Weliving',estado:'En ejecución',avance:null},
  {id:'novaeva',nombre:'Novaeva',estado:'En ejecución',avance:null}];
 const fmt=v=>(v==null?'—':'$'+Math.round(v).toLocaleString('es-CO'));
@@ -192,7 +192,7 @@ let GAS=[],CAPS=[],ITEMS=[],CRONO=[],capByNum={},ON=[],ACP=[];
 let PAGOS=[];
 let CUENTAS=[];
 var CUR='robledo';
-const CFG={robledo:{caja:50000000,porrecibir:155000000}};
+const CFG={};/* sin caja/porrecibir quemados: se muestran "Por definir" hasta conectar la caja real */
 let ESTADOS={};
 function loadEstados(){try{ESTADOS=JSON.parse(localStorage.getItem('imp_estados_'+CUR)||'{}');}catch(e){ESTADOS={};}}
 function saveEstados(){try{localStorage.setItem('imp_estados_'+CUR,JSON.stringify(ESTADOS));}catch(e){}}
@@ -279,12 +279,7 @@ function faltaBars(){var whole=isWhole();var tot=whole?presuTotal():faltaTotal()
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,tot)+'</div><div class="legend">'+legend+'</div></div></div>';}
 function bloque2(){return '<div class="grp"><span>Falta por ejecutar · detalle editable</span><span class="gt" id="grp-falta">—</span></div>'+
  '<div class="grpnote">Lo que viene. Toca el lápiz ✎ de una línea para editar Cant. o V.Unit; recalcula y guarda en tu base. El estado baja la Falta al marcar Hecho.</div>'+ACP.map(capHTML).join('');}
-function cajaHTML(){var disp=CAJA+PORRECIBIR;
- return '<div class="itemh"><span class="nm0">💰</span><h3>Caja y financiación</h3></div><div class="sum">'+
-  '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+fmt(CAJA)+'</div><div class="n">efectivo hoy</div></div>'+
-  '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+fmt(PORRECIBIR)+'</div><div class="n">Julieth · se libera al 80%</div></div>'+
-  '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+fmt(disp)+'</div><div class="n">caja + por recibir</div></div></div>'+
-  '<div class="notebar">Con la caja sola ('+fmt(CAJA)+') no alcanza para la falta; el cobro de Julieth ('+fmt(PORRECIBIR)+') se libera al llegar al 80%.</div>';}
+/* cajaHTML() eliminado: era código muerto con cifras quemadas (caja $50M / Julieth $155M). La caja real se leerá de la base. */
 function presuTotal(){return ACP.reduce(function(a,c){return a+capPresup(c);},0);}
 function isWhole(){return ACP.length>0&&presuTotal()>=gastadoTotal();}
 function faltaTotal(){if(!ACP.length)return 0;if(isWhole()){var f=presuTotal()-gastadoTotal();return f>0?f:0;}return ACP.reduce(function(a,c){return a+capFalta(c);},0);}

@@ -2566,7 +2566,6 @@ canvas{border-radius:4px}
     <div class="bn-more-item" onclick="gotoViewMobile('tesoreria');toggleMorePanel()"><span class="bn-more-ico">💎</span><span class="bn-more-lbl">Tesorería</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('cobrar');toggleMorePanel()"><span class="bn-more-ico">💰</span><span class="bn-more-lbl">Cobrar</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Abonos</span></div>
-    <div class="bn-more-item" onclick="gotoViewMobile('control');toggleMorePanel()"><span class="bn-more-ico">🏗</span><span class="bn-more-lbl">Control Obra</span></div>
     <div class="bn-more-item" onclick="openGasto();toggleMorePanel()"><span class="bn-more-ico">➕</span><span class="bn-more-lbl">Gasto</span></div>
   </div>
 </div>
@@ -2582,7 +2581,6 @@ canvas{border-radius:4px}
     <div class="sb-sect">Obras</div>
     <div id="obras-nav"></div>
     <div class="ni" style="cursor:pointer;color:var(--bl);font-size:12px;padding:6px 12px" onclick="openNuevaObra()">+ Nueva obra</div>
-    <div class="ni" data-v="control" onclick="gotoView('control')"><span class="ni-ico">🏗</span><span>Control de Obra</span><span class="ni-b" id="badge-control"></span></div>
     <div class="sb-sect">Finanzas</div>
     <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
     <div class="ni" data-v="tesoreria" onclick="gotoView('tesoreria')"><span class="ni-ico">💎</span><span>Tesorería</span></div>
@@ -2683,9 +2681,6 @@ canvas{border-radius:4px}
   </div>
   <div class="view" id="v-cronograma">
     <div id="cronograma-content"></div>
-  </div>
-  <div class="view" id="v-control">
-    <div id="control-content"></div>
   </div>
 
 
@@ -3046,9 +3041,9 @@ async function _autoDedup(obra) {
 // OBRAS_REG — Registro maestro de obras (dinámico)
 // ═══════════════════════════════════════════════
 var OBRAS_REG = {
-  weliving: {id:'weliving', nm:'Weliving',  ico:'🏗', col:'#007AFF', badge:'En estructura', bcls:'ba', prog:38, etapa:'Losa P3 → P4', nota:'Nómina Jun 1-15 pagada. Total socios: $755.69M.'},
+  weliving: {id:'weliving', nm:'Weliving',  ico:'🏗', col:'#007AFF', badge:'En estructura', bcls:'ba', prog:42, etapa:'Losa P3 → P4', nota:'Nómina Jun 1-15 pagada. Total socios: $755.69M.'},
   robledo:  {id:'robledo',  nm:'Robledo',   ico:'🏠', col:'#FF9500', badge:'En ejecución',  bcls:'bn', prog:55, etapa:'Mampostería',   nota:'Losa entrepiso ejecutada.'},
-  novaeva:  {id:'novaeva',  nm:'Novaeva',   ico:'🏢', col:'#34C759', badge:'Acabados',      bcls:'bv', prog:75, etapa:'Acabados finales', nota:'Etapa final.'},
+  novaeva:  {id:'novaeva',  nm:'Novaeva',   ico:'🏢', col:'#34C759', badge:'Acabados',      bcls:'bv', prog:95, etapa:'Acabados finales', nota:'Etapa final.'},
 };
 function obrasIds() { return (typeof S !== 'undefined' && S && S.obras && S.obras.length) ? S.obras : ['weliving','robledo','novaeva']; }
 function obraReg(id) { return OBRAS_REG[id] || {id:id, nm:id, ico:'🏗', col:'#6366f1', badge:'En obra', bcls:'ba', prog:0, etapa:'', nota:''}; }
@@ -3654,7 +3649,7 @@ var WELIVING_HIST = [{"obra":"weliving","fecha":"2024-10-10","nombre":"Mario","d
 var _wlHistKey = 'imp_weliving_hist_v1';
 var _importWLCurso = false;
 
-async function _autoImportarHistWeliving() {
+async function _autoImportarHistWeliving() { return; /* SEED DESACTIVADO: históricos ya están en la base; evita duplicar/borrar */
   if (_importWLCurso) return;
   if (localStorage.getItem(_wlHistKey) === '1') return;
   _importWLCurso = true;
@@ -3701,7 +3696,7 @@ var NOVAEVA_HIST = [{"obra":"novaeva","fecha":"2026-03-27","nombre":"Mauricio Al
 var _novaHistKey = 'imp_novaeva_hist_v1';
 var _importNECurso = false;
 
-async function _autoImportarHistNovaeva() {
+async function _autoImportarHistNovaeva() { return; /* SEED DESACTIVADO: históricos ya están en la base; evita duplicar/borrar */
   if (_importNECurso) return;
   if (localStorage.getItem(_novaHistKey) === '1') return;
   _importNECurso = true;
@@ -3734,7 +3729,7 @@ var ROBLEDO_HIST = [{"obra":"robledo","fecha":"2025-01-12","nombre":"victoria-ge
 var _robHistKey = 'imp_robledo_hist_v1';
 var _importROBCurso = false;
 
-async function _autoImportarHistRobledo() {
+async function _autoImportarHistRobledo() { return; /* SEED DESACTIVADO: históricos ya están en la base; evita duplicar/borrar */
   if (_importROBCurso) return;
   if (localStorage.getItem(_robHistKey) === '1') return;
   _importROBCurso = true;
@@ -3895,7 +3890,6 @@ function renderView(v, skipHistory) {
   else if (v === 'abonos')  { rAbonos(); }
   else if (v === 'movimientos') { rMovimientos(); }
   else if (v === 'cronograma') { rCronograma(); }
-  else if (v === 'control') { rControlObra(); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -8707,197 +8701,6 @@ function rCronograma() {
       }
     });
   })();
-}
-
-/* ═══════════════════════════════════════════════════
-   CONTROL DE OBRA — Controller Weliving (datos en vivo)
-   Replica el reporte diario del agente dentro del dashboard:
-   pagos próximos/vencidos, regla del hierro, ciclo de
-   estructura, estado de caja y recomendación del día.
-═══════════════════════════════════════════════════ */
-function _coDias(a, b){ return Math.round((a.getTime()-b.getTime())/86400000); }
-function _coParse(f){ if(!f) return null; var d=new Date(String(f).slice(0,10)+'T12:00:00'); return isNaN(d)?null:d; }
-function _coFecha(d){ if(!d) return '—'; try{ return d.getDate()+' '+d.toLocaleString('es-CO',{month:'short'}).replace('.',''); }catch(e){ return '—'; } }
-
-function rControlObra(){
-  var el = document.getElementById('control-content');
-  if (!el) return;
-  el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--mut,#8a8a9a)">⏳ Cargando control de obra en vivo…</div>';
-
-  var HOY = new Date(); HOY.setHours(12,0,0,0);
-  var LIM = new Date(HOY.getTime()); LIM.setDate(LIM.getDate()+10);
-  var limISO = LIM.toISOString().slice(0,10);
-
-  Promise.all([
-    sbFetch('pagos', "obra_id=eq.weliving&deleted_at=is.null&pagado=eq.false&fecha=lte."+limISO+"&order=fecha.asc"),
-    sbFetch('cronograma', "obra=eq.weliving&order=fecha_ini.asc"),
-    sbFetch('cuentas', "activa=eq.true&deleted_at=is.null&order=nombre.asc")
-  ]).then(function(res){
-    var pagos = Array.isArray(res[0])?res[0]:[];
-    var crono = Array.isArray(res[1])?res[1]:[];
-    var ctas  = Array.isArray(res[2])?res[2]:[];
-    el.innerHTML = _coRender(pagos, crono, ctas, HOY);
-  }).catch(function(e){
-    console.warn('rControlObra', e);
-    el.innerHTML = '<div class="sec">🏗 Control de Obra</div><div style="padding:24px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#991B1B">No se pudo cargar la información en vivo de Supabase. Revisa la conexión e intenta con el botón ↺ Sincronizar.</div>';
-  });
-}
-
-function _coRender(pagos, crono, ctas, HOY){
-  var venc=[], prox=[], totVenc=0, totProx=0;
-  pagos.forEach(function(p){
-    var f=_coParse(p.fecha); if(!f) return;
-    p._f=f; p._m=+p.monto||0;
-    if(f.getTime() < HOY.getTime()){ venc.push(p); totVenc+=p._m; }
-    else { prox.push(p); totProx+=p._m; }
-  });
-
-  // ── CAJA ──
-  var caja=0, ctasHtml='';
-  ctas.forEach(function(c){
-    var s = (c.saldo_actual!=null? +c.saldo_actual : (+c.saldo||0));
-    caja += s;
-    ctasHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f4;font-size:13px">'
-      + '<span>'+(c.nombre||'—')+' <span style="color:#9aa;font-size:11px">'+(c.banco||'')+'</span></span>'
-      + '<b style="color:'+(s>0?'#059669':'#9aa')+'">'+fmt(s)+'</b></div>';
-  });
-  var pend10 = totVenc+totProx;
-  var cajaAlcanza = caja >= pend10;
-  var cajaSospecha = caja===0; // todas las cuentas en 0 → dato sin actualizar
-
-  // ── REGLA DEL HIERRO ──
-  // El acero de losa se paga 12 días ANTES del amarre de esa losa.
-  var hierro=[];
-  var amarres = crono.filter(function(a){ return /amarre de acero losa/i.test(a.actividad||''); });
-  amarres.forEach(function(a){
-    var fi=_coParse(a.fecha_ini); if(!fi) return;
-    // solo amarres desde ayer en adelante
-    if(_coDias(fi,HOY) < -2) return;
-    var mp = (a.actividad.match(/losa\s+([A-Za-z0-9]+)/i)||[])[1] || '';
-    // buscar pago de acero de esa losa (pendiente)
-    var pago = pagos.filter(function(p){ return /acero\s+losa/i.test(p.descripcion||'') && new RegExp('losa\\s+'+mp+'\\b','i').test(p.descripcion||''); })[0];
-    var diasAmarre = _coDias(fi,HOY);
-    if(!pago){
-      hierro.push({sev:'warn', txt:'Losa '+mp+': amarre en '+diasAmarre+' día(s) ('+_coFecha(fi)+') y NO hay pago de acero pendiente/programado. Verificar si ya se pagó o programarlo.'});
-      return;
-    }
-    var pf=_coParse(pago.fecha);
-    var vencido = pf && pf.getTime() < HOY.getTime();
-    var margen = _coDias(fi, pf); // días entre pago programado y amarre
-    if(vencido){
-      hierro.push({sev:'red', txt:'Losa '+mp+': acero '+fmtM(+pago.monto)+' venció el '+_coFecha(pf)+' y sigue SIN PAGAR. El amarre arranca en '+diasAmarre+' día(s) ('+_coFecha(fi)+'). Pagar YA o se frena la losa.'});
-    } else if(diasAmarre < 12){
-      hierro.push({sev:'red', txt:'Losa '+mp+': faltan '+diasAmarre+' día(s) para el amarre ('+_coFecha(fi)+') y el acero '+fmtM(+pago.monto)+' aún no se paga (vence '+_coFecha(pf)+'). Regla de 12 días en riesgo.'});
-    } else if(margen < 12){
-      hierro.push({sev:'warn', txt:'Losa '+mp+': el pago de acero está programado a solo '+margen+' día(s) del amarre ('+_coFecha(fi)+'). La regla pide ≥12 días. Adelantar el pago.'});
-    } else {
-      hierro.push({sev:'ok', txt:'Losa '+mp+': acero '+fmtM(+pago.monto)+' programado '+_coFecha(pf)+', amarre '+_coFecha(fi)+' ('+margen+' días de margen). A tiempo.'});
-    }
-  });
-
-  // ── CICLO DE ESTRUCTURA ──
-  var etapaAct=null, etapaProx=null;
-  var estr = crono.filter(function(a){ return _coParse(a.fecha_ini); })
-                  .sort(function(x,y){ return _coParse(x.fecha_ini)-_coParse(y.fecha_ini); });
-  estr.forEach(function(a){
-    var fi=_coParse(a.fecha_ini), ff=_coParse(a.fecha_fin)||fi;
-    if(fi.getTime()<=HOY.getTime() && ff.getTime()>=HOY.getTime() && !etapaAct) etapaAct=a;
-  });
-  if(!etapaAct){ // la última que empezó antes de hoy
-    for(var i=estr.length-1;i>=0;i--){ if(_coParse(estr[i].fecha_ini).getTime()<=HOY.getTime()){ etapaAct=estr[i]; break; } }
-  }
-  for(var j=0;j<estr.length;j++){ if(_coParse(estr[j].fecha_ini).getTime()>HOY.getTime()){ etapaProx=estr[j]; break; } }
-
-  // ══════════ HTML ══════════
-  var h='';
-  h+='<div class="sec">🏗 Control de Obra · Weliving <span style="font-weight:400;color:#9aa;font-size:12px">— datos en vivo · '+_coFecha(HOY)+'</span></div>';
-
-  // BANNER RESUMEN
-  var alertaCaja = (!cajaAlcanza||cajaSospecha);
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">';
-  h+= _coKpi('🔴 Vencidos', fmt(totVenc), venc.length+' pago(s)', '#EF4444');
-  h+= _coKpi('💸 Próx. 10 días', fmt(totProx), prox.length+' pago(s)', '#F59E0B');
-  h+= _coKpi('📋 Pendiente total', fmt(pend10), 'a 10 días', '#6366F1');
-  h+= _coKpi((alertaCaja?'🔴 ':'💰 ')+'Caja', fmt(caja), (cajaSospecha?'sin actualizar':(cajaAlcanza?'alcanza':'NO alcanza')), alertaCaja?'#EF4444':'#10B981');
-  h+='</div>';
-
-  // ALERTA CAJA
-  if(cajaSospecha){
-    h+='<div style="padding:14px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#991B1B;margin-bottom:16px;font-size:13px">🔴 <b>ALERTA DE LIQUIDEZ:</b> todas las cuentas activas figuran en <b>$0</b>. O la caja está vacía o los saldos no están actualizados. Con '+fmt(pend10)+' por pagar a 10 días, no hay respaldo visible. <b>Actualizar saldos hoy.</b></div>';
-  } else if(!cajaAlcanza){
-    h+='<div style="padding:14px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#991B1B;margin-bottom:16px;font-size:13px">🔴 <b>ALERTA DE LIQUIDEZ:</b> la caja ('+fmt(caja)+') NO cubre los pagos de los próximos 10 días ('+fmt(pend10)+'). Faltan <b>'+fmt(pend10-caja)+'</b>. Priorizar cobros y ordenar pagos.</div>';
-  }
-
-  // REGLA DEL HIERRO
-  h+='<div class="sec">⚙️ Regla del Hierro <span style="font-weight:400;color:#9aa;font-size:11px">— acero pagado 12 días antes de cada amarre de losa</span></div>';
-  if(!hierro.length){
-    h+='<div style="padding:12px 16px;background:#F8FAFC;border:1px solid #e6e6ee;border-radius:10px;color:#667;font-size:13px;margin-bottom:16px">Sin amarres de losa próximos en el cronograma.</div>';
-  } else {
-    hierro.forEach(function(x){
-      var c = x.sev==='red'?{bg:'#FEF2F2',bd:'#FECACA',tx:'#991B1B',i:'🔴'}
-            : x.sev==='warn'?{bg:'#FFFBEB',bd:'#FDE68A',tx:'#92400E',i:'🟠'}
-            : {bg:'#F0FDF4',bd:'#BBF7D0',tx:'#166534',i:'✅'};
-      h+='<div style="padding:11px 14px;background:'+c.bg+';border:1px solid '+c.bd+';border-radius:10px;color:'+c.tx+';font-size:13px;margin-bottom:8px">'+c.i+' '+x.txt+'</div>';
-    });
-    h+='<div style="height:8px"></div>';
-  }
-
-  // CICLO ESTRUCTURA
-  h+='<div class="sec">🏗 Ciclo de Estructura <span style="font-weight:400;color:#9aa;font-size:11px">— meta: losa + columna cada 15 días</span></div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">';
-  h+='<div style="padding:14px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:12px">'
-     +'<div style="font-size:11px;color:#6366F1;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Etapa actual</div>'
-     +'<div style="font-size:15px;font-weight:700;color:#312E81;margin-top:4px">'+(etapaAct?etapaAct.actividad:'—')+'</div>'
-     +'<div style="font-size:12px;color:#667;margin-top:2px">'+(etapaAct?_coFecha(_coParse(etapaAct.fecha_ini))+' → '+_coFecha(_coParse(etapaAct.fecha_fin)):'sin dato')+'</div></div>';
-  h+='<div style="padding:14px;background:#F8FAFC;border:1px solid #e6e6ee;border-radius:12px">'
-     +'<div style="font-size:11px;color:#8a8a9a;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Siguiente</div>'
-     +'<div style="font-size:15px;font-weight:700;color:#334;margin-top:4px">'+(etapaProx?etapaProx.actividad:'—')+'</div>'
-     +'<div style="font-size:12px;color:#667;margin-top:2px">'+(etapaProx?_coFecha(_coParse(etapaProx.fecha_ini))+' → '+_coFecha(_coParse(etapaProx.fecha_fin)):'sin dato')+'</div></div>';
-  h+='</div>';
-
-  // TABLA DE PAGOS
-  h+='<div class="sec">💸 Pagos — vencidos y próximos 10 días</div>';
-  if(!venc.length && !prox.length){
-    h+='<div style="padding:12px 16px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;color:#166534;font-size:13px;margin-bottom:16px">✅ Sin pagos pendientes en la ventana de 10 días.</div>';
-  } else {
-    h+='<div style="border:1px solid #e6e6ee;border-radius:12px;overflow:hidden;margin-bottom:16px">';
-    h+='<table style="width:100%;border-collapse:collapse;font-size:13px">';
-    h+='<thead><tr style="background:#F8FAFC;text-align:left;color:#667"><th style="padding:9px 12px">Fecha</th><th style="padding:9px 12px">Concepto</th><th style="padding:9px 12px;text-align:right">Monto</th><th style="padding:9px 12px;text-align:center">Estado</th></tr></thead><tbody>';
-    venc.concat(prox).forEach(function(p){
-      var esVenc = p._f.getTime() < HOY.getTime();
-      h+='<tr style="border-top:1px solid #f0f0f4">'
-        +'<td style="padding:8px 12px;white-space:nowrap">'+_coFecha(p._f)+'</td>'
-        +'<td style="padding:8px 12px">'+(p.descripcion||'—')+'</td>'
-        +'<td style="padding:8px 12px;text-align:right;font-weight:600">'+fmt(p._m)+'</td>'
-        +'<td style="padding:8px 12px;text-align:center">'+(esVenc?'<span style="color:#EF4444;font-weight:600">🔴 Vencido</span>':'<span style="color:#F59E0B">Próximo</span>')+'</td>'
-        +'</tr>';
-    });
-    h+='</tbody></table></div>';
-  }
-
-  // CAJA DETALLE
-  h+='<div class="sec">💰 Cuentas</div>';
-  h+='<div style="border:1px solid #e6e6ee;border-radius:12px;padding:10px 16px;margin-bottom:16px">'+(ctasHtml||'<div style="color:#9aa;font-size:13px;padding:8px 0">Sin cuentas.</div>')
-     +'<div style="display:flex;justify-content:space-between;padding:10px 0 2px;margin-top:4px;border-top:2px solid #e6e6ee;font-size:14px"><b>Total caja</b><b style="color:'+(caja>0?'#059669':'#EF4444')+'">'+fmt(caja)+'</b></div></div>';
-
-  // RECOMENDACIÓN
-  var rec;
-  if(cajaSospecha) rec='Antes de pagar nada: actualiza los saldos reales de las cuentas. Con el saldo real en mano, prioriza el acero de la próxima losa para no romper la regla del hierro.';
-  else if(hierro.some(function(x){return x.sev==='red';})) rec='Prioriza HOY el pago de acero en alerta roja: sin acero a tiempo se frena la estructura. Es el pago que más protege el cronograma.';
-  else if(!cajaAlcanza) rec='La caja no cubre 10 días. Acelera cobros (billetera por cobrar) y ordena pagos por criticidad: acero de estructura primero, luego nómina, luego el resto.';
-  else if(totVenc>0) rec='Pon al día los '+venc.length+' pagos vencidos ('+fmt(totVenc)+') antes de asumir nuevos compromisos; son de obra ya ejecutada.';
-  else rec='Todo bajo control. Mantén el pago de acero 12 días antes de cada amarre y el ritmo de 15 días por losa.';
-  h+='<div class="sec">✅ Recomendación del día</div>';
-  h+='<div style="padding:14px 16px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:12px;color:#312E81;font-size:14px;line-height:1.5;margin-bottom:24px">'+rec+'</div>';
-
-  return h;
-}
-
-function _coKpi(label, val, sub, color){
-  return '<div style="padding:12px 14px;background:#fff;border:1px solid #e6e6ee;border-left:3px solid '+color+';border-radius:10px">'
-    +'<div style="font-size:11px;color:#8a8a9a;font-weight:600">'+label+'</div>'
-    +'<div style="font-size:19px;font-weight:800;color:'+color+';margin-top:3px">'+val+'</div>'
-    +'<div style="font-size:11px;color:#9aa;margin-top:1px">'+sub+'</div></div>';
 }
 
 // ── Actualizar estado de actividad (Last Planner)
