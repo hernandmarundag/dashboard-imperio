@@ -190,6 +190,7 @@ const fmt=v=>(v==null?'—':'$'+Math.round(v).toLocaleString('es-CO'));
 const qfmt=v=>(+v).toLocaleString('es-CO',{maximumFractionDigits:2});
 let GAS=[],CAPS=[],ITEMS=[],CRONO=[],capByNum={},ON=[],ACP=[];
 let PAGOS=[];
+let CUENTAS=[];
 var CUR='robledo';
 const CFG={robledo:{caja:50000000,porrecibir:155000000}};
 let ESTADOS={};
@@ -328,13 +329,15 @@ function col(i){return PAL[i%PAL.length];}
 function donut(cats,total){var C=2*Math.PI*58,off=0,segs='';
  cats.forEach(function(c,i){var len=(total?c.v/total:0)*C;segs+='<circle cx="80" cy="80" r="58" fill="none" stroke="'+col(i)+'" stroke-width="20" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 80 80)"/>';off+=len;});
  return '<svg width="160" height="160" viewBox="0 0 160 160">'+segs+'<text x="80" y="74" text-anchor="middle" font-size="9" fill="#8a90a6" letter-spacing="1">TOTAL</text><text x="80" y="93" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2030">'+fmtM(total)+'</text></svg>';}
+function walletOpts(){return CUENTAS.map(function(c){var lbl=(c.nombre||'')+' — '+(c.banco||'');return '<option value="'+lbl.replace(/"/g,'&quot;')+'">'+lbl+'</option>';}).join('');}
+function mpselHTML(g,rid){var cur=(g.mp||g.cuenta||'');var opt='<option value="'+cur.replace(/"/g,'&quot;')+'" selected>'+(cur||'— sin cuenta —')+'</option>';return '<select class="ed mpd" disabled data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="mp">'+opt+'<option value="">— sin cuenta —</option>'+walletOpts()+'</select>';}
 function capShort(nm){return (nm||'').indexOf(' · ')>=0?nm.split(' · ').slice(1).join(' · '):nm;}
 function capselHTML(g,rid){var cur='<option value="'+(g.cap_num||'')+'" selected>'+((g.etapa||'sin categoría')).replace(/"/g,'&quot;')+'</option>';return '<select class="ed capsel" disabled data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="cap">'+cur+'<option value="">— sin categoría —</option>'+capOptsHTML()+'</select>';}
 function hojaRow(g,num){var rid='g'+g.id;
  var fac=g.factura_url?' <a href="'+g.factura_url+'" target="_blank" rel="noopener" style="color:#4f46e5;text-decoration:none" title="Ver factura">📎</a>':'';
  var dsc='<input class="ed edt" readonly value="'+(g.descripcion||'').replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="descripcion">';
  var mto='<input class="ed montoed" readonly type="text" value="'+fmt(g.monto)+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="monto">';
- var mpi='<input class="ed mpd" readonly value="'+((g.mp||g.cuenta||'')).replace(/"/g,'&quot;')+'" data-row="'+rid+'" data-kind="gasto" data-gid="'+g.id+'" data-f="mp">';
+ var mpi=mpselHTML(g,rid);
  return '<tr><td class="mut" style="text-align:left;white-space:nowrap">'+num+' <button class="pen" data-target="'+rid+'" title="Editar gasto">✎</button></td><td class="l mut" style="white-space:nowrap">'+(g.fecha||'')+'</td><td class="l">'+(g.nombre||'—')+'</td><td class="l">'+dsc+fac+'</td><td class="l mut" style="font-size:10.5px">'+capselHTML(g,rid)+'</td><td class="l">'+mpi+'</td><td>'+mto+'</td></tr>';}
 function hojaHTML(){var tot=gastadoTotal();var capOpts=(function(){var byg={},ordr=[];CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'Capítulos';if(!byg[gr]){byg[gr]=[];ordr.push(gr);}byg[gr].push(c);});return ordr.map(function(gr){return '<optgroup label="'+gr+'">'+byg[gr].map(function(c){var nm=c.nombre.indexOf(' · ')>=0?c.nombre.split(' · ').slice(1).join(' · '):c.nombre;return '<option value="'+c.num+'">'+nm+'</option>';}).join('')+'</optgroup>';}).join('');})();
  var cats=gastoCats();
@@ -473,8 +476,8 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden'),g('cronograma?obra=eq.'+id+'&order=orden'),g('pagos_proyectados?obra=eq.'+id+'&order=fecha')]);
-  GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];PAGOS=res[4]||[];
+  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden'),g('cronograma?obra=eq.'+id+'&order=orden'),g('pagos_proyectados?obra=eq.'+id+'&order=fecha'),g('cuentas?deleted_at=is.null&order=orden')]);
+  GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];PAGOS=res[4]||[];CUENTAS=res[5]||[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=(CUR==='robledo')?PEND.map(function(n){return capByNum[n];}).filter(Boolean):CAPS.slice();
   document.getElementById('d-meta').textContent=(o.avance!=null?('Avance '+o.avance+'% · '):'')+GAS.length+' gastos reales (en vivo)';
