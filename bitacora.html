@@ -338,9 +338,10 @@ var histData=null,histMonth=null;
 function initHist(){var h=document.getElementById('hist');
  if(histData){renderCal();return;}
  h.innerHTML='<div class="bub bot">Cargando historia… ⏳</div>';
- fetch(SB_URL+'/rest/v1/bitacora?obra=eq.'+sel.obra+'&order=fecha.desc&limit=300',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
- .then(function(r){return r.json();}).then(function(rows){histData=rows||[];var last=histData[0];histMonth=(last&&last.fecha)?last.fecha.slice(0,7):new Date().toISOString().slice(0,7);renderCal();})
- .catch(function(){h.innerHTML='<div class="bub bot">No pude cargar la historia. Revisa el internet.</div>';});}
+ var ctl=new AbortController();var to=setTimeout(function(){ctl.abort();},15000);
+ fetch(SB_URL+'/rest/v1/bitacora?obra=eq.'+sel.obra+'&order=fecha.desc&limit=300',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},signal:ctl.signal})
+ .then(function(r){return r.json();}).then(function(rows){clearTimeout(to);histData=rows||[];var last=histData[0];histMonth=(last&&last.fecha)?last.fecha.slice(0,7):new Date().toISOString().slice(0,7);renderCal();})
+ .catch(function(){clearTimeout(to);h.innerHTML='<div class="bub bot">No pude cargar la historia (conexión lenta). <button class="qchip" onclick="histData=null;initHist();">Reintentar</button></div>';});}
 function histMove(d){var y=+histMonth.slice(0,4),m=+histMonth.slice(5,7)-1;var dt=new Date(y,m+d,1);histMonth=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');renderCal();}
 function renderCal(){var y=+histMonth.slice(0,4),m=+histMonth.slice(5,7)-1;
  var MESN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
