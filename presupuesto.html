@@ -145,13 +145,29 @@ function dotQ(d){return d.es_comun?(+d.cant_apto||0):(+d.cant_apto||0)*APTOS;}
 function dotSub(d){return (+d.precio||0)*dotQ(d);}
 function dotTotal(){return DOT.reduce(function(a,d){return a+dotSub(d);},0);}
 function dotPagado(){return DOT.reduce(function(a,d){return a+(+d.pagado||0);},0);}
+function gastoEtapa(){var order=['PRELIMINARES','CIMENTACION','ESTRUCTURA','INDIRECTOS','SIN CLASIFICAR'];var m={};GAS.forEach(function(x){var e=(x.etapa_contable||'SIN CLASIFICAR');var o=m[e]||(m[e]={dir:0,ind:0,aju:0,rev:0,tot:0});var v=+x.monto||0;o.tot+=v;var c=(x.clase||'').toUpperCase();if(c==='DIRECTO')o.dir+=v;else if(c==='INDIRECTO')o.ind+=v;else if(c==='AJUSTE')o.aju+=v;else o.rev+=v;});return {m:m,order:order};}
+function secEtapaGasto(){
+ var r=gastoEtapa(),m=r.m;
+ var lbl={PRELIMINARES:'Preliminares',CIMENTACION:'Cimentación',ESTRUCTURA:'Estructura',INDIRECTOS:'Indirectos','SIN CLASIFICAR':'Sin clasificar'};
+ var sub={PRELIMINARES:'campamento · localización · topografía · admin inicial',CIMENTACION:'excavación · retiro · pilas · vigas cim. · bombeo · muros de contención',ESTRUCTURA:'columnas · vigas · losas P1→P4',INDIRECTOS:'seguros · SISO · servicios · admin'};
+ var col={PRELIMINARES:'#334155',CIMENTACION:'#111827',ESTRUCTURA:'#7c5cf0',INDIRECTOS:'#d97706','SIN CLASIFICAR':'#94a3b8'};
+ var order=r.order.filter(function(k){return m[k];});
+ var tot=order.reduce(function(a,k){return a+m[k].tot;},0);
+ var dir=order.reduce(function(a,k){return a+m[k].dir;},0);
+ var ind=order.reduce(function(a,k){return a+m[k].ind;},0);
+ var otr=tot-dir-ind;
+ function p(v){return tot?(v/tot*100):0;}
+ var stack='<div class="stack">'+order.map(function(k){return seg(p(m[k].tot),col[k]);}).join('')+'</div>';
+ var rows=order.map(function(k){var o=m[k];return '<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+col[k]+';margin-right:8px;vertical-align:middle"></span><b>'+lbl[k]+'</b><div class="note" style="margin:2px 0 0">'+(sub[k]||'')+'</div></td><td class="n">'+fmt(o.dir)+'</td><td class="n">'+fmt(o.ind)+'</td><td class="n">'+((o.aju+o.rev)?fmt(o.aju+o.rev):'—')+'</td><td class="n"><b>'+fmt(o.tot)+'</b></td><td class="n">'+p(o.tot).toFixed(1)+'%</td></tr>';}).join('');
+ return '<div class="sec"><h2>🏗 Gasto real por etapa (lógica contable)</h2><div class="note">Cada peso gastado clasificado a su etapa real, separando <b>directo de obra</b> (materiales, mano de obra, equipos) de <b>indirecto</b> (admin, seguros, SISO, servicios). Cimentación abarca toda la fundación, no solo pilas.</div>'+stack+'<div class="tblwrap"><table><tr><th>Etapa</th><th class="n">Directo</th><th class="n">Indirecto</th><th class="n">Ajuste/rev.</th><th class="n">Total</th><th class="n">%</th></tr>'+rows+'<tr class="grand"><td>TOTAL GASTADO REAL</td><td class="n">'+fmt(dir)+'</td><td class="n">'+fmt(ind)+'</td><td class="n">'+fmt(otr)+'</td><td class="n">'+fmt(tot)+'</td><td class="n">100%</td></tr></table></div><div class="note">Total conciliado con contabilidad ('+fmt(tot)+'). El mayor peso es <b>cimentación</b>: la roca y el nivel freático (registrados en la bitácora) elevaron la fundación por encima del estimado inicial.</div></div>';
+}
 
 function boot(){
  document.getElementById('body').innerHTML='<div class="loading"><div style="font-size:30px">⏳</div><p style="margin-top:8px">Cargando presupuesto…</p></div>';
  Promise.all([
   g('presupuesto_caps?obra_id=eq.weliving&order=orden'),
   g('presupuesto_items?obra_id=eq.weliving&order=id&limit=5000'),
-  g('gastos?obra=eq.weliving&select=monto,cap_num&limit=5000'),
+  g('gastos?obra=eq.weliving&select=monto,cap_num,etapa_contable,clase&limit=5000'),
   g('dotacion_airbnb?order=orden&limit=1000')
  ]).then(function(r){CAPS=r[0]||[];ITEMS=r[1]||[];GAS=r[2]||[];DOT=r[3]||[];PC={};GAS.forEach(function(x){if(x.cap_num!=null)PC[String(x.cap_num)]=(PC[String(x.cap_num)]||0)+(+x.monto||0);});render();})
  .catch(function(e){document.getElementById('body').innerHTML='<div class="loading"><div style="font-size:32px">⚠️</div><p style="margin:10px 0">No pude conectar a la base. Revisa el internet.</p><button class="retry" onclick="boot()">↻ Reintentar</button></div>';});
@@ -199,7 +215,7 @@ function vResumen(){
   '</table></div></div>';
  var av='<div class="sec"><h2>📈 Avance físico de la obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:var(--ok)"></div></div><div class="note" style="margin-top:8px">'+pct+'% de la construcción ejecutado (físico) · <b>Falta por ejecutar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real en gastos.</div></div>';
  var chart='<div class="sec"><h2>Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
- var diff=grl-ej;var recon='<div class="sec"><h2>⚖️ Ejecutado vs Gastado — control de desvíos</h2><div class="tblwrap"><table>'+'<tr><td>Presupuesto de lo ejecutado (lo que está construido)</td><td class="n">'+fmt(ej)+'</td></tr>'+'<tr><td>Gastado real (plata que ya salió)</td><td class="n">'+fmt(grl)+'</td></tr>'+'<tr class="grand"><td>'+(diff>=0?'Diferencia · así costó de más que lo presupuestado':'Por debajo de lo presupuestado')+'</td><td class="n">'+fmt(diff)+'</td></tr>'+'</table></div><div class="note"><b>Ejecutado</b> = valor de la obra en presupuesto (lo estimado). <b>Gastado</b> = lo que realmente costó. La diferencia <b>no es un error</b>: la obra costó más que la estimación — sobre todo la cimentación (roca y nivel freático), más indirectos (admin, seguros, transporte) y anticipos. Ese es el costo real; el presupuesto era solo un estimado.</div></div>';
+ var recon=secEtapaGasto();
  return hero+cards+div+av+recon+chart;
 }
 function kc(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
@@ -228,7 +244,7 @@ function vObra(){
    var open=openCaps[c.num];
    html+='<div class="cap'+(open?' open':'')+'" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+' '+badge+'</span><span class="r">'+fmt(tot)+'</span></div>'+
     '<div class="bar"><div class="barf" style="width:'+pct+'%;background:'+GC[gr]+'"></div></div>'+
-    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Pagado '+fmt(pm)+' · Gasto real '+fmt(pgr)+(sc>0?' <span class="bdg over">costó '+fmt(sc)+' más</span>':'')+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Hecho</button><button class="ib" onclick="event.stopPropagation();todoPagado(\''+c.num+'\')">$ Pagado</button><span class="fal" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">Falta '+fmt(fal)+'</span></div>'+
+    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Pagado '+fmt(pm)+' · Gasto real '+fmt(pgr)+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Hecho</button><button class="ib" onclick="event.stopPropagation();todoPagado(\''+c.num+'\')">$ Pagado</button><span class="fal" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">Falta '+fmt(fal)+'</span></div>'+
     '<div class="items'+(open?'':' hidden')+'">';
    if(its.length){html+='<div class="tblwrap"><table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado</th><th>Pago</th></tr>';
     its.forEach(function(i){html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
@@ -242,7 +258,7 @@ function vObra(){
   });
   html+='</div></div>';
  });
- return '<div class="sec"><h2>🧱 Obra por etapa · físico vs pagado real</h2><div class="note">Cada ítem trae su <b>estado físico</b> (⚪→🔵→✅). El <b>gasto real</b> del capítulo viene de la contabilidad; si costó más que el presupuesto, se muestra cuánto (así costó de verdad, no es un error). Edita cantidad y precio; "＋ Adicional" agrega líneas (MO, imprevistos).</div>'+html+'</div>';
+ return '<div class="sec"><h2>🧱 Obra por etapa · físico vs pagado real</h2><div class="note">Cada ítem trae su <b>estado físico</b> (⚪→🔵→✅). El <b>gasto real</b> del capítulo viene de la contabilidad. Edita cantidad y precio; "＋ Adicional" agrega líneas (MO, imprevistos).</div>'+html+'</div>';
 }
 function vCant(){
  var uds=['und','m2','ml'];var its=ITEMS.filter(function(i){return uds.indexOf((i.und||'').toLowerCase())>=0;});
