@@ -42,12 +42,11 @@ table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{padding:7px 10px;text-align:left;border-top:1px solid #f0f1f6;vertical-align:middle}
 th{background:#fafbff;color:#8a90a6;font-size:9.5px;text-transform:uppercase;letter-spacing:.3px}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-.ped{width:92px;border:1px solid #cbd2e0;border-radius:7px;padding:4px 7px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums;background:#fffdf5}
-.ped.sm{width:60px}
+.ped{width:96px;border:1px solid #cbd2e0;border-radius:7px;padding:4px 7px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums;background:#fffdf5}
+.ped.sm{width:62px}
 .ped:focus{outline:none;border-color:#4f46e5;background:#fff}
 .ib{border:1.5px solid #16a34a;background:#fff;color:#16a34a;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
 .ib:active{background:#16a34a;color:#fff}
-.ib.g{border-color:#4f46e5;color:#4f46e5}
 .stb{border:1.5px solid;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#fff}
 .stb.st-por_hacer{border-color:#cbd2e0;color:#94a3b8}
 .stb.st-en_curso{border-color:#4f46e5;color:#4f46e5;background:#eef0fe}
@@ -65,7 +64,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <body>
 <div class="top">
   <h1>🏗 Weliving · Presupuesto para terminar</h1>
-  <div class="d">~20 aptos · 24 baños · seguimiento por ítem: marca lo pagado y la falta baja sola</div>
+  <div class="d">~20 aptos · 25 camas · Pagado = gastos reales · Estado físico por ítem</div>
   <div class="tabs" id="tabs">
     <button class="tab on" data-t="resumen">📊 Resumen</button>
     <button class="tab" data-t="obra">🧱 Obra por etapa</button>
@@ -79,8 +78,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
 const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
-var CAPS=[],ITEMS=[],DOT=[],CUR='resumen',chart=null,openCaps={};
-function fmt(n){n=Math.round(+n||0);return '$'+n.toLocaleString('es-CO');}
+var CAPS=[],ITEMS=[],GAS=[],DOT=[],PC={},CUR='resumen',chart=null,openCaps={};
+function fmt(n){n=Math.round(+n||0);return (n<0?'-$':'$')+Math.abs(n).toLocaleString('es-CO');}
 function num(v){return parseInt(String(v).replace(/[^0-9-]/g,''))||0;}
 function numF(v){return parseFloat(String(v).replace(/[^0-9.]/g,''))||0;}
 function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(function(r){return r.json();});}
@@ -94,11 +93,14 @@ function grupoDe(nm){return (nm||'').split(' · ')[0];}
 function capTit(nm){var p=(nm||'').split(' · ');return p.length>1?p.slice(1).join(' · '):nm;}
 function itemsOf(c){return ITEMS.filter(function(i){return i.cap_num===c.num;});}
 function capTotal(c){var its=itemsOf(c);return its.length?its.reduce(function(a,i){return a+(+i.total||0);},0):(+c.ppto||0);}
-function capPagado(c){var its=itemsOf(c);return its.length?its.reduce(function(a,i){return a+(+i.pagado||0);},0):(+c.pagado_manual||0);}
+function capGasto(c){return (c.pagado_manual!=null)?(+c.pagado_manual):(PC[c.num]||0);}
 function totalObra(){return CAPS.reduce(function(a,c){return a+capTotal(c);},0);}
-function pagObra(){return CAPS.reduce(function(a,c){return a+capPagado(c);},0);}
+function capEjec(c){return itemsOf(c).reduce(function(a,i){return a+(i.estado==='hecho'?(+i.total||0):0);},0);}
+function ejecObra(){return CAPS.reduce(function(a,c){return a+capEjec(c);},0);}
+function gastadoReal(){return GAS.reduce(function(a,x){return a+(+x.monto||0);},0);}
 function porFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+capTotal(c);});return m;}
-function pagFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+capPagado(c);});return m;}
+function ejecFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+capEjec(c);});return m;}
+function fisicoCap(c){var its=itemsOf(c);var nH=its.filter(function(i){return i.estado==='hecho';}).length,nC=its.filter(function(i){return i.estado==='en_curso';}).length;return {nH:nH,nC:nC,nT:its.length};}
 function dotQ(d){return d.es_comun?(+d.cant_apto||0):(+d.cant_apto||0)*20;}
 function dotSub(d){return (+d.precio||0)*dotQ(d);}
 function dotTotal(){return DOT.reduce(function(a,d){return a+dotSub(d);},0);}
@@ -108,8 +110,9 @@ function boot(){
  Promise.all([
   g('presupuesto_caps?obra_id=eq.weliving&order=orden'),
   g('presupuesto_items?obra_id=eq.weliving&order=id'),
+  g('gastos?obra=eq.weliving&select=monto,cap_num&limit=3000'),
   g('dotacion_airbnb?order=orden')
- ]).then(function(r){CAPS=r[0]||[];ITEMS=r[1]||[];DOT=r[2]||[];render();})
+ ]).then(function(r){CAPS=r[0]||[];ITEMS=r[1]||[];GAS=r[2]||[];DOT=r[3]||[];PC={};GAS.forEach(function(x){if(x.cap_num)PC[x.cap_num]=(PC[x.cap_num]||0)+(+x.monto||0);});render();})
  .catch(function(e){document.getElementById('body').innerHTML='<div class="loading">No pude conectar a la base.<br><span style="font-size:11px">('+e+')</span></div>';});
 }
 function render(){var b=document.getElementById('body');
@@ -117,15 +120,15 @@ function render(){var b=document.getElementById('body');
  attach();if(CUR==='resumen')drawChart();}
 function card(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
 function vResumen(){
- var to=totalObra(),pg=pagObra(),fa=to-pg,dt=dotTotal(),dpg=dotPagado(),dfa=dt-dpg,pct=to?Math.round(pg/to*100):0;
+ var to=totalObra(),ej=ejecObra(),fa=to-ej,grl=gastadoReal(),dt=dotTotal(),dpg=dotPagado(),dfa=dt-dpg,pct=to?Math.round(ej/to*100):0;
  var cards='<div class="cards">'+
   card('ink','Presupuesto total obra',fmt(to),'todas las etapas')+
-  card('green','Pagado (obra)',fmt(pg),pct+'% ejecutado')+
-  card('red','Falta por pagar (obra)',fmt(fa),'saldo de obra')+
+  card('green','Ejecutado (físico)',fmt(ej),pct+'% del presupuesto hecho')+
+  card('red','Falta por gastar',fmt(fa),'lo que viene desde aquí')+
+  card('purp','Gastado real (control)',fmt(grl),'plata que ya salió')+
   card('amber','Dotación Airbnb',fmt(dt),'falta '+fmt(dfa))+
-  card('purp','Gran total estimado',fmt(to+dt),'obra + dotación')+
-  card('red','FALTA TOTAL POR PAGAR',fmt(fa+dfa),'obra + dotación')+'</div>';
- var av='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Avance financiero de la obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:#16a34a"></div></div><div class="note">'+pct+'% pagado ('+fmt(pg)+') · falta '+fmt(fa)+'</div></div>';
+  card('red','FALTA TOTAL',fmt(fa+dfa),'obra + dotación')+'</div>';
+ var av='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Avance físico vs presupuesto</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:#16a34a"></div></div><div class="note">'+pct+'% del presupuesto ejecutado (físico) · <b>Falta por gastar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real — la diferencia con lo ejecutado son indirectos, anticipos o sobrecostos por revisar.</div></div>';
  var chart='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
  return cards+av+chart;
 }
@@ -137,31 +140,27 @@ function drawChart(){var m=porFase();var labels=['NEGRA','GRIS','BLANCA','INDIRE
 }
 function compTag(i,gr){if(gr!=='NEGRA')return '';var u=(i.und||'').toLowerCase();if(u==='kg')return '<span class="tg h">Hierro</span>';if(u==='m3')return '<span class="tg c">Concreto</span>';if(u==='m2')return '<span class="tg f">Formaleta</span>';return '';}
 function vObra(){
- var m=porFase(),pf=pagFase();var orden=['NEGRA','GRIS','BLANCA','INDIRECTOS'];var html='';
+ var m=porFase(),ef=ejecFase();var orden=['NEGRA','GRIS','BLANCA','INDIRECTOS'];var html='';
  orden.forEach(function(gr){
   if(!m[gr])return;
   var caps=CAPS.filter(function(c){return grupoDe(c.nombre)===gr;});
-  var ppF=m[gr],pgF=pf[gr]||0,pF=ppF?Math.min(100,Math.round(pgF/ppF*100)):0;
-  html+='<div class="fase"><div class="faseh" style="background:'+GC[gr]+'"><span>'+gr+' · '+caps.length+' cap · '+pF+'% pagado</span><span>Falta '+fmt(ppF-pgF)+'</span></div><div class="fbar"><div class="fbarf" style="width:'+pF+'%"></div></div><div class="fbody">';
+  var ppF=m[gr],ejF=ef[gr]||0,pF=ppF?Math.min(100,Math.round(ejF/ppF*100)):0;
+  html+='<div class="fase"><div class="faseh" style="background:'+GC[gr]+'"><span>'+gr+' · '+caps.length+' cap · '+pF+'% ejecutado</span><span>Falta por gastar '+fmt(ppF-ejF)+'</span></div><div class="fbar"><div class="fbarf" style="width:'+pF+'%"></div></div><div class="fbody">';
   caps.forEach(function(c){
-   var its=itemsOf(c),tot=capTotal(c),pg=capPagado(c),pct=tot?Math.min(100,Math.round(pg/tot*100)):0,fal=tot-pg;
-   var nH=its.filter(function(x){return x.estado==='hecho';}).length,nC=its.filter(function(x){return x.estado==='en_curso';}).length,nT=its.length;
-   var badge=nT===0?'':(nH>=nT?'<span class="bdg ok">✅ Hecho</span>':((nH>0||nC>0)?'<span class="bdg cur">🔵 En curso</span>':'<span class="bdg pen">⚪ Por hacer</span>'));
+   var its=itemsOf(c),tot=capTotal(c),ej=capEjec(c),pct=tot?Math.min(100,Math.round(ej/tot*100)):0,fal=tot-ej;
+   var fx=fisicoCap(c);
+   var badge=fx.nT===0?'':(fx.nH>=fx.nT?'<span class="bdg ok">✅ Hecho</span>':((fx.nH>0||fx.nC>0)?'<span class="bdg cur">🔵 En curso</span>':'<span class="bdg pen">⚪ Por hacer</span>'));
    var open=openCaps[c.num];
    html+='<div class="cap" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+' '+badge+'</span><span class="r">'+fmt(tot)+'</span></div>'+
     '<div class="bar"><div class="barf" style="width:'+pct+'%;background:'+GC[gr]+'"></div></div>'+
-    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Pagado '+fmt(pg)+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Todo hecho</button><button class="ib g" onclick="event.stopPropagation();ejecutarCap(\''+c.num+'\')">$ Todo pagado</button><span class="fal" style="color:'+(fal>0?'#dc2626':'#16a34a')+'">Falta '+fmt(fal)+'</span></div>'+
+    '<div class="capsub"><b>'+fx.nH+'/'+fx.nT+' ítems hechos</b> · Ejecutado '+fmt(ej)+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Todo hecho</button><span class="fal" style="color:#dc2626">Falta por gastar '+fmt(fal)+'</span></div>'+
     '<div class="items'+(open?'':' hidden')+'">';
-   if(its.length){html+='<table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado</th><th class="n">Pagado</th><th class="n">Falta</th><th></th></tr>';
-    its.forEach(function(i){var t=+i.total||0,p=+i.pagado||0,f=t-p;
-     html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
+   if(its.length){html+='<table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado físico</th></tr>';
+    its.forEach(function(i){html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
       '<td class="n"><input class="ped sm" value="'+(i.cant||0)+'" onchange="saveItemCant('+i.id+',this.value)"></td>'+
       '<td class="n"><input class="ped" value="'+(i.punit||0)+'" onchange="saveItemPrecio('+i.id+',this.value)"></td>'+
-      '<td class="n">'+fmt(t)+'</td>'+
-      '<td>'+estBtn(i)+'</td>'+
-      '<td class="n"><input class="ped" value="'+(i.pagado||'')+'" placeholder="0" onchange="saveItemPag('+i.id+',this.value)"></td>'+
-      '<td class="n" style="color:'+(f>0?'#dc2626':'#16a34a')+';font-weight:700">'+fmt(f)+'</td>'+
-      '<td class="n"><button class="ib" onclick="ejecutarItem('+i.id+')">✓</button></td></tr>';});
+      '<td class="n">'+fmt(+i.total||0)+'</td>'+
+      '<td>'+estBtn(i)+'</td></tr>';});
     html+='</table>';}
    else html+='<div class="note" style="padding:10px 13px">Sin ítems.</div>';
    html+='<button class="addb" onclick="addAdicional(\''+c.num+'\')">＋ Adicional</button>';
@@ -169,7 +168,7 @@ function vObra(){
   });
   html+='</div></div>';
  });
- return '<div class="sec"><h2>Obra por etapa · seguimiento por ítem</h2><div class="note">Cada ítem (hierro, concreto, MO…) trae su <b>Pagado</b> y su <b>Falta</b>. Marca ✓ lo que ya pagaste y la falta del capítulo baja sola. "＋ Adicional" agrega líneas (MO, imprevistos, etc.). Todo edita cantidad y precio.</div>'+html+'</div>';
+ return '<div class="sec"><h2>Obra por etapa · físico vs pagado real</h2><div class="note">Cada ítem muestra su <b>estado físico</b> (⚪ por hacer → 🔵 en curso → ✅ hecho). El <b>Pagado</b> del capítulo viene de tus <b>gastos reales</b> (contabilidad). Si el gasto supera el presupuesto, se marca <b>Sobrecosto</b>. Editas cantidad y precio; "＋ Adicional" agrega líneas (MO, imprevistos).</div>'+html+'</div>';
 }
 function vCant(){
  var uds=['und','m2','ml'];var its=ITEMS.filter(function(i){return uds.indexOf((i.und||'').toLowerCase())>=0;});
@@ -183,7 +182,7 @@ function vCant(){
 function vDot(){
  var cats={},oc=[];DOT.forEach(function(d){if(!cats[d.categoria]){cats[d.categoria]=[];oc.push(d.categoria);}cats[d.categoria].push(d);});
  var dt=dotTotal(),dpg=dotPagado();
- var head='<div class="cards"><div class="kc amber"><div class="l">Dotación · total</div><div class="v">'+fmt(dt)+'</div><div class="n">'+DOT.length+' ítems × ~20 aptos</div></div>'+
+ var head='<div class="cards"><div class="kc amber"><div class="l">Dotación · total</div><div class="v">'+fmt(dt)+'</div><div class="n">'+DOT.length+' ítems</div></div>'+
   '<div class="kc green"><div class="l">Pagado</div><div class="v">'+fmt(dpg)+'</div><div class="n">de la dotación</div></div>'+
   '<div class="kc red"><div class="l">Falta por pagar</div><div class="v">'+fmt(dt-dpg)+'</div><div class="n">dotación</div></div></div>';
  var html='<div class="sec"><h2>Dotación tipo Airbnb</h2><div class="note">Edita cantidad/apto, precio y lo pagado. Precios de referencia Colombia (a confirmar con cotización).</div>';
@@ -199,18 +198,11 @@ function vDot(){
   html+='</table>';});
  return head+html+'</div>';
 }
-function recap(cap){/* total del cap se deriva de items; no hace falta persistir ppto */}
 function saveItemCant(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.cant=numF(v);it.total=it.cant*(+it.punit||0);var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{cant:it.cant,total:it.total}).then(function(){toast('Cantidad guardada ✓');}).catch(function(){toast('Error');});render();}
 function saveItemPrecio(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.punit=num(v);it.total=(+it.cant||0)*it.punit;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{punit:it.punit,total:it.total}).then(function(){toast('Precio guardado ✓');}).catch(function(){toast('Error');});render();}
-function saveItemPag(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.pagado=num(v)||null;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast('Pagado guardado ✓');}).catch(function(){toast('Error');});render();}
-function ejecutarItem(id){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.pagado=+it.total||0;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast('Ítem pagado ✓');}).catch(function(){toast('Error');});render();}
 function cicloEstado(id){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.estado=(EST[it.estado]||EST.por_hacer).nx;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{estado:it.estado}).then(function(){toast('Estado: '+(EST[it.estado]||EST.por_hacer).lbl);}).catch(function(){toast('Error');});render();}
 function todoHecho(numc){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;var its=itemsOf(c);openCaps[numc]=true;its.forEach(function(i){i.estado='hecho';patch('presupuesto_items?id=eq.'+i.id,{estado:'hecho'});});toast('Todo marcado hecho ✓');render();}
-function ejecutarCap(numc){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;var its=itemsOf(c);openCaps[numc]=true;
- if(its.length){its.forEach(function(i){i.pagado=+i.total||0;patch('presupuesto_items?id=eq.'+i.id,{pagado:i.pagado});});}
- else{c.pagado_manual=+c.ppto||0;patch('presupuesto_caps?obra_id=eq.weliving&num=eq.'+encodeURIComponent(numc),{pagado_manual:c.pagado_manual});}
- toast('Capítulo pagado ✓ · falta $0');render();}
-function addAdicional(numc){post('presupuesto_items',{obra_id:'weliving',cap_num:numc,descripcion:'Adicional',und:'gl',cant:1,punit:0,total:0,pagado:null}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])ITEMS.push(rows[0]);openCaps[numc]=true;toast('Adicional agregado ✓');render();}).catch(function(){toast('Error');});}
+function addAdicional(numc){post('presupuesto_items',{obra_id:'weliving',cap_num:numc,descripcion:'Adicional',und:'gl',cant:1,punit:0,total:0,estado:'por_hacer'}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])ITEMS.push(rows[0]);openCaps[numc]=true;toast('Adicional agregado ✓');render();}).catch(function(){toast('Error');});}
 function saveDotCant(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.cant_apto=numF(v);patch('dotacion_airbnb?id=eq.'+id,{cant_apto:d.cant_apto}).then(function(){toast('Guardado ✓');}).catch(function(){toast('Error');});render();}
 function saveDotPrecio(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;var p=num(v);d.precio=p||null;patch('dotacion_airbnb?id=eq.'+id,{precio:d.precio}).then(function(){toast('Guardado ✓');}).catch(function(){toast('Error');});render();}
 function saveDotPagado(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.pagado=num(v)||null;patch('dotacion_airbnb?id=eq.'+id,{pagado:d.pagado}).then(function(){toast('Guardado ✓');}).catch(function(){toast('Error');});render();}
