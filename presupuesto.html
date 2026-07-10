@@ -48,6 +48,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .ib{border:1.5px solid #16a34a;background:#fff;color:#16a34a;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
 .ib:active{background:#16a34a;color:#fff}
 .ib.g{border-color:#4f46e5;color:#4f46e5}
+.stb{border:1.5px solid;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#fff}
+.stb.st-por_hacer{border-color:#cbd2e0;color:#94a3b8}
+.stb.st-en_curso{border-color:#4f46e5;color:#4f46e5;background:#eef0fe}
+.stb.st-hecho{border-color:#16a34a;color:#16a34a;background:#dcfce7}
 .addb{border:1.5px dashed #cbd2e0;background:#fff;color:#4f46e5;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;margin:8px 13px}
 .catbar{color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:8px 13px;border-radius:9px;margin:14px 0 8px}
 .pill{display:inline-block;background:#eef0fe;color:#4f46e5;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
@@ -84,6 +88,8 @@ function patch(path,body){return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',h
 function post(path,body){return fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(body)});}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1400);}
 var GC={'NEGRA':'#111827','GRIS':'#0ea5a3','BLANCA':'#7c5cf0','INDIRECTOS':'#d97706'};
+var EST={por_hacer:{ic:'⚪',lbl:'Por hacer',nx:'en_curso'},en_curso:{ic:'🔵',lbl:'En curso',nx:'hecho'},hecho:{ic:'✅',lbl:'Hecho',nx:'por_hacer'}};
+function estBtn(i){var e=EST[i.estado]||EST.por_hacer;return '<button class="stb st-'+(i.estado||'por_hacer')+'" onclick="cicloEstado('+i.id+')">'+e.ic+' '+e.lbl+'</button>';}
 function grupoDe(nm){return (nm||'').split(' · ')[0];}
 function capTit(nm){var p=(nm||'').split(' · ');return p.length>1?p.slice(1).join(' · '):nm;}
 function itemsOf(c){return ITEMS.filter(function(i){return i.cap_num===c.num;});}
@@ -139,18 +145,20 @@ function vObra(){
   html+='<div class="fase"><div class="faseh" style="background:'+GC[gr]+'"><span>'+gr+' · '+caps.length+' cap · '+pF+'% pagado</span><span>Falta '+fmt(ppF-pgF)+'</span></div><div class="fbar"><div class="fbarf" style="width:'+pF+'%"></div></div><div class="fbody">';
   caps.forEach(function(c){
    var its=itemsOf(c),tot=capTotal(c),pg=capPagado(c),pct=tot?Math.min(100,Math.round(pg/tot*100)):0,fal=tot-pg;
-   var badge=pg<=0?'<span class="bdg pen">⚪ sin pagar</span>':(pg>=tot*0.999?'<span class="bdg ok">✅ pagado</span>':'<span class="bdg cur">🔵 en curso</span>');
+   var nH=its.filter(function(x){return x.estado==='hecho';}).length,nC=its.filter(function(x){return x.estado==='en_curso';}).length,nT=its.length;
+   var badge=nT===0?'':(nH>=nT?'<span class="bdg ok">✅ Hecho</span>':((nH>0||nC>0)?'<span class="bdg cur">🔵 En curso</span>':'<span class="bdg pen">⚪ Por hacer</span>'));
    var open=openCaps[c.num];
    html+='<div class="cap" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+' '+badge+'</span><span class="r">'+fmt(tot)+'</span></div>'+
     '<div class="bar"><div class="barf" style="width:'+pct+'%;background:'+GC[gr]+'"></div></div>'+
-    '<div class="capsub">Pagado '+fmt(pg)+'<button class="ib g" onclick="event.stopPropagation();ejecutarCap(\''+c.num+'\')">✓ Todo pagado</button><span class="fal" style="color:'+(fal>0?'#dc2626':'#16a34a')+'">Falta '+fmt(fal)+'</span></div>'+
+    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Pagado '+fmt(pg)+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Todo hecho</button><button class="ib g" onclick="event.stopPropagation();ejecutarCap(\''+c.num+'\')">$ Todo pagado</button><span class="fal" style="color:'+(fal>0?'#dc2626':'#16a34a')+'">Falta '+fmt(fal)+'</span></div>'+
     '<div class="items'+(open?'':' hidden')+'">';
-   if(its.length){html+='<table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th class="n">Pagado</th><th class="n">Falta</th><th></th></tr>';
+   if(its.length){html+='<table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado</th><th class="n">Pagado</th><th class="n">Falta</th><th></th></tr>';
     its.forEach(function(i){var t=+i.total||0,p=+i.pagado||0,f=t-p;
      html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
       '<td class="n"><input class="ped sm" value="'+(i.cant||0)+'" onchange="saveItemCant('+i.id+',this.value)"></td>'+
       '<td class="n"><input class="ped" value="'+(i.punit||0)+'" onchange="saveItemPrecio('+i.id+',this.value)"></td>'+
       '<td class="n">'+fmt(t)+'</td>'+
+      '<td>'+estBtn(i)+'</td>'+
       '<td class="n"><input class="ped" value="'+(i.pagado||'')+'" placeholder="0" onchange="saveItemPag('+i.id+',this.value)"></td>'+
       '<td class="n" style="color:'+(f>0?'#dc2626':'#16a34a')+';font-weight:700">'+fmt(f)+'</td>'+
       '<td class="n"><button class="ib" onclick="ejecutarItem('+i.id+')">✓</button></td></tr>';});
@@ -196,6 +204,8 @@ function saveItemCant(id,v){var it=ITEMS.find(function(x){return x.id===id;});if
 function saveItemPrecio(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.punit=num(v);it.total=(+it.cant||0)*it.punit;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{punit:it.punit,total:it.total}).then(function(){toast('Precio guardado ✓');}).catch(function(){toast('Error');});render();}
 function saveItemPag(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.pagado=num(v)||null;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast('Pagado guardado ✓');}).catch(function(){toast('Error');});render();}
 function ejecutarItem(id){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.pagado=+it.total||0;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast('Ítem pagado ✓');}).catch(function(){toast('Error');});render();}
+function cicloEstado(id){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.estado=(EST[it.estado]||EST.por_hacer).nx;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{estado:it.estado}).then(function(){toast('Estado: '+(EST[it.estado]||EST.por_hacer).lbl);}).catch(function(){toast('Error');});render();}
+function todoHecho(numc){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;var its=itemsOf(c);openCaps[numc]=true;its.forEach(function(i){i.estado='hecho';patch('presupuesto_items?id=eq.'+i.id,{estado:'hecho'});});toast('Todo marcado hecho ✓');render();}
 function ejecutarCap(numc){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;var its=itemsOf(c);openCaps[numc]=true;
  if(its.length){its.forEach(function(i){i.pagado=+i.total||0;patch('presupuesto_items?id=eq.'+i.id,{pagado:i.pagado});});}
  else{c.pagado_manual=+c.ppto||0;patch('presupuesto_caps?obra_id=eq.weliving&num=eq.'+encodeURIComponent(numc),{pagado_manual:c.pagado_manual});}
