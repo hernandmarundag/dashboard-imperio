@@ -128,11 +128,11 @@ function vResumen(){
  var legales=proy-lote;
  var dot=dotTotal();
  var gran=civ+ind+lote+legales+dot;
- var to=totalObra(),ej=ejecObra(),fa=to-ej,grl=gastadoReal(),pct=to?Math.round(ej/to*100):0;
+ var obraT=civ+ind;var ej=CAPS.filter(function(c){return ['NEGRA','GRIS','BLANCA','INDIRECTOS'].indexOf(grupoDe(c.nombre))>=0;}).reduce(function(a,c){return a+capEjec(c);},0);var fa=obraT-ej,grl=gastadoReal(),pct=obraT?Math.round(ej/obraT*100):0;
  var cards='<div class="cards">'+
   card('ink','Gran total del proyecto',fmt(gran),'todo incluido')+
-  card('green','Ejecutado (físico)',fmt(ej),pct+'% de la obra')+
-  card('red','Falta por gastar (obra)',fmt(fa),'desde aquí')+
+  card('green','Ejecutado obra (físico)',fmt(ej),pct+'% de la construcción')+
+  card('red','Falta por construir',fmt(fa),'obra pendiente de gastar')+
   card('purp','Gastado real (control)',fmt(grl),'plata que ya salió')+'</div>';
  function frow(nm,val,col){var p=gran?(val/gran*100):0;return '<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+col+';margin-right:7px"></span>'+nm+'</td><td class="n">'+fmt(val)+'</td><td class="n">'+p.toFixed(1)+'%</td></tr>';}
  var div='<div class="sec"><h2>💰 División del costo del proyecto</h2><div class="note">Cómo se compone el gran total. Suma exacta de todas las partes.</div><table><tr><th>Concepto</th><th class="n">Monto</th><th class="n">% del total</th></tr>'+
