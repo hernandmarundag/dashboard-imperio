@@ -8,7 +8,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .top{background:linear-gradient(120deg,#4f46e5,#7c5cf0);color:#fff;padding:20px 20px 16px}
 .top h1{font-size:20px;font-weight:800}
 .top .d{font-size:12.5px;opacity:.92;margin-top:3px}
-.wrap{max-width:1080px;margin:0 auto;padding:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:16px}
 .tabs{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .tab{padding:9px 15px;border-radius:11px;background:rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;border:none}
 .tab.on{background:#fff;color:#4f46e5}
@@ -19,7 +19,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .kc .n{font-size:11px;color:#a7adbf;margin-top:3px}
 .kc.ink .v{color:#1b2030}.kc.green .v{color:#16a34a}.kc.red .v{color:#dc2626}.kc.amber .v{color:#d97706}.kc.purp .v{color:#4f46e5}
 .sec{background:#fff;border:1px solid #e6e8f0;border-radius:16px;padding:16px;margin-bottom:16px}
-.sec h2{font-size:15px;font-weight:800;margin-bottom:12px}
+.sec h2{font-size:15px;font-weight:800;margin-bottom:6px}
 .hidden{display:none}
 .fase{margin-bottom:14px}
 .faseh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px 12px 0 0;color:#fff;font-weight:800;font-size:14px}
@@ -27,30 +27,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .fbarf{height:100%;background:rgba(255,255,255,.9)}
 .fbody{border:1px solid #eef0f6;border-top:none;border-radius:0 0 12px 12px;padding:10px}
 .cap{border:1px solid #eef0f6;border-radius:11px;margin:8px 0;overflow:hidden}
-.caph{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:#f7f8fc;cursor:pointer;font-weight:700;font-size:13.5px}
+.caph{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:#f7f8fc;cursor:pointer;font-weight:700;font-size:13.5px;gap:8px}
 .caph .r{color:#4f46e5;font-variant-numeric:tabular-nums;white-space:nowrap}
 .bar{height:7px;background:#eef0f6;overflow:hidden}
 .barf{height:100%}
-.payrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:8px 13px;font-size:12px;background:#fcfcff}
-.payrow label{color:#8a90a6;font-weight:600}
-.payrow .fal{margin-left:auto;font-weight:800}
-.ejb{border:1.5px solid #16a34a;background:#fff;color:#16a34a;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:800;cursor:pointer}
-.ejb:active{background:#16a34a;color:#fff}
-.bdg{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:6px;white-space:nowrap}
+.capsub{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:7px 13px;font-size:12px;background:#fcfcff}
+.capsub .fal{margin-left:auto;font-weight:800}
+.bdg{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;white-space:nowrap}
 .bdg.ok{background:#dcfce7;color:#16a34a}.bdg.cur{background:#e0e7ff;color:#4f46e5}.bdg.pen{background:#f1f5f9;color:#94a3b8}
+.tg{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:5px;background:#eef0fe;color:#4f46e5;margin-right:5px}
+.tg.h{background:#fde8e8;color:#c0392b}.tg.c{background:#e8eef8;color:#2451b8}.tg.f{background:#eaf6ee;color:#1a7340}
 .items{padding:0}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th,td{padding:8px 12px;text-align:left;border-top:1px solid #f0f1f6}
-th{background:#fafbff;color:#8a90a6;font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:7px 10px;text-align:left;border-top:1px solid #f0f1f6;vertical-align:middle}
+th{background:#fafbff;color:#8a90a6;font-size:9.5px;text-transform:uppercase;letter-spacing:.3px}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-.ped{width:96px;border:1px solid #cbd2e0;border-radius:7px;padding:5px 7px;font-size:12px;text-align:right;font-variant-numeric:tabular-nums;background:#fffdf5}
-.ped.sm{width:66px}
+.ped{width:92px;border:1px solid #cbd2e0;border-radius:7px;padding:4px 7px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums;background:#fffdf5}
+.ped.sm{width:60px}
 .ped:focus{outline:none;border-color:#4f46e5;background:#fff}
+.ib{border:1.5px solid #16a34a;background:#fff;color:#16a34a;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.ib:active{background:#16a34a;color:#fff}
+.ib.g{border-color:#4f46e5;color:#4f46e5}
+.addb{border:1.5px dashed #cbd2e0;background:#fff;color:#4f46e5;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;margin:8px 13px}
 .catbar{color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:8px 13px;border-radius:9px;margin:14px 0 8px}
 .pill{display:inline-block;background:#eef0fe;color:#4f46e5;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
 .muted{color:#a7adbf}
 .chartbox{background:#fff;border:1px solid #e6e8f0;border-radius:16px;padding:16px;margin-bottom:16px}
-.note{font-size:12px;color:#8a90a6;margin-top:8px}
+.note{font-size:12px;color:#8a90a6;margin:6px 0 10px}
 .loading{text-align:center;padding:50px;color:#8a90a6}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a7340;color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:.3s;z-index:9;pointer-events:none}
 .toast.on{opacity:1}
@@ -58,7 +61,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <body>
 <div class="top">
   <h1>🏗 Weliving · Presupuesto para terminar</h1>
-  <div class="d">~20 aptos · 24 baños · en vivo desde tu base · edita cantidad, precio y lo pagado</div>
+  <div class="d">~20 aptos · 24 baños · seguimiento por ítem: marca lo pagado y la falta baja sola</div>
   <div class="tabs" id="tabs">
     <button class="tab on" data-t="resumen">📊 Resumen</button>
     <button class="tab" data-t="obra">🧱 Obra por etapa</button>
@@ -72,21 +75,24 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
 const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
-var CAPS=[],ITEMS=[],GAS=[],DOT=[],CUR='resumen',chart=null,openCaps={},PC={};
+var CAPS=[],ITEMS=[],DOT=[],CUR='resumen',chart=null,openCaps={};
 function fmt(n){n=Math.round(+n||0);return '$'+n.toLocaleString('es-CO');}
-function num(v){return parseInt(String(v).replace(/[^0-9]/g,''))||0;}
+function num(v){return parseInt(String(v).replace(/[^0-9-]/g,''))||0;}
 function numF(v){return parseFloat(String(v).replace(/[^0-9.]/g,''))||0;}
 function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(function(r){return r.json();});}
 function patch(path,body){return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(body)});}
-function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1500);}
+function post(path,body){return fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(body)});}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1400);}
 var GC={'NEGRA':'#111827','GRIS':'#0ea5a3','BLANCA':'#7c5cf0','INDIRECTOS':'#d97706'};
 function grupoDe(nm){return (nm||'').split(' · ')[0];}
 function capTit(nm){var p=(nm||'').split(' · ');return p.length>1?p.slice(1).join(' · '):nm;}
-function totalObra(){return CAPS.reduce(function(a,c){return a+(+c.ppto||0);},0);}
-function capPag(c){return (c.pagado_manual!=null)?(+c.pagado_manual):(PC[c.num]||0);}
-function pagObra(){return CAPS.reduce(function(a,c){return a+capPag(c);},0);}
-function porFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+(+c.ppto||0);});return m;}
-function pagFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+capPag(c);});return m;}
+function itemsOf(c){return ITEMS.filter(function(i){return i.cap_num===c.num;});}
+function capTotal(c){var its=itemsOf(c);return its.length?its.reduce(function(a,i){return a+(+i.total||0);},0):(+c.ppto||0);}
+function capPagado(c){var its=itemsOf(c);return its.length?its.reduce(function(a,i){return a+(+i.pagado||0);},0):(+c.pagado_manual||0);}
+function totalObra(){return CAPS.reduce(function(a,c){return a+capTotal(c);},0);}
+function pagObra(){return CAPS.reduce(function(a,c){return a+capPagado(c);},0);}
+function porFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+capTotal(c);});return m;}
+function pagFase(){var m={};CAPS.forEach(function(c){var gr=grupoDe(c.nombre);m[gr]=(m[gr]||0)+capPagado(c);});return m;}
 function dotQ(d){return d.es_comun?(+d.cant_apto||0):(+d.cant_apto||0)*20;}
 function dotSub(d){return (+d.precio||0)*dotQ(d);}
 function dotTotal(){return DOT.reduce(function(a,d){return a+dotSub(d);},0);}
@@ -96,82 +102,74 @@ function boot(){
  Promise.all([
   g('presupuesto_caps?obra_id=eq.weliving&order=orden'),
   g('presupuesto_items?obra_id=eq.weliving&order=id'),
-  g('gastos?obra=eq.weliving&select=monto,cap_num&limit=2000'),
   g('dotacion_airbnb?order=orden')
- ]).then(function(r){CAPS=r[0]||[];ITEMS=r[1]||[];GAS=r[2]||[];DOT=r[3]||[];PC={};GAS.forEach(function(x){if(x.cap_num)PC[x.cap_num]=(PC[x.cap_num]||0)+(+x.monto||0);});render();})
- .catch(function(e){document.getElementById('body').innerHTML='<div class="loading">No pude conectar a la base. Revisa el internet.<br><span style="font-size:11px">('+e+')</span></div>';});
+ ]).then(function(r){CAPS=r[0]||[];ITEMS=r[1]||[];DOT=r[2]||[];render();})
+ .catch(function(e){document.getElementById('body').innerHTML='<div class="loading">No pude conectar a la base.<br><span style="font-size:11px">('+e+')</span></div>';});
 }
-function render(){
- var b=document.getElementById('body');
- if(CUR==='resumen')b.innerHTML=vResumen();
- else if(CUR==='obra')b.innerHTML=vObra();
- else if(CUR==='cant')b.innerHTML=vCant();
- else b.innerHTML=vDot();
- attach();
- if(CUR==='resumen')drawChart();
-}
+function render(){var b=document.getElementById('body');
+ if(CUR==='resumen')b.innerHTML=vResumen();else if(CUR==='obra')b.innerHTML=vObra();else if(CUR==='cant')b.innerHTML=vCant();else b.innerHTML=vDot();
+ attach();if(CUR==='resumen')drawChart();}
 function card(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
 function vResumen(){
- var to=totalObra(),pg=pagObra(),fa=to-pg,dt=dotTotal(),dpg=dotPagado(),dfa=dt-dpg;
- var pct=to?Math.round(pg/to*100):0;
- var faltaTot=fa+dfa;
+ var to=totalObra(),pg=pagObra(),fa=to-pg,dt=dotTotal(),dpg=dotPagado(),dfa=dt-dpg,pct=to?Math.round(pg/to*100):0;
  var cards='<div class="cards">'+
   card('ink','Presupuesto total obra',fmt(to),'todas las etapas')+
   card('green','Pagado (obra)',fmt(pg),pct+'% ejecutado')+
   card('red','Falta por pagar (obra)',fmt(fa),'saldo de obra')+
   card('amber','Dotación Airbnb',fmt(dt),'falta '+fmt(dfa))+
   card('purp','Gran total estimado',fmt(to+dt),'obra + dotación')+
-  card('red','FALTA TOTAL POR PAGAR',fmt(faltaTot),'obra + dotación')+
- '</div>';
+  card('red','FALTA TOTAL POR PAGAR',fmt(fa+dfa),'obra + dotación')+'</div>';
  var av='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Avance financiero de la obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:#16a34a"></div></div><div class="note">'+pct+'% pagado ('+fmt(pg)+') · falta '+fmt(fa)+'</div></div>';
  var chart='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
  return cards+av+chart;
 }
-function drawChart(){
- var m=porFase();var labels=['NEGRA','GRIS','BLANCA','INDIRECTOS'].filter(function(k){return m[k];});
+function drawChart(){var m=porFase();var labels=['NEGRA','GRIS','BLANCA','INDIRECTOS'].filter(function(k){return m[k];});
  var data=labels.map(function(k){return m[k];});var cols=labels.map(function(k){return GC[k];});
  var ctx=document.getElementById('cv');if(!ctx)return;if(chart)chart.destroy();
  chart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:cols,borderRadius:8}]},
-  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fmt(c.raw);}}}},
-   scales:{x:{ticks:{callback:function(v){return '$'+(v/1e6)+'M';}}}},maintainAspectRatio:false}});
+  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fmt(c.raw);}}}},scales:{x:{ticks:{callback:function(v){return '$'+(v/1e6)+'M';}}}},maintainAspectRatio:false}});
 }
+function compTag(i,gr){if(gr!=='NEGRA')return '';var u=(i.und||'').toLowerCase();if(u==='kg')return '<span class="tg h">Hierro</span>';if(u==='m3')return '<span class="tg c">Concreto</span>';if(u==='m2')return '<span class="tg f">Formaleta</span>';return '';}
 function vObra(){
- var m=porFase(),pf=pagFase();var orden=['NEGRA','GRIS','BLANCA','INDIRECTOS'];
- var html='';
+ var m=porFase(),pf=pagFase();var orden=['NEGRA','GRIS','BLANCA','INDIRECTOS'];var html='';
  orden.forEach(function(gr){
   if(!m[gr])return;
   var caps=CAPS.filter(function(c){return grupoDe(c.nombre)===gr;});
   var ppF=m[gr],pgF=pf[gr]||0,pF=ppF?Math.min(100,Math.round(pgF/ppF*100)):0;
   html+='<div class="fase"><div class="faseh" style="background:'+GC[gr]+'"><span>'+gr+' · '+caps.length+' cap · '+pF+'% pagado</span><span>Falta '+fmt(ppF-pgF)+'</span></div><div class="fbar"><div class="fbarf" style="width:'+pF+'%"></div></div><div class="fbody">';
   caps.forEach(function(c){
-   var its=ITEMS.filter(function(i){return i.cap_num===c.num;});
-   var pg=capPag(c),pp=+c.ppto||0,pct=pp?Math.min(100,Math.round(pg/pp*100)):0,fal=pp-pg;
-   var badge=pg<=0?'<span class="bdg pen">⚪ sin pagar</span>':(pg>=pp*0.99?'<span class="bdg ok">✅ pagado</span>':'<span class="bdg cur">🔵 en curso</span>');
+   var its=itemsOf(c),tot=capTotal(c),pg=capPagado(c),pct=tot?Math.min(100,Math.round(pg/tot*100)):0,fal=tot-pg;
+   var badge=pg<=0?'<span class="bdg pen">⚪ sin pagar</span>':(pg>=tot*0.999?'<span class="bdg ok">✅ pagado</span>':'<span class="bdg cur">🔵 en curso</span>');
    var open=openCaps[c.num];
-   html+='<div class="cap" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+badge+'</span><span class="r">'+fmt(pp)+'</span></div>'+
+   html+='<div class="cap" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+' '+badge+'</span><span class="r">'+fmt(tot)+'</span></div>'+
     '<div class="bar"><div class="barf" style="width:'+pct+'%;background:'+GC[gr]+'"></div></div>'+
-    '<div class="payrow"><label>Pagado</label><input class="ped" value="'+pg+'" onclick="event.stopPropagation()" onchange="saveCapPag(\''+c.num+'\',this.value)"><button class="ejb" onclick="event.stopPropagation();ejecutarCap(\''+c.num+'\')">✓ Ejecutado</button><span class="fal" style="color:'+(fal>0?'#dc2626':'#16a34a')+'">Falta '+fmt(fal)+'</span></div>'+
+    '<div class="capsub">Pagado '+fmt(pg)+'<button class="ib g" onclick="event.stopPropagation();ejecutarCap(\''+c.num+'\')">✓ Todo pagado</button><span class="fal" style="color:'+(fal>0?'#dc2626':'#16a34a')+'">Falta '+fmt(fal)+'</span></div>'+
     '<div class="items'+(open?'':' hidden')+'">';
-   if(its.length){html+='<table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio unit</th><th class="n">Total</th></tr>';
-    its.forEach(function(i){html+='<tr><td>'+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td><td class="n"><input class="ped sm" value="'+(i.cant||0)+'" onchange="saveItemCant('+i.id+',this.value)"></td><td class="n"><input class="ped" value="'+(i.punit||0)+'" onchange="saveItemPrecio('+i.id+',this.value)"></td><td class="n">'+(i.total?fmt(i.total):'—')+'</td></tr>';});
+   if(its.length){html+='<table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th class="n">Pagado</th><th class="n">Falta</th><th></th></tr>';
+    its.forEach(function(i){var t=+i.total||0,p=+i.pagado||0,f=t-p;
+     html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
+      '<td class="n"><input class="ped sm" value="'+(i.cant||0)+'" onchange="saveItemCant('+i.id+',this.value)"></td>'+
+      '<td class="n"><input class="ped" value="'+(i.punit||0)+'" onchange="saveItemPrecio('+i.id+',this.value)"></td>'+
+      '<td class="n">'+fmt(t)+'</td>'+
+      '<td class="n"><input class="ped" value="'+(i.pagado||'')+'" placeholder="0" onchange="saveItemPag('+i.id+',this.value)"></td>'+
+      '<td class="n" style="color:'+(f>0?'#dc2626':'#16a34a')+';font-weight:700">'+fmt(f)+'</td>'+
+      '<td class="n"><button class="ib" onclick="ejecutarItem('+i.id+')">✓</button></td></tr>';});
     html+='</table>';}
-   else html+='<div class="note" style="padding:10px 13px">Sin ítems — por presupuestar.</div>';
+   else html+='<div class="note" style="padding:10px 13px">Sin ítems.</div>';
+   html+='<button class="addb" onclick="addAdicional(\''+c.num+'\')">＋ Adicional</button>';
    html+='</div></div>';
   });
   html+='</div></div>';
  });
- return '<div class="sec"><h2>Obra por etapa · pagado vs falta</h2><div class="note" style="margin-bottom:10px">Cada capítulo trae <b>Pagado</b> (arranca con lo real de gastos) y descuenta la <b>Falta por pagar</b>. Toca para ver ítems y <b>editar cantidad y precio</b> en vivo — todo se guarda y recalcula.</div>'+html+'</div>';
+ return '<div class="sec"><h2>Obra por etapa · seguimiento por ítem</h2><div class="note">Cada ítem (hierro, concreto, MO…) trae su <b>Pagado</b> y su <b>Falta</b>. Marca ✓ lo que ya pagaste y la falta del capítulo baja sola. "＋ Adicional" agrega líneas (MO, imprevistos, etc.). Todo edita cantidad y precio.</div>'+html+'</div>';
 }
 function vCant(){
- var uds=['und','m2','ml'];
- var its=ITEMS.filter(function(i){return uds.indexOf((i.und||'').toLowerCase())>=0;});
+ var uds=['und','m2','ml'];var its=ITEMS.filter(function(i){return uds.indexOf((i.und||'').toLowerCase())>=0;});
  var byc={};its.forEach(function(i){var c=CAPS.find(function(x){return x.num===i.cap_num;});var k=c?capTit(c.nombre):i.cap_num;(byc[k]=byc[k]||[]).push(i);});
- var html='<div class="sec"><h2>Cantidades clave para compras <span class="pill">'+its.length+' ítems</span></h2><div class="note" style="margin-bottom:10px">Puertas, ventanas, cabinas, aparatos, salidas eléctricas/hidráulicas, closets… edita la cantidad si cambia.</div>';
- Object.keys(byc).forEach(function(k){
-  html+='<div class="catbar" style="background:#0ea5a3">'+k+'</div><table><tr><th>Ítem</th><th>Und</th><th class="n">Cantidad</th></tr>';
+ var html='<div class="sec"><h2>Cantidades clave para compras <span class="pill">'+its.length+' ítems</span></h2><div class="note">Puertas, ventanas, cabinas, aparatos, salidas, closets… edita la cantidad si cambia.</div>';
+ Object.keys(byc).forEach(function(k){html+='<div class="catbar" style="background:#0ea5a3">'+k+'</div><table><tr><th>Ítem</th><th>Und</th><th class="n">Cantidad</th></tr>';
   byc[k].forEach(function(i){html+='<tr><td>'+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td><td class="n"><input class="ped sm" value="'+(i.cant||0)+'" onchange="saveItemCant('+i.id+',this.value)"></td></tr>';});
-  html+='</table>';
- });
+  html+='</table>';});
  return html+'</div>';
 }
 function vDot(){
@@ -180,34 +178,34 @@ function vDot(){
  var head='<div class="cards"><div class="kc amber"><div class="l">Dotación · total</div><div class="v">'+fmt(dt)+'</div><div class="n">'+DOT.length+' ítems × ~20 aptos</div></div>'+
   '<div class="kc green"><div class="l">Pagado</div><div class="v">'+fmt(dpg)+'</div><div class="n">de la dotación</div></div>'+
   '<div class="kc red"><div class="l">Falta por pagar</div><div class="v">'+fmt(dt-dpg)+'</div><div class="n">dotación</div></div></div>';
- var html='<div class="sec"><h2>Dotación tipo Airbnb</h2><div class="note" style="margin-bottom:6px">Edita <b>cantidad/apto</b>, <b>precio</b> y lo <b>pagado</b>. Precios de referencia Colombia (a confirmar con cotización).</div>';
- oc.forEach(function(cat){
-  var col=cat.indexOf('Comunes')>=0?'#d97706':'#4f46e5';
-  html+='<div class="catbar" style="background:'+col+'">'+cat+'</div><table><tr><th>Ítem</th><th class="n">Cant/apto</th><th class="n">Total</th><th class="n">Precio unit</th><th class="n">Subtotal</th><th class="n">Pagado</th><th class="n">Falta</th></tr>';
+ var html='<div class="sec"><h2>Dotación tipo Airbnb</h2><div class="note">Edita cantidad/apto, precio y lo pagado. Precios de referencia Colombia (a confirmar con cotización).</div>';
+ oc.forEach(function(cat){var col=cat.indexOf('Comunes')>=0?'#d97706':'#4f46e5';
+  html+='<div class="catbar" style="background:'+col+'">'+cat+'</div><table><tr><th>Ítem</th><th class="n">Cant/apto</th><th class="n">Total</th><th class="n">Precio</th><th class="n">Subtotal</th><th class="n">Pagado</th><th class="n">Falta</th></tr>';
   cats[cat].forEach(function(d){var q=dotQ(d),sub=dotSub(d),pgd=+d.pagado||0,fal=sub-pgd;
    html+='<tr><td>'+d.item+(d.es_comun?' <span class="pill">común</span>':'')+'</td>'+
-    '<td class="n"><input class="ped sm" value="'+(d.cant_apto||0)+'" onchange="saveDotCant('+d.id+',this.value)"></td>'+
-    '<td class="n">'+q+'</td>'+
+    '<td class="n"><input class="ped sm" value="'+(d.cant_apto||0)+'" onchange="saveDotCant('+d.id+',this.value)"></td><td class="n">'+q+'</td>'+
     '<td class="n"><input class="ped" value="'+(d.precio||'')+'" placeholder="—" onchange="saveDotPrecio('+d.id+',this.value)"></td>'+
     '<td class="n">'+(d.precio?fmt(sub):'—')+'</td>'+
     '<td class="n"><input class="ped" value="'+(d.pagado||'')+'" placeholder="0" onchange="saveDotPagado('+d.id+',this.value)"></td>'+
     '<td class="n" style="color:'+(fal>0?'#dc2626':'#16a34a')+'">'+(d.precio?fmt(fal):'—')+'</td></tr>';});
-  html+='</table>';
- });
+  html+='</table>';});
  return head+html+'</div>';
 }
-function recap(cap){cap.ppto=ITEMS.filter(function(x){return x.cap_num===cap.num;}).reduce(function(a,x){return a+(+x.total||0);},0);patch('presupuesto_caps?obra_id=eq.weliving&num=eq.'+encodeURIComponent(cap.num),{ppto:cap.ppto});}
-function saveItemCant(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.cant=numF(v);it.total=it.cant*(+it.punit||0);var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c){recap(c);openCaps[c.num]=true;}patch('presupuesto_items?id=eq.'+id,{cant:it.cant,total:it.total}).then(function(){toast('Cantidad guardada ✓');}).catch(function(){toast('Error');});render();}
-function saveItemPrecio(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.punit=num(v);it.total=(+it.cant||0)*it.punit;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c){recap(c);openCaps[c.num]=true;}patch('presupuesto_items?id=eq.'+id,{punit:it.punit,total:it.total}).then(function(){toast('Precio guardado ✓');}).catch(function(){toast('Error');});render();}
-function saveCapPag(numc,v){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;c.pagado_manual=num(v);patch('presupuesto_caps?obra_id=eq.weliving&num=eq.'+encodeURIComponent(numc),{pagado_manual:c.pagado_manual}).then(function(){toast('Pagado guardado ✓');}).catch(function(){toast('Error');});render();}
-function ejecutarCap(numc){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;c.pagado_manual=+c.ppto||0;patch('presupuesto_caps?obra_id=eq.weliving&num=eq.'+encodeURIComponent(numc),{pagado_manual:c.pagado_manual}).then(function(){toast('Capítulo ejecutado ✓ · falta $0');}).catch(function(){toast('Error');});render();}
-function saveDotCant(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.cant_apto=numF(v);patch('dotacion_airbnb?id=eq.'+id,{cant_apto:d.cant_apto}).then(function(){toast('Cantidad guardada ✓');}).catch(function(){toast('Error');});render();}
-function saveDotPrecio(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;var p=num(v);d.precio=p||null;patch('dotacion_airbnb?id=eq.'+id,{precio:d.precio}).then(function(){toast('Precio guardado ✓');}).catch(function(){toast('Error');});render();}
-function saveDotPagado(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.pagado=num(v)||null;patch('dotacion_airbnb?id=eq.'+id,{pagado:d.pagado}).then(function(){toast('Pagado guardado ✓');}).catch(function(){toast('Error');});render();}
+function recap(cap){/* total del cap se deriva de items; no hace falta persistir ppto */}
+function saveItemCant(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.cant=numF(v);it.total=it.cant*(+it.punit||0);var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{cant:it.cant,total:it.total}).then(function(){toast('Cantidad guardada ✓');}).catch(function(){toast('Error');});render();}
+function saveItemPrecio(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.punit=num(v);it.total=(+it.cant||0)*it.punit;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{punit:it.punit,total:it.total}).then(function(){toast('Precio guardado ✓');}).catch(function(){toast('Error');});render();}
+function saveItemPag(id,v){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.pagado=num(v)||null;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast('Pagado guardado ✓');}).catch(function(){toast('Error');});render();}
+function ejecutarItem(id){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.pagado=+it.total||0;var c=CAPS.find(function(x){return x.num===it.cap_num;});if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast('Ítem pagado ✓');}).catch(function(){toast('Error');});render();}
+function ejecutarCap(numc){var c=CAPS.find(function(x){return x.num===numc;});if(!c)return;var its=itemsOf(c);openCaps[numc]=true;
+ if(its.length){its.forEach(function(i){i.pagado=+i.total||0;patch('presupuesto_items?id=eq.'+i.id,{pagado:i.pagado});});}
+ else{c.pagado_manual=+c.ppto||0;patch('presupuesto_caps?obra_id=eq.weliving&num=eq.'+encodeURIComponent(numc),{pagado_manual:c.pagado_manual});}
+ toast('Capítulo pagado ✓ · falta $0');render();}
+function addAdicional(numc){post('presupuesto_items',{obra_id:'weliving',cap_num:numc,descripcion:'Adicional',und:'gl',cant:1,punit:0,total:0,pagado:null}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])ITEMS.push(rows[0]);openCaps[numc]=true;toast('Adicional agregado ✓');render();}).catch(function(){toast('Error');});}
+function saveDotCant(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.cant_apto=numF(v);patch('dotacion_airbnb?id=eq.'+id,{cant_apto:d.cant_apto}).then(function(){toast('Guardado ✓');}).catch(function(){toast('Error');});render();}
+function saveDotPrecio(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;var p=num(v);d.precio=p||null;patch('dotacion_airbnb?id=eq.'+id,{precio:d.precio}).then(function(){toast('Guardado ✓');}).catch(function(){toast('Error');});render();}
+function saveDotPagado(id,v){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.pagado=num(v)||null;patch('dotacion_airbnb?id=eq.'+id,{pagado:d.pagado}).then(function(){toast('Guardado ✓');}).catch(function(){toast('Error');});render();}
 function togCap(el){var c=el.closest('.cap');var n=c.dataset.num;openCaps[n]=!openCaps[n];var it=c.querySelector('.items');if(it)it.classList.toggle('hidden',!openCaps[n]);}
-function attach(){
- document.querySelectorAll('#tabs .tab').forEach(function(t){t.onclick=function(){CUR=t.dataset.t;document.querySelectorAll('#tabs .tab').forEach(function(x){x.classList.toggle('on',x===t);});render();};});
-}
+function attach(){document.querySelectorAll('#tabs .tab').forEach(function(t){t.onclick=function(){CUR=t.dataset.t;document.querySelectorAll('#tabs .tab').forEach(function(x){x.classList.toggle('on',x===t);});render();};});}
 boot();
 </script>
 </body></html>
