@@ -76,6 +76,7 @@ tr.grand td{background:var(--ink);color:#fff;font-weight:800;font-size:13px;bord
 .ped.ok{animation:saved 1s ease}
 .ib{border:1.5px solid var(--ok);background:#fff;color:var(--ok);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
 .ib:active{background:var(--ok);color:#fff}
+.pb{border:1.5px solid #cbd2e0;background:#fff;color:var(--muted);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}.pb.on{border-color:var(--ok);color:var(--ok);background:#dcfce7}
 .stb{border:1.5px solid;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#fff}
 .stb.st-por_hacer{border-color:#cbd2e0;color:var(--faint)}
 .stb.st-en_curso{border-color:var(--indigo);color:var(--indigo);background:#eef0fe}
@@ -134,6 +135,8 @@ function capByNum(n){return CAPS.find(function(c){return String(c.num)===String(
 function itemsOf(c){return ITEMS.filter(function(i){return String(i.cap_num)===String(c.num);});}
 function capTotal(c){var its=itemsOf(c);return its.length?its.reduce(function(a,i){return a+(+i.total||0);},0):(+c.ppto||0);}
 function capEjec(c){return itemsOf(c).reduce(function(a,i){return a+(i.estado==='hecho'?(+i.total||0):0);},0);}
+function capPagMarc(c){return itemsOf(c).reduce(function(a,i){return a+(+i.pagado||0);},0);}
+function pagoBtn(i){var p=(+i.pagado||0)>0;return '<button class="pb'+(p?' on':'')+'" onclick="togPago('+i.id+',this)">'+(p?'✅ Pagado':'⬜ Pagar')+'</button>';}
 function capGasto(c){return (c.pagado_manual!=null)?(+c.pagado_manual):(PC[String(c.num)]||0);}
 function totalObra(){return CAPS.reduce(function(a,c){return a+capTotal(c);},0);}
 function gastadoReal(){return GAS.reduce(function(a,x){return a+(+x.monto||0);},0);}
@@ -170,13 +173,17 @@ function vResumen(){
  var obraT=civ+ind;
  var ej=CAPS.filter(function(c){return ['NEGRA','GRIS','BLANCA','INDIRECTOS'].indexOf(grupoDe(c.nombre))>=0;}).reduce(function(a,c){return a+capEjec(c);},0);
  var fa=obraT-ej,grl=gastadoReal(),pct=obraT?Math.round(ej/obraT*100):0;
- var hero='<div class="hero"><div class="kc-hero"><div class="l">Gran total del proyecto</div><div class="v">'+fmt(gran)+'</div><div class="n">todo incluido · obra + lote + legales + dotación</div></div>'+
-  '<div class="hero-side">'+
-   kc('green','Ejecutado (físico)',fmt(ej),pct+'% de la construcción')+
+ var pagMarc=CAPS.filter(function(c){return ['NEGRA','GRIS','BLANCA','INDIRECTOS'].indexOf(grupoDe(c.nombre))>=0;}).reduce(function(a,c){return a+capPagMarc(c);},0);
+ var faPagar=obraT-pagMarc;
+ var hero='<div class="hero" style="grid-template-columns:1fr"><div class="kc-hero"><div class="l">Gran total del proyecto</div><div class="v">'+fmt(gran)+'</div><div class="n">todo incluido · obra + lote + legales + dotación</div></div></div>';
+ var cards='<div class="cards">'+
+   kc('green','Ejecutado (físico)',fmt(ej),pct+'% construido')+
    kc('red','Falta por ejecutar',fmt(fa),'obra pendiente')+
-   kc('purp','Gastado real',fmt(grl),'plata que ya salió')+
-   kc('ink','Dotación',fmt(dot),(dot?Math.round(dot/gran*100):0)+'% del total')+
-  '</div></div>';
+   kc('ink','Pagado (marcado)',fmt(pagMarc),'según presupuesto')+
+   kc('amber','Falta por pagar',fmt(faPagar),'por desembolsar')+
+   kc('purp','Gastado real',fmt(grl),'contabilidad · control')+
+   kc('green','Dotación',fmt(dot),(dot?Math.round(dot/gran*100):0)+'% del total')+
+  '</div>';
  function pc(v){return gran?(v/gran*100):0;}
  var stack='<div class="stack">'+
   seg(pc(civ),'#7c5cf0')+seg(pc(ind),'#d97706')+seg(pc(lote),'#334155')+seg(pc(legales),'#0ea5a3')+seg(pc(dot),'#16a34a')+(otros?seg(pc(otros),'#94a3b8'):'')+'</div>';
@@ -193,7 +200,7 @@ function vResumen(){
  var av='<div class="sec"><h2>📈 Avance físico de la obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:var(--ok)"></div></div><div class="note" style="margin-top:8px">'+pct+'% de la construcción ejecutado (físico) · <b>Falta por ejecutar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real en gastos.</div></div>';
  var chart='<div class="sec"><h2>Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
  var diff=grl-ej;var recon='<div class="sec"><h2>⚖️ Ejecutado vs Gastado — control de desvíos</h2><div class="tblwrap"><table>'+'<tr><td>Presupuesto de lo ejecutado (lo que está construido)</td><td class="n">'+fmt(ej)+'</td></tr>'+'<tr><td>Gastado real (plata que ya salió)</td><td class="n">'+fmt(grl)+'</td></tr>'+'<tr class="grand"><td>'+(diff>=0?'Diferencia · así costó de más que lo presupuestado':'Por debajo de lo presupuestado')+'</td><td class="n">'+fmt(diff)+'</td></tr>'+'</table></div><div class="note"><b>Ejecutado</b> = valor de la obra en presupuesto (lo estimado). <b>Gastado</b> = lo que realmente costó. La diferencia <b>no es un error</b>: la obra costó más que la estimación — sobre todo la cimentación (roca y nivel freático), más indirectos (admin, seguros, transporte) y anticipos. Ese es el costo real; el presupuesto era solo un estimado.</div></div>';
- return hero+div+av+recon+chart;
+ return hero+cards+div+av+recon+chart;
 }
 function kc(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
 function seg(p,col){return '<span style="width:'+p+'%;background:'+col+'" title="'+p.toFixed(1)+'%"></span>';}
@@ -215,20 +222,20 @@ function vObra(){
   html+='<div class="fase"><div class="faseh" style="background:'+GC[gr]+'"><span>'+gr+' · '+caps.length+' cap · '+pF+'% ejecutado</span><span>Falta '+fmt(ppF-ejF)+'</span></div><div class="fbar"><div class="fbarf" style="width:'+pF+'%"></div></div><div class="fbody">';
   caps.forEach(function(c){
    var its=itemsOf(c),tot=capTotal(c),ej=capEjec(c),pct=tot?Math.min(100,Math.round(ej/tot*100)):0,fal=tot-ej;
-   var pgr=capGasto(c),sc=pgr-tot;
+   var pgr=capGasto(c),sc=pgr-tot,pm=capPagMarc(c);
    var nH=its.filter(function(i){return i.estado==='hecho';}).length,nT=its.length;
    var badge=nT===0?'':(nH>=nT?'<span class="bdg ok">✅ Hecho</span>':(nH>0?'<span class="bdg cur">🔵 En curso</span>':'<span class="bdg pen">⚪ Por hacer</span>'));
    var open=openCaps[c.num];
    html+='<div class="cap'+(open?' open':'')+'" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+' '+badge+'</span><span class="r">'+fmt(tot)+'</span></div>'+
     '<div class="bar"><div class="barf" style="width:'+pct+'%;background:'+GC[gr]+'"></div></div>'+
-    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Gasto real '+fmt(pgr)+(sc>0?' <span class="bdg over">costó '+fmt(sc)+' más</span>':'')+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Todo hecho</button><span class="fal" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">Falta '+fmt(fal)+'</span></div>'+
+    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Pagado '+fmt(pm)+' · Gasto real '+fmt(pgr)+(sc>0?' <span class="bdg over">costó '+fmt(sc)+' más</span>':'')+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Hecho</button><button class="ib" onclick="event.stopPropagation();todoPagado(\''+c.num+'\')">$ Pagado</button><span class="fal" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">Falta '+fmt(fal)+'</span></div>'+
     '<div class="items'+(open?'':' hidden')+'">';
-   if(its.length){html+='<div class="tblwrap"><table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado físico</th></tr>';
+   if(its.length){html+='<div class="tblwrap"><table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado</th><th>Pago</th></tr>';
     its.forEach(function(i){html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
       '<td class="n"><input class="ped sm" value="'+(i.cant||0)+'" onchange="saveItemCant('+i.id+',this)"></td>'+
       '<td class="n"><input class="ped" value="'+(i.punit||0)+'" onchange="saveItemPrecio('+i.id+',this)"></td>'+
       '<td class="n calc">'+fmt(+i.total||0)+'</td>'+
-      '<td>'+estBtn(i)+'</td></tr>';});
+      '<td>'+estBtn(i)+'</td><td>'+pagoBtn(i)+'</td></tr>';});
     html+='</table></div>';}
    else html+='<div class="note" style="padding:14px 13px;text-align:center">Este capítulo aún no tiene ítems. Usa <b>＋ Adicional</b> para agregar el primero.</div>';
    html+='<button class="addb" onclick="addAdicional(\''+c.num+'\')">＋ Adicional</button></div></div>';
@@ -269,6 +276,8 @@ function saveItemCant(id,el){var it=ITEMS.find(function(x){return x.id===id;});i
 function saveItemPrecio(id,el){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.punit=num(el.value);it.total=(+it.cant||0)*it.punit;var c=capByNum(it.cap_num);if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{punit:it.punit,total:it.total}).then(function(){toast('Precio guardado ✓');flashOk(el);render();}).catch(function(){toast('Error al guardar',true);});}
 function cicloEstado(id,el){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.estado=(EST[it.estado]||EST.por_hacer).nx;var c=capByNum(it.cap_num);if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{estado:it.estado}).then(function(){toast('Estado: '+(EST[it.estado]||EST.por_hacer).lbl);render();}).catch(function(){toast('Error al guardar',true);});}
 function todoHecho(numc){var c=capByNum(numc);if(!c)return;var its=itemsOf(c);openCaps[String(numc)]=true;Promise.all(its.map(function(i){i.estado='hecho';return patch('presupuesto_items?id=eq.'+i.id,{estado:'hecho'});})).then(function(){toast('Todo marcado hecho ✓');render();}).catch(function(){toast('Error al guardar',true);render();});}
+function togPago(id,el){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;var p=(+it.pagado||0)>0;it.pagado=p?null:(+it.total||0);var c=capByNum(it.cap_num);if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{pagado:it.pagado}).then(function(){toast(it.pagado?'Marcado pagado ✓':'Pago quitado');render();}).catch(function(){toast('Error',true);});}
+function todoPagado(numc){var c=capByNum(numc);if(!c)return;var its=itemsOf(c);openCaps[String(numc)]=true;Promise.all(its.map(function(i){i.pagado=+i.total||0;return patch('presupuesto_items?id=eq.'+i.id,{pagado:i.pagado});})).then(function(){toast('Capítulo pagado ✓');render();}).catch(function(){toast('Error',true);render();});}
 function addAdicional(numc){post('presupuesto_items',{obra_id:'weliving',cap_num:numc,descripcion:'Adicional',und:'gl',cant:1,punit:0,total:0,estado:'por_hacer'}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0]){ITEMS.push(rows[0]);openCaps[String(numc)]=true;toast('Adicional agregado ✓');render();}else{toast('No se pudo agregar',true);}}).catch(function(){toast('Error',true);});}
 function saveDotCant(id,el){var d=DOT.find(function(x){return x.id===id;});if(!d)return;d.cant_apto=numF(el.value);patch('dotacion_airbnb?id=eq.'+id,{cant_apto:d.cant_apto}).then(function(){toast('Guardado ✓');flashOk(el);render();}).catch(function(){toast('Error',true);});}
 function saveDotPrecio(id,el){var d=DOT.find(function(x){return x.id===id;});if(!d)return;var p=num(el.value);d.precio=p||null;patch('dotacion_airbnb?id=eq.'+id,{precio:d.precio}).then(function(){toast('Guardado ✓');flashOk(el);render();}).catch(function(){toast('Error',true);});}
