@@ -2585,6 +2585,7 @@ canvas{border-radius:4px}
     <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
     <div class="ni" data-v="tesoreria" onclick="gotoView('tesoreria')"><span class="ni-ico">💎</span><span>Tesorería</span></div>
     <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobrar</span></div>
+    <div class="ni" data-v="presupuesto" onclick="gotoView('presupuesto')"><span class="ni-ico">📊</span><span>Presupuesto</span></div>
     <div class="sb-sect">Análisis</div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
   </nav>
@@ -2670,6 +2671,7 @@ canvas{border-radius:4px}
   <div class="view" id="v-cobrar">
     <div id="cobrar-content"></div>
   </div>
+  <div class="view" id="v-presupuesto"></div>
   <div class="view" id="v-analisis">
     <div id="analisis-content"></div>
   </div>
@@ -3873,6 +3875,13 @@ function rObraEmbed(id){
     el.innerHTML='<iframe class="rb-embed" src="robledo.html?t='+Date.now()+'#'+id+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
   }
 }
+function rPresupuestoEmbed(){
+  var el=document.getElementById("v-presupuesto");
+  if(!el) return;
+  if(!el.querySelector("iframe.rb-embed")){
+    el.innerHTML='<iframe class="rb-embed" src="presupuesto.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+  }
+}
 function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
@@ -3886,6 +3895,7 @@ function renderView(v, skipHistory) {
   else if (v === 'plan')    { rPlan(); }
   else if (v === 'tesoreria'){ rTesoreria(); }
   else if (v === 'cobrar')  { rCobrar(); }
+  else if (v === 'presupuesto') { rPresupuestoEmbed(); }
   else if (v === 'analisis'){ rAnalisis(); }
   else if (v === 'abonos')  { rAbonos(); }
   else if (v === 'movimientos') { rMovimientos(); }
