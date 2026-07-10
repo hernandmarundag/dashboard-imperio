@@ -192,7 +192,8 @@ function vResumen(){
   '</table></div></div>';
  var av='<div class="sec"><h2>📈 Avance físico de la obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:var(--ok)"></div></div><div class="note" style="margin-top:8px">'+pct+'% de la construcción ejecutado (físico) · <b>Falta por ejecutar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real en gastos.</div></div>';
  var chart='<div class="sec"><h2>Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
- return hero+div+av+chart;
+ var diff=grl-ej;var recon='<div class="sec"><h2>⚖️ Ejecutado vs Gastado — control de desvíos</h2><div class="tblwrap"><table>'+'<tr><td>Presupuesto de lo ejecutado (lo que está construido)</td><td class="n">'+fmt(ej)+'</td></tr>'+'<tr><td>Gastado real (plata que ya salió)</td><td class="n">'+fmt(grl)+'</td></tr>'+'<tr class="grand"><td>'+(diff>=0?'Gastado de más · sobrecosto + indirectos + anticipos':'Por debajo de lo ejecutado')+'</td><td class="n">'+fmt(diff)+'</td></tr>'+'</table></div><div class="note">Son <b>cosas distintas</b>: <b>Ejecutado</b> = valor en presupuesto de lo construido; <b>Gastado</b> = plata real que salió. La diferencia son <b>sobrecostos</b> (sobre todo cimentación por roca y freático), <b>indirectos</b> (admin, seguros, transporte) y <b>anticipos</b>. Míralos capítulo por capítulo en \'Obra por etapa\' — los que tienen ⚠ Sobrecosto.</div></div>';
+ return hero+div+av+recon+chart;
 }
 function kc(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
 function seg(p,col){return '<span style="width:'+p+'%;background:'+col+'" title="'+p.toFixed(1)+'%"></span>';}
