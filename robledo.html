@@ -155,7 +155,7 @@ td.l{color:#4b5168} .mut{color:#a7adbf}
 .kcard:active{cursor:grabbing} .kcard .kt{font-size:12px;font-weight:600;color:#1b2030;line-height:1.35}
 .kcard .kd{font-size:10.5px;color:#8a90a6;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
 .kadv{border:1px solid #e0e3ee;background:#fff;color:#4f46e5;border-radius:6px;cursor:pointer;font-size:11px;padding:1px 7px;font-weight:700}
-</style></head><body><div class="wrap">
+.ppcbar{background:#fff;border:1px solid #e6e8f0;border-radius:14px;padding:14px 16px;margin-bottom:14px}.ppcbar .pt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.ppcbar .pn{font-weight:800;font-size:14px}.ppcbar .pv{font-weight:800;font-size:20px;color:#4f46e5}.ppctrack{height:10px;background:#eef0f6;border-radius:6px;overflow:hidden}.ppcfill{height:100%;background:linear-gradient(90deg,#4f46e5,#22c55e);border-radius:6px;transition:width .3s}.dcard{background:#fff;border:1px solid #e6e8f0;border-radius:14px;margin-bottom:12px;overflow:hidden}.dcard.hito{border-color:#86efac}.dhead{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:#f7f8fc;border-bottom:1px solid #eef0f6}.dhead.hito{background:#dcfce7}.dhead .dd{font-weight:800;font-size:14px}.dhead .dp{font-size:12px;color:#64748b;font-weight:600}.cua{padding:8px 14px;border-bottom:1px dashed #eef0f6}.cua:last-child{border-bottom:0}.cua .ch{font-size:11px;font-weight:800;color:#7c5cf0;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}.act{display:flex;align-items:flex-start;gap:9px;padding:6px 0;cursor:pointer}.act .bx{width:20px;height:20px;border:2px solid #cbd2e0;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;margin-top:1px}.act.done .bx{background:#22c55e;border-color:#22c55e}.act .tx{font-size:13.5px;line-height:1.35;color:#1b2030}.act.done .tx{text-decoration:line-through;color:#94a3b8}.act.hito .tx{color:#dc2626;font-weight:800}.act.hito.done .tx{color:#94a3b8}</style></head><body><div class="wrap">
 <div id="home">
 <div class="top"><div class="logo">I</div><div><h1>Imperio · Obras</h1><div class="sub">Conectado a tu hoja de gastos · en vivo</div></div></div>
 <div class="obras" id="obras"></div></div>
@@ -309,7 +309,7 @@ function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,falta=h
   '<div class="cards">'+
    '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
    '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">'+(hasPres?('Falta '+fmt(falta)+' · Total '+fmt(total)):'Por definir')+'</div></div>'+
-   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CRONO.length?(CRONO.length+' actividades'):'Por definir')+'</div></div>'+
+   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CUR==='weliving'?'Plan por cuadrillas · 12 días':(CRONO.length?(CRONO.length+' actividades'):'Por definir'))+'</div></div>'+
    '<div class="navc" data-sec="flujo"><div class="navic">💸</div><div class="navt">Flujo y pagos</div><div class="navs">'+(PAGOS.filter(function(p){return p.estado!=='pagado';}).length||0)+' pagos programados</div></div>'+
    '<a class="navc" href="bitacora.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="navic">📒</div><div class="navt">Bitácora del día</div><div class="navs">Reportar apertura · durante · cierre ↗</div></a>'+
   '</div>';
@@ -446,10 +446,28 @@ function plannerFechas(){var cr=CRONO.filter(function(c){return c.fecha_ini;}).s
   return '<div class="lprow"><span class="lp-ic">'+ic+'</span><div class="lp-mid"><div class="lp-a">'+(c.actividad||'')+'</div><div class="lp-f">'+fd(c.fecha_ini)+(c.fecha_fin&&c.fecha_fin!==c.fecha_ini?(' → '+fd(c.fecha_fin)):'')+'</div>'+sub+'</div>'+right+'</div>';}).join('');
  var iniL=cr[0]?fd(cr[0].fecha_ini):'',finL=cr.length?fd(cr[cr.length-1].fecha_fin||cr[cr.length-1].fecha_ini):'';
  return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · gasto por periodo</h3></div>'+'<div class="grp"><span>Programación + gasto real por periodo ('+iniL+' → '+finL+')</span><span class="gt">'+fmt(totP)+'</span></div><div class="grpnote">Cada actividad muestra lo gastado en su periodo (por fecha): directo (a la obra) e indirecto (admin, servicios). Verde = gasto real; ámbar = pago programado.</div><div class="dl" style="padding:6px 0">'+rows+'</div>';}
+var PLAN=[];
+function loadPlan(cb){fetch(SB_URL+'/rest/v1/planner_cuadrillas?obra=eq.'+CUR+'&order=orden',{headers:SBH}).then(function(r){return r.json();}).then(function(rows){PLAN=rows||[];if(cb)cb();}).catch(function(){PLAN=[];if(cb)cb();});}
+function togglePlan(id,el){var a=PLAN.find(function(x){return x.id===id;});if(!a)return;a.estado=(a.estado==='hecho')?'pendiente':'hecho';patch('planner_cuadrillas?id=eq.'+id,{estado:a.estado}).catch(function(){});el.classList.toggle('done',a.estado==='hecho');var bx=el.querySelector('.bx');if(bx)bx.textContent=(a.estado==='hecho')?'✓':'';var total=PLAN.length,hechos=PLAN.filter(function(x){return x.estado==='hecho';}).length,ppc=total?Math.round(hechos/total*100):0;var pv=document.querySelector('#d-body .ppcbar .pv');if(pv)pv.textContent=ppc+'%';var pf=document.querySelector('#d-body .ppcfill');if(pf)pf.style.width=ppc+'%';var pc=document.getElementById('ppc-cnt');if(pc)pc.textContent=hechos+' de '+total+' actividades hechas';}
+function attachPlan(){document.querySelectorAll('#d-body .act').forEach(function(el){el.onclick=function(){togglePlan(+el.dataset.id,el);};});}
+function plannerCuadrillas(){if(!PLAN.length){return backG()+'<div class="canvas">Sin plan cargado para esta obra.</div>';}
+ var dias={},od=[];PLAN.forEach(function(a){if(!dias[a.dia]){dias[a.dia]=[];od.push(a.dia);}dias[a.dia].push(a);});od.sort(function(x,y){return x-y;});
+ var total=PLAN.length,hechos=PLAN.filter(function(a){return a.estado==='hecho';}).length,ppc=total?Math.round(hechos/total*100):0;
+ var html=backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · Plan por cuadrillas</h3></div>';
+ html+='<div class="grpnote">Vaciar columnas y losa · ciclo de 12 días · toca cada actividad para marcarla hecha.</div>';
+ html+='<div class="ppcbar"><div class="pt"><span class="pn">Cumplimiento del plan (PPC)</span><span class="pv">'+ppc+'%</span></div><div class="ppctrack"><div class="ppcfill" style="width:'+ppc+'%"></div></div><div id="ppc-cnt" style="font-size:12px;color:#64748b;margin-top:6px">'+hechos+' de '+total+' actividades hechas</div></div>';
+ od.forEach(function(d){var acts=dias[d];var esHito=acts.some(function(a){return a.es_hito;});var pers=acts.reduce(function(s2,a){return s2+(+a.personal||0);},0);
+  var cuas={},oc=[];acts.forEach(function(a){if(!cuas[a.cuadrilla]){cuas[a.cuadrilla]=[];oc.push(a.cuadrilla);}cuas[a.cuadrilla].push(a);});oc.sort(function(x,y){return x-y;});
+  html+='<div class="dcard'+(esHito?' hito':'')+'"><div class="dhead'+(esHito?' hito':'')+'"><span class="dd">Día '+d+(esHito?' · 🏗 Vaciado':'')+'</span><span class="dp">'+pers+' personas</span></div>';
+  oc.forEach(function(c){var cp=cuas[c].reduce(function(s2,a){return s2+(+a.personal||0);},0);html+='<div class="cua"><div class="ch">Cuadrilla '+c+(cp?' · '+cp+'p':'')+'</div>';
+   cuas[c].forEach(function(a){html+='<div class="act'+(a.estado==='hecho'?' done':'')+(a.es_hito?' hito':'')+'" data-id="'+a.id+'"><span class="bx">'+(a.estado==='hecho'?'✓':'')+'</span><span class="tx">'+(a.es_hito?'🏗 ':'')+a.actividad+'</span></div>';});
+   html+='</div>';});
+  html+='</div>';});
+ return html;}
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){if(!CAPS.length){b.innerHTML=backG()+'<div class="canvas">💰 <b>Presupuesto por definir</b><br>Cada obra tiene sus propios capítulos e ítems. Cuando tengas el presupuesto de esta obra lo cargamos con la misma lógica que Robledo.</div>';}else{b.innerHTML=presSec();attach();recompute();}}
- else if(sec==='planner'){if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b></div>';}else if(CRONO.some(function(c){return c.fecha_ini;})){b.innerHTML=plannerFechas();}else{b.innerHTML=renderPlanner();attachPlanner();}}
+ else if(sec==='planner'){if(CUR==='weliving'){b.innerHTML=backG()+'<div class="canvas">📅 Cargando plan…</div>';loadPlan(function(){b.innerHTML=plannerCuadrillas();attachPlan();});}else if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b></div>';}else if(CRONO.some(function(c){return c.fecha_ini;})){b.innerHTML=plannerFechas();}else{b.innerHTML=renderPlanner();attachPlanner();}}
  else if(sec==='flujo'){b.innerHTML=flujoSec();}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
  window.scrollTo(0,0);}
