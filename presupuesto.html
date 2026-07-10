@@ -120,17 +120,32 @@ function render(){var b=document.getElementById('body');
  attach();if(CUR==='resumen')drawChart();}
 function card(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
 function vResumen(){
- var to=totalObra(),ej=ejecObra(),fa=to-ej,grl=gastadoReal(),dt=dotTotal(),dpg=dotPagado(),dfa=dt-dpg,pct=to?Math.round(ej/to*100):0;
+ function grpTot(gr){return CAPS.filter(function(c){return grupoDe(c.nombre)===gr;}).reduce(function(x,c){return x+capTotal(c);},0);}
+ var civ=grpTot('NEGRA')+grpTot('GRIS')+grpTot('BLANCA');
+ var ind=grpTot('INDIRECTOS');
+ var proy=grpTot('PROYECTO');
+ var loteIt=ITEMS.find(function(i){return (i.descripcion||'')==='Lote';});var lote=loteIt?(+loteIt.total||0):0;
+ var legales=proy-lote;
+ var dot=dotTotal();
+ var gran=civ+ind+lote+legales+dot;
+ var to=totalObra(),ej=ejecObra(),fa=to-ej,grl=gastadoReal(),pct=to?Math.round(ej/to*100):0;
  var cards='<div class="cards">'+
-  card('ink','Presupuesto total proyecto',fmt(to),'obra + terreno + legales')+
-  card('green','Ejecutado (físico)',fmt(ej),pct+'% del presupuesto hecho')+
-  card('red','Falta por gastar',fmt(fa),'lo que viene desde aquí')+
-  card('purp','Gastado real (control)',fmt(grl),'plata que ya salió')+
-  card('amber','Dotación Airbnb',fmt(dt),'falta '+fmt(dfa))+
-  card('red','FALTA TOTAL',fmt(fa+dfa),'obra + dotación')+'</div>';
- var av='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Avance físico vs presupuesto</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:#16a34a"></div></div><div class="note">'+pct+'% del presupuesto ejecutado (físico) · <b>Falta por gastar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real — la diferencia con lo ejecutado son indirectos, anticipos o sobrecostos por revisar.</div></div>';
+  card('ink','Gran total del proyecto',fmt(gran),'todo incluido')+
+  card('green','Ejecutado (físico)',fmt(ej),pct+'% de la obra')+
+  card('red','Falta por gastar (obra)',fmt(fa),'desde aquí')+
+  card('purp','Gastado real (control)',fmt(grl),'plata que ya salió')+'</div>';
+ function frow(nm,val,col){var p=gran?(val/gran*100):0;return '<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+col+';margin-right:7px"></span>'+nm+'</td><td class="n">'+fmt(val)+'</td><td class="n">'+p.toFixed(1)+'%</td></tr>';}
+ var div='<div class="sec"><h2>💰 División del costo del proyecto</h2><div class="note">Cómo se compone el gran total. Suma exacta de todas las partes.</div><table><tr><th>Concepto</th><th class="n">Monto</th><th class="n">% del total</th></tr>'+
+  frow('Obra civil directa (negra + gris + blanca)',civ,'#7c5cf0')+
+  frow('Indirectos de obra (admin, imprevistos, servicios)',ind,'#d97706')+
+  frow('Lote (terreno)',lote,'#334155')+
+  frow('Legales y trámites (URB, EPM, licencia, escrituras…)',legales,'#0ea5a3')+
+  frow('Dotación / amoblamiento',dot,'#16a34a')+
+  '<tr style="font-weight:800;background:#eef0fe"><td>GRAN TOTAL DEL PROYECTO</td><td class="n">'+fmt(gran)+'</td><td class="n">100%</td></tr>'+
+  '</table></div>';
+ var av='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Avance físico vs presupuesto de obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:#16a34a"></div></div><div class="note">'+pct+'% de la obra ejecutado (físico) · <b>Falta por gastar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real.</div></div>';
  var chart='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
- return cards+av+chart;
+ return cards+div+av+chart;
 }
 function drawChart(){var m=porFase();var labels=['PROYECTO','NEGRA','GRIS','BLANCA','INDIRECTOS'].filter(function(k){return m[k];});
  var data=labels.map(function(k){return m[k];});var cols=labels.map(function(k){return GC[k];});
