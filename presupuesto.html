@@ -86,7 +86,7 @@ function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(function(r){
 function patch(path,body){return fetch(SB_URL+'/rest/v1/'+path,{method:'PATCH',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(body)});}
 function post(path,body){return fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(body)});}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1400);}
-var GC={'NEGRA':'#111827','GRIS':'#0ea5a3','BLANCA':'#7c5cf0','INDIRECTOS':'#d97706'};
+var GC={'PROYECTO':'#334155','NEGRA':'#111827','GRIS':'#0ea5a3','BLANCA':'#7c5cf0','INDIRECTOS':'#d97706'};
 var EST={por_hacer:{ic:'⚪',lbl:'Por hacer',nx:'en_curso'},en_curso:{ic:'🔵',lbl:'En curso',nx:'hecho'},hecho:{ic:'✅',lbl:'Hecho',nx:'por_hacer'}};
 function estBtn(i){var e=EST[i.estado]||EST.por_hacer;return '<button class="stb st-'+(i.estado||'por_hacer')+'" onclick="cicloEstado('+i.id+')">'+e.ic+' '+e.lbl+'</button>';}
 function grupoDe(nm){return (nm||'').split(' · ')[0];}
@@ -122,7 +122,7 @@ function card(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</d
 function vResumen(){
  var to=totalObra(),ej=ejecObra(),fa=to-ej,grl=gastadoReal(),dt=dotTotal(),dpg=dotPagado(),dfa=dt-dpg,pct=to?Math.round(ej/to*100):0;
  var cards='<div class="cards">'+
-  card('ink','Presupuesto total obra',fmt(to),'todas las etapas')+
+  card('ink','Presupuesto total proyecto',fmt(to),'obra + terreno + legales')+
   card('green','Ejecutado (físico)',fmt(ej),pct+'% del presupuesto hecho')+
   card('red','Falta por gastar',fmt(fa),'lo que viene desde aquí')+
   card('purp','Gastado real (control)',fmt(grl),'plata que ya salió')+
@@ -132,7 +132,7 @@ function vResumen(){
  var chart='<div class="chartbox"><h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
  return cards+av+chart;
 }
-function drawChart(){var m=porFase();var labels=['NEGRA','GRIS','BLANCA','INDIRECTOS'].filter(function(k){return m[k];});
+function drawChart(){var m=porFase();var labels=['PROYECTO','NEGRA','GRIS','BLANCA','INDIRECTOS'].filter(function(k){return m[k];});
  var data=labels.map(function(k){return m[k];});var cols=labels.map(function(k){return GC[k];});
  var ctx=document.getElementById('cv');if(!ctx)return;if(chart)chart.destroy();
  chart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:cols,borderRadius:8}]},
@@ -140,7 +140,7 @@ function drawChart(){var m=porFase();var labels=['NEGRA','GRIS','BLANCA','INDIRE
 }
 function compTag(i,gr){if(gr!=='NEGRA')return '';var u=(i.und||'').toLowerCase();if(u==='kg')return '<span class="tg h">Hierro</span>';if(u==='m3')return '<span class="tg c">Concreto</span>';if(u==='m2')return '<span class="tg f">Formaleta</span>';return '';}
 function vObra(){
- var m=porFase(),ef=ejecFase();var orden=['NEGRA','GRIS','BLANCA','INDIRECTOS'];var html='';
+ var m=porFase(),ef=ejecFase();var orden=['PROYECTO','NEGRA','GRIS','BLANCA','INDIRECTOS'];var html='';
  orden.forEach(function(gr){
   if(!m[gr])return;
   var caps=CAPS.filter(function(c){return grupoDe(c.nombre)===gr;});
