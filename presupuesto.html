@@ -106,6 +106,7 @@ tr.grand td{background:var(--ink);color:#fff;font-weight:800;font-size:13px;bord
   <div class="tabs" id="tabs">
     <button class="tab on" data-t="resumen">📊 Resumen</button>
     <button class="tab" data-t="obra">🧱 Obra por etapa</button>
+    <button class="tab" data-t="recorte">✂️ Por recortar</button>
     <button class="tab" data-t="cant">📐 Cantidades clave</button>
     <button class="tab" data-t="dot">🛋 Dotación Airbnb</button>
   </div>
@@ -173,7 +174,7 @@ function boot(){
  .catch(function(e){document.getElementById('body').innerHTML='<div class="loading"><div style="font-size:32px">⚠️</div><p style="margin:10px 0">No pude conectar a la base. Revisa el internet.</p><button class="retry" onclick="boot()">↻ Reintentar</button></div>';});
 }
 function render(){var b=document.getElementById('body');
- if(CUR==='resumen')b.innerHTML=vResumen();else if(CUR==='obra')b.innerHTML=vObra();else if(CUR==='cant')b.innerHTML=vCant();else b.innerHTML=vDot();
+ if(CUR==='resumen')b.innerHTML=vResumen();else if(CUR==='obra')b.innerHTML=vObra();else if(CUR==='recorte')b.innerHTML=vRecorte();else if(CUR==='cant')b.innerHTML=vCant();else b.innerHTML=vDot();
  attach();if(CUR==='resumen')drawChart();}
 function vResumen(){
  var civ=grpTot('NEGRA')+grpTot('GRIS')+grpTot('BLANCA');
@@ -287,6 +288,33 @@ function vDot(){
     '<td class="n" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">'+(d.precio?fmt(fal):'—')+'</td></tr>';});
   html+='</table></div>';});
  return head+html+'</div>';
+}
+var META_PROY=5200000000;
+function grpRestante(gr){return CAPS.filter(function(c){return grupoDe(c.nombre)===gr;}).reduce(function(a,c){return a+Math.max(0,capTotal(c)-capEjec(c));},0);}
+function vRecorte(){
+ var grupos=['PROYECTO','NEGRA','GRIS','BLANCA','INDIRECTOS'];
+ var FLEX={BLANCA:['Alta',0.15],DOTACION:['Alta',0.25],GRIS:['Media',0.08],INDIRECTOS:['Media',0.10],NEGRA:['Baja',0.03],PROYECTO:['Fija',0]};
+ var lbl={PROYECTO:'Lote y legales',NEGRA:'Estructura / obra negra',GRIS:'Mampostería e instalaciones',BLANCA:'Acabados',INDIRECTOS:'Indirectos',DOTACION:'Dotación Airbnb'};
+ var fcol={Alta:'#16a34a',Media:'#d97706',Baja:'#dc2626',Fija:'#334155'};
+ var totProy=totalObra()+dotTotal();
+ var recorte=totProy-META_PROY;
+ var rows=[],ahorroPot=0;
+ grupos.forEach(function(gr){var r=grpRestante(gr);if(r<=0)return;var f=FLEX[gr];var ah=r*f[1];ahorroPot+=ah;rows.push({nm:gr,rest:r,flx:f[0],pct:f[1],ah:ah});});
+ var dotRest=Math.max(0,dotTotal()-dotPagado());if(dotRest>0){var fd=FLEX.DOTACION;var ahd=dotRest*fd[1];ahorroPot+=ahd;rows.push({nm:'DOTACION',rest:dotRest,flx:fd[0],pct:fd[1],ah:ahd});}
+ rows.sort(function(a,b){return b.ah-a.ah;});
+ var meta='<div class="hero" style="grid-template-columns:1fr"><div class="kc-hero"><div class="l">Recorte necesario para llegar a la meta</div><div class="v">'+fmt(recorte>0?recorte:0)+'</div><div class="n">Valor hoy '+fmt(totProy)+' → Meta '+fmt(META_PROY)+'</div></div></div>';
+ var reachable=ahorroPot>=recorte;
+ var cards='<div class="cards">'+
+   kc('purp','Valor total hoy',fmt(totProy),'obra + lote + legales + dotación')+
+   kc('red','Recortar para meta',fmt(recorte>0?recorte:0),'objetivo '+fmt(META_PROY))+
+   kc(reachable?'green':'amber','Ahorro potencial',fmt(ahorroPot),(reachable?'alcanza la meta ✓':'faltan '+fmt(recorte-ahorroPot)))+
+  '</div>';
+ var trows=rows.map(function(r){return '<tr><td><b>'+(lbl[r.nm]||r.nm)+'</b></td><td class="n">'+fmt(r.rest)+'</td><td><span class="bdg" style="background:'+fcol[r.flx]+'22;color:'+fcol[r.flx]+'">'+r.flx+'</span></td><td class="n">'+(r.pct*100).toFixed(0)+'%</td><td class="n"><b>'+fmt(r.ah)+'</b></td></tr>';}).join('');
+ var tabla='<div class="sec"><h2>✂️ Dónde recortar · costos que vienen</h2><div class="note">Solo lo que <b>falta por invertir</b> (lo ya ejecutado no se toca). Ordenado por ahorro potencial. "Flexibilidad" = qué tan fácil es bajar sin afectar la obra: acabados y dotación son los más flexibles; la estructura casi no.</div><div class="tblwrap"><table><tr><th>Rubro</th><th class="n">Por invertir</th><th>Flexibilidad</th><th class="n">Recorte sugerido</th><th class="n">Ahorro</th></tr>'+trows+'<tr class="grand"><td>AHORRO POTENCIAL TOTAL</td><td class="n">—</td><td></td><td></td><td class="n">'+fmt(ahorroPot)+'</td></tr></table></div><div class="note">'+(reachable?'Con estos porcentajes conservadores <b>alcanzas la meta de '+fmt(META_PROY)+'</b>. Prioriza acabados y dotación.':'Con recortes conservadores llegas a '+fmt(totProy-ahorroPot)+'. Para la meta de '+fmt(META_PROY)+' habría que recortar más fuerte en acabados/dotación o revisar estructura.')+'</div></div>';
+ var ups=ITEMS.filter(function(i){return i.estado!=='hecho' && (+i.total||0)>0 && grupoDe((capByNum(i.cap_num)||{}).nombre)!=='PROYECTO';}).sort(function(a,b){return (+b.total||0)-(+a.total||0);}).slice(0,20);
+ var uphtml=ups.map(function(i){var gr=grupoDe((capByNum(i.cap_num)||{}).nombre);return '<tr><td>'+(i.descripcion||'')+'</td><td class="muted">'+gr+'</td><td class="n">'+fmt(+i.total||0)+'</td></tr>';}).join('');
+ var top='<div class="sec"><h2>🔎 Los 20 ítems más grandes por venir</h2><div class="note">Los candidatos de mayor impacto para revisar de una. Edita cantidad o precio en "Obra por etapa" y el total se ajusta solo.</div><div class="tblwrap"><table><tr><th>Ítem</th><th>Rubro</th><th class="n">Valor</th></tr>'+uphtml+'</table></div></div>';
+ return meta+cards+tabla+top;
 }
 function saveItemCant(id,el){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.cant=numF(el.value);it.total=it.cant*(+it.punit||0);var c=capByNum(it.cap_num);if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{cant:it.cant,total:it.total}).then(function(){toast('Cantidad guardada ✓');flashOk(el);render();}).catch(function(){toast('Error al guardar',true);});}
 function saveItemPrecio(id,el){var it=ITEMS.find(function(x){return x.id===id;});if(!it)return;it.punit=num(el.value);it.total=(+it.cant||0)*it.punit;var c=capByNum(it.cap_num);if(c)openCaps[c.num]=true;patch('presupuesto_items?id=eq.'+id,{punit:it.punit,total:it.total}).then(function(){toast('Precio guardado ✓');flashOk(el);render();}).catch(function(){toast('Error al guardar',true);});}
