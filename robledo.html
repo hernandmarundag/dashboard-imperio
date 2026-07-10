@@ -446,24 +446,47 @@ function plannerFechas(){var cr=CRONO.filter(function(c){return c.fecha_ini;}).s
   return '<div class="lprow"><span class="lp-ic">'+ic+'</span><div class="lp-mid"><div class="lp-a">'+(c.actividad||'')+'</div><div class="lp-f">'+fd(c.fecha_ini)+(c.fecha_fin&&c.fecha_fin!==c.fecha_ini?(' → '+fd(c.fecha_fin)):'')+'</div>'+sub+'</div>'+right+'</div>';}).join('');
  var iniL=cr[0]?fd(cr[0].fecha_ini):'',finL=cr.length?fd(cr[cr.length-1].fecha_fin||cr[cr.length-1].fecha_ini):'';
  return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · gasto por periodo</h3></div>'+'<div class="grp"><span>Programación + gasto real por periodo ('+iniL+' → '+finL+')</span><span class="gt">'+fmt(totP)+'</span></div><div class="grpnote">Cada actividad muestra lo gastado en su periodo (por fecha): directo (a la obra) e indirecto (admin, servicios). Verde = gasto real; ámbar = pago programado.</div><div class="dl" style="padding:6px 0">'+rows+'</div>';}
-var PLAN=[];
+var PLAN=[];var planViewC='tablero';
+var ESTP={pendiente:{ic:'⚪',nx:'en_curso'},en_curso:{ic:'🔵',nx:'hecho'},hecho:{ic:'✅',nx:'pendiente'}};
 function loadPlan(cb){fetch(SB_URL+'/rest/v1/planner_cuadrillas?obra=eq.'+CUR+'&order=orden',{headers:SBH}).then(function(r){return r.json();}).then(function(rows){PLAN=rows||[];if(cb)cb();}).catch(function(){PLAN=[];if(cb)cb();});}
-function togglePlan(id,el){var a=PLAN.find(function(x){return x.id===id;});if(!a)return;a.estado=(a.estado==='hecho')?'pendiente':'hecho';patch('planner_cuadrillas?id=eq.'+id,{estado:a.estado}).catch(function(){});el.classList.toggle('done',a.estado==='hecho');var bx=el.querySelector('.bx');if(bx)bx.textContent=(a.estado==='hecho')?'✓':'';var total=PLAN.length,hechos=PLAN.filter(function(x){return x.estado==='hecho';}).length,ppc=total?Math.round(hechos/total*100):0;var pv=document.querySelector('#d-body .ppcbar .pv');if(pv)pv.textContent=ppc+'%';var pf=document.querySelector('#d-body .ppcfill');if(pf)pf.style.width=ppc+'%';var pc=document.getElementById('ppc-cnt');if(pc)pc.textContent=hechos+' de '+total+' actividades hechas';}
-function attachPlan(){document.querySelectorAll('#d-body .act').forEach(function(el){el.onclick=function(){togglePlan(+el.dataset.id,el);};});}
-function plannerCuadrillas(){if(!PLAN.length){return backG()+'<div class="canvas">Sin plan cargado para esta obra.</div>';}
- var dias={},od=[];PLAN.forEach(function(a){if(!dias[a.dia]){dias[a.dia]=[];od.push(a.dia);}dias[a.dia].push(a);});od.sort(function(x,y){return x-y;});
- var total=PLAN.length,hechos=PLAN.filter(function(a){return a.estado==='hecho';}).length,ppc=total?Math.round(hechos/total*100):0;
- var html=backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · Plan por cuadrillas</h3></div>';
- html+='<div class="grpnote">Vaciar columnas y losa · ciclo de 12 días · toca cada actividad para marcarla hecha.</div>';
- html+='<div class="ppcbar"><div class="pt"><span class="pn">Cumplimiento del plan (PPC)</span><span class="pv">'+ppc+'%</span></div><div class="ppctrack"><div class="ppcfill" style="width:'+ppc+'%"></div></div><div id="ppc-cnt" style="font-size:12px;color:#64748b;margin-top:6px">'+hechos+' de '+total+' actividades hechas</div></div>';
+function setPlanViewC(v){planViewC=v;var b=document.getElementById('d-body');b.innerHTML=plannerCuadrillas();attachPlan();}
+function planAvanza(id){var a=PLAN.find(function(x){return x.id===id;});if(!a)return;a.estado=(ESTP[a.estado]||ESTP.pendiente).nx;patch('planner_cuadrillas?id=eq.'+id,{estado:a.estado}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});var b=document.getElementById('d-body');b.innerHTML=plannerCuadrillas();attachPlan();}
+function moverPlan(id,col){var map={porhacer:'pendiente',encurso:'en_curso',hecho:'hecho'};var ne=map[col];if(!ne)return;var a=PLAN.find(function(x){return x.id===id;});if(!a||a.estado===ne)return;a.estado=ne;patch('planner_cuadrillas?id=eq.'+id,{estado:ne}).then(function(){flash('Movido ✓');}).catch(function(){flash('Error al guardar',true);});var b=document.getElementById('d-body');b.innerHTML=plannerCuadrillas();attachPlan();}
+function attachPlan(){
+ document.querySelectorAll('#d-body .pv').forEach(function(bt){bt.onclick=function(){setPlanViewC(bt.dataset.v);};});
+ document.querySelectorAll('#d-body .act').forEach(function(el){el.onclick=function(){planAvanza(+el.dataset.id);};});
+ document.querySelectorAll('#d-body .kadv').forEach(function(bt){bt.onclick=function(ev){ev.stopPropagation();planAvanza(+bt.dataset.id);};});
+ var dragId=null;
+ document.querySelectorAll('#d-body .kcard').forEach(function(c){c.addEventListener('dragstart',function(e){dragId=+c.dataset.id;if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});});
+ document.querySelectorAll('#d-body .kcol').forEach(function(col){col.addEventListener('dragover',function(e){e.preventDefault();col.classList.add('over');});col.addEventListener('dragleave',function(){col.classList.remove('over');});col.addEventListener('drop',function(e){e.preventDefault();col.classList.remove('over');if(dragId!=null){moverPlan(dragId,col.dataset.est);dragId=null;}});});}
+function kanbanPlan(){var cols=[['⚪ Por hacer','porhacer',['pendiente']],['🔵 En curso','encurso',['en_curso']],['✅ Hecho','hecho',['hecho']]];
+ var html='<div class="kanban">';
+ cols.forEach(function(c){var items=PLAN.filter(function(a){return c[2].indexOf(a.estado)>=0;});
+  html+='<div class="kcol" data-est="'+c[1]+'"><div class="kh"><span>'+c[0]+'</span><span>'+items.length+'</span></div>'+
+   items.map(function(a){var col=a.es_hito?'#dc2626':(a.cuadrilla===1?'#4f46e5':a.cuadrilla===2?'#0ea5a3':a.cuadrilla===3?'#d97706':'#7c5cf0');
+    return '<div class="kcard" draggable="true" data-id="'+a.id+'" style="border-left-color:'+col+'"><div class="kt">'+(a.es_hito?'🏗 ':'')+a.actividad+'</div><div class="kd"><span>Día '+a.dia+' · Cuad '+a.cuadrilla+(a.personal?' · '+a.personal+'p':'')+'</span><button class="kadv" data-id="'+a.id+'" title="Avanzar estado">siguiente ▸</button></div></div>';}).join('')+'</div>';});
+ return html+'</div><div class="grpnote" style="margin-top:10px">Arrastra una tarjeta entre columnas o usa "siguiente ▸" para avanzar su estado. Los hitos de vaciado van en rojo.</div>';}
+function cuadrillasPlan(){var dias={},od=[];PLAN.forEach(function(a){if(!dias[a.dia]){dias[a.dia]=[];od.push(a.dia);}dias[a.dia].push(a);});od.sort(function(x,y){return x-y;});
+ var html='';
  od.forEach(function(d){var acts=dias[d];var esHito=acts.some(function(a){return a.es_hito;});var pers=acts.reduce(function(s2,a){return s2+(+a.personal||0);},0);
+  var hech=acts.filter(function(a){return a.estado==='hecho';}).length;
   var cuas={},oc=[];acts.forEach(function(a){if(!cuas[a.cuadrilla]){cuas[a.cuadrilla]=[];oc.push(a.cuadrilla);}cuas[a.cuadrilla].push(a);});oc.sort(function(x,y){return x-y;});
-  html+='<div class="dcard'+(esHito?' hito':'')+'"><div class="dhead'+(esHito?' hito':'')+'"><span class="dd">Día '+d+(esHito?' · 🏗 Vaciado':'')+'</span><span class="dp">'+pers+' personas</span></div>';
+  html+='<div class="dcard'+(esHito?' hito':'')+'"><div class="dhead'+(esHito?' hito':'')+'"><span class="dd">Día '+d+(esHito?' · 🏗 Vaciado':'')+'</span><span class="dp">'+hech+'/'+acts.length+' hechas · '+pers+' pers</span></div>';
   oc.forEach(function(c){var cp=cuas[c].reduce(function(s2,a){return s2+(+a.personal||0);},0);html+='<div class="cua"><div class="ch">Cuadrilla '+c+(cp?' · '+cp+'p':'')+'</div>';
-   cuas[c].forEach(function(a){html+='<div class="act'+(a.estado==='hecho'?' done':'')+(a.es_hito?' hito':'')+'" data-id="'+a.id+'"><span class="bx">'+(a.estado==='hecho'?'✓':'')+'</span><span class="tx">'+(a.es_hito?'🏗 ':'')+a.actividad+'</span></div>';});
+   cuas[c].forEach(function(a){var ic=(ESTP[a.estado]||ESTP.pendiente).ic;html+='<div class="act'+(a.estado==='hecho'?' done':'')+(a.es_hito?' hito':'')+'" data-id="'+a.id+'"><span class="estd">'+ic+'</span><span class="tx">'+(a.es_hito?'🏗 ':'')+a.actividad+'</span></div>';});
    html+='</div>';});
   html+='</div>';});
  return html;}
+function plannerCuadrillas(){if(!PLAN.length){return backG()+'<div class="canvas">Sin plan cargado para esta obra.</div>';}
+ var total=PLAN.length,hechos=PLAN.filter(function(a){return a.estado==='hecho';}).length,enc=PLAN.filter(function(a){return a.estado==='en_curso';}).length,ppc=total?Math.round(hechos/total*100):0;
+ return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · Plan por cuadrillas</h3></div>'+
+  '<div class="grpnote">Vaciar columnas y losa · ciclo de 12 días · vaciado de columnas el día 5, vaciado de losa el día 12.</div>'+
+  '<div class="sum">'+
+   '<div class="sc to"><div class="l">PPC · cumplimiento</div><div class="v">'+ppc+'%</div><div class="n">del plan de 12 días</div></div>'+
+   '<div class="sc ej"><div class="l">✅ Hechas</div><div class="v">'+hechos+' / '+total+'</div></div>'+
+   '<div class="sc fa"><div class="l">🔵 En curso</div><div class="v">'+enc+'</div><div class="n">⚪ '+(total-hechos-enc)+' por hacer</div></div></div>'+
+  '<div class="ptoggle"><button class="pv '+(planViewC==='tablero'?'on':'')+'" data-v="tablero">🗂 Tablero</button><button class="pv '+(planViewC==='cuadrillas'?'on':'')+'" data-v="cuadrillas">👷 Por cuadrillas</button></div>'+
+  (planViewC==='tablero'?kanbanPlan():cuadrillasPlan());}
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){if(!CAPS.length){b.innerHTML=backG()+'<div class="canvas">💰 <b>Presupuesto por definir</b><br>Cada obra tiene sus propios capítulos e ítems. Cuando tengas el presupuesto de esta obra lo cargamos con la misma lógica que Robledo.</div>';}else{b.innerHTML=presSec();attach();recompute();}}
