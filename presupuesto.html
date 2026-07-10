@@ -192,7 +192,7 @@ function vResumen(){
   '</table></div></div>';
  var av='<div class="sec"><h2>📈 Avance físico de la obra</h2><div class="bar" style="border-radius:6px"><div class="barf" style="width:'+pct+'%;background:var(--ok)"></div></div><div class="note" style="margin-top:8px">'+pct+'% de la construcción ejecutado (físico) · <b>Falta por ejecutar '+fmt(fa)+'</b>. Control: llevas gastado '+fmt(grl)+' real en gastos.</div></div>';
  var chart='<div class="sec"><h2>Presupuesto por etapa</h2><div style="height:260px"><canvas id="cv"></canvas></div></div>';
- var diff=grl-ej;var recon='<div class="sec"><h2>⚖️ Ejecutado vs Gastado — control de desvíos</h2><div class="tblwrap"><table>'+'<tr><td>Presupuesto de lo ejecutado (lo que está construido)</td><td class="n">'+fmt(ej)+'</td></tr>'+'<tr><td>Gastado real (plata que ya salió)</td><td class="n">'+fmt(grl)+'</td></tr>'+'<tr class="grand"><td>'+(diff>=0?'Gastado de más · sobrecosto + indirectos + anticipos':'Por debajo de lo ejecutado')+'</td><td class="n">'+fmt(diff)+'</td></tr>'+'</table></div><div class="note">Son <b>cosas distintas</b>: <b>Ejecutado</b> = valor en presupuesto de lo construido; <b>Gastado</b> = plata real que salió. La diferencia son <b>sobrecostos</b> (sobre todo cimentación por roca y freático), <b>indirectos</b> (admin, seguros, transporte) y <b>anticipos</b>. Míralos capítulo por capítulo en \'Obra por etapa\' — los que tienen ⚠ Sobrecosto.</div></div>';
+ var diff=grl-ej;var recon='<div class="sec"><h2>⚖️ Ejecutado vs Gastado — control de desvíos</h2><div class="tblwrap"><table>'+'<tr><td>Presupuesto de lo ejecutado (lo que está construido)</td><td class="n">'+fmt(ej)+'</td></tr>'+'<tr><td>Gastado real (plata que ya salió)</td><td class="n">'+fmt(grl)+'</td></tr>'+'<tr class="grand"><td>'+(diff>=0?'Diferencia · así costó de más que lo presupuestado':'Por debajo de lo presupuestado')+'</td><td class="n">'+fmt(diff)+'</td></tr>'+'</table></div><div class="note"><b>Ejecutado</b> = valor de la obra en presupuesto (lo estimado). <b>Gastado</b> = lo que realmente costó. La diferencia <b>no es un error</b>: la obra costó más que la estimación — sobre todo la cimentación (roca y nivel freático), más indirectos (admin, seguros, transporte) y anticipos. Ese es el costo real; el presupuesto era solo un estimado.</div></div>';
  return hero+div+av+recon+chart;
 }
 function kc(cls,l,v,n){return '<div class="kc '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+'</div></div>';}
@@ -221,7 +221,7 @@ function vObra(){
    var open=openCaps[c.num];
    html+='<div class="cap'+(open?' open':'')+'" data-num="'+c.num+'"><div class="caph" onclick="togCap(this)"><span>'+capTit(c.nombre)+' '+badge+'</span><span class="r">'+fmt(tot)+'</span></div>'+
     '<div class="bar"><div class="barf" style="width:'+pct+'%;background:'+GC[gr]+'"></div></div>'+
-    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Gasto real '+fmt(pgr)+(sc>0?' <span class="bdg over">⚠ Sobrecosto '+fmt(sc)+'</span>':'')+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Todo hecho</button><span class="fal" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">Falta '+fmt(fal)+'</span></div>'+
+    '<div class="capsub"><b>'+nH+'/'+nT+' hechos</b> · Gasto real '+fmt(pgr)+(sc>0?' <span class="bdg over">costó '+fmt(sc)+' más</span>':'')+'<button class="ib" onclick="event.stopPropagation();todoHecho(\''+c.num+'\')">✓ Todo hecho</button><span class="fal" style="color:'+(fal>0?'var(--danger)':'var(--ok)')+'">Falta '+fmt(fal)+'</span></div>'+
     '<div class="items'+(open?'':' hidden')+'">';
    if(its.length){html+='<div class="tblwrap"><table><tr><th>Ítem</th><th>Und</th><th class="n">Cant</th><th class="n">Precio</th><th class="n">Total</th><th>Estado físico</th></tr>';
     its.forEach(function(i){html+='<tr><td>'+compTag(i,gr)+(i.descripcion||'')+'</td><td class="muted">'+(i.und||'')+'</td>'+
@@ -235,7 +235,7 @@ function vObra(){
   });
   html+='</div></div>';
  });
- return '<div class="sec"><h2>🧱 Obra por etapa · físico vs pagado real</h2><div class="note">Cada ítem trae su <b>estado físico</b> (⚪→🔵→✅). El <b>gasto real</b> del capítulo viene de la contabilidad; si supera el presupuesto se marca <b>Sobrecosto</b>. Edita cantidad y precio; "＋ Adicional" agrega líneas (MO, imprevistos).</div>'+html+'</div>';
+ return '<div class="sec"><h2>🧱 Obra por etapa · físico vs pagado real</h2><div class="note">Cada ítem trae su <b>estado físico</b> (⚪→🔵→✅). El <b>gasto real</b> del capítulo viene de la contabilidad; si costó más que el presupuesto, se muestra cuánto (así costó de verdad, no es un error). Edita cantidad y precio; "＋ Adicional" agrega líneas (MO, imprevistos).</div>'+html+'</div>';
 }
 function vCant(){
  var uds=['und','m2','ml'];var its=ITEMS.filter(function(i){return uds.indexOf((i.und||'').toLowerCase())>=0;});
