@@ -289,12 +289,14 @@ function faltaTotal(){if(!ACP.length)return 0;if(isWhole()){var f=presuTotal()-g
 function totalProy(){if(!ACP.length)return gastadoTotal();return isWhole()?presuTotal():(gastadoTotal()+faltaTotal());}
 function computeFalta(){return faltaTotal();}
 function gastoCats(){var tot=gastadoTotal();if(CUR==='robledo'){var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;});var sum=cats.reduce(function(a,c){return a+c.v;},0);var rest=tot-sum;if(rest>1)cats.push({nm:'Acabados / nuevos',v:rest});return cats.sort(function(a,b){return b.v-a.v;});}var lblE={PRELIMINARES:'Preliminares',CIMENTACION:'Cimentación',ESTRUCTURA:'Estructura',INDIRECTOS:'Indirectos'};var m={};GAS.forEach(function(g){var k=g.etapa_contable?(lblE[g.etapa_contable]||g.etapa_contable):((g.etapa||'Sin categoría').replace(/^\d+\s*/,'')||'Sin categoría');m[k]=(m[k]||0)+(+g.monto||0);});return Object.keys(m).map(function(k){return {nm:k,v:m[k]};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});}
+function gastoConcepto(){var lbl={MO:'Mano de obra',MATERIAL:'Materiales',EQUIPO:'Máquina / equipos',INDIRECTO:'Indirectos (admin, seguros)',AJUSTE:'Ajuste histórico',REVISAR:'Por revisar'};var m={};GAS.forEach(function(g){if(!g.concepto_costo)return;var k=lbl[g.concepto_costo]||g.concepto_costo;m[k]=(m[k]||0)+(+g.monto||0);});return Object.keys(m).map(function(k){return {nm:k,v:m[k]};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});}
 function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,total=hasPres?proyTotalReal():null,falta=(total!=null?Math.max(0,total-gastado):null);
  var o=OBRAS.find(function(x){return x.id===CUR;})||{},av=(o.avance!=null?o.avance:((hasPres&&total)?Math.round(gastado/total*100):null));
  var cfg=CFG[CUR]||{},caja=(cfg.caja!=null?cfg.caja:null),prc=(cfg.porrecibir!=null?cfg.porrecibir:null);
  var pd=function(v){return v==null?'<span style="color:#a7adbf;font-weight:600">Por definir</span>':fmt(v);};
  var cats=gastoCats();
  var legend=cats.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
+ var catsC=gastoConcepto();var legendC=catsC.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var html='<div class="itemh"><span class="nm0">📊</span><h3>Dashboard general</h3></div>'+
   '<div class="sum">'+
    '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+pd(caja)+'</div><div class="n">'+(caja!=null?'efectivo hoy':'sin cargar')+'</div></div>'+
@@ -306,8 +308,10 @@ function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,total=h
    '<div class="sc fa"><div class="l">⚪ Falta por invertir</div><div class="v">'+pd(falta)+'</div><div class="n">'+(hasPres?'del total del proyecto':'presupuesto por definir')+'</div></div>'+
    '<div class="sc to"><div class="l">📊 Valor total del proyecto</div><div class="v">'+pd(total)+'</div><div class="n">obra + lote + legales + dotación</div></div></div>'+
   (av!=null?'<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de obra</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% ejecutado</div></div>':'')+
-  '<div class="grp"><span>Distribución del gasto · % por categoría</span><span class="gt">'+fmt(gastado)+'</span></div>'+
+  '<div class="grp"><span>Distribución del gasto · por etapa</span><span class="gt">'+fmt(gastado)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,gastado)+'</div><div class="legend">'+legend+'</div></div></div>'+
+  (catsC.length?('<div class="grp"><span>Gasto por concepto · máquina, MO, material, indirecto</span><span class="gt">'+fmt(gastado)+'</span></div>'+
+  '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(catsC,gastado)+'</div><div class="legend">'+legendC+'</div></div></div>'):'')+
   '<div class="grp"><span>Entrar al detalle</span></div>'+
   '<div class="cards">'+
    '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
@@ -520,7 +524,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
   var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
-  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,etapa_contable,clase,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden&limit=5000'),g('cronograma?obra=eq.'+id+'&order=orden'),g('pagos_proyectados?obra=eq.'+id+'&order=fecha'),g('cuentas?deleted_at=is.null&order=orden'),g('dotacion_airbnb?select=precio,cant_apto,es_comun&limit=1000')]);
+  var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,etapa_contable,clase,concepto_costo,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden&limit=5000'),g('cronograma?obra=eq.'+id+'&order=orden'),g('pagos_proyectados?obra=eq.'+id+'&order=fecha'),g('cuentas?deleted_at=is.null&order=orden'),g('dotacion_airbnb?select=precio,cant_apto,es_comun&limit=1000')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];PAGOS=res[4]||[];CUENTAS=res[5]||[];DOT=(id==='weliving')?(res[6]||[]):[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
   ACP=(CUR==='robledo')?PEND.map(function(n){return capByNum[n];}).filter(Boolean):CAPS.slice();
