@@ -260,6 +260,20 @@ function capFalta(c){var f=capPresup(c)-capPagado(c);return f>0?f:0;}
 function capValorFull(c){return lineasOf(c).reduce(function(a,l){return a+(+l.total||0);},0);}
 function dotTotalReal(){return (DOT||[]).reduce(function(a,d){var q=d.es_comun?(+d.cant_apto||0):(+d.cant_apto||0)*20;return a+(+d.precio||0)*q;},0);}
 function proyTotalReal(){return ACP.reduce(function(a,c){return a+capValorFull(c);},0)+dotTotalReal();}
+function grpValG(grs){return ACP.filter(function(c){return grs.indexOf((c.nombre||'').split(' · ')[0])>=0;}).reduce(function(a,c){return a+capValorFull(c);},0);}
+function loteVal(){return ITEMS.filter(function(i){var c=capByNum[i.cap_num];return c&&((c.nombre||'').split(' · ')[0])==='PROYECTO'&&/lote/i.test(i.descripcion||'');}).reduce(function(a,i){return a+(+i.total||0);},0);}
+function compHTML(lote,legales,obra,indir,dot,total,gastado){
+ var rows=[['🏞 Terreno (lote)',lote,'✅ Comprado','#334155'],['🏗 Obra civil (negra+gris+blanca)',obra,'En ejecución','#7c5cf0'],['🛋 Dotación Airbnb',dot,'Pendiente','#16a34a'],['📄 Legales y trámites',legales,'En trámite','#0ea5a3'],['🧾 Indirectos de obra',indir,'En ejecución','#d97706']];
+ var body=rows.filter(function(r){return r[1]>0;}).map(function(r){return '<div class="lgrow"><span class="dot" style="background:'+r[3]+'"></span><span class="ln">'+r[0]+'</span><span class="lp" style="min-width:96px;text-align:right;color:#8a90a6">'+r[2]+'</span><span class="lv">'+fmt(r[1])+'</span></div>';}).join('');
+ var invertido=lote+gastado, faltaInv=Math.max(0,total-invertido);
+ return '<div class="grp"><span>Composición de la inversión</span><span class="gt">'+fmt(total)+'</span></div>'+
+  '<div class="grpnote">El <b>lote ya está comprado</b>, por eso no cuenta como "falta por invertir". Lo demás es lo que se construye.</div>'+
+  '<div class="dl" style="padding:16px">'+body+'<div class="lgrow" style="border-top:1px solid #eceef4;margin-top:8px;padding-top:10px;font-weight:800"><span class="dot" style="background:#111827"></span><span class="ln">TOTAL DEL PROYECTO</span><span class="lp"></span><span class="lv">'+fmt(total)+'</span></div></div>'+
+  '<div class="sum" style="margin-top:10px">'+
+   '<div class="sc ej"><div class="l">✅ Ya invertido</div><div class="v">'+fmt(invertido)+'</div><div class="n">lote '+fmt(lote)+' + obra '+fmt(gastado)+'</div></div>'+
+   '<div class="sc fa"><div class="l">⏳ Falta por invertir</div><div class="v">'+fmt(faltaInv)+'</div><div class="n">construcción + dotación + legales restantes</div></div>'+
+   '<div class="sc to"><div class="l">📊 Valor total</div><div class="v">'+fmt(total)+'</div><div class="n">todo incluido</div></div></div>';
+}
 function hasGroups(){return CAPS.some(function(c){return /·/.test(c.nombre||'');});}
 function obraGrupos(){var P={},G={},ord={},AV={},AD={};CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'(otros)';P[gr]=(P[gr]||0)+(+c.ppto||0);if(ord[gr]==null)ord[gr]=+c.orden||999;if(c.avance!=null){AV[gr]=(AV[gr]||0)+(+c.ppto||0)*(+c.avance);AD[gr]=(AD[gr]||0)+(+c.ppto||0);}});GAS.forEach(function(g){var c=capByNum[g.cap_num];var gr=c?(((c.nombre||'').split(' · ')[0])||'(otros)'):'Sin asignar';G[gr]=(G[gr]||0)+(+g.monto||0);});var keys={};Object.keys(P).forEach(function(k){keys[k]=1;});Object.keys(G).forEach(function(k){keys[k]=1;});return Object.keys(keys).map(function(k){return {grupo:k,presup:P[k]||0,gastado:G[k]||0,saldo:(P[k]||0)-(G[k]||0),avance:(AD[k]?Math.round(AV[k]/AD[k]):null),ord:(ord[k]!=null?ord[k]:998)};}).sort(function(a,b){return b.presup-a.presup;});}
 function grupoView(){var rows=obraGrupos();var totP=rows.reduce(function(a,r){return a+r.presup;},0);var totG=rows.reduce(function(a,r){return a+r.gastado;},0);
@@ -290,8 +304,10 @@ function totalProy(){if(!ACP.length)return gastadoTotal();return isWhole()?presu
 function computeFalta(){return faltaTotal();}
 function gastoCats(){var tot=gastadoTotal();if(CUR==='robledo'){var cats=DIST.map(function(d){return {nm:d.nm.split(' · ')[0],v:catTotal(d.ets)};}).filter(function(c){return c.v>0;});var sum=cats.reduce(function(a,c){return a+c.v;},0);var rest=tot-sum;if(rest>1)cats.push({nm:'Acabados / nuevos',v:rest});return cats.sort(function(a,b){return b.v-a.v;});}var lblE={PRELIMINARES:'Preliminares',CIMENTACION:'Cimentación',ESTRUCTURA:'Estructura',INDIRECTOS:'Indirectos'};var m={};GAS.forEach(function(g){var k=g.etapa_contable?(lblE[g.etapa_contable]||g.etapa_contable):((g.etapa||'Sin categoría').replace(/^\d+\s*/,'')||'Sin categoría');m[k]=(m[k]||0)+(+g.monto||0);});return Object.keys(m).map(function(k){return {nm:k,v:m[k]};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});}
 function gastoConcepto(){var lbl={MO:'Mano de obra',MATERIAL:'Materiales',EQUIPO:'Máquina / equipos',INDIRECTO:'Indirectos (admin, seguros)',AJUSTE:'Ajuste histórico',REVISAR:'Por revisar'};var m={};GAS.forEach(function(g){if(!g.concepto_costo)return;var k=lbl[g.concepto_costo]||g.concepto_costo;m[k]=(m[k]||0)+(+g.monto||0);});return Object.keys(m).map(function(k){return {nm:k,v:m[k]};}).filter(function(c){return c.v>0;}).sort(function(a,b){return b.v-a.v;});}
-function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,total=hasPres?proyTotalReal():null,falta=(total!=null?Math.max(0,total-gastado):null);
- var o=OBRAS.find(function(x){return x.id===CUR;})||{},av=(o.avance!=null?o.avance:((hasPres&&total)?Math.round(gastado/total*100):null));
+function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,total=hasPres?proyTotalReal():null;
+ var lote=hasPres?loteVal():0,legales=hasPres?Math.max(0,grpValG(['PROYECTO'])-lote):0,obraCivil=hasPres?grpValG(['NEGRA','GRIS','BLANCA']):0,indir=hasPres?grpValG(['INDIRECTOS']):0,dot=dotTotalReal();
+ var desarrollo=(total!=null?total-lote:null),falta=(desarrollo!=null?Math.max(0,desarrollo-gastado):null);
+ var o=OBRAS.find(function(x){return x.id===CUR;})||{},av=(o.avance!=null?o.avance:((desarrollo)?Math.round(gastado/desarrollo*100):null));
  var cfg=CFG[CUR]||{},caja=(cfg.caja!=null?cfg.caja:null),prc=(cfg.porrecibir!=null?cfg.porrecibir:null);
  var pd=function(v){return v==null?'<span style="color:#a7adbf;font-weight:600">Por definir</span>':fmt(v);};
  var cats=gastoCats();
@@ -305,9 +321,10 @@ function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,total=h
   '<div class="grp"><span>Resumen ejecutivo · en vivo</span><span class="gt">'+pd(total)+'</span></div>'+
   '<div class="sum">'+
    '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja ('+GAS.length+' gastos)</div></div>'+
-   '<div class="sc fa"><div class="l">⚪ Falta por invertir</div><div class="v">'+pd(falta)+'</div><div class="n">'+(hasPres?'del total del proyecto':'presupuesto por definir')+'</div></div>'+
-   '<div class="sc to"><div class="l">📊 Valor total del proyecto</div><div class="v">'+pd(total)+'</div><div class="n">obra + lote + legales + dotación</div></div></div>'+
-  (av!=null?'<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de obra</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% ejecutado</div></div>':'')+
+   '<div class="sc fa"><div class="l">⏳ Falta por invertir</div><div class="v">'+pd(falta)+'</div><div class="n">'+(hasPres?'obra + dotación + legales (sin el lote)':'presupuesto por definir')+'</div></div>'+
+   '<div class="sc to"><div class="l">📊 Valor total del proyecto</div><div class="v">'+pd(total)+'</div><div class="n">incluye el lote ya comprado</div></div></div>'+
+  (av!=null?'<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de inversión (obra)</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% invertido</div></div>':'')+
+  (hasPres&&lote>0?compHTML(lote,legales,obraCivil,indir,dot,total,gastado):'')+
   '<div class="grp"><span>Distribución del gasto · por etapa</span><span class="gt">'+fmt(gastado)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,gastado)+'</div><div class="legend">'+legend+'</div></div></div>'+
   (catsC.length?('<div class="grp"><span>Gasto por concepto · máquina, MO, material, indirecto</span><span class="gt">'+fmt(gastado)+'</span></div>'+
