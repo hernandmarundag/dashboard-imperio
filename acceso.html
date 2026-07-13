@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imperio · Acceso del equipo</title>
+<style>
+:root{--indigo:#4f46e5;--purple:#7c5cf0;--ink:#1b2030;--muted:#6b7280;--line:#e6e8f0;--bg:#0f1024}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(160deg,#1a1b3a,#0f1024);color:#fff;min-height:100vh;padding:28px 16px 40px}
+.wrap{max-width:920px;margin:0 auto}
+.hd{text-align:center;margin-bottom:26px}
+.hd .logo{font-size:34px}
+.hd h1{font-size:22px;font-weight:800;margin-top:6px}
+.hd p{color:#a7adbf;font-size:13.5px;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:#fff;color:var(--ink);border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.card .ico{font-size:30px}
+.card h2{font-size:17px;font-weight:800;margin:8px 0 2px}
+.card .rol{font-size:12px;color:var(--muted);margin-bottom:14px}
+.btn{display:flex;align-items:center;gap:8px;background:var(--indigo);color:#fff;text-decoration:none;border-radius:11px;padding:12px 14px;font-weight:700;font-size:14px;margin-top:8px}
+.btn.alt{background:#eef0fe;color:var(--indigo)}
+.btn.dark{background:var(--ink)}
+.btn:active{transform:translateY(1px)}
+.btn .a{margin-left:auto;opacity:.7}
+.foot{text-align:center;color:#8a90a6;font-size:11.5px;margin-top:24px}
+</style></head>
+<body>
+<div class="wrap">
+ <div class="hd"><div class="logo">🏛️</div><h1>Imperio · Constructora</h1><p>Elige tu acceso según tu rol</p></div>
+ <div class="grid">
+
+  <div class="card">
+   <div class="ico">🔑</div>
+   <h2>Hernán</h2>
+   <div class="rol">Dirección · acceso a todo</div>
+   <a class="btn dark" href="index.html">Panel completo (ERP) <span class="a">→</span></a>
+  </div>
+
+  <div class="card">
+   <div class="ico">💵</div>
+   <h2>Paulina</h2>
+   <div class="rol">Tesorería · pagar y subir comprobante</div>
+   <a class="btn" href="requisiciones.html?rol=tesorera">Requisiciones por pagar <span class="a">→</span></a>
+   <a class="btn alt" href="flujo.html">Flujo de caja <span class="a">→</span></a>
+  </div>
+
+  <div class="card">
+   <div class="ico">📗</div>
+   <h2>Lina</h2>
+   <div class="rol">Contabilidad · revisar y registrar gastos</div>
+   <a class="btn" href="requisiciones.html?rol=contabilidad">Requisiciones por contabilizar <span class="a">→</span></a>
+   <a class="btn alt" href="index.html">Panel general · agregar gastos <span class="a">→</span></a>
+  </div>
+
+  <div class="card">
+   <div class="ico">👷</div>
+   <h2>Ingeniero</h2>
+   <div class="rol">Obra · bitácora y requisiciones</div>
+   <a class="btn" href="bitacora.html">Bitácora del día <span class="a">→</span></a>
+   <a class="btn alt" href="requisiciones.html?rol=ing">Crear requisición <span class="a">→</span></a>
+  </div>
+
+ </div>
+ <div class="foot">Cada quien entra a lo suyo. La página general (ERP) tiene su clave. · Imperio Constructora</div>
+</div>
+</body></html>
