@@ -45,6 +45,8 @@ tr.grand td{background:var(--ink);color:#fff;font-weight:800}
 .toast.on{opacity:1}.toast.err{background:var(--danger)}
 .alert{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13.5px;color:#9a3412}
 .alert b{color:#7c2d12}
+.abin{width:110px;border:1px solid #cbd2e0;border-radius:6px;padding:4px 7px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;background:#fffdf5}
+.abin:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
 </style></head>
 <body>
 <div class="top"><h1>💵 Weliving · Flujo de caja</h1><div class="d">qué debes · cuándo · qué esperas cobrar · saldo proyectado</div></div>
@@ -79,9 +81,10 @@ function boot(){
 function pend(){return PAG.filter(function(p){return p.estado!=='pagado';});}
 function esper(){return ING.filter(function(i){return i.estado!=='recibido';});}
 function sum(a,k){return a.reduce(function(s,x){return s+(+x[k]||0);},0);}
+function saldoDe(p){return Math.max(0,(+p.monto||0)-(+p.pagado_parcial||0));}
 function render(){
- var porPagar=sum(pend(),'monto'),porCobrar=sum(esper(),'monto'),saldoProy=CAJA+porCobrar-porPagar;
- var pag7=sum(pend().filter(function(p){return dias(p.fecha)<=7;}),'monto');
+ var porPagar=pend().reduce(function(s,p){return s+saldoDe(p);},0),porCobrar=sum(esper(),'monto'),saldoProy=CAJA+porCobrar-porPagar;
+ var pag7=pend().filter(function(p){return dias(p.fecha)<=7;}).reduce(function(s,p){return s+saldoDe(p);},0);
  var alerta='';
  if(pag7>0){alerta='<div class="alert">⚠️ En los próximos 7 días necesitas <b>'+fmt(pag7)+'</b> para pagos. Caja hoy: <b>'+fmt(CAJA)+'</b>. '+(CAJA<pag7?'<b style="color:#b91c1c">Falta '+fmt(pag7-CAJA)+'</b>.':'Alcanza.')+'</div>';}
  var cards='<div class="cards">'+
@@ -92,8 +95,13 @@ function render(){
  '</div>';
  // POR PAGAR
  var pr=pend().slice().sort(function(a,b){return (a.fecha||'')<(b.fecha||'')?-1:1;});
- var pagRows=pr.map(function(p){return '<tr><td>'+(p.fecha||'—')+' '+pillFecha(p.fecha)+'</td><td>'+(p.concepto||'')+'</td><td class="muted" style="font-size:11px">'+(p.fase||'')+'</td><td class="n">'+fmt(p.monto)+'</td><td><button class="b" onclick="pagar(\''+p.id+'\')">✓ Pagado</button></td></tr>';}).join('')||'<tr><td colspan="5" class="note" style="text-align:center;padding:16px">Sin pagos pendientes.</td></tr>';
- var secPagar='<div class="sec"><h2>🔴 Cuentas por pagar</h2><div class="note">Deudas y pagos programados. Al marcar "Pagado" salen del flujo.</div><div class="tblwrap"><table><tr><th>Fecha</th><th>Concepto</th><th>Etapa</th><th class="n">Monto</th><th></th></tr>'+pagRows+'<tr class="grand"><td colspan="3">TOTAL POR PAGAR</td><td class="n">'+fmt(porPagar)+'</td><td></td></tr></table></div>'+
+ var pagRows=pr.map(function(p){
+   var sal=saldoDe(p),ab=(+p.pagado_parcial||0),rq=p._rq;
+   var montoCell=fmt(p.monto)+(rq?'':'<div class="note" style="margin:3px 0 0">Abonado <input class="abin" value="'+ab+'" onchange="setAbono(\''+p.id+'\',this)"> · saldo <b>'+fmt(sal)+'</b></div>');
+   var btns=rq?'<button class="b" onclick="pagar(\''+p.id+'\')">✓ Pagado</button>':'<button class="b" onclick="pagar(\''+p.id+'\')">✓ Todo</button>';
+   return '<tr><td>'+(p.fecha||'—')+' '+pillFecha(p.fecha)+'</td><td>'+(p.concepto||'')+'</td><td class="muted" style="font-size:11px">'+(p.fase||'')+'</td><td class="n">'+montoCell+'</td><td>'+btns+'</td></tr>';
+ }).join('')||'<tr><td colspan="5" class="note" style="text-align:center;padding:16px">Sin pagos pendientes.</td></tr>';
+ var secPagar='<div class="sec"><h2>🔴 Cuentas por pagar</h2><div class="note">Deudas y pagos programados. Puedes <b>abonar parcial</b> (escribe lo abonado y editas cuando quieras) o "✓ Todo". Al pagar completo salen del flujo.</div><div class="tblwrap"><table><tr><th>Fecha</th><th>Concepto</th><th>Etapa</th><th class="n">Monto</th><th></th></tr>'+pagRows+'<tr class="grand"><td colspan="3">TOTAL POR PAGAR</td><td class="n">'+fmt(porPagar)+'</td><td></td></tr></table></div>'+
    '<button class="add" onclick="tog(\'fp\')">＋ Agregar pago / deuda</button>'+
    '<div class="form" id="fp"><div class="fld"><label>Concepto</label><input id="fp-c" placeholder="Ej: Nómina quincena"></div><div class="fld"><label>Monto</label><input id="fp-m" placeholder="$"></div><div class="fld"><label>Fecha</label><input id="fp-f" type="date" value="'+hoy()+'"></div><div class="fld"><label>Etapa</label><input id="fp-e" placeholder="Estructura / Gris..."></div><button class="save" onclick="addPago()">Guardar</button></div></div>';
  // POR COBRAR
@@ -116,7 +124,8 @@ function addPago(){var c=(document.getElementById('fp-c').value||'').trim(),m=nu
 function addIngreso(){var s=(document.getElementById('fi-s').value||'').trim(),c=(document.getElementById('fi-c').value||'').trim(),m=num(document.getElementById('fi-m').value),f=document.getElementById('fi-f').value,p=num(document.getElementById('fi-p').value);if(!m){toast('Pon el monto',true);return;}post('ingresos_esperados',{obra:'weliving',fuente:s||'Ingreso',concepto:c||null,monto:m,fecha:f||null,probabilidad:p||100,estado:'esperado'}).then(function(r){return r.json();}).then(function(rows){ING.push((rows&&rows[0])||{});toast('Ingreso agregado ✓');render();}).catch(function(){toast('Error',true);});}
 function pagar(id){id=String(id);var p=PAG.find(function(x){return String(x.id)===id;});if(p)p.estado='pagado';
  if(id.indexOf('rq')===0){patch('requisiciones?id=eq.'+id.slice(2),{pagado:true,fecha_pago:hoy()}).then(function(){toast('Requisición pagada ✓');boot();}).catch(function(){toast('Error',true);});}
- else{patch('pagos_proyectados?id=eq.'+id,{estado:'pagado'}).then(function(){toast('Marcado pagado ✓');render();}).catch(function(){toast('Error',true);});}}
+ else{if(p)p.pagado_parcial=(+p.monto||0);patch('pagos_proyectados?id=eq.'+id,{estado:'pagado',pagado_parcial:(p?(+p.monto||0):0)}).then(function(){toast('Marcado pagado ✓');render();}).catch(function(){toast('Error',true);});}}
+function setAbono(id,el){id=String(id);var p=PAG.find(function(x){return String(x.id)===id;});if(!p)return;var m=Math.max(0,num(el.value));var full=m>=(+p.monto||0);p.pagado_parcial=m;p.estado=full?'pagado':'pendiente';patch('pagos_proyectados?id=eq.'+id,{pagado_parcial:m,estado:(full?'pagado':'pendiente')}).then(function(){toast(full?'Pago completado ✓':'Abono guardado ✓');render();}).catch(function(){toast('Error',true);});}
 function cobrar(id){var i=ING.find(function(x){return x.id===id;});if(i)i.estado='recibido';patch('ingresos_esperados?id=eq.'+id,{estado:'recibido'}).then(function(){toast('Marcado recibido ✓');render();}).catch(function(){toast('Error',true);});}
 boot();
 </script>
