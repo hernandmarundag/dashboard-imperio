@@ -69,15 +69,16 @@ function render(){
  var pend=RQ.filter(function(r){return !r.pagado&&(r.estado||'pendiente')==='pendiente';});
  var aprob=RQ.filter(function(r){return !r.pagado&&r.estado==='aprobado';});
  var pag=RQ.filter(function(r){return r.pagado;});
+ var xcont=RQ.filter(function(r){return r.pagado&&!r.contabilizado;});
  var cards='<div class="cards">'+
-  kc('amber','⏳ Por aprobar',pend.length+' · '+fmt(pend.reduce(function(a,r){return a+(+r.valor||0);},0)))+
-  kc('blue','✅ Aprobadas por pagar',fmt(aprob.reduce(function(a,r){return a+(+r.valor||0);},0)),aprob.length+' requisiciones')+
+  kc('amber','⏳ Por aprobar (Hernán)',pend.length+' · '+fmt(pend.reduce(function(a,r){return a+(+r.valor||0);},0)))+
+  kc('blue','✅ Por pagar (tesorera)',fmt(aprob.reduce(function(a,r){return a+(+r.valor||0);},0)),aprob.length+' aprobadas')+
   kc('green','💵 Pagadas',fmt(pag.reduce(function(a,r){return a+(+r.valor||0);},0)),pag.length+' pagadas')+
-  kc('red','📋 Total',RQ.length+' requisiciones','en total')+
+  kc('red','📗 Por contabilizar',xcont.length+' · '+fmt(xcont.reduce(function(a,r){return a+(+r.valor||0);},0)))+
  '</div>';
  var lista=RQ;
- if(FILT==='pend')lista=pend;else if(FILT==='aprob')lista=aprob;else if(FILT==='pag')lista=pag;
- var filt='<div class="filt">'+fb('todas','Todas')+fb('pend','⏳ Por aprobar')+fb('aprob','✅ Por pagar')+fb('pag','💵 Pagadas')+'</div>';
+ if(FILT==='pend')lista=pend;else if(FILT==='aprob')lista=aprob;else if(FILT==='pag')lista=pag;else if(FILT==='cont')lista=xcont;
+ var filt='<div class="filt">'+fb('todas','Todas')+fb('pend','⏳ Por aprobar')+fb('aprob','✅ Por pagar')+fb('pag','💵 Pagadas')+fb('cont','📗 Por contabilizar')+'</div>';
  var rows=lista.map(rowHTML).join('')||'<tr><td colspan="9" class="note" style="text-align:center;padding:18px">Sin requisiciones en este filtro.</td></tr>';
  var tabla='<div class="sec"><h2>📋 Requisiciones</h2><div class="note">Aprobar → entra a "Por pagar" del flujo. Marcar pagada → sale de Por pagar (la tesorera registra el gasto aparte). Toca los íconos de documento para marcarlos.</div>'+filt+
   '<div class="tblwrap"><table><tr><th>Fecha</th><th>Proveedor</th><th>Descripción</th><th class="n">Valor</th><th>Medio</th><th>Estado</th><th>Docs</th><th>Acciones</th></tr>'+rows+'</table></div></div>';
@@ -97,9 +98,10 @@ function render(){
 }
 function kc(c,l,v,n){return '<div class="kc '+c+'"><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(n?'<div class="note" style="margin:3px 0 0">'+n+'</div>':'')+'</div>';}
 function fb(k,t){return '<button class="'+(FILT===k?'on':'')+'" onclick="setF(\''+k+'\')">'+t+'</button>';}
-function bdg(r){if(r.pagado)return '<span class="bdg pag">💵 Pagada</span>';var e=r.estado||'pendiente';if(e==='aprobado')return '<span class="bdg aprob">✅ Aprobada</span>';if(e==='rechazado')return '<span class="bdg rech">✗ Rechazada</span>';return '<span class="bdg pend">⏳ Por aprobar</span>';}
+function bdg(r){if(r.pagado&&r.contabilizado)return '<span class="bdg pag">📗 Contabilizada</span>';if(r.pagado)return '<span class="bdg aprob">💵 Pagada · x contab.</span>';var e=r.estado||'pendiente';if(e==='aprobado')return '<span class="bdg aprob">✅ Aprobada · x pagar</span>';if(e==='rechazado')return '<span class="bdg rech">✗ Rechazada</span>';return '<span class="bdg pend">⏳ Por aprobar</span>';}
 function docs(r){function d(c,l){return '<span class="doc" title="'+l+'" onclick="togDoc('+r.id+',\''+c+'\','+(r[c]?'false':'true')+')">'+(r[c]?'✅':'⬜')+'</span>';}return d('rut','RUT')+' '+d('cuenta_cobro','Cta cobro')+' '+d('certificado','Certif.')+' '+d('contabilizado','Contab.');}
-function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'){h+='<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}return h||'—';}
+function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'){h+='<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado){h+='<button class="b ap" onclick="contabilizar('+r.id+')">📗 Contabilizar</button>';}return h||'—';}
+function contabilizar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.contabilizado=true;patch('requisiciones?id=eq.'+id,{contabilizado:true}).then(function(){toast('Contabilizada ✓');render();}).catch(function(){toast('Error',true);});}
 function rowHTML(r){var lk=r.link_pago?' <a class="pl" href="'+esc(r.link_pago)+'" target="_blank" rel="noopener">🔗</a>':'';
  return '<tr><td style="white-space:nowrap">'+(r.fecha||'')+'</td><td>'+esc(r.proveedor)+'</td><td>'+esc(r.descripcion)+(r.cantidad?' <span class="note">('+esc(r.cantidad)+')</span>':'')+'</td><td class="n">'+fmt(r.valor)+'</td><td style="font-size:11px">'+esc(r.medio_pago||'')+lk+'</td><td>'+bdg(r)+'</td><td style="white-space:nowrap">'+docs(r)+'</td><td style="white-space:nowrap">'+acc(r)+'</td></tr>';}
 function tog(id){document.getElementById(id).classList.toggle('on');}
