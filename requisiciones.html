@@ -50,7 +50,13 @@ a.pl{color:var(--indigo);font-size:11px}
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
 const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
-var RQ=[],FILT='todas',FUP=null;
+var ROL=((new URLSearchParams(location.search).get('rol'))||'admin').toLowerCase();
+var ROLNAME={ing:'👷 Ingeniero — crear y subir factura',hernan:'✅ Hernán — aprobar',tesorera:'💵 Paulina (tesorería) — pagar y subir comprobante',contabilidad:'📗 Lina (contabilidad) — revisar y pasar a gasto',admin:'🔑 Admin — todo'};
+var RQ=[],FILT=({ing:'todas',hernan:'pend',tesorera:'aprob',contabilidad:'cont'})[ROL]||'todas',FUP=null;
+function can(a){if(ROL==='admin')return true;if(a==='crear')return ROL==='ing';if(a==='aprob')return ROL==='hernan';if(a==='pay')return ROL==='tesorera';if(a==='cont')return ROL==='contabilidad';return false;}
+var AREAS=['MO General','Materiales General','Nomina ADM','Nomina Empleados','Administracion','Alquiler Equipos','Seguros','Seguridad Social','Herramientas','Transporte','Excavacion','Varios','Planos'];
+var OBRAS=[['weliving','Weliving'],['robledo','Robledo'],['novaeva','Novaeva']];
+function obraNm(id){var o=OBRAS.find(function(x){return x[0]===id;});return o?o[1]:(id||'');}
 function subirFactura(el){var f=el.files&&el.files[0];if(!f){return;}var st=document.getElementById('fac-st');if(st)st.textContent='⏳ subiendo…';
  var path='weliving/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
  fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f})
@@ -66,7 +72,7 @@ function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.cla
 function hoy(){return new Date().toISOString().slice(0,10);}
 function boot(){
  document.getElementById('body').innerHTML='<div class="loading"><div style="font-size:30px">⏳</div><p style="margin-top:8px">Cargando requisiciones…</p></div>';
- g('requisiciones?obra=eq.weliving&order=fecha.desc,id.desc&limit=2000').then(function(r){RQ=r||[];render();})
+ g('requisiciones?order=fecha.desc,id.desc&limit=3000').then(function(r){RQ=r||[];render();})
  .catch(function(){document.getElementById('body').innerHTML='<div class="loading"><div style="font-size:32px">⚠️</div><p style="margin:10px 0">No pude conectar.</p><button class="retry" onclick="boot()">↻ Reintentar</button></div>';});
 }
 function estOf(r){return r.pagado?'pag':(r.estado||'pendiente').slice(0,5).replace('pendi','pend').replace('aprob','aprob').replace('recha','rech');}
@@ -89,39 +95,42 @@ function render(){
   '<div class="tblwrap"><table><tr><th>Fecha</th><th>Proveedor</th><th>Descripción</th><th class="n">Valor</th><th>Medio</th><th>Estado</th><th>Docs</th><th>Acciones</th></tr>'+rows+'</table></div></div>';
  var addf='<div class="sec"><button class="add" onclick="tog(\'nf\')">＋ Nueva requisición</button>'+
   '<div class="form" id="nf">'+
+   '<div class="fld"><label>Obra</label><select id="n-obra">'+OBRAS.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('')+'</select></div>'+
    '<div class="fld"><label>Fecha</label><input id="n-f" type="date" value="'+hoy()+'"></div>'+
-   '<div class="fld big"><label>Proveedor</label><input id="n-p" placeholder="Ej: San Pío"></div>'+
-   '<div class="fld big"><label>Descripción</label><input id="n-d" placeholder="Qué se pide"></div>'+
+   '<div class="fld big"><label>Pagado a / Proveedor</label><input id="n-p" placeholder="Ej: San Pío"></div>'+
+   '<div class="fld big"><label>Descripción / Material</label><input id="n-d" placeholder="Ej: Hierro, Concreto, Arena"></div>'+
+   '<div class="fld"><label>Área / Categoría</label><select id="n-area"><option value="">-- Área --</option>'+AREAS.map(function(a){return '<option>'+a+'</option>';}).join('')+'</select></div>'+
+   '<div class="fld"><label>Etapa</label><input id="n-e" placeholder="Ej: Estructura, Losa P5..."></div>'+
    '<div class="fld"><label>Cantidad</label><input id="n-c" placeholder="Ej: 5 m³"></div>'+
    '<div class="fld"><label>Valor</label><input id="n-v" placeholder="$"></div>'+
-   '<div class="fld"><label>Medio de pago</label><input id="n-m" placeholder="Ahorros / Nequi / Link"></div>'+
-   '<div class="fld"><label>Cuenta</label><input id="n-cta" placeholder="N° cuenta"></div>'+
-   '<div class="fld"><label>Etapa / Capítulo</label><input id="n-e" placeholder="Estructura / Gris..."></div>'+
-   '<div class="fld"><label>Material / rubro</label><input id="n-mat" placeholder="Concreto, acero..."></div>'+
-   '<div class="fld"><label>N° factura</label><input id="n-nf" placeholder="Opcional"></div>'+
    '<div class="fld"><label>IVA</label><input id="n-iva" placeholder="$ 0"></div>'+
+   '<div class="fld"><label>Cuenta / Método de pago</label><input id="n-m" placeholder="BCol Grupo, TC Paulina..."></div>'+
+   '<div class="fld"><label>N° cuenta</label><input id="n-cta" placeholder="Opcional"></div>'+
+   '<div class="fld"><label>N° factura</label><input id="n-nf" placeholder="Opcional"></div>'+
    '<div class="fld big"><label>📎 Factura (foto o PDF)</label><input id="n-fac" type="file" accept="image/*,application/pdf" onchange="subirFactura(this)"> <span id="fac-st" style="font-size:11px"></span></div>'+
    '<button class="save" onclick="addReq()">Guardar requisición</button>'+
   '</div></div>';
- document.getElementById('body').innerHTML=cards+addf+tabla;
+ if(!can('crear'))addf='';
+ var banner='<div class="sec" style="background:#eef0fe;border-color:#c7d2fe;padding:11px 15px;margin-bottom:14px"><b style="color:var(--indigo)">'+(ROLNAME[ROL]||ROL)+'</b> <span class="note" style="margin:0"> · esta vista está enfocada en tu tarea</span></div>';
+ document.getElementById('body').innerHTML=banner+cards+addf+tabla;
 }
 function kc(c,l,v,n){return '<div class="kc '+c+'"><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(n?'<div class="note" style="margin:3px 0 0">'+n+'</div>':'')+'</div>';}
 function fb(k,t){return '<button class="'+(FILT===k?'on':'')+'" onclick="setF(\''+k+'\')">'+t+'</button>';}
 function bdg(r){if(r.pagado&&r.contabilizado)return '<span class="bdg pag">📗 Contabilizada</span>';if(r.pagado)return '<span class="bdg aprob">💵 Pagada · x contab.</span>';var e=r.estado||'pendiente';if(e==='aprobado')return '<span class="bdg aprob">✅ Aprobada · x pagar</span>';if(e==='rechazado')return '<span class="bdg rech">✗ Rechazada</span>';return '<span class="bdg pend">⏳ Por aprobar</span>';}
 function fileIco(r,campo,emo,lbl){var u=r[campo];if(u)return '<a class="pl" href="'+esc(u)+'" target="_blank" rel="noopener" title="Ver '+lbl+'" style="font-size:15px">'+emo+'</a>';return '<span class="doc" title="Subir '+lbl+'" style="opacity:.5" onclick="subirDoc('+r.id+',\''+campo+'\')">📎</span>';}
 function docs(r){function d(c,l){return '<span class="doc" title="'+l+'" onclick="togDoc('+r.id+',\''+c+'\','+(r[c]?'false':'true')+')">'+(r[c]?'✅':'⬜')+'</span>';}return fileIco(r,'factura_url','📄','factura')+' '+fileIco(r,'comprobante_url','🧾','comprobante de pago')+' <span style="color:#cbd2e0">|</span> '+d('rut','RUT')+' '+d('cuenta_cobro','Cta cobro')+' '+d('certificado','Certif.');}
-function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'){h+='<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado){h+='<button class="b ap" onclick="pasarAGasto('+r.id+')">📗 Pasar a gasto</button>';}return h||'—';}
+function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'&&can('aprob')){h+='<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'&&can('pay')){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado&&can('cont')){h+='<button class="b ap" onclick="pasarAGasto('+r.id+')">📗 Pasar a gasto</button>';}return h||'—';}
 function pasarAGasto(id){var r=RQ.find(function(x){return x.id===id;});if(!r)return;if(r.gasto_id){if(!confirm('Ya tiene gasto registrado. ¿Solo marcar contabilizada?')){return;}patch('requisiciones?id=eq.'+id,{contabilizado:true}).then(function(){r.contabilizado=true;toast('Contabilizada ✓');render();});return;}
  if(!confirm('¿Registrar en la HOJA DE GASTO y marcar contabilizada?\n'+r.proveedor+' · '+fmt(r.valor)+'\n(Se crea el gasto con la factura y los datos de la requisición.)'))return;
  var cant=parseFloat(String(r.cantidad||'').replace(/[^0-9.]/g,''))||null;
- post('gastos',{obra:'weliving',fecha:r.fecha_pago||r.fecha,nombre:r.proveedor,descripcion:r.descripcion,material:r.material,cantidad:cant,iva:r.iva||0,monto:r.valor,mp:r.medio_pago,cuenta:r.cuenta,etapa:r.etapa,cap_num:r.cap_num,factura_url:r.factura_url,fuente:'requisicion'})
+ post('gastos',{obra:r.obra||'weliving',fecha:r.fecha_pago||r.fecha,nombre:r.proveedor,descripcion:r.descripcion,material:r.material||r.descripcion,area:r.area,cantidad:cant,iva:r.iva||0,monto:r.valor,mp:r.medio_pago,cuenta:r.cuenta,etapa:r.etapa,cap_num:r.cap_num,factura_url:r.factura_url,fuente:'requisicion'})
  .then(function(res){return res.json();}).then(function(rows){var gid=(rows&&rows[0])?rows[0].id:null;r.contabilizado=true;r.gasto_id=gid;return patch('requisiciones?id=eq.'+id,{contabilizado:true,gasto_id:gid});})
  .then(function(){toast('Registrada en la hoja de gasto y contabilizada ✓');render();}).catch(function(){toast('Error al pasar a gasto',true);});}
 function rowHTML(r){var lk=r.link_pago?' <a class="pl" href="'+esc(r.link_pago)+'" target="_blank" rel="noopener">🔗</a>':'';
- return '<tr><td style="white-space:nowrap">'+(r.fecha||'')+'</td><td>'+esc(r.proveedor)+'</td><td>'+esc(r.descripcion)+(r.cantidad?' <span class="note">('+esc(r.cantidad)+')</span>':'')+'</td><td class="n">'+fmt(r.valor)+'</td><td style="font-size:11px">'+esc(r.medio_pago||'')+lk+'</td><td>'+bdg(r)+'</td><td style="white-space:nowrap">'+docs(r)+'</td><td style="white-space:nowrap">'+acc(r)+'</td></tr>';}
+ return '<tr><td style="white-space:nowrap">'+(r.fecha||'')+'<div class="note" style="margin:0">'+obraNm(r.obra)+'</div></td><td>'+esc(r.proveedor)+'</td><td>'+esc(r.descripcion)+(r.cantidad?' <span class="note">('+esc(r.cantidad)+')</span>':'')+'</td><td class="n">'+fmt(r.valor)+'</td><td style="font-size:11px">'+esc(r.medio_pago||'')+lk+'</td><td>'+bdg(r)+'</td><td style="white-space:nowrap">'+docs(r)+'</td><td style="white-space:nowrap">'+acc(r)+'</td></tr>';}
 function tog(id){document.getElementById(id).classList.toggle('on');}
 function setF(k){FILT=k;render();}
-function addReq(){var b={obra:'weliving',fecha:document.getElementById('n-f').value||hoy(),proveedor:(document.getElementById('n-p').value||'').trim(),descripcion:(document.getElementById('n-d').value||'').trim(),cantidad:(document.getElementById('n-c').value||'').trim()||null,valor:num(document.getElementById('n-v').value),medio_pago:(document.getElementById('n-m').value||'').trim()||null,cuenta:(document.getElementById('n-cta').value||'').trim()||null,etapa:(document.getElementById('n-e').value||'').trim()||null,material:(document.getElementById('n-mat').value||'').trim()||null,num_factura:(document.getElementById('n-nf').value||'').trim()||null,iva:num(document.getElementById('n-iva').value),factura_url:FUP,estado:'pendiente'};if(!b.valor){toast('Pon el valor',true);return;}post('requisiciones',b).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])RQ.unshift(rows[0]);FUP=null;toast('Requisición creada ✓');render();}).catch(function(){toast('Error',true);});}
+function addReq(){var b={obra:(document.getElementById('n-obra').value||'weliving'),fecha:document.getElementById('n-f').value||hoy(),proveedor:(document.getElementById('n-p').value||'').trim(),descripcion:(document.getElementById('n-d').value||'').trim(),cantidad:(document.getElementById('n-c').value||'').trim()||null,valor:num(document.getElementById('n-v').value),medio_pago:(document.getElementById('n-m').value||'').trim()||null,cuenta:(document.getElementById('n-cta').value||'').trim()||null,etapa:(document.getElementById('n-e').value||'').trim()||null,area:(document.getElementById('n-area').value||'')||null,num_factura:(document.getElementById('n-nf').value||'').trim()||null,iva:num(document.getElementById('n-iva').value),factura_url:FUP,estado:'pendiente'};if(!b.valor){toast('Pon el valor',true);return;}post('requisiciones',b).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])RQ.unshift(rows[0]);FUP=null;toast('Requisición creada ✓');render();}).catch(function(){toast('Error',true);});}
 function subirDoc(id,campo){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;toast('⏳ subiendo…');var path='weliving/'+campo+'_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f}).then(function(r){if(!r.ok)throw 0;var url=SB_URL+'/storage/v1/object/public/facturas/'+path;var b={};b[campo]=url;var rr=RQ.find(function(x){return x.id===id;});if(rr)rr[campo]=url;return patch('requisiciones?id=eq.'+id,b);}).then(function(){toast('Archivo guardado ✓');render();}).catch(function(){toast('Error al subir',true);});};inp.click();}
 function aprobar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estado='aprobado';patch('requisiciones?id=eq.'+id,{estado:'aprobado'}).then(function(){toast('Aprobada ✓ (ya está en Por pagar del flujo)');render();}).catch(function(){toast('Error',true);});}
 function rechazar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estado='rechazado';patch('requisiciones?id=eq.'+id,{estado:'rechazado'}).then(function(){toast('Rechazada');render();}).catch(function(){toast('Error',true);});}
