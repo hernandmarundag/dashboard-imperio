@@ -104,8 +104,8 @@ function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.cla
 function copiar(t,el){var s=String(t);function ok(){var o=el.textContent;el.textContent='✅';setTimeout(function(){el.textContent=o;},1000);toast('Copiado: '+s);}
  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(ok).catch(fb);}else fb();
  function fb(){var ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('No se pudo copiar',true);}document.body.removeChild(ta);}}
-var SMMLV=1750905, SMDIA=SMMLV/30;
-function calc(r){var sm=+r.salario_mensual||0;var sd=sm/30;var dias=+r.dias||0;var base=dias*sd;var smBase=Math.min(SMDIA*dias,base);var bonif=base-smBase;var vhe=sm/240*1.25;var extra=(+r.horas_extra||0)*vhe;var prest=+r.prestamo||0;var total=base+extra-prest;var salud=smBase*0.04;var pension=smBase*0.04;return {sd:sd,base:base,smBase:smBase,bonif:bonif,vhe:vhe,extra:extra,prest:prest,total:total,salud:salud,pension:pension};}
+var SMMLV=1750905, SMDIA=SMMLV/30, AUXT=249095, AUXDIA=AUXT/30;
+function calc(r){var sm=+r.salario_mensual||0;var sd=sm/30;var dias=+r.dias||0;var base=dias*sd;var smBase=Math.min(SMDIA*dias,base);var rem=base-smBase;var aux=Math.min(AUXDIA*dias,rem);var bonif=rem-aux;var vhe=sm/240*1.25;var extra=(+r.horas_extra||0)*vhe;var prest=+r.prestamo||0;var total=base+extra-prest;var salud=smBase*0.04;var pension=smBase*0.04;return {sd:sd,base:base,smBase:smBase,aux:aux,bonif:bonif,vhe:vhe,extra:extra,prest:prest,total:total,salud:salud,pension:pension};}
 function esSin(x){return x.alerta&&/inscrib/i.test(x.alerta);}
 function qkey(q){var m=String(q).toLowerCase().match(/(\d+)\s*-\s*\d+\s+(\w+)\s+(\d{4})/);if(!m)return 0;var M={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12};return (+m[3])*10000+(M[(m[2]||'').slice(0,3)]||0)*100+(+m[1]);}
 function boot(){g('nomina?order=num&limit=1000').then(function(r){NOM=r||[];var qs=[];NOM.forEach(function(x){if(qs.indexOf(x.quincena)<0)qs.push(x.quincena);});qs.sort(function(a,b){return qkey(b)-qkey(a);});QUIN=QUIN||qs[0]||'';document.getElementById('qsel').innerHTML=qs.map(function(q){return '<option'+(q===QUIN?' selected':'')+'>'+esc(q)+'</option>';}).join('');render();}).catch(function(){document.getElementById('list').innerHTML='<div class="load">⚠️ No pude conectar. <button class="btn" onclick="boot()">Reintentar</button></div>';});}
@@ -149,6 +149,7 @@ function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;
   '<div style="height:8px"></div>'+
   rr('Días trabajados',(+x.dias||0))+
   rr('Salario base (mínimo)',fmt(c.smBase))+
+  rr('Auxilio de transporte',fmt(c.aux))+
   rr('Bonificación',fmt(c.bonif))+
   rr('Horas extra',(+x.horas_extra||0)+' h × '+fmt(c.vhe)+' = '+fmt(c.extra))+
   (c.prest!==0?rr('Préstamo',(c.prest>0?'− ':'+ ')+fmt(Math.abs(c.prest))):'')+
