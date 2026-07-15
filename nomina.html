@@ -65,7 +65,7 @@ h1{font-size:19px;font-weight:800}
 .benef .bnote{margin-top:6px;font-size:11.5px;color:#047857}
 .racts{display:flex;gap:8px;margin-top:14px}
 .racts button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;font-size:14px}
-.bx{background:#e2e8f0;color:var(--ink)}.bi{background:var(--blue);color:#fff}
+.bx{background:#e2e8f0;color:var(--ink)}.bi{background:var(--blue);color:#fff}.bg{background:var(--green);color:#fff}
 @media print{.filters,.foot,.acts,.qsel,.racts,.warn{display:none!important}body{background:#fff}
  body *{visibility:hidden}#reciboBox,#reciboBox *{visibility:visible}#reciboBox{position:absolute;left:0;top:0}}
 </style>
@@ -91,6 +91,7 @@ h1{font-size:19px;font-weight:800}
 </div>
 <div class="toast" id="toast"></div>
 <div class="ov" id="ov"><div class="recibo" id="reciboBox"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
@@ -144,7 +145,8 @@ function render(){
 function pagar(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;if(!x.pagado){if(!confirm('¿Marcar PAGADO?\n'+x.nombre+' · '+fmt(x.valor)+'\nCuenta: '+(x.cuenta||'')+(x.tercero?'\n⚠️ Tercero: '+x.tercero:'')))return;}
  var nv=!x.pagado;x.pagado=nv;x.fecha_pago=nv?hoy():null;patch('nomina?id=eq.'+id,{pagado:nv,fecha_pago:nv?hoy():null,estado:nv?'pagado':'pendiente'}).then(function(){toast(nv?'Pagado ✓':'Marca quitada');render();}).catch(function(){x.pagado=!nv;toast('Error',true);render();});}
 function subirComp(id){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;toast('⏳ subiendo…');var path='nomina/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f}).then(function(r){if(!r.ok)throw 0;var url=SB_URL+'/storage/v1/object/public/facturas/'+path;var x=NOM.find(function(y){return y.id===id;});if(x)x.comprobante_url=url;return patch('nomina?id=eq.'+id,{comprobante_url:url});}).then(function(){toast('Comprobante guardado ✓');render();}).catch(function(){toast('Error al subir',true);});};inp.click();}
-function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;var c=calc(x);
+var RECNAME='';
+function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;var c=calc(x);RECNAME=(x.nombre||'nomina')+'_'+(x.quincena||'');
  var h='<h3>Recibo de pago · Nómina</h3><div class="rs">Imperio Constructora · Quincena '+esc(x.quincena)+'</div>'+
   rr('Empleado',esc(x.nombre))+rr('Cédula',esc(x.cedula||''))+rr('Cargo',esc(x.cargo||''))+rr('Obra',esc(x.proyecto||''))+
   rr('Cuenta',esc(x.metodo||'')+' · '+esc(x.cuenta||''))+(x.tercero?rr('⚠ Tercero',esc(x.tercero)):'')+
@@ -161,9 +163,10 @@ function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;
   '<div class="brow"><span>Salud (4%)</span><b>'+fmt(c.salud)+'</b></div>'+
   '<div class="brow"><span>Pensión (4%)</span><b>'+fmt(c.pension)+'</b></div>'+
   '<div class="bnote">La empresa paga estos <b>'+fmt(c.salud+c.pension)+'</b> que normalmente se te descontarían del salario. Aquí los recibes completos, como un beneficio extra.</div></div>'+
-  '<div class="racts"><button class="bx" onclick="cerrar()">Cerrar</button><button class="bi" onclick="window.print()">🖨 Imprimir</button></div>';
+  '<div class="racts"><button class="bx" onclick="cerrar()">Cerrar</button><button class="bg" onclick="descargarImg()">📥 Imagen</button><button class="bi" onclick="window.print()">🖨 Imprimir</button></div>';
  document.getElementById('reciboBox').innerHTML=h;document.getElementById('ov').classList.add('on');}
 function rr(l,v){return '<div class="rr"><span>'+l+'</span><b>'+v+'</b></div>';}
+function descargarImg(){if(typeof html2canvas==='undefined'){toast('Cargando… reintenta',true);return;}var box=document.getElementById('reciboBox');var acts=box.querySelector('.racts');if(acts)acts.style.display='none';toast('⏳ generando imagen…');html2canvas(box,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(function(canvas){if(acts)acts.style.display='';var fname='Recibo_'+RECNAME.replace(/[^a-zA-Z0-9]/g,'_')+'.png';canvas.toBlob(function(blob){if(!blob){toast('Error al generar',true);return;}var file=new File([blob],fname,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Recibo de pago'}).then(function(){toast('Listo ✓');}).catch(function(){});}else{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();document.body.removeChild(a);toast('Imagen descargada ✓');}},'image/png');}).catch(function(){if(acts)acts.style.display='';toast('No se pudo generar la imagen',true);});}
 function cerrar(){document.getElementById('ov').classList.remove('on');}
 document.getElementById('ov').addEventListener('click',function(e){if(e.target.id==='ov')cerrar();});
 boot();
