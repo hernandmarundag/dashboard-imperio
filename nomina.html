@@ -57,6 +57,10 @@ h1{font-size:19px;font-weight:800}
 .rr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px;gap:12px}
 .rr b{font-variant-numeric:tabular-nums;text-align:right}
 .rtot{background:var(--ink);color:#fff;border-radius:11px;padding:11px 13px;display:flex;justify-content:space-between;font-weight:800;margin-top:12px;font-size:16px}
+.benef{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:11px;padding:11px 13px;margin-top:12px;font-size:12.5px;color:#065f46;line-height:1.4}
+.benef .brow{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.benef .brow b{font-variant-numeric:tabular-nums}
+.benef .bnote{margin-top:6px;font-size:11.5px;color:#047857}
 .racts{display:flex;gap:8px;margin-top:14px}
 .racts button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;font-size:14px}
 .bx{background:#e2e8f0;color:var(--ink)}.bi{background:var(--blue);color:#fff}
@@ -100,7 +104,8 @@ function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.cla
 function copiar(t,el){var s=String(t);function ok(){var o=el.textContent;el.textContent='✅';setTimeout(function(){el.textContent=o;},1000);toast('Copiado: '+s);}
  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(ok).catch(fb);}else fb();
  function fb(){var ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('No se pudo copiar',true);}document.body.removeChild(ta);}}
-function calc(r){var sm=+r.salario_mensual||0;var sd=sm/30;var base=(+r.dias||0)*sd;var vhe=sm/240*1.25;var extra=(+r.horas_extra||0)*vhe;var total=base+extra-(+r.prestamo||0);return {sd:sd,base:base,vhe:vhe,extra:extra,total:total};}
+var SMMLV=1750905, SMDIA=SMMLV/30;
+function calc(r){var sm=+r.salario_mensual||0;var sd=sm/30;var dias=+r.dias||0;var base=dias*sd;var smBase=Math.min(SMDIA*dias,base);var bonif=base-smBase;var vhe=sm/240*1.25;var extra=(+r.horas_extra||0)*vhe;var prest=+r.prestamo||0;var total=base+extra-prest;var salud=smBase*0.04;var pension=smBase*0.04;return {sd:sd,base:base,smBase:smBase,bonif:bonif,vhe:vhe,extra:extra,prest:prest,total:total,salud:salud,pension:pension};}
 function esSin(x){return x.alerta&&/inscrib/i.test(x.alerta);}
 function qkey(q){var m=String(q).toLowerCase().match(/(\d+)\s*-\s*\d+\s+(\w+)\s+(\d{4})/);if(!m)return 0;var M={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12};return (+m[3])*10000+(M[(m[2]||'').slice(0,3)]||0)*100+(+m[1]);}
 function boot(){g('nomina?order=num&limit=1000').then(function(r){NOM=r||[];var qs=[];NOM.forEach(function(x){if(qs.indexOf(x.quincena)<0)qs.push(x.quincena);});qs.sort(function(a,b){return qkey(b)-qkey(a);});QUIN=QUIN||qs[0]||'';document.getElementById('qsel').innerHTML=qs.map(function(q){return '<option'+(q===QUIN?' selected':'')+'>'+esc(q)+'</option>';}).join('');render();}).catch(function(){document.getElementById('list').innerHTML='<div class="load">⚠️ No pude conectar. <button class="btn" onclick="boot()">Reintentar</button></div>';});}
@@ -142,10 +147,16 @@ function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;
   rr('Empleado',esc(x.nombre))+rr('Cédula',esc(x.cedula||''))+rr('Cargo',esc(x.cargo||''))+rr('Obra',esc(x.proyecto||''))+
   rr('Cuenta',esc(x.metodo||'')+' · '+esc(x.cuenta||''))+(x.tercero?rr('⚠ Tercero',esc(x.tercero)):'')+
   '<div style="height:8px"></div>'+
-  rr('Salario mensual',fmt(x.salario_mensual))+rr('Salario diario',fmt(c.sd))+rr('Días',(+x.dias||0))+
-  rr('Pago base',fmt(c.base))+rr('Horas extra',(+x.horas_extra||0)+' h × '+fmt(c.vhe))+rr('Pago extra',fmt(c.extra))+
-  ((+x.prestamo||0)!==0?rr('Préstamo',((+x.prestamo)>0?'− ':'+ ')+fmt(Math.abs(+x.prestamo))):'')+
+  rr('Días trabajados',(+x.dias||0))+
+  rr('Salario base (mínimo)',fmt(c.smBase))+
+  rr('Bonificación',fmt(c.bonif))+
+  rr('Horas extra',(+x.horas_extra||0)+' h × '+fmt(c.vhe)+' = '+fmt(c.extra))+
+  (c.prest!==0?rr('Préstamo',(c.prest>0?'− ':'+ ')+fmt(Math.abs(c.prest))):'')+
   '<div class="rtot"><span>TOTAL A PAGAR</span><span>'+fmt(x.valor)+'</span></div>'+
+  '<div class="benef">🛡️ <b>Beneficios que asume la empresa por ti</b> (no se te descuentan):'+
+  '<div class="brow"><span>Salud (4%)</span><b>'+fmt(c.salud)+'</b></div>'+
+  '<div class="brow"><span>Pensión (4%)</span><b>'+fmt(c.pension)+'</b></div>'+
+  '<div class="bnote">La empresa paga estos <b>'+fmt(c.salud+c.pension)+'</b> que normalmente se te descontarían del salario. Aquí los recibes completos, como un beneficio extra.</div></div>'+
   '<div class="racts"><button class="bx" onclick="cerrar()">Cerrar</button><button class="bi" onclick="window.print()">🖨 Imprimir</button></div>';
  document.getElementById('reciboBox').innerHTML=h;document.getElementById('ov').classList.add('on');}
 function rr(l,v){return '<div class="rr"><span>'+l+'</span><b>'+v+'</b></div>';}
