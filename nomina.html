@@ -3,22 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Nómina 16–30 Junio 2026</title>
+<title>Nómina · Pagar</title>
 <style>
 :root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--green:#16a34a;--greenbg:#dcfce7;--red:#dc2626;--redbg:#fee2e2;--blue:#2563eb}
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;padding:14px 12px 40px}
 .wrap{max-width:540px;margin:0 auto}
 h1{font-size:19px;font-weight:800}
 .sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.4}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.qsel{display:flex;align-items:center;gap:8px;margin-top:12px}
+.qsel select{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:14px;font-weight:700;background:#fff;color:var(--ink)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .kc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
 .kc .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
 .kc .v{font-size:19px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums}
 .kc.g .v{color:var(--green)}.kc.a .v{color:#d97706}
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
 .filters::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;padding:8px 15px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.chip{flex:0 0 auto;padding:8px 15px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;cursor:pointer}
 .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 .catbar{color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:8px 14px;border-radius:10px;margin:16px 0 10px}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
@@ -26,76 +28,129 @@ h1{font-size:19px;font-weight:800}
 .prow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .nm{font-weight:700;font-size:15.5px;line-height:1.25}
 .pcard.paid .nm{text-decoration:line-through;color:var(--muted)}
-.mt{font-weight:800;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.meta{color:var(--muted);font-size:13px;margin-top:5px;word-break:break-all}
+.mt{font-weight:800;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.meta{color:var(--muted);font-size:13px;margin-top:6px;word-break:break-all;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cpy{border:1px solid var(--blue);background:#eff6ff;color:var(--blue);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;cursor:pointer;flex:0 0 auto}
+.cpy:active{transform:translateY(1px)}
 .badges{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px}
 .t-ins{background:var(--greenbg);color:var(--green)}.t-sin{background:var(--redbg);color:var(--red)}.t-nd{background:#f1f5f9;color:var(--muted)}
 .alert{display:block;width:100%;font-size:12px;color:var(--red);font-weight:600;margin-top:2px;line-height:1.35}
-.paybtn{margin-top:12px;width:100%;padding:12px;border:1.5px solid var(--green);background:#fff;color:var(--green);border-radius:10px;font-size:15px;font-weight:800;cursor:pointer}
+.acts{display:flex;gap:8px;margin-top:12px}
+.paybtn{flex:1;padding:12px;border:1.5px solid var(--green);background:#fff;color:var(--green);border-radius:10px;font-size:15px;font-weight:800;cursor:pointer}
 .paybtn.on{background:var(--green);color:#fff}
+.recbtn{flex:0 0 auto;padding:12px 14px;border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:10px;font-size:14px;font-weight:800;cursor:pointer}
+.compbtn{flex:0 0 auto;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:16px;cursor:pointer;text-decoration:none;color:var(--ink);display:flex;align-items:center}
 .subt{text-align:right;color:var(--muted);font-size:13px;padding:2px 4px 4px}
 .subt b{color:var(--ink);font-variant-numeric:tabular-nums}
 .warn{background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:13px;margin-top:18px;font-size:12.5px;color:#92400e;line-height:1.5}
 .foot{display:flex;gap:10px;margin-top:16px}
-.btn{flex:1;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;font-weight:700}
+.btn{flex:1;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
 .btn.p{background:var(--blue);color:#fff;border-color:var(--blue)}
-@media print{.filters,.foot,.paybtn{display:none}body{background:#fff}}
+.load{text-align:center;color:var(--muted);padding:40px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a7340;color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:.3s;z-index:40;pointer-events:none}
+.toast.on{opacity:1}.toast.err{background:var(--red)}
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:flex-start;justify-content:center;padding:20px;z-index:50;overflow:auto}
+.ov.on{display:flex}
+.recibo{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:22px}
+.recibo h3{font-size:16px;font-weight:800}.recibo .rs{font-size:11.5px;color:var(--muted);margin-bottom:12px}
+.rr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px;gap:12px}
+.rr b{font-variant-numeric:tabular-nums;text-align:right}
+.rtot{background:var(--ink);color:#fff;border-radius:11px;padding:11px 13px;display:flex;justify-content:space-between;font-weight:800;margin-top:12px;font-size:16px}
+.racts{display:flex;gap:8px;margin-top:14px}
+.racts button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;font-size:14px}
+.bx{background:#e2e8f0;color:var(--ink)}.bi{background:var(--blue);color:#fff}
+@media print{.filters,.foot,.acts,.qsel,.racts,.warn{display:none!important}body{background:#fff}
+ body *{visibility:hidden}#reciboBox,#reciboBox *{visibility:visible}#reciboBox{position:absolute;left:0;top:0}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><h1>💰 Nómina · 16–30 Junio 2026</h1>
-  <div class="sub">Imperio de Libertad S.A.S. · Consolidado de dispersión · 19 personas. Marque cada pago realizado; los totales se actualizan solos.</div></header>
+  <header><h1>💰 Nómina · Pagar</h1>
+  <div class="sub">Imperio Constructora · Dispersión. Marque cada pago; copie cuenta y valor para pagar. Los totales se actualizan solos.</div>
+  <div class="qsel"><b style="font-size:13px;color:var(--muted)">Quincena:</b><select id="qsel" onchange="QUIN=this.value;render()"></select></div>
+  </header>
   <div class="cards">
     <div class="kc"><div class="l">Total a pagar</div><div class="v" id="cT">$0</div></div>
     <div class="kc g"><div class="l">Pagado</div><div class="v" id="cP">$0</div></div>
     <div class="kc a"><div class="l">Pendiente</div><div class="v" id="cN">$0</div></div>
-    <div class="kc"><div class="l">Pagos hechos</div><div class="v" id="cC">0 / 19</div></div>
+    <div class="kc"><div class="l">Pagos hechos</div><div class="v" id="cC">0 / 0</div></div>
   </div>
   <div class="filters" id="filters"></div>
-  <div id="list"></div>
-  <div class="warn"><b>⚠️ Revisar antes de pagar:</b> 3 cuentas a nombre de terceros (Castro→Silveria González · Angulo→Dely Medina · Rendón→Emilsen Oquendo): pedir autorización firmada. 2 SIN INSCRIBIR (Wilmar García, José Rendón): riesgo laboral. Jeison y Mosco sin cédula. Marvin con PPT: verificar permiso.</div>
+  <div id="list"><div class="load">⏳ Cargando…</div></div>
+  <div class="warn" id="warn"></div>
   <div class="foot">
-    <button class="btn" onclick="resetAll()">Limpiar marcas</button>
     <button class="btn p" onclick="window.print()">Imprimir / PDF</button>
   </div>
 </div>
+<div class="toast" id="toast"></div>
+<div class="ov" id="ov"><div class="recibo" id="reciboBox"></div></div>
 <script>
-var data=[
-{c:"ADMINISTRACIÓN",n:"John Alexander Castro Betancur",d:"C.C. 1037622034",b:"Bancolombia Ahorros",ac:"01977649869",m:2500000,e:"INSCRITO",a:"Cuenta a nombre de tercero: Silveria González"},
-{c:"ADMINISTRACIÓN",n:"Vannesa (SISO profesional)",d:"C.C. 1053806849",b:"Bancolombia Ahorros",ac:"36860650015",m:1000000,e:"INSCRITO",a:""},
-{c:"ADMINISTRACIÓN",n:"María Fernanda García Bastidas",d:"C.C. 1238938433",b:"Bancolombia Ahorros",ac:"25597197627",m:1168208,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Eugenio Salgado",d:"C.C. 1045498790",b:"Nequi",ac:"3016146429",m:2093750,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Luis Alberto Coronado Prado",d:"C.C. 1001814691",b:"Nequi",ac:"3245550720",m:1471354,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Jose Alberto Batista",d:"C.C. 1001667687",b:"Bancolombia Ahorros",ac:"00296302554",m:1647917,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Johan Estiven Jaramillo",d:"C.C. 1037643375",b:"Nequi",ac:"3238062361",m:420833,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Daiber Valoyes",d:"C.C. 1001846747",b:"Bancolombia Ahorros",ac:"23881314576",m:946875,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Yorbis Borja",d:"C.C. 1046527267",b:"Nequi",ac:"3233368961",m:1046875,e:"INSCRITO",a:""},
-{c:"WELIVING",n:"Marvin Jose Matos",d:"PPT 5917988",b:"Bancolombia Ahorros",ac:"31600012581",m:1458333,e:"INSCRITO",a:"PPT migrante — verificar permiso de trabajo"},
-{c:"WELIVING",n:"Jesus Danobis Castro",d:"C.C. 1104404219",b:"Nequi",ac:"3005605551",m:894219,e:"INSCRITO",a:""},
-{c:"ROBLEDO",n:"Milton Herrera",d:"C.C. 71353708",b:"Bancolombia Ahorros",ac:"27274784003",m:2406250,e:"INSCRITO",a:""},
-{c:"ROBLEDO",n:"Carlos Angulo",d:"C.C. 32107120",b:"Nequi",ac:"3025613400",m:1311979,e:"INSCRITO",a:"Cuenta a nombre de tercero: Dely Medina (CC 11954255)"},
-{c:"ROBLEDO",n:"Wilmar García",d:"C.C. 71739802",b:"Bancolombia Ahorros",ac:"37725515988",m:1250000,e:"SIN INSCRIBIR",a:"No afiliado a seguridad social — riesgo laboral"},
-{c:"ROBLEDO",n:"John Palacios",d:"C.C. 1129365209",b:"Nequi",ac:"3018362978",m:1192708,e:"INSCRITO",a:""},
-{c:"ROBLEDO",n:"German Rueda",d:"C.C. 1098766335",b:"Nequi",ac:"3204082010",m:1189063,e:"INSCRITO",a:""},
-{c:"SIN CLASIFICAR",n:"Jeison",d:"Sin documento",b:"Llave",ac:"—",m:2000000,e:"SIN DATO",a:"Sin cédula ni categoría — falta soporte"},
-{c:"SIN CLASIFICAR",n:"Mosco",d:"Sin documento",b:"Nequi",ac:"—",m:1600000,e:"SIN DATO",a:"Sin cédula ni categoría — falta soporte"},
-{c:"SEGURIDAD",n:"Jose Rendón",d:"C.C. 70071887",b:"Nequi",ac:"3113730478",m:400000,e:"SIN INSCRIBIR",a:"Cuenta a nombre de tercero: Emilsen Oquendo (CC 43588182) · Sin inscribir"}
-];
-var catColor={"ADMINISTRACIÓN":"#3b82f6","WELIVING":"#22c55e","ROBLEDO":"#f59e0b","SEGURIDAD":"#8b5cf6","SIN CLASIFICAR":"#94a3b8"};
-var order=["ADMINISTRACIÓN","WELIVING","ROBLEDO","SEGURIDAD","SIN CLASIFICAR"];
-var KEY="nomina_16_30_jun2026_v2";
-var paid=JSON.parse(localStorage.getItem(KEY)||"{}");
-var curFilter="all";
-function fmt(n){return "$"+n.toLocaleString("es-CO");}
-function tag(e){var c=e==="INSCRITO"?"t-ins":e==="SIN INSCRIBIR"?"t-sin":"t-nd";return '<span class="tag '+c+'">'+e+'</span>';}
-function buildFilters(){var labels=[["all","Todos"],["ADMINISTRACIÓN","Admin"],["WELIVING","Weliving"],["ROBLEDO","Robledo"],["SEGURIDAD","Seguridad"],["SIN CLASIFICAR","Sin clasif."]];var h="";for(var i=0;i<labels.length;i++){h+='<div class="chip'+(labels[i][0]===curFilter?' active':'')+'" data-c="'+labels[i][0]+'">'+labels[i][1]+'</div>';}var f=document.getElementById("filters");f.innerHTML=h;var ch=f.querySelectorAll(".chip");for(var j=0;j<ch.length;j++){ch[j].onclick=function(){curFilter=this.getAttribute("data-c");render();};}}
-function render(){buildFilters();var list=document.getElementById("list");var out="";for(var oi=0;oi<order.length;oi++){var cat=order[oi];if(curFilter!=="all"&&curFilter!==cat)continue;var idxs=[];for(var i=0;i<data.length;i++){if(data[i].c===cat)idxs.push(i);}if(idxs.length===0)continue;var sub=0;out+='<div class="catbar" style="background:'+catColor[cat]+'">'+cat+' · '+idxs.length+'</div>';for(var r=0;r<idxs.length;r++){var k=idxs[r];var d=data[k];sub+=d.m;out+='<div class="pcard'+(paid[k]?' paid':'')+'">';out+='<div class="prow"><div class="nm">'+d.n+'</div><div class="mt">'+fmt(d.m)+'</div></div>';out+='<div class="meta">'+d.d+'</div>';out+='<div class="meta">'+d.b+' · '+d.ac+'</div>';out+='<div class="badges">'+tag(d.e);if(d.a)out+='<span class="alert">⚠ '+d.a+'</span>';out+='</div>';out+='<button class="paybtn'+(paid[k]?' on':'')+'" onclick="toggle('+k+')">'+(paid[k]?'✓ Pagado':'Marcar pagado')+'</button>';out+='</div>';}out+='<div class="subt">Subtotal '+cat+': <b>'+fmt(sub)+'</b></div>';}list.innerHTML=out;totals();}
-function totals(){var t=0,p=0,c=0;for(var i=0;i<data.length;i++){t+=data[i].m;if(paid[i]){p+=data[i].m;c++;}}document.getElementById("cT").textContent=fmt(t);document.getElementById("cP").textContent=fmt(p);document.getElementById("cN").textContent=fmt(t-p);document.getElementById("cC").textContent=c+" / "+data.length;}
-function toggle(i){paid[i]=!paid[i];localStorage.setItem(KEY,JSON.stringify(paid));render();}
-function resetAll(){if(confirm("¿Borrar todas las marcas de pagado?")){paid={};localStorage.setItem(KEY,"{}");render();}}
-render();
+const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+var NOM=[],QUIN='',curFilter='all';
+var catColor={"ADMINISTRACION":"#3b82f6","WELIVING":"#22c55e","ROBLEDO":"#f59e0b","NOVAEVA":"#0ea5e9","SEGURIDAD":"#8b5cf6","SIN CLASIFICAR":"#94a3b8"};
+function fmt(n){return "$"+Math.round(+n||0).toLocaleString("es-CO");}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function hoy(){return new Date().toISOString().slice(0,10);}
+function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(function(r){return r.json();});}
+function patch(p,b){return fetch(SB_URL+'/rest/v1/'+p,{method:'PATCH',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(b)});}
+function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.classList.toggle('err',!!e);t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1500);}
+function copiar(t,el){var s=String(t);function ok(){var o=el.textContent;el.textContent='✅';setTimeout(function(){el.textContent=o;},1000);toast('Copiado: '+s);}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(ok).catch(fb);}else fb();
+ function fb(){var ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('No se pudo copiar',true);}document.body.removeChild(ta);}}
+function calc(r){var sm=+r.salario_mensual||0;var sd=sm/30;var base=(+r.dias||0)*sd;var vhe=sm/240*1.25;var extra=(+r.horas_extra||0)*vhe;var total=base+extra-(+r.prestamo||0);return {sd:sd,base:base,vhe:vhe,extra:extra,total:total};}
+function esSin(x){return x.alerta&&/inscrib/i.test(x.alerta);}
+function boot(){g('nomina?order=quincena.desc,num&limit=1000').then(function(r){NOM=r||[];var qs=[];NOM.forEach(function(x){if(qs.indexOf(x.quincena)<0)qs.push(x.quincena);});QUIN=QUIN||qs[0]||'';document.getElementById('qsel').innerHTML=qs.map(function(q){return '<option'+(q===QUIN?' selected':'')+'>'+esc(q)+'</option>';}).join('');render();}).catch(function(){document.getElementById('list').innerHTML='<div class="load">⚠️ No pude conectar. <button class="btn" onclick="boot()">Reintentar</button></div>';});}
+function lista(){return NOM.filter(function(x){return x.quincena===QUIN;});}
+function cats(){var o=[];lista().forEach(function(x){var c=x.proyecto||'SIN CLASIFICAR';if(o.indexOf(c)<0)o.push(c);});return o;}
+function buildFilters(){var cs=cats();var labels=[['all','Todos']].concat(cs.map(function(c){return [c,c.charAt(0)+c.slice(1).toLowerCase()];}));document.getElementById('filters').innerHTML=labels.map(function(l){return '<div class="chip'+(l[0]===curFilter?' active':'')+'" onclick="curFilter=\''+esc(l[0])+'\';render()">'+esc(l[1])+'</div>';}).join('');}
+function render(){
+ buildFilters();
+ var L=lista(),cs=cats(),out='';
+ for(var oi=0;oi<cs.length;oi++){var cat=cs[oi];if(curFilter!=='all'&&curFilter!==cat)continue;
+  var rows=L.filter(function(x){return (x.proyecto||'SIN CLASIFICAR')===cat;});if(!rows.length)continue;
+  var sub=0;out+='<div class="catbar" style="background:'+(catColor[cat]||'#94a3b8')+'">'+esc(cat)+' · '+rows.length+'</div>';
+  rows.forEach(function(x){sub+=(+x.valor||0);
+   var sinTag=esSin(x)?'<span class="tag t-sin">SIN INSCRIBIR</span>':'<span class="tag t-ins">INSCRITO</span>';
+   var alert=x.alerta?'<span class="alert">⚠ '+esc(x.alerta)+(x.tercero?' · '+esc(x.tercero):'')+'</span>':(x.tercero?'<span class="alert">⚠ Cuenta de tercero: '+esc(x.tercero)+'</span>':'');
+   var comp=x.comprobante_url?'<a class="compbtn" href="'+esc(x.comprobante_url)+'" target="_blank" rel="noopener" title="Ver comprobante">🧾</a>':'<button class="compbtn" title="Subir comprobante" onclick="subirComp('+x.id+')">📎</button>';
+   out+='<div class="pcard'+(x.pagado?' paid':'')+'">'+
+    '<div class="prow"><div class="nm">'+esc(x.nombre)+'</div><div class="mt">'+fmt(x.valor)+' <button class="cpy" onclick="copiar('+(+x.valor||0)+',this)">📋</button></div></div>'+
+    '<div class="meta">CC '+esc(x.cedula||'')+' <button class="cpy" onclick="copiar(\''+esc(x.cedula||'')+'\',this)">📋</button> · '+esc(x.cargo||'')+'</div>'+
+    '<div class="meta">'+esc(x.metodo||'')+' · <b>'+esc(x.cuenta||'')+'</b> <button class="cpy" onclick="copiar(\''+esc(x.cuenta||'')+'\',this)">📋 cuenta</button></div>'+
+    '<div class="badges">'+sinTag+alert+'</div>'+
+    '<div class="acts"><button class="paybtn'+(x.pagado?' on':'')+'" onclick="pagar('+x.id+')">'+(x.pagado?'✓ Pagado':'Marcar pagado')+'</button>'+
+    '<button class="recbtn" onclick="recibo('+x.id+')">🧾 Recibo</button>'+comp+'</div></div>';
+  });
+  out+='<div class="subt">Subtotal '+esc(cat)+': <b>'+fmt(sub)+'</b></div>';
+ }
+ document.getElementById('list').innerHTML=out||'<div class="load">Sin nómina en esta quincena.</div>';
+ var totV=L.reduce(function(a,x){return a+(+x.valor||0);},0),pagV=L.filter(function(x){return x.pagado;}).reduce(function(a,x){return a+(+x.valor||0);},0),hechos=L.filter(function(x){return x.pagado;}).length;
+ document.getElementById('cT').textContent=fmt(totV);document.getElementById('cP').textContent=fmt(pagV);document.getElementById('cN').textContent=fmt(totV-pagV);document.getElementById('cC').textContent=hechos+' / '+L.length;
+ var al=L.filter(function(x){return x.alerta||x.tercero;});
+ document.getElementById('warn').innerHTML=al.length?('<b>⚠️ Revisar antes de pagar:</b> '+al.map(function(x){return esc(x.nombre)+' ('+esc(x.alerta||x.tercero)+')';}).join(' · ')):'';
+ document.getElementById('warn').style.display=al.length?'block':'none';
+}
+function pagar(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;if(!x.pagado){if(!confirm('¿Marcar PAGADO?\n'+x.nombre+' · '+fmt(x.valor)+'\nCuenta: '+(x.cuenta||'')+(x.tercero?'\n⚠️ Tercero: '+x.tercero:'')))return;}
+ var nv=!x.pagado;x.pagado=nv;x.fecha_pago=nv?hoy():null;patch('nomina?id=eq.'+id,{pagado:nv,fecha_pago:nv?hoy():null,estado:nv?'pagado':'pendiente'}).then(function(){toast(nv?'Pagado ✓':'Marca quitada');render();}).catch(function(){x.pagado=!nv;toast('Error',true);render();});}
+function subirComp(id){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;toast('⏳ subiendo…');var path='nomina/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f}).then(function(r){if(!r.ok)throw 0;var url=SB_URL+'/storage/v1/object/public/facturas/'+path;var x=NOM.find(function(y){return y.id===id;});if(x)x.comprobante_url=url;return patch('nomina?id=eq.'+id,{comprobante_url:url});}).then(function(){toast('Comprobante guardado ✓');render();}).catch(function(){toast('Error al subir',true);});};inp.click();}
+function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;var c=calc(x);
+ var h='<h3>Recibo de pago · Nómina</h3><div class="rs">Imperio Constructora · Quincena '+esc(x.quincena)+'</div>'+
+  rr('Empleado',esc(x.nombre))+rr('Cédula',esc(x.cedula||''))+rr('Cargo',esc(x.cargo||''))+rr('Obra',esc(x.proyecto||''))+
+  rr('Cuenta',esc(x.metodo||'')+' · '+esc(x.cuenta||''))+(x.tercero?rr('⚠ Tercero',esc(x.tercero)):'')+
+  '<div style="height:8px"></div>'+
+  rr('Salario mensual',fmt(x.salario_mensual))+rr('Salario diario',fmt(c.sd))+rr('Días',(+x.dias||0))+
+  rr('Pago base',fmt(c.base))+rr('Horas extra',(+x.horas_extra||0)+' h × '+fmt(c.vhe))+rr('Pago extra',fmt(c.extra))+
+  ((+x.prestamo||0)!==0?rr('Préstamo',((+x.prestamo)>0?'− ':'+ ')+fmt(Math.abs(+x.prestamo))):'')+
+  '<div class="rtot"><span>TOTAL A PAGAR</span><span>'+fmt(x.valor)+'</span></div>'+
+  '<div class="racts"><button class="bx" onclick="cerrar()">Cerrar</button><button class="bi" onclick="window.print()">🖨 Imprimir</button></div>';
+ document.getElementById('reciboBox').innerHTML=h;document.getElementById('ov').classList.add('on');}
+function rr(l,v){return '<div class="rr"><span>'+l+'</span><b>'+v+'</b></div>';}
+function cerrar(){document.getElementById('ov').classList.remove('on');}
+document.getElementById('ov').addEventListener('click',function(e){if(e.target.id==='ov')cerrar();});
+boot();
 </script>
 </body>
 </html>
