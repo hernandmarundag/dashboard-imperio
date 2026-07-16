@@ -246,8 +246,8 @@ function saveRow(rid){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]
   patch('gastos?id=eq.'+gid,body).then(function(){flash('Guardado ✓');document.getElementById('d-body').innerHTML=hojaHTML();attach();}).catch(function(){flash('Error al guardar',true);});return;}
  var cap=f0.dataset.cap;
  if(kind==='item'){var id=+f0.dataset.id,it=ITEMS.find(function(x){return x.id===id;});if(!it)return;
-  Promise.all([patch('presupuesto_items?id=eq.'+id,{cant:it.cant,punit:it.punit,total:it.total}),patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto})]).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}
- else{patch('presupuesto_caps?obra_id=eq.robledo&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}}
+  Promise.all([patch('presupuesto_items?id=eq.'+id,{cant:it.cant,punit:it.punit,total:it.total}),patch('presupuesto_caps?obra_id=eq.'+encodeURIComponent(CUR)+'&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto})]).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}
+ else{patch('presupuesto_caps?obra_id=eq.'+encodeURIComponent(CUR)+'&num=eq.'+encodeURIComponent(cap),{ppto:(capByNum[cap]||{}).ppto}).then(function(){flash('Guardado ✓');}).catch(function(){flash('Error al guardar',true);});}}
 function toggleEdit(rid,btn){var ins=document.querySelectorAll('.ed[data-row="'+rid+'"]');
  if(btn.dataset.on!=='1'){ins.forEach(function(i){if(i.tagName==='SELECT'){i.disabled=false;}else{i.readOnly=false;}i.classList.add('on');});btn.dataset.on='1';btn.textContent='✓';btn.classList.add('done');if(ins[0]){ins[0].focus();ins[0].select();}}
  else{ins.forEach(function(i){if(i.tagName==='SELECT'){i.disabled=true;}else{i.readOnly=true;}i.classList.remove('on');});btn.dataset.on='0';btn.textContent='✎';btn.classList.remove('done');saveRow(rid);}}
