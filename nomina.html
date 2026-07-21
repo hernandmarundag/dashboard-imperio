@@ -72,6 +72,7 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
   <div class="tabs">
     <div class="tab on" data-t="nomina" onclick="setTab('nomina')">🧮 Nómina</div>
     <div class="tab" data-t="pago" onclick="setTab('pago')">💸 Pago</div>
+    <div class="tab" data-t="hist" onclick="setTab('hist')">📚 Historial</div>
     <div class="tab" data-t="liq" onclick="setTab('liq')">📅 Liquidación</div>
     <div class="tab" data-t="prest" onclick="setTab('prest')">🛡 Seguridad social</div>
     <div class="tab" data-t="empleados" onclick="setTab('empleados')">👥 Empleados</div>
@@ -87,7 +88,7 @@ var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im
 var H={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"};
 var R={ces:0.0833,intces:0.01,prima:0.0833,vac:0.0417,salud:0.085,pension:0.12,arl:0.0696,caja:0.04};
 var SMLMV=1750905, AUX_TRANSPORTE=249095; // paramétricas 2026
-var emps=[], nom=[], tab="nomina", liq={}, att={};
+var emps=[], nom=[], tab="nomina", liq={}, att={}, snap=false, rost=[];
 var COLORS=['#5b5bd6','#1d8a5f','#c98a12','#c23b2e','#2563eb','#7c3aed','#0f766e','#b45309'];
 
 function fmt(n){return "$"+Math.round(n||0).toLocaleString("es-CO");}
@@ -141,10 +142,14 @@ function cargar(){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
     nom=Array.isArray(res[1])?res[1]:[];
     att={};(Array.isArray(res[2])?res[2]:[]).forEach(function(a){if(!att[a.cedula])att[a.cedula]={};att[a.cedula][a.fecha]=a.estado;});
-    liq={};
-    emps.forEach(function(e){var n=nom.find(function(x){return x.cedula===e.cedula;});
-      liq[e.cedula]={hed:n?(+n.he_diurna||0):0, hen:n?(+n.he_nocturna||0):0, prest:n?(+n.prestamo||0):0};});
-    document.getElementById("sub").textContent=emps.length+" empleados · ciclo "+cy.label+" · se paga el 15 y el 30";
+    snap=nom.length>0; // quincena ya guardada = foto congelada
+    rost = snap ? nom.map(function(n){
+        var e=emps.find(function(x){return x.cedula===n.cedula;})||{cedula:n.cedula,nombre_completo:n.nombre,cargo:(n.cargo||n.area||''),obra_id:(n.proyecto||'').toLowerCase(),salario_basico:n.salario_mensual,bonificacion:0,metodo_pago:n.metodo,cuenta_pago:n.cuenta,__inactivo:true};
+        if(!emps.some(function(x){return x.cedula===n.cedula;})) e.__inactivo=true; else e.__inactivo=false;
+        return {e:e,n:n};
+      }) : emps.map(function(e){return {e:e,n:null};});
+    liq={};rost.forEach(function(it){liq[it.e.cedula]={hed:it.n?(+it.n.he_diurna||0):0,hen:it.n?(+it.n.he_nocturna||0):0,prest:it.n?(+it.n.prestamo||0):0};});
+    document.getElementById("sub").textContent=rost.length+(snap?" empleados (guardada)":" empleados")+" · ciclo "+cy.label+" · se paga el 15 y el 30";
     render();
   }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
 }
@@ -152,30 +157,42 @@ function cargar(){
 function render(){var v=document.getElementById("view");
   if(tab==="nomina")return renderNomina(v);
   if(tab==="pago")return renderPago(v);
+  if(tab==="hist")return renderHistorial(v);
   if(tab==="liq")return renderLiq(v);
   if(tab==="prest")return renderPrest(v);
   if(tab==="empleados")return renderEmpleados(v);
 }
 
 // ── NÓMINA + ASISTENCIA ──
+function diasItem(it,cy){if(it.n&&it.n.pagado)return +it.n.dias||0;return diasTrab(it.e.cedula,cy);}
+function pagoItem(it,cy,l){
+  if(it.n&&it.n.pagado)return {total:+it.n.valor||0,locked:true,dias:+it.n.dias||0};
+  var dias=diasItem(it,cy);var p=pago(it.e,dias,l.hed,l.hen,l.prest);
+  return {total:p.total,locked:false,dias:dias};
+}
 function renderNomina(v){
   var cy=cycle(); var totNet=0;
-  var rows=emps.map(function(e){
-    var l=liq[e.cedula]||{hed:0,hen:0,prest:0};
-    var ex=att[e.cedula]||{};var faltas=0,incs=0;cy.days.forEach(function(d){if(ex[d]==='falta')faltas++;else if(ex[d]==='incapacidad'||ex[d]==='inc')incs++;});
-    var dias=diasTrab(e.cedula,cy); var p=pago(e,dias,l.hed,l.hen,l.prest); totNet+=p.total;
-    var sub=(faltas||incs)?('<div class="diassub">'+(faltas?faltas+' falta ':'')+(incs?incs+' incap.':'')+'</div>'):'';
-    return '<tr><td><div class="emprow">'+avatar(e,40)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div></td>'
-      +'<td><span class="diaspill">'+dias+' días</span>'+sub+'</td>'
+  var rows=rost.map(function(it){
+    var e=it.e,n=it.n;var l=liq[e.cedula]||{hed:0,hen:0,prest:0};
+    var pi=pagoItem(it,cy,l);totNet+=pi.total;
+    var inact=e.__inactivo?' <span style="font-size:10px;color:var(--mut)">· inactivo</span>':'';
+    var name='<td><div class="emprow">'+avatar(e,40)+'<div><div class="nm">'+esc(e.nombre_completo)+inact+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div></td>';
+    if(pi.locked){
+      return '<tr>'+name+'<td><span class="diaspill">'+pi.dias+' días</span></td>'
+        +'<td class="r">'+(n.he_diurna||0)+'</td><td class="r">'+(n.he_nocturna||0)+'</td><td class="r">'+fmt(n.prestamo||0)+'</td>'
+        +'<td class="r tot">'+fmt(pi.total)+' <span class="badge pill-pag" style="font-size:9px">pagada</span></td></tr>';
+    }
+    return '<tr>'+name+'<td><span class="diaspill">'+pi.dias+' días</span></td>'
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hed+'" oninput="upd(\''+e.cedula+'\',\'hed\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hen+'" oninput="upd(\''+e.cedula+'\',\'hen\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" value="'+l.prest+'" oninput="upd(\''+e.cedula+'\',\'prest\',this.value)"></td>'
-      +'<td class="r tot" id="tot-'+e.cedula+'">'+fmt(p.total)+'</td></tr>';
+      +'<td class="r tot" id="tot-'+e.cedula+'">'+fmt(pi.total)+'</td></tr>';
   }).join("");
-  v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Total a pagar (quincena)</div><div class="v" id="k-net">'+fmt(totNet)+'</div></div>'
+  var aviso=snap?'<div class="hint" style="background:#eef7f2;border-radius:10px;padding:10px 12px"><strong>Quincena guardada</strong> — muestra lo que se registró y pagó (queda congelada; incluye empleados ya inactivos con su valor real). Puedes ajustar horas extra/préstamo de las que no estén pagadas.</div>':'<div class="hint">Los <strong>días vienen de Asistencia</strong>, donde el ingeniero marca a diario. Aquí ajustas horas extra (diurna ×1,25 · nocturna ×1,75) y préstamos, y guardas para pagar.</div>';
+  v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Total '+(snap?'de la quincena':'a pagar')+'</div><div class="v" id="k-net">'+fmt(totNet)+'</div></div>'
     +'<div class="kpi"><div class="l">Ciclo</div><div class="v" style="font-size:17px">'+cy.label+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">pago el 15 y el 30</div></div>'
-    +'<div class="kpi"><div class="l">Empleados</div><div class="v">'+emps.length+'</div></div></div>'
-    +'<div class="hint">Los <strong>días vienen de la sección Asistencia</strong>, donde el ingeniero marca a diario. Aquí solo ajustas horas extra (diurna ×1,25 · nocturna ×1,75 sobre básico+bonificación) y préstamos, y guardas para pagar.</div>'
+    +'<div class="kpi"><div class="l">Personas</div><div class="v">'+rost.length+'</div></div></div>'
+    +aviso
     +'<div class="card"><table><thead><tr><th>Empleado</th><th>Días trabajados</th><th class="r">HE día</th><th class="r">HE noche</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
     +'<div class="foot"><button class="btn g" onclick="guardarNomina()">Guardar nómina del ciclo</button></div>';
 }
@@ -192,21 +209,20 @@ function recalcRow(ced){var cy=cycle();var e=emps.find(function(x){return x.cedu
   renderNomina(document.getElementById('view'));
 }
 function upd(ced,c,val){if(!liq[ced])liq[ced]={hed:0,hen:0,prest:0};liq[ced][c]=num(val);
-  var cy=cycle();var e=emps.find(function(x){return x.cedula===ced;});var l=liq[ced];var dias=diasTrab(ced,cy);var p=pago(e,dias,l.hed,l.hen,l.prest);
-  var tc=document.getElementById('tot-'+ced);if(tc)tc.textContent=fmt(p.total);
-  var tot=0;emps.forEach(function(x){var ll=liq[x.cedula]||{hed:0,hen:0,prest:0};tot+=pago(x,diasTrab(x.cedula,cy),ll.hed,ll.hen,ll.prest).total;});
+  var cy=cycle();var it=rost.find(function(x){return x.e.cedula===ced;});if(!it)return;
+  var tc=document.getElementById('tot-'+ced);if(tc)tc.textContent=fmt(pagoItem(it,cy,liq[ced]).total);
+  var tot=0;rost.forEach(function(x){tot+=pagoItem(x,cy,liq[x.e.cedula]||{hed:0,hen:0,prest:0}).total;});
   document.getElementById('k-net').textContent=fmt(tot);
 }
 function guardarNomina(){
   var cy=cycle();
-  var nomOps=emps.map(function(e){
-    var l=liq[e.cedula]||{hed:0,hen:0,prest:0};var dias=diasTrab(e.cedula,cy);var p=pago(e,dias,l.hed,l.hen,l.prest);
-    var ex=nom.find(function(x){return x.cedula===e.cedula;});
+  var nomOps=rost.map(function(it){var e=it.e,n=it.n;
+    var l=liq[e.cedula]||{hed:0,hen:0,prest:0};var pi=pagoItem(it,cy,l);
     var body={quincena:cy.label,nombre:e.nombre_completo,cedula:e.cedula,proyecto:(e.obra_id||'').toUpperCase(),area:e.cargo,cargo:e.cargo,
-      salario_mensual:e.salario_basico,dias:dias,he_diurna:l.hed,he_nocturna:l.hen,horas_extra:(l.hed+l.hen),prestamo:l.prest,valor:p.total,
+      salario_mensual:e.salario_basico,dias:pi.dias,he_diurna:l.hed,he_nocturna:l.hen,horas_extra:(l.hed+l.hen),prestamo:l.prest,valor:pi.total,
       metodo:e.metodo_pago,cuenta:e.cuenta_pago,
-      pagado:(ex?!!ex.pagado:false),estado:(ex&&ex.pagado?'pagada':'liquidada')};
-    if(ex)return fetch(SB+"/rest/v1/nomina?id=eq."+ex.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)});
+      pagado:(n?!!n.pagado:false),estado:(n&&n.pagado?'pagada':'liquidada')};
+    if(n&&n.id)return fetch(SB+"/rest/v1/nomina?id=eq."+n.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)});
     return fetch(SB+"/rest/v1/nomina",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)});
   });
   Promise.all(nomOps).then(function(){toast("Nómina guardada ✓");cargar();}).catch(function(){toast("Error al guardar");});
@@ -262,13 +278,15 @@ function renderLiq(v){
     var base=(+e.salario_basico||0)+(+e.bonificacion||0);
     if(!e.fecha_ingreso) return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td><td colspan="6" style="color:var(--amb);font-size:12px">Falta fecha de ingreso — edítala en la ficha del empleado</td></tr>';
     var ing=new Date(e.fecha_ingreso+'T12:00:00');var dias=Math.max(0,Math.round((hoy-ing)/86400000));
-    var ces=Math.round(base*dias/360);var intc=Math.round(ces*0.12);var prima=Math.round(base*dias/360);var vac=Math.round(base*dias/720);
+    // La prima se pagó hasta el 30-jun-2026; la nueva acumula solo desde el 1-jul
+    var iniPrima=new Date(Math.max(ing.getTime(), new Date('2026-07-01T12:00:00').getTime()));var diasPrima=Math.max(0,Math.round((hoy-iniPrima)/86400000));
+    var ces=Math.round(base*dias/360);var intc=Math.round(ces*0.12*dias/360);var prima=Math.round(base*diasPrima/360);var vac=Math.round(base*dias/720);
     var tl=ces+intc+prima+vac;totLiq+=tl;
     return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">desde '+esc(e.fecha_ingreso)+' · '+dias+' días</div></div></div></td>'
       +'<td class="r">'+fmt(ces)+'</td><td class="r">'+fmt(intc)+'</td><td class="r">'+fmt(prima)+'</td><td class="r">'+fmt(vac)+'</td><td class="r tot">'+fmt(tl)+'</td></tr>';
   }).join("");
   v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Liquidación acumulada total</div><div class="v" style="color:var(--amb)">'+fmt(totLiq)+'</div><div style="font-size:10px;color:var(--mut)">si se liquidara hoy</div></div></div>'
-    +'<div class="hint">Lo que se le debe a cada empleado por prestaciones acumuladas, según su fecha de ingreso y días laborados. <strong>No se paga cada quincena</strong>; se acumula hasta la liquidación. Base = básico + bonificación.</div>'
+    +'<div class="hint">Prestaciones acumuladas por empleado, según fecha de ingreso y días laborados. <strong>No se paga cada quincena</strong>; se acumula hasta la liquidación. Base = básico + bonificación. <strong>La prima acumula solo desde el 1-jul</strong> (la anterior se pagó el 30-jun-2026); cesantías y vacaciones van desde el ingreso.</div>'
     +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">Cesantías</th><th class="r">Int. cesantías</th><th class="r">Prima</th><th class="r">Vacaciones</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
@@ -344,6 +362,24 @@ function inactivarEmp(){if(!_fe||!_fe.id)return;if(!confirm('¿Inactivar a '+_fe
 }
 
 // init
+var MESN={ene:'01',feb:'02',mar:'03',abr:'04',may:'05',jun:'06',jul:'07',ago:'08',sep:'09',oct:'10',nov:'11',dic:'12'};
+function histKey(q){var p=(q||'').split(' ');var y=+p[2]||0,mo=+(MESN[p[1]]||0),q2=(p[0]||'').indexOf('16')===0?2:1;return y*100+mo*2+q2;}
+function renderHistorial(v){
+  v.innerHTML='<div class="hint">Cargando historial…</div>';
+  fetch(SB+"/rest/v1/nomina?select=quincena,valor,pagado",{headers:H}).then(function(r){return r.json();}).then(function(rows){
+    var g={};(Array.isArray(rows)?rows:[]).forEach(function(n){var q=n.quincena||'—';if(!g[q])g[q]={q:q,n:0,tot:0,pag:0};g[q].n++;g[q].tot+=(+n.valor||0);if(n.pagado)g[q].pag++;});
+    var arr=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return histKey(b.q)-histKey(a.q);});
+    if(!arr.length){v.innerHTML='<div class="hint">Aún no hay quincenas registradas.</div>';return;}
+    var body=arr.map(function(x){
+      var est=x.pag===x.n?'<span class="badge pill-pag">Pagada</span>':(x.pag>0?'<span class="badge" style="background:#fdf0d8;color:#8a5a06">Parcial '+x.pag+'/'+x.n+'</span>':'<span class="badge" style="background:#eef0f3;color:#777">Liquidada</span>');
+      return '<tr style="cursor:pointer" onclick="irCiclo(\''+x.q.replace(/'/g,"")+'\')"><td class="nm">'+esc(x.q)+'</td><td class="r">'+x.n+'</td><td class="r tot">'+fmt(x.tot)+'</td><td class="r">'+est+'</td></tr>';
+    }).join("");
+    v.innerHTML='<div class="hint">Todas las quincenas registradas, ordenadas de la más reciente. Toca una para ver su detalle y recibos — queda <strong>congelada</strong>: no cambia aunque hoy inactives empleados.</div>'
+      +'<div class="card"><table><thead><tr><th>Quincena</th><th class="r">Personas</th><th class="r">Total</th><th class="r">Estado</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+  }).catch(function(){v.innerHTML='<div class="hint" style="color:var(--red)">Error al cargar el historial.</div>';});
+}
+function irCiclo(q){var p=q.split(' ');var y=p[2]||'2026',mo=MESN[p[1]]||'01',q2=(p[0]||'').indexOf('16')===0?'2':'1';
+  document.getElementById("mes").value=y+'-'+mo;document.getElementById("quin").value=q2;setTab('nomina');cargar();}
 var d=new Date();document.getElementById("mes").value=d.toISOString().slice(0,7);
 document.getElementById("quin").value='1';
 document.getElementById("mes").addEventListener("change",cargar);
