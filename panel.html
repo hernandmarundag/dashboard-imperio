@@ -2754,7 +2754,6 @@ canvas{border-radius:4px}
             <option>General</option>
           </select>
         </div>
-        <div class="fg"><label>Detalle de etapa</label><input type="text" id="gf-eobra" placeholder="Pilas / Columnas..."></div>
       </div>
       <div class="fdiv">Información del gasto</div>
       <div class="frow2">
@@ -2765,17 +2764,10 @@ canvas{border-radius:4px}
       <div class="fg"><label>Descripción *</label><textarea id="gf-desc" placeholder="Describe el gasto con detalle..."></textarea></div>
       <div class="fdiv">Detalle y soporte</div>
       <div class="frow2">
-        <div class="fg"><label>Material</label>
-          <select id="gf-mat"><option>No aplica</option><option>Hierro</option><option>Cemento</option><option>Concreto/mixer</option><option>Material general</option><option>Material Hidro</option><option>Material Electrico</option><option>Madera General</option><option>Mixto</option></select>
+        <div class="fg"><label>Material / tipo</label>
+          <select id="gf-mat"><option>No aplica</option><option>Hierro</option><option>Concreto</option><option>Cemento</option><option>Formaleta</option><option>Mampostería</option><option>Material Electrico</option><option>Material Hidro</option><option>Madera</option><option>Herramienta</option><option>Mano de obra</option><option>Servicio</option><option>Mixto</option></select>
         </div>
-        <div class="fg"><label>Cantidad</label><input type="number" id="gf-cant" placeholder="Unidades"></div>
-      </div>
-      <div class="frow2">
-        <div class="fg"><label>No. Cotización / Factura</label><input type="text" id="gf-cotiz"></div>
-        <div class="fg" style="flex-direction:row;align-items:center;gap:8px;margin-top:22px">
-          <input type="checkbox" id="gf-facrev" style="width:15px;height:15px">
-          <label for="gf-facrev" style="font-size:13px;font-weight:400;cursor:pointer">Factura revisada ✓</label>
-        </div>
+        <div class="fg"><label>N° factura (opcional)</label><input type="text" id="gf-cotiz"></div>
       </div>
       <div class="fg"><label>Foto o PDF de la factura / cotización</label><input type="file" id="gf-factura" accept="image/*,application/pdf" capture="environment"><div id="gf-facmsg" style="font-size:12px;color:var(--mut,#888);margin-top:4px">Opcional. Toma la foto de la cuenta de cobro o sube el PDF.</div></div>
       <div class="fdiv">Valores</div>
@@ -3517,7 +3509,7 @@ function loadS() {
   catch(e) { S = JSON.parse(JSON.stringify(DEF)); }
   if (!S.hist) { S.hist = {}; }
   obrasIds().forEach(function(o){ if (!S.hist[o]) S.hist[o] = []; });
-  if (!S.abonos || S.abonos.length < DEF.abonos.length) S.abonos = JSON.parse(JSON.stringify(DEF.abonos));
+  if (!S.abonos) S.abonos = JSON.parse(JSON.stringify(DEF.abonos));
   if (!S.traspasos) S.traspasos = [];
   if (!S.obras)     S.obras     = ['weliving', 'robledo', 'novaeva'];
   if (!S.pagos)     S.pagos     = JSON.parse(JSON.stringify(DEF.pagos));
@@ -4733,6 +4725,25 @@ function insertMovimiento(mov) {
   }).catch(function(e){ console.warn('insertMov net:', e); });
 }
 
+function editAbono(id){
+  var a=(S.abonos||[]).find(function(x){return x.id===id;});if(!a)return;
+  var nm=prompt('Nombre / concepto del abono:', a.desc); if(nm===null) return;
+  var mt=parseInt((prompt('Monto ($):', a.monto)||'0').replace(/\D/g,'')); if(!mt){alert('Monto inválido');return;}
+  var fe=(prompt('Fecha (AAAA-MM-DD):', a.fecha)||a.fecha).trim();
+  a.desc=nm.trim(); a.monto=mt; a.fecha=fe;
+  try{var d=new Date(fe+'T12:00:00');a.f=d.getDate()+' '+d.toLocaleString('es-CO',{month:'short'}).replace('.','');}catch(e){}
+  saveS(); rAbonos(); rKpi();
+  if(a.sbId) sbPatch('abonos','id=eq.'+a.sbId,{descripcion:a.desc,monto:mt,fecha:fe}).catch(function(e){console.warn('[editAbono] SB:',e);});
+  else if(a.id) sbPatch('abonos','legacy_id=eq.'+encodeURIComponent(a.id),{descripcion:a.desc,monto:mt,fecha:fe}).catch(function(e){console.warn('[editAbono] SB:',e);});
+}
+function delAbono(id){
+  var a=(S.abonos||[]).find(function(x){return x.id===id;});if(!a)return;
+  if(!confirm('¿Borrar este abono?\n'+a.desc+' · '+fmtM(a.monto)))return;
+  S.abonos=(S.abonos||[]).filter(function(x){return x.id!==id;});
+  saveS(); rAbonos(); rKpi();
+  if(a.sbId) sbDelete('abonos','id=eq.'+a.sbId).catch(function(e){console.warn('[delAbono] SB:',e);});
+  else if(a.id) sbDelete('abonos','legacy_id=eq.'+encodeURIComponent(a.id)).catch(function(e){console.warn('[delAbono] SB:',e);});
+}
 function saveAbono() {
   var monto = parseFloat(document.getElementById('ab-monto').value)||0;
   var desc  = document.getElementById('ab-desc').value.trim();
@@ -4742,8 +4753,8 @@ function saveAbono() {
   var fStr  = document.getElementById('ab-fecha').value;
   var d = new Date(fStr+'T12:00:00');
   var fFmt = d.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
-  S.abonos.push({id:'ab'+Date.now(),f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
   var _abonoId='ab'+Date.now();
+  S.abonos.push({id:_abonoId,f:fFmt,fecha:fStr,monto:monto,obra:obra,ctaId:ctaId,desc:desc});
   // Actualizar saldoReal de la cuenta receptora
   var _ctaAb = S.cuentas ? S.cuentas.find(function(c){return c.id===ctaId;}) : null;
   if (_ctaAb && _ctaAb.saldoReal !== undefined) {
@@ -5968,6 +5979,7 @@ function rAbonos() {
         +'<td style="padding:9px 12px;font-size:12px;color:var(--tx2);white-space:nowrap">'+(a.f||a.fecha||'')+'</td>'
         +'<td style="padding:9px 12px;font-size:13px;font-weight:700;color:var(--tx)">'+nm+'</td>'
         +'<td style="padding:9px 12px;text-align:right;font-size:14px;font-weight:900;color:'+proj.col+'">'+fmtM(a.monto)+'</td>'
+        +'<td style="padding:9px 12px;text-align:right;white-space:nowrap"><button onclick="editAbono(\''+a.id+'\')" style="border:none;background:none;cursor:pointer;font-size:14px" title="Editar">✏️</button> <button onclick="delAbono(\''+a.id+'\')" style="border:none;background:none;cursor:pointer;font-size:14px" title="Borrar">🗑</button></td>'
         +'</tr>';
     }).join('');
 
@@ -5978,8 +5990,9 @@ function rAbonos() {
         +'<th style="padding:7px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tx2)">Fecha</th>'
         +'<th style="padding:7px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tx2)">Nombre</th>'
         +'<th style="padding:7px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--tx2)">Monto</th>'
+        +'<th style="padding:7px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--tx2)"></th>'
       +'</tr></thead>'
-      +'<tbody>'+(tRows||'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--tx2)">Sin abonos.</td></tr>')+'</tbody>'
+      +'<tbody>'+(tRows||'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx2)">Sin abonos.</td></tr>')+'</tbody>'
       +'</table></div></div>';
 
     sections += '<div style="background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:20px">'
@@ -7753,10 +7766,10 @@ function openGasto() {
   _refreshNombresDatalist();
   ['ow-w','ow-r','ow-n'].forEach(function(id){document.getElementById(id).className='obra-opt';});
   document.getElementById('gf-fecha').value = new Date().toISOString().split('T')[0];
-  ['gf-nombre','gf-cotiz','gf-cant','gf-eobra','gf-desc'].forEach(function(id){document.getElementById(id).value='';});
+  ['gf-nombre','gf-cotiz','gf-desc'].forEach(function(id){var _el=document.getElementById(id); if(_el)_el.value='';});
   document.getElementById('gf-iva').value='';
   document.getElementById('gf-total').value='';
-  document.getElementById('gf-facrev').checked=false;
+  var _fr=document.getElementById('gf-facrev'); if(_fr)_fr.checked=false;
   var _ff=document.getElementById('gf-factura'); if(_ff) _ff.value='';
   var _fm=document.getElementById('gf-facmsg'); if(_fm) _fm.textContent='Opcional. Toma la foto de la cuenta de cobro o sube el PDF.';
   document.getElementById('gf-metodo').value='Transferencia';
@@ -8234,7 +8247,7 @@ function fetchAbonos() {
       S.abonos=rows.map(function(r){
         var fmtF='';
         try{var d=new Date(r.fecha+'T12:00:00');fmtF=d.getDate()+' '+d.toLocaleString('es-CO',{month:'short'}).replace('.','');}catch(e2){}
-        return {id:r.legacy_id||r.id,f:fmtF,fecha:r.fecha,monto:r.monto,obra:r.obra_id,ctaId:r.cuenta_id,desc:r.descripcion||''};
+        return {id:r.legacy_id||r.id,sbId:r.id,f:fmtF,fecha:r.fecha,monto:r.monto,obra:r.obra_id,ctaId:r.cuenta_id,desc:r.descripcion||''};
       });
       console.log('[fetchAbonos] OK',S.abonos.length,'abonos');
       if(curV==='abonos') rAbonos();
