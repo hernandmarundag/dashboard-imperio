@@ -2587,11 +2587,13 @@ canvas{border-radius:4px}
     <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobrar</span></div>
     <div class="ni" data-v="presupuesto" onclick="gotoView('presupuesto')"><span class="ni-ico">📊</span><span>Presupuesto</span></div>
     <div class="ni" data-v="requisiciones" onclick="gotoView('requisiciones')"><span class="ni-ico">📋</span><span>Requisiciones</span></div>
+    <div class="ni" data-v="bitacora" onclick="gotoView('bitacora')"><span class="ni-ico">📓</span><span>Bitácora</span></div>
     <div class="ni" data-v="flujocaja" onclick="gotoView('flujocaja')"><span class="ni-ico">💵</span><span>Flujo de caja</span></div>
     <div class="sb-sect">Análisis</div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
     <div class="sb-sect">Empresa</div>
     <div class="ni" data-v="facturacion" onclick="gotoView('facturacion')"><span class="ni-ico">🧾</span><span>Facturación</span></div>
+    <div class="ni" data-v="nomina" onclick="gotoView('nomina')"><span class="ni-ico">👥</span><span>Nómina</span></div>
   </nav>
   <div class="sb-foot">
     <div class="sb-foot-btn" onclick="openAbono()">💰 Ingreso</div>
@@ -2693,6 +2695,8 @@ canvas{border-radius:4px}
   <div class="view" id="v-facturacion">
     <div id="facturacion-content"></div>
   </div>
+  <div class="view" id="v-bitacora"></div>
+  <div class="view" id="v-nomina"></div>
 
 
 </main>
@@ -3793,6 +3797,20 @@ function rFlujoCajaEmbed(){
     el.innerHTML='<iframe class="rb-embed" src="flujo.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
   }
 }
+function rBitacoraEmbed(){
+  var el=document.getElementById("v-bitacora");
+  if(!el) return;
+  if(!el.querySelector("iframe.rb-embed")){
+    el.innerHTML='<iframe class="rb-embed" src="bitacora.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+  }
+}
+function rNominaEmbed(){
+  var el=document.getElementById("v-nomina");
+  if(!el) return;
+  if(!el.querySelector("iframe.rb-embed")){
+    el.innerHTML='<iframe class="rb-embed" src="nomina.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+  }
+}
 function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
@@ -3814,6 +3832,8 @@ function renderView(v, skipHistory) {
   else if (v === 'movimientos') { rMovimientos(); }
   else if (v === 'cronograma') { rCronograma(); }
   else if (v === 'facturacion') { rFacturacion(); }
+  else if (v === 'bitacora') { rBitacoraEmbed(); }
+  else if (v === 'nomina') { rNominaEmbed(); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5736,14 +5756,16 @@ function openNuevoDeudor(){
    ABONOS — Capital recibido e ingresos por proyecto
 ═══════════════════════════════════════════════════ */
 function _facKpi(label,value,color,foot){
-  return '<div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px">'
-    +'<div style="font-size:11px;color:#888;margin-bottom:6px">'+label+'</div>'
-    +'<div style="font-size:22px;font-weight:700;color:'+color+';letter-spacing:-.02em">'+value+'</div>'
-    +'<div style="font-size:11px;color:#aaa;margin-top:4px">'+foot+'</div></div>';
+  return '<div style="background:#fff;border:1px solid #ececec;border-radius:14px;padding:16px 18px;text-transform:none">'
+    +'<div style="font-size:11px;color:#999;margin-bottom:8px;font-weight:600;letter-spacing:.2px">'+label+'</div>'
+    +'<div style="font-size:24px;font-weight:700;color:'+color+';letter-spacing:-.02em;line-height:1.1">'+value+'</div>'
+    +'<div style="font-size:11px;color:#aaa;margin-top:6px">'+foot+'</div></div>';
 }
 function rFacturacion(){
   var el=document.getElementById('facturacion-content'); if(!el) return;
-  el.innerHTML='<div class="sec"><div class="sec-tit">🧾 Facturación</div><div style="color:#888;font-size:13px">Cargando…</div></div>';
+  var WRAP='padding:22px 26px;max-width:1080px;margin:0 auto;text-transform:none';
+  var HDR='font-size:16px;font-weight:700;color:#1b1b19;margin:26px 0 12px;text-transform:none;letter-spacing:0';
+  el.innerHTML='<div style="'+WRAP+'"><div style="color:#888;font-size:14px">Cargando facturación…</div></div>';
   Promise.all([
     fetch(SB_URL+'/rest/v1/intercompania_ciclos?order=fecha_hasta.desc',{headers:SB_H}).then(function(r){return r.json();}),
     fetch(SB_URL+'/rest/v1/cuenta_corriente_intercompania?order=fecha.desc',{headers:SB_H}).then(function(r){return r.json();})
@@ -5754,41 +5776,42 @@ function rFacturacion(){
     var saldo=cc.reduce(function(s,r){return s+(+r.valor||0)*(r.signo||1);},0);
     var estCol={pendiente:'#c98a12',soporte_listo:'#2563eb',facturada:'#1d8a5f',pagada:'#1d8a5f',vencida:'#c23b2e'};
     var estLbl={pendiente:'Pendiente',soporte_listo:'Soporte listo',facturada:'Facturada',pagada:'Pagada',vencida:'Vencida'};
-    var h='';
-    h+='<div class="sec"><div class="sec-tit">🧾 Facturación intercompañía</div>';
-    h+='<div style="font-size:13px;color:#888;margin-bottom:12px">Grupo Imperio ejecuta la obra y le factura a Imperio de Libertad. Cada quincena de nómina de obra genera una factura.</div>';
-    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">';
+    var h='<div style="'+WRAP+'">';
+    h+='<div style="font-size:20px;font-weight:700;color:#1b1b19;margin-bottom:4px">🧾 Facturación</div>';
+    h+='<div style="font-size:13px;color:#888;margin-bottom:18px">Grupo Imperio ejecuta la obra y le factura a Imperio de Libertad. Cada quincena de nómina de obra genera una factura.</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">';
     h+=_facKpi('Pendiente por facturar', fmt(pend), '#c98a12', 'Grupo Imperio → Imperio de Libertad');
     h+=_facKpi('Ya facturado', fmt(fact), '#1d8a5f', ciclos.length+' ciclos en total');
     h+=_facKpi('Cuenta corriente', fmt(saldo), '#2563eb', saldo>=0?'Imperio de Libertad le debe a Grupo Imperio':'A favor de Imperio de Libertad');
-    h+='</div></div>';
-    h+='<div class="sec"><div class="sec-tit">Facturas por ejecutar</div>';
-    if(!ciclos.length){ h+='<div style="color:#888;font-size:13px">Aún no hay ciclos de facturación registrados.</div>'; }
+    h+='</div>';
+    h+='<div style="'+HDR+'">Facturas por ejecutar</div>';
+    h+='<div style="background:#fff;border:1px solid #ececec;border-radius:14px;overflow:hidden">';
+    if(!ciclos.length){ h+='<div style="padding:16px;color:#888;font-size:13px">Aún no hay ciclos de facturación registrados.</div>'; }
     else {
-      h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
-      h+='<tr style="text-align:left;color:#888;font-size:11px"><th style="padding:8px">Periodo</th><th>Concepto</th><th style="text-align:right">Valor</th><th style="text-align:right">Estado</th></tr>';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:#999;font-size:11px;background:#fafafa"><th style="padding:10px 14px">Periodo</th><th>Concepto</th><th style="text-align:right">Valor</th><th style="text-align:right;padding-right:14px">Estado</th></tr></thead><tbody>';
       ciclos.forEach(function(c){
         var col=estCol[c.estado]||'#888', lbl=estLbl[c.estado]||c.estado;
-        h+='<tr style="border-top:1px solid #eee"><td style="padding:8px;font-weight:600">'+(c.periodo||'')+'</td><td style="color:#555">'+(c.concepto||'')+'</td><td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">'+fmt(+c.total||0)+'</td><td style="text-align:right"><span style="background:'+col+'22;color:'+col+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">'+lbl+'</span></td></tr>';
+        h+='<tr style="border-top:1px solid #f0f0f0"><td style="padding:11px 14px;font-weight:600;white-space:nowrap">'+(c.periodo||'')+'</td><td style="color:#555">'+(c.concepto||'')+'</td><td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;padding-left:10px">'+fmt(+c.total||0)+'</td><td style="text-align:right;padding-right:14px"><span style="background:'+col+'1f;color:'+col+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap">'+lbl+'</span></td></tr>';
       });
-      h+='</table></div>';
+      h+='</tbody></table>';
     }
     h+='</div>';
-    h+='<div class="sec"><div class="sec-tit">Cuenta corriente entre empresas</div>';
-    if(!cc.length){ h+='<div style="color:#888;font-size:13px">Sin movimientos.</div>'; }
+    h+='<div style="'+HDR+'">Cuenta corriente entre empresas</div>';
+    h+='<div style="background:#fff;border:1px solid #ececec;border-radius:14px;overflow:hidden">';
+    if(!cc.length){ h+='<div style="padding:16px;color:#888;font-size:13px">Sin movimientos.</div>'; }
     else {
-      h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
-      h+='<tr style="text-align:left;color:#888;font-size:11px"><th style="padding:8px">Fecha</th><th>Concepto</th><th>Pagó</th><th style="text-align:right">Valor</th></tr>';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:#999;font-size:11px;background:#fafafa"><th style="padding:10px 14px">Fecha</th><th>Concepto</th><th>Pagó</th><th style="text-align:right;padding-right:14px">Valor</th></tr></thead><tbody>';
       cc.forEach(function(r){
         var pos=(r.signo||1)>0;
-        h+='<tr style="border-top:1px solid #eee"><td style="padding:8px">'+(r.fecha||'')+'</td><td style="color:#555">'+(r.concepto||'')+'</td><td style="color:#888;font-size:12px">'+(r.cuenta_pagadora||'')+'</td><td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:'+(pos?'#1d8a5f':'#c23b2e')+'">'+(pos?'+':'−')+fmt(+r.valor||0)+'</td></tr>';
+        h+='<tr style="border-top:1px solid #f0f0f0"><td style="padding:11px 14px;white-space:nowrap">'+(r.fecha||'')+'</td><td style="color:#555">'+(r.concepto||'')+'</td><td style="color:#888;font-size:12px">'+(r.cuenta_pagadora||'')+'</td><td style="text-align:right;padding-right:14px;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;color:'+(pos?'#1d8a5f':'#c23b2e')+'">'+(pos?'+':'−')+fmt(+r.valor||0)+'</td></tr>';
       });
-      h+='</table></div>';
-      h+='<div style="margin-top:10px;padding:12px;background:#f5f7ff;border-radius:10px;font-size:13px">Saldo: <strong>'+fmt(saldo)+'</strong> — lo que Imperio de Libertad le debe a Grupo Imperio por obra ejecutada, pendiente de formalizar en factura electrónica.</div>';
+      h+='</tbody></table>';
     }
     h+='</div>';
+    h+='<div style="margin-top:14px;padding:14px 16px;background:#f5f7ff;border:1px solid #e5e9ff;border-radius:12px;font-size:13px;color:#33417a">Saldo: <strong>'+fmt(saldo)+'</strong> — lo que Imperio de Libertad le debe a Grupo Imperio por obra ejecutada, pendiente de formalizar en factura electrónica.</div>';
+    h+='</div>';
     el.innerHTML=h;
-  }).catch(function(e){ el.innerHTML='<div class="sec"><div class="sec-tit">🧾 Facturación</div><div style="color:#c23b2e;font-size:13px">No se pudo cargar. '+(e.message||'')+'</div></div>'; });
+  }).catch(function(e){ el.innerHTML='<div style="'+WRAP+'"><div style="font-size:20px;font-weight:700;margin-bottom:8px">🧾 Facturación</div><div style="color:#c23b2e;font-size:13px">No se pudo cargar. '+(e.message||'')+'</div></div>'; });
 }
 function rAbonos() {
   var el = document.getElementById('abonos-content');
