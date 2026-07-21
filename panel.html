@@ -8125,7 +8125,6 @@ function initObrasViews() {
       // Tabs nav
       + '<div class="obra-tabs">'
       + '<button class="obra-tab on" id="otab-res-'+id+'" onclick="obraTab(\''+id+'\',\'res\')">📊 Resumen</button>'
-      + '<button class="obra-tab" id="otab-inf-'+id+'" onclick="obraTab(\''+id+'\',\'inf\')">📋 Informe</button>'
       + '<button class="obra-tab" id="otab-pag-'+id+'" onclick="obraTab(\''+id+'\',\'pag\')">💸 Pagos</button>'
       + '<button class="obra-tab" id="otab-ldg-'+id+'" onclick="obraTab(\''+id+'\',\'ldg\')">📒 Libro</button>'
       + '</div>'
@@ -8133,10 +8132,6 @@ function initObrasViews() {
       + '<div class="obra-tab-content on" id="otc-res-'+id+'">'
       + '<div id="cat-'+id+'"></div>'
       + '<div id="burn-'+id+'" class="burn-card"></div>'
-      + '</div>'
-      // Tab: Informe
-      + '<div class="obra-tab-content" id="otc-inf-'+id+'">'
-      + '<div id="informe-'+id+'"></div>'
       + '</div>'
       // Tab: Pagos
       + '<div class="obra-tab-content" id="otc-pag-'+id+'">'
@@ -8157,7 +8152,6 @@ function obraTab(o, tab) {
     if(btn) btn.classList.toggle('on', t===tab);
     if(cnt) cnt.classList.toggle('on', t===tab);
   });
-  if(tab==='inf') rInforme(o);
   if(tab==='pag') rPagosPorObra(o);
   if(tab==='ldg') renderLedger(o);
 }
