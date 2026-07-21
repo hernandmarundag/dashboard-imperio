@@ -300,7 +300,7 @@ function guardarFicha(){if(!fichaId)return;if(!Object.keys(fichaEdits).length){c
 
 // init
 var d=new Date();document.getElementById("mes").value=d.toISOString().slice(0,7);
-document.getElementById("quin").value=d.getDate()<=15?'1':'2';
+document.getElementById("quin").value='1';
 document.getElementById("mes").addEventListener("change",cargar);
 document.getElementById("quin").addEventListener("change",cargar);
 document.getElementById("ov-ficha").addEventListener("click",function(e){if(e.target===this)cerrarFicha();});

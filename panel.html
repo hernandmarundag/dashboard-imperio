@@ -2594,6 +2594,7 @@ canvas{border-radius:4px}
     <div class="sb-sect">Empresa</div>
     <div class="ni" data-v="facturacion" onclick="gotoView('facturacion')"><span class="ni-ico">🧾</span><span>Facturación</span></div>
     <div class="ni" data-v="nomina" onclick="gotoView('nomina')"><span class="ni-ico">👥</span><span>Nómina</span></div>
+    <div class="ni" data-v="asistencia" onclick="gotoView('asistencia')"><span class="ni-ico">📋</span><span>Asistencia (ing.)</span></div>
   </nav>
   <div class="sb-foot">
     <div class="sb-foot-btn" onclick="openAbono()">💰 Ingreso</div>
@@ -2697,6 +2698,7 @@ canvas{border-radius:4px}
   </div>
   <div class="view" id="v-bitacora"></div>
   <div class="view" id="v-nomina"></div>
+  <div class="view" id="v-asistencia"></div>
 
 
 </main>
@@ -3811,6 +3813,13 @@ function rNominaEmbed(){
     el.innerHTML='<iframe class="rb-embed" src="nomina.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
   }
 }
+function rAsistenciaEmbed(){
+  var el=document.getElementById("v-asistencia");
+  if(!el) return;
+  if(!el.querySelector("iframe.rb-embed")){
+    el.innerHTML='<iframe class="rb-embed" src="asistencia.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 4px);border:0;display:block;background:#f4f5f8"></iframe>';
+  }
+}
 function renderView(v, skipHistory) {
   if (typeof showBackBar === 'function') showBackBar(v);
   if (typeof _viewHistory !== 'undefined') { if (!skipHistory) _viewHistory.push(v); }
@@ -3834,6 +3843,7 @@ function renderView(v, skipHistory) {
   else if (v === 'facturacion') { rFacturacion(); }
   else if (v === 'bitacora') { rBitacoraEmbed(); }
   else if (v === 'nomina') { rNominaEmbed(); }
+  else if (v === 'asistencia') { rAsistenciaEmbed(); }
 }
 
 /* ═══════════════════════════════════════════════════
