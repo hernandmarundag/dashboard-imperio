@@ -246,8 +246,11 @@ function renderPago(v){
 }
 function marcarPag(id){var f=new Date().toISOString().slice(0,10);fetch(SB+"/rest/v1/nomina?id=eq."+id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({pagado:true,fecha_pago:f,estado:'pagada'})})
   .then(function(r){if(!r.ok)throw 0;var n=nom.find(function(x){return x.id===id;});if(n){n.pagado=true;n.fecha_pago=f;}toast("Pagado ✓");render();}).catch(function(){toast("Error");});}
-function openRecibo(id){
-  var n=nom.find(function(x){return x.id===id;});if(!n)return;
+var histN={};
+function openRecibo(id){mostrarRecibo(nom.find(function(x){return x.id===id;}));}
+function openReciboHist(id){mostrarRecibo(histN[id]);}
+function mostrarRecibo(n){
+  if(!n)return;
   var e=emps.find(function(x){return x.cedula===n.cedula;})||{cedula:n.cedula,nombre_completo:n.nombre};
   var basico=+n.salario_mensual||+e.salario_basico||0,bonif=+e.bonificacion||0,dias=+n.dias||0;
   var basicoP=Math.round(basico/30*dias),bonP=Math.round(bonif/30*dias);
@@ -333,8 +336,23 @@ function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(fu
     +'<div class="frow">'+f('Salario básico / mes','salario_basico','number')+f('Bonificación / mes','bonificacion','number')+'</div>'
     +'<div class="frow">'+f('Método de pago','metodo_pago')+f('Cuenta','cuenta_pago')+'</div>'
     +'<div class="frow">'+f('Saldo préstamo','prestamo_saldo','number')+'<div class="fg"><label>Activo</label><select onchange="fichaSet(\'activo\',this.value===\'si\')"><option value="si"'+(e.activo!==false?' selected':'')+'>Sí</option><option value="no"'+(e.activo===false?' selected':'')+'>No</option></select></div></div>'
+    +(e.id?'<div id="ficha-hist" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">🧾 Historial de recibos</div><div style="color:var(--mut);font-size:12px">Cargando…</div></div>':'')
     +'<div class="foot">'+(e.id?'<button class="btn s" style="color:var(--red)" onclick="inactivarEmp()">Inactivar</button>':'')+'<button class="btn s" onclick="cerrarFicha()">Cancelar</button><button class="btn g" onclick="guardarFicha()">'+(e.id?'Guardar ficha':'Crear empleado')+'</button></div>';
   document.getElementById("ficha-body").innerHTML=body;document.getElementById("ov-ficha").className="ov on";
+  if(e.id&&e.cedula)cargarHistRecibos(e.cedula);
+}
+function cargarHistRecibos(ced){
+  fetch(SB+"/rest/v1/nomina?cedula=eq."+encodeURIComponent(ced)+"&order=id.desc",{headers:H}).then(function(r){return r.json();}).then(function(rows){
+    var el=document.getElementById("ficha-hist");if(!el)return;
+    rows=Array.isArray(rows)?rows:[];
+    if(!rows.length){el.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:8px">🧾 Historial de recibos</div><div style="color:var(--mut);font-size:12px">Aún no tiene recibos.</div>';return;}
+    histN={};rows.forEach(function(n){histN[n.id]=n;});
+    var lista=rows.map(function(n){
+      var est=n.pagado?'<span class="badge pill-pag" style="font-size:10px">Pagado'+(n.fecha_pago?' '+esc(n.fecha_pago):'')+'</span>':'<span class="badge" style="font-size:10px;background:#eef0f3;color:#777">Liquidada</span>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f4f5f7"><div><div style="font-weight:600;font-size:13px">'+esc(n.quincena||'')+'</div><div style="font-size:11px;color:var(--mut)">'+(+n.dias||0)+' días · '+est+'</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-variant-numeric:tabular-nums">'+fmt(n.valor)+'</span><button class="btn s" style="height:30px;padding:0 10px;font-size:12px" onclick="openReciboHist('+n.id+')">🧾 Ver</button></div></div>';
+    }).join("");
+    el.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">🧾 Historial de recibos ('+rows.length+')</div>'+lista;
+  }).catch(function(){var el=document.getElementById("ficha-hist");if(el)el.innerHTML='<div style="color:var(--red);font-size:12px">Error al cargar recibos.</div>';});
 }
 function fichaSet(k,v){fichaEdits[k]=(v===''?null:v);if(_fe)_fe[k]=v;}
 function cerrarFicha(){document.getElementById("ov-ficha").className="ov";var had=emps.some(function(x){return x.id===null;});emps=emps.filter(function(x){return x.id!==null;});fichaId=null;_fe=null;if(had&&tab==='empleados')render();}
