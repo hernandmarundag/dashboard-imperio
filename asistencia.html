@@ -2,112 +2,142 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Imperio · Asistencia</title>
 <style>
-:root{--bg:#f5f4f0;--card:#fff;--ink:#1b1b19;--mut:#7a786f;--line:#e7e4dc;--grn:#1d8a5f;--amb:#c98a12;--red:#c23b2e}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
-.wrap{max-width:560px;margin:0 auto;padding:14px 14px 60px}
-h1{font-size:18px;font-weight:700;margin:0}
-.sub{font-size:12px;color:var(--mut);margin-top:2px}
-.datebar{display:flex;align-items:center;gap:8px;margin:12px 0}
-input[type=date]{flex:1;height:44px;border:1px solid var(--line);border-radius:11px;padding:0 12px;font-size:16px;background:var(--card);font-family:inherit}
-.chips{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.chip{padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13px;font-weight:500;color:var(--mut)}
-.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.summary{display:flex;gap:8px;margin-bottom:12px}
-.sm{flex:1;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px;text-align:center}
-.sm .n{font-size:19px;font-weight:700}.sm .l{font-size:10px;color:var(--mut)}
-.emp{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:9px;display:flex;align-items:center;gap:11px}
-.av{width:44px;height:44px;border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex:0 0 auto}
-.nm{font-weight:600;font-size:15px}.cargo{font-size:11px;color:var(--mut)}
-.acts{display:flex;gap:6px;margin-left:auto;flex:0 0 auto}
-.mk{width:44px;height:44px;border-radius:11px;border:1px solid var(--line);background:#fafafa;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mut)}
-.mk.on-t{background:#e1f5ee;border-color:var(--grn);color:var(--grn)}
-.mk.on-f{background:#fceceb;border-color:var(--red);color:var(--red)}
-.mk.on-i{background:#fbf1dd;border-color:var(--amb);color:var(--amb)}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:22px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mut:#8a8f99;--line:#edeef1;--acc:#5b5bd6;--grn:#1d8a5f;--amb:#c98a12;--red:#e0463d;--sh:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06)}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:18px}
+h1{font-size:21px;font-weight:700;margin:0;letter-spacing:-.02em}
+.sub{font-size:12.5px;color:var(--mut);margin-top:3px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0}
+.cyc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input{height:38px;border:1px solid var(--line);border-radius:10px;padding:0 11px;font-size:14px;background:var(--card);font-family:inherit;color:var(--ink);box-shadow:var(--sh)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 13px;border-radius:20px;border:0;background:#eceef1;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer}
+.chip.on{background:var(--ink);color:#fff}
+.save{height:42px;border:0;border-radius:11px;background:var(--grn);color:#fff;font-size:14px;font-weight:700;padding:0 20px;cursor:pointer;box-shadow:0 1px 2px rgba(29,138,95,.3)}
+.save:active{transform:scale(.98)}
+.save.dirty{background:var(--acc);box-shadow:0 1px 2px rgba(91,91,214,.35)}
+.leg{font-size:12px;color:var(--mut);display:flex;gap:14px;margin:6px 2px 12px;flex-wrap:wrap}
+.leg span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:13px;height:13px;border-radius:4px;display:inline-block}
+.scroll{overflow-x:auto;border-radius:16px;box-shadow:var(--sh);background:var(--card)}
+table{border-collapse:collapse;font-size:13px;width:100%}
+th,td{padding:0;white-space:nowrap}
+thead th{position:sticky;top:0;background:#fafbfc;font-size:11px;color:var(--mut);font-weight:700;padding:8px 4px;text-align:center;border-bottom:1px solid var(--line)}
+th.emp,td.emp{position:sticky;left:0;background:var(--card);text-align:left;padding:8px 12px;min-width:190px;box-shadow:1px 0 0 var(--line);z-index:1}
+thead th.emp{z-index:2;background:#fafbfc}
+.emprow{display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex:0 0 auto}
+.nm{font-weight:600;font-size:13.5px;line-height:1.15}.cargo{font-size:10.5px;color:var(--mut)}
+tbody tr{border-top:1px solid #f4f5f7}
+.cell{width:34px;height:38px;text-align:center;vertical-align:middle}
+.mk{width:30px;height:30px;margin:0 auto;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;background:#eef7f2;color:var(--grn)}
+.mk.f{background:#fceceb;color:var(--red)}.mk.i{background:#fbf1dd;color:var(--amb)}
+.mk.dom{background:#f1f2f4;color:#c3c6cc;cursor:default}
+.dias{text-align:center;font-weight:700;font-size:15px;padding:0 12px;position:sticky;right:0;background:var(--card);box-shadow:-1px 0 0 var(--line)}
+thead th.diash{position:sticky;right:0;background:#fafbfc;box-shadow:-1px 0 0 var(--line)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:22px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
 .toast.on{opacity:1}
-.muted{color:var(--mut);font-size:13px;text-align:center;padding:20px}
+.hint{font-size:12.5px;color:var(--mut);margin:2px 2px 12px;line-height:1.5}
+.muted{color:var(--mut);text-align:center;padding:24px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Marcar asistencia</h1>
-  <div class="sub" id="sub">Cargando…</div>
-  <div class="datebar"><input type="date" id="fecha"></div>
-  <div class="chips" id="obras"></div>
-  <div class="summary">
-    <div class="sm"><div class="n" style="color:var(--grn)" id="s-t">0</div><div class="l">asistieron</div></div>
-    <div class="sm"><div class="n" style="color:var(--red)" id="s-f">0</div><div class="l">faltas</div></div>
-    <div class="sm"><div class="n" style="color:var(--amb)" id="s-i">0</div><div class="l">incapacidad</div></div>
-    <div class="sm"><div class="n" id="s-p">0</div><div class="l">sin marcar</div></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+    <div><h1>Asistencia de obra</h1><div class="sub" id="sub">Cargando…</div></div>
+    <button class="save" id="btn-save" onclick="guardar()">Guardar asistencia</button>
   </div>
-  <div id="list"></div>
+  <div class="bar">
+    <div class="cyc"><input type="month" id="mes"><select id="quin"><option value="1">1ª quincena (1–15)</option><option value="2">2ª quincena (16–fin)</option></select></div>
+    <div class="chips" id="obras"></div>
+  </div>
+  <div class="leg"><span><i class="dot" style="background:#8fd8bd"></i>asistió</span><span><i class="dot" style="background:#f3c9c6"></i>falta</span><span><i class="dot" style="background:#eeddb4"></i>incapacidad</span><span><i class="dot" style="background:#dfe1e5"></i>domingo</span></div>
+  <div class="hint">Todos aparecen como <strong>asistió</strong>. Toca un día para cambiar a falta → incapacidad → asistió. Los <strong>días trabajados se suman</strong> a la derecha. Al terminar, presiona <strong>Guardar asistencia</strong>.</div>
+  <div class="scroll" id="grid"></div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
 var SB="https://dghmgaaprlzpfnpsqzav.supabase.co";
 var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k";
 var H={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"};
-var COLORS=['#5b5bd6','#1d8a5f','#c98a12','#c23b2e','#2563eb','#7c3aed','#0f766e','#b45309'];
-var emps=[], marks={}, obra="todas";
+var COLORS=['#5b5bd6','#1d8a5f','#c98a12','#e0463d','#2563eb','#7c3aed','#0f766e','#b45309'];
+var emps=[], marks={}, obra="todas", dirty=false, cy=null;
+var BASE_QUINCENA=15; // asalariado: 15 días por quincena (mes de 30), domingos y festivos incluidos
+var FESTIVOS={'2026-01-01':1,'2026-01-12':1,'2026-03-23':1,'2026-04-02':1,'2026-04-03':1,'2026-05-01':1,'2026-05-18':1,'2026-06-08':1,'2026-06-15':1,'2026-06-29':1,'2026-07-20':1,'2026-08-07':1,'2026-08-17':1,'2026-10-12':1,'2026-11-02':1,'2026-11-16':1,'2026-12-08':1,'2026-12-25':1};
+function esDescanso(d){var dn=new Date(d+'T12:00:00').getDay();return dn===0||FESTIVOS[d];}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
-function toast(m){var t=document.getElementById("toast");t.textContent=m;t.className="toast on";setTimeout(function(){t.className="toast";},1600);}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.className="toast on";setTimeout(function(){t.className="toast";},1800);}
 function initials(n){var p=(n||'').trim().split(/\s+/);return((p[0]||'')[0]||'')+((p[1]||'')[0]||'');}
 function colorFor(s){var h=0;for(var i=0;i<(s||'').length;i++)h=(h*31+s.charCodeAt(i))>>>0;return COLORS[h%COLORS.length];}
 function avatar(e){if(e.foto_url)return '<img class="av" src="'+esc(e.foto_url)+'" alt="">';return '<span class="av" style="background:'+colorFor(e.cedula||e.nombre_completo)+'">'+esc(initials(e.nombre_completo).toUpperCase())+'</span>';}
-function quincenaDe(f){var d=new Date(f+'T12:00:00');var meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];var dd=d.getDate();var d2=dd<=15?'1-15':'16-'+new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return d2+' '+meses[d.getMonth()]+' '+d.getFullYear();}
-
-function renderObras(){document.getElementById("obras").innerHTML=['todas','weliving','robledo','novaeva'].map(function(o){return '<div class="chip'+(o===obra?' on':'')+'" onclick="pickObra(\''+o+'\')">'+o+'</div>';}).join("");}
+function cycle(){var m=document.getElementById("mes").value;if(!m){var d=new Date();m=d.toISOString().slice(0,7);}
+  var y=+m.split('-')[0],mo=+m.split('-')[1],q=document.getElementById("quin").value;
+  var d1=q==='1'?1:16,d2=q==='1'?15:new Date(y,mo,0).getDate();var days=[];for(var i=d1;i<=d2;i++)days.push(y+'-'+String(mo).padStart(2,'0')+'-'+String(i).padStart(2,'0'));
+  var meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return {y:y,mo:mo,days:days,label:d1+'-'+d2+' '+meses[mo-1]+' '+y};}
+function renderObras(){document.getElementById("obras").innerHTML=['todas','weliving','robledo','novaeva'].map(function(o){return '<button class="chip'+(o===obra?' on':'')+'" onclick="pickObra(\''+o+'\')">'+o+'</button>';}).join("");}
 function pickObra(o){obra=o;renderObras();render();}
+function setDirty(d){dirty=d;var b=document.getElementById("btn-save");b.className="save"+(d?" dirty":"");b.textContent=d?"● Guardar asistencia":"Guardar asistencia";}
 
 function cargar(){
-  var f=document.getElementById("fecha").value;
-  document.getElementById("sub").textContent="Cargando "+f+"…";
+  cy=cycle();document.getElementById("sub").textContent="Cargando "+cy.label+"…";
   Promise.all([
     fetch(SB+"/rest/v1/empleados?select=id,cedula,nombre_completo,cargo,obra_id,foto_url,activo&order=obra_id,nombre_completo",{headers:H}).then(function(r){return r.json();}),
-    fetch(SB+"/rest/v1/asistencia?fecha=eq."+f+"&select=cedula,estado",{headers:H}).then(function(r){return r.json();})
+    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado",{headers:H}).then(function(r){return r.json();})
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
-    marks={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){marks[a.cedula]=a.estado;});
-    var d=new Date(f+'T12:00:00');var dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-    document.getElementById("sub").textContent=dias[d.getDay()]+' · '+emps.length+' empleados';
-    render();
+    marks={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){if(a.estado==='falta'||a.estado==='incapacidad'){if(!marks[a.cedula])marks[a.cedula]={};marks[a.cedula][a.fecha]=a.estado;}});
+    document.getElementById("sub").textContent=emps.length+" empleados · ciclo "+cy.label;
+    setDirty(false);render();
   }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
+}
+
+function diasDe(ced){
+  var hoy=new Date().toISOString().slice(0,10);
+  var transcurridos=cy.days.filter(function(d){return d<=hoy;}).length;
+  var base=Math.min(BASE_QUINCENA,transcurridos); // asalariado 15, topado a lo ya transcurrido (no cuenta futuro)
+  var ex=marks[ced]||{};
+  cy.days.forEach(function(d){if(d<=hoy && ex[d])base--;});
+  return Math.max(0,base);
 }
 
 function render(){
   var list=emps.filter(function(e){return obra==='todas'||e.obra_id===obra;});
-  var t=0,fa=0,i=0,p=0;
-  emps.forEach(function(e){var m=marks[e.cedula];if(m==='trabajo')t++;else if(m==='falta')fa++;else if(m==='incapacidad')i++;else p++;});
-  document.getElementById("s-t").textContent=t;document.getElementById("s-f").textContent=fa;document.getElementById("s-i").textContent=i;document.getElementById("s-p").textContent=p;
-  if(!list.length){document.getElementById("list").innerHTML='<div class="muted">Sin empleados.</div>';return;}
-  document.getElementById("list").innerHTML=list.map(function(e){var m=marks[e.cedula];
-    return '<div class="emp">'+avatar(e)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div>'
-      +'<div class="acts">'
-      +'<div class="mk '+(m==='trabajo'?'on-t':'')+'" title="Asistió" onclick="marcar(\''+e.cedula+'\',\'trabajo\')">✓</div>'
-      +'<div class="mk '+(m==='falta'?'on-f':'')+'" title="Falta" onclick="marcar(\''+e.cedula+'\',\'falta\')">✗</div>'
-      +'<div class="mk '+(m==='incapacidad'?'on-i':'')+'" title="Incapacidad" onclick="marcar(\''+e.cedula+'\',\'incapacidad\')">I</div>'
-      +'</div></div>';
-  }).join("");
+  if(!list.length){document.getElementById("grid").innerHTML='<div class="muted">Sin empleados.</div>';return;}
+  var head='<tr><th class="emp">Empleado</th>'+cy.days.map(function(d){var dn=new Date(d+'T12:00:00').getDay();return '<th>'+(+d.split('-')[2])+'<div style="font-weight:400;color:#c3c6cc;font-size:9px">'+['D','L','M','X','J','V','S'][dn]+'</div></th>';}).join('')+'<th class="diash">Días</th></tr>';
+  var body=list.map(function(e){
+    var hoy=new Date().toISOString().slice(0,10);
+    var cells=cy.days.map(function(d){var st=(marks[e.cedula]||{})[d];
+      if(esDescanso(d))return '<td class="cell"><div class="mk dom" title="domingo/festivo — pagado">·</div></td>';
+      if(d>hoy)return '<td class="cell"><div class="mk dom" title="aún no llega">·</div></td>';
+      var cls=st==='falta'?'f':st==='incapacidad'?'i':'';var lab=st==='falta'?'F':st==='incapacidad'?'I':'✓';
+      return '<td class="cell"><div class="mk '+cls+'" onclick="toggle(\''+e.cedula+'\',\''+d+'\')">'+lab+'</div></td>';}).join('');
+    return '<tr><td class="emp"><div class="emprow">'+avatar(e)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td>'+cells+'<td class="dias" id="d-'+e.cedula+'">'+diasDe(e.cedula)+'</td></tr>';
+  }).join('');
+  document.getElementById("grid").innerHTML='<table><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+}
+function toggle(ced,d){if(!marks[ced])marks[ced]={};var cur=marks[ced][d];
+  var nx=cur===undefined?'falta':cur==='falta'?'incapacidad':undefined;
+  if(nx===undefined)delete marks[ced][d];else marks[ced][d]=nx;
+  setDirty(true);render();}
+
+function guardar(){
+  var rows=[];Object.keys(marks).forEach(function(ced){Object.keys(marks[ced]).forEach(function(d){var e=emps.find(function(x){return x.cedula===ced;});rows.push({cedula:ced,nombre:e?e.nombre_completo:'',fecha:d,quincena:cy.label,obra_id:e?e.obra_id:'',estado:marks[ced][d],dias:1});});});
+  var b=document.getElementById("btn-save");b.textContent="Guardando…";
+  fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label),{method:"DELETE",headers:H})
+    .then(function(r){if(!r.ok)throw 0;return rows.length?fetch(SB+"/rest/v1/asistencia",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(rows)}):{ok:true};})
+    .then(function(r){if(r&&r.ok===false)throw 0;toast("Asistencia guardada ✓ ("+rows.length+" novedades)");setDirty(false);})
+    .catch(function(){b.textContent="● Guardar asistencia";toast("Error al guardar");});
 }
 
-function marcar(ced,estado){
-  var f=document.getElementById("fecha").value;
-  var e=emps.find(function(x){return x.cedula===ced;});
-  var prev=marks[ced];
-  marks[ced]=estado; render();
-  fetch(SB+"/rest/v1/asistencia?cedula=eq."+encodeURIComponent(ced)+"&fecha=eq."+f,{method:"DELETE",headers:H})
-    .then(function(){return fetch(SB+"/rest/v1/asistencia",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),
-      body:JSON.stringify({cedula:ced,nombre:e?e.nombre_completo:'',fecha:f,quincena:quincenaDe(f),obra_id:e?e.obra_id:'',estado:estado,dias:1})});})
-    .then(function(r){if(!r.ok)throw 0;toast("Guardado ✓");})
-    .catch(function(){marks[ced]=prev;render();toast("Error al guardar");});
-}
-
-document.getElementById("fecha").value=new Date().toISOString().slice(0,10);
-document.getElementById("fecha").addEventListener("change",cargar);
+var d=new Date();document.getElementById("mes").value=d.toISOString().slice(0,7);
+document.getElementById("quin").value=d.getDate()<=15?'1':'2';
+document.getElementById("mes").addEventListener("change",cargar);
+document.getElementById("quin").addEventListener("change",cargar);
 renderObras();cargar();
 </script>
 </body>

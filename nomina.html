@@ -86,6 +86,7 @@ var SB="https://dghmgaaprlzpfnpsqzav.supabase.co";
 var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k";
 var H={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"};
 var R={ces:0.0833,intces:0.01,prima:0.0833,vac:0.0417,salud:0.085,pension:0.12,arl:0.0696,caja:0.04};
+var SMLMV=1750905, AUX_TRANSPORTE=249095; // paramétricas 2026
 var emps=[], nom=[], tab="nomina", liq={}, att={};
 var COLORS=['#5b5bd6','#1d8a5f','#c98a12','#c23b2e','#2563eb','#7c3aed','#0f766e','#b45309'];
 
@@ -111,7 +112,14 @@ function cycle(){
   return {y:y,mo:mo,d1:d1,d2:d2,days:days,label:label,desde:days[0],hasta:days[days.length-1]};
 }
 
-function diasTrab(ced,cy){var ex=att[ced]||{};var n=cy.days.length;cy.days.forEach(function(d){if(ex[d]==='falta'||ex[d]==='incapacidad'||ex[d]==='inc')n--;});return n;}
+function diasTrab(ced,cy){
+  var hoy=new Date().toISOString().slice(0,10);
+  var transcurridos=cy.days.filter(function(d){return d<=hoy;}).length;
+  var base=Math.min(15,transcurridos); // asalariado 15, topado a días ya transcurridos (no cuenta quincena futura)
+  var ex=att[ced]||{};
+  cy.days.forEach(function(d){if(d<=hoy && (ex[d]==='falta'||ex[d]==='incapacidad'||ex[d]==='inc'))base--;});
+  return Math.max(0,base);
+}
 function pago(e,dias,hed,hen,prest){
   var b=+e.salario_basico||0, bon=+e.bonificacion||0;
   var devB=Math.round(b/30*dias), devBon=Math.round(bon/30*dias);
@@ -266,26 +274,31 @@ function renderLiq(v){
 
 // ── SEGURIDAD SOCIAL ──
 function renderPrest(v){
-  var sumAp=0,sumPr=0,sumBas=0;
-  var rows=emps.map(function(e){var b=+e.salario_basico||0;sumBas+=b;
-    var salud=Math.round(b*R.salud),pension=Math.round(b*R.pension),arl=Math.round(b*R.arl),caja=Math.round(b*R.caja);var ap=salud+pension+arl+caja;
-    var pr=Math.round(b*(R.ces+R.intces+R.prima+R.vac));sumAp+=ap;sumPr+=pr;
+  var sumAp=0,sumPr=0;var ibc=SMLMV;
+  var rows=emps.map(function(e){
+    var baseP=(+e.salario_basico||0)+(+e.bonificacion||0); // prestaciones sobre salario real
+    var salud=Math.round(ibc*R.salud),pension=Math.round(ibc*R.pension),arl=Math.round(ibc*R.arl),caja=Math.round(ibc*R.caja);var ap=salud+pension+arl+caja;
+    var pr=Math.round(baseP*(R.ces+R.intces+R.prima+R.vac));sumAp+=ap;sumPr+=pr;
     return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td>'
-      +'<td class="r">'+fmt(b)+'</td><td class="r">'+fmt(salud)+'</td><td class="r">'+fmt(pension)+'</td><td class="r">'+fmt(arl)+'</td><td class="r">'+fmt(caja)+'</td><td class="r tot">'+fmt(ap)+'</td><td class="r" style="color:var(--amb)">'+fmt(pr)+'</td></tr>';}).join("");
-  v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Aportes / mes (PILA)</div><div class="v">'+fmt(sumAp)+'</div><div style="font-size:10px;color:var(--mut)">salud+pensión+ARL+caja</div></div>'
+      +'<td class="r">'+fmt(ibc)+'</td><td class="r">'+fmt(salud)+'</td><td class="r">'+fmt(pension)+'</td><td class="r">'+fmt(arl)+'</td><td class="r">'+fmt(caja)+'</td><td class="r tot">'+fmt(ap)+'</td><td class="r" style="color:var(--amb)">'+fmt(pr)+'</td></tr>';}).join("");
+  v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Aportes / mes (PILA)</div><div class="v">'+fmt(sumAp)+'</div><div style="font-size:10px;color:var(--mut)">salud+pensión+ARL+caja sobre el mínimo</div></div>'
     +'<div class="kpi"><div class="l">Provisión prestaciones / mes</div><div class="v" style="color:var(--amb)">'+fmt(sumPr)+'</div><div style="font-size:10px;color:var(--mut)">se acumula</div></div>'
-    +'<div class="kpi"><div class="l">Costo real / mes (aprox)</div><div class="v">'+fmt(sumBas+emps.reduce(function(s,e){return s+(+e.bonificacion||0);},0)+sumAp+sumPr)+'</div></div></div>'
-    +'<div class="hint">Aportes mensuales a la PILA y provisión de prestaciones (sobre el básico). ARL clase V (construcción). No se pagan al trabajador cada quincena.</div>'
-    +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">Básico</th><th class="r">Salud</th><th class="r">Pensión</th><th class="r">ARL</th><th class="r">Caja</th><th class="r">Aportes</th><th class="r">Prest.</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    +'<div class="kpi"><div class="l">IBC de cotización</div><div class="v" style="font-size:17px">'+fmt(ibc)+'</div><div style="font-size:10px;color:var(--mut)">salario mínimo 2026</div></div></div>'
+    +'<div class="hint">Aportes sobre el <strong>IBC = salario mínimo ($'+SMLMV.toLocaleString("es-CO")+')</strong>, como pediste. ARL clase V (construcción). ⚠️ <strong>Aviso legal:</strong> cotizar por menos del salario real expone a sanción de la UGPP (diferencias + intereses); el IBC no puede ser menor al salario real. La provisión de prestaciones sí va sobre el salario real.</div>'
+    +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">IBC</th><th class="r">Salud</th><th class="r">Pensión</th><th class="r">ARL</th><th class="r">Caja</th><th class="r">Aportes</th><th class="r">Prest.</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 // ── EMPLEADOS + FICHA ──
 function renderEmpleados(v){
-  v.innerHTML='<div class="hint">Toca un empleado para abrir su ficha técnica: foto, datos demográficos, afiliaciones y salario.</div>'
+  v.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="hint" style="margin:0">Toca un empleado para abrir su ficha técnica: foto, datos demográficos, afiliaciones y salario.</div><button class="btn" onclick="openFichaNuevo()">+ Nuevo empleado</button></div>'
     +'<div class="grid-emp">'+emps.map(function(e){return '<div class="empcard" onclick="openFicha(\''+e.id+'\')">'+avatar(e,46)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div><div style="margin-top:3px"><span class="obratag">'+esc(e.obra_id||'')+'</span></div></div></div>';}).join("")+'</div>';
 }
-var fichaId=null, fichaEdits={};
-function openFicha(id){var e=emps.find(function(x){return x.id===id;});if(!e)return;fichaId=id;fichaEdits={};
+function openFichaNuevo(){
+  var nuevo={id:null,activo:true,nombre_completo:'',cedula:'',cargo:'',obra_id:'weliving'};
+  emps.push(nuevo);nuevo.__i=emps.length-1;openFicha('__nuevo__');
+}
+var fichaId=null, fichaEdits={}, _fe=null;
+function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(function(x){return x.id===id;});if(!e)return;_fe=e;fichaId=id;fichaEdits={};
   function f(lbl,key,type){var val=e[key]==null?'':e[key];return '<div class="fg"><label>'+lbl+'</label><input type="'+(type||'text')+'" value="'+esc(val)+'" oninput="fichaSet(\''+key+'\',this.value)"></div>';}
   var body='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div style="display:flex;align-items:center;gap:12px">'+avatar(e,64)
     +'<div><div style="font-size:18px;font-weight:700">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div>'
@@ -302,20 +315,32 @@ function openFicha(id){var e=emps.find(function(x){return x.id===id;});if(!e)ret
     +'<div class="frow">'+f('Salario básico / mes','salario_basico','number')+f('Bonificación / mes','bonificacion','number')+'</div>'
     +'<div class="frow">'+f('Método de pago','metodo_pago')+f('Cuenta','cuenta_pago')+'</div>'
     +'<div class="frow">'+f('Saldo préstamo','prestamo_saldo','number')+'<div class="fg"><label>Activo</label><select onchange="fichaSet(\'activo\',this.value===\'si\')"><option value="si"'+(e.activo!==false?' selected':'')+'>Sí</option><option value="no"'+(e.activo===false?' selected':'')+'>No</option></select></div></div>'
-    +'<div class="foot"><button class="btn s" onclick="cerrarFicha()">Cancelar</button><button class="btn g" onclick="guardarFicha()">💾 Guardar ficha</button></div>';
+    +'<div class="foot">'+(e.id?'<button class="btn s" style="color:var(--red)" onclick="inactivarEmp()">Inactivar</button>':'')+'<button class="btn s" onclick="cerrarFicha()">Cancelar</button><button class="btn g" onclick="guardarFicha()">'+(e.id?'Guardar ficha':'Crear empleado')+'</button></div>';
   document.getElementById("ficha-body").innerHTML=body;document.getElementById("ov-ficha").className="ov on";
 }
-function fichaSet(k,v){fichaEdits[k]=(v===''?null:v);var e=emps.find(function(x){return x.id===fichaId;});if(e)e[k]=v;}
-function cerrarFicha(){document.getElementById("ov-ficha").className="ov";fichaId=null;}
-function subirFoto(inp){var f=inp.files[0];if(!f||!fichaId)return;var e=emps.find(function(x){return x.id===fichaId;});
-  var path=fichaId+'/'+Date.now()+'.'+(f.name.split('.').pop()||'jpg').toLowerCase();
+function fichaSet(k,v){fichaEdits[k]=(v===''?null:v);if(_fe)_fe[k]=v;}
+function cerrarFicha(){document.getElementById("ov-ficha").className="ov";var had=emps.some(function(x){return x.id===null;});emps=emps.filter(function(x){return x.id!==null;});fichaId=null;_fe=null;if(had&&tab==='empleados')render();}
+function subirFoto(inp){var f=inp.files[0];if(!f||!_fe)return;var e=_fe;
+  var path=(_fe.id||_fe.cedula||('nuevo'+Date.now()))+'/'+Date.now()+'.'+(f.name.split('.').pop()||'jpg').toLowerCase();
   toast("Subiendo foto…");
   fetch(SB+"/storage/v1/object/avatars/"+path,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":f.type||"image/jpeg"},body:f})
     .then(function(r){if(!r.ok)throw 0;var url=SB+"/storage/v1/object/public/avatars/"+path;fichaEdits.foto_url=url;e.foto_url=url;openFicha(fichaId);toast("Foto lista — guarda la ficha");}).catch(function(){toast("Error al subir foto");});
 }
-function guardarFicha(){if(!fichaId)return;if(!Object.keys(fichaEdits).length){cerrarFicha();return;}
-  fetch(SB+"/rest/v1/empleados?id=eq."+fichaId,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(fichaEdits)})
-    .then(function(r){if(!r.ok)throw 0;toast("Ficha guardada ✓");cerrarFicha();cargar();}).catch(function(){toast("Error al guardar");});
+function guardarFicha(){if(!_fe)return;
+  if(_fe.id){
+    if(!Object.keys(fichaEdits).length){cerrarFicha();return;}
+    fetch(SB+"/rest/v1/empleados?id=eq."+_fe.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(fichaEdits)})
+      .then(function(r){if(!r.ok)throw 0;toast("Ficha guardada ✓");cerrarFicha();cargar();}).catch(function(){toast("Error al guardar");});
+  } else {
+    var body=Object.assign({activo:true,empresa_id:'230ab43f-0f77-4f84-94bf-f9bb925b384b'},fichaEdits);
+    if(!body.nombre_completo||!body.cedula){toast("Falta nombre y cédula");return;}
+    fetch(SB+"/rest/v1/empleados",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)})
+      .then(function(r){if(!r.ok)throw 0;toast("Empleado creado ✓");cerrarFicha();cargar();}).catch(function(){toast("Error al crear");});
+  }
+}
+function inactivarEmp(){if(!_fe||!_fe.id)return;if(!confirm('¿Inactivar a '+_fe.nombre_completo+'? Deja de aparecer en nómina, pero se conserva el histórico.'))return;
+  fetch(SB+"/rest/v1/empleados?id=eq."+_fe.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({activo:false})})
+    .then(function(r){if(!r.ok)throw 0;toast("Empleado inactivado");cerrarFicha();cargar();}).catch(function(){toast("Error");});
 }
 
 // init
