@@ -252,23 +252,42 @@ function openReciboHist(id){mostrarRecibo(histN[id]);}
 function mostrarRecibo(n){
   if(!n)return;
   var e=emps.find(function(x){return x.cedula===n.cedula;})||{cedula:n.cedula,nombre_completo:n.nombre};
-  var basico=+n.salario_mensual||+e.salario_basico||0,bonif=+e.bonificacion||0,dias=+n.dias||0;
-  var basicoP=Math.round(basico/30*dias),bonP=Math.round(bonif/30*dias);
-  var vh=(basico+bonif)/240,hed=Math.round((+n.he_diurna||0)*vh*1.25),hen=Math.round((+n.he_nocturna||0)*vh*1.75);
-  var prest=+n.prestamo||0,neto=+n.valor||0;
-  function fila(l,val,neg){return '<tr><td style="padding:5px 0">'+l+'</td><td class="r"'+(neg?' style="color:var(--red)"':'')+'>'+(neg?'−':'')+fmt(val)+'</td></tr>';}
-  var body='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div><div style="font-size:13px;font-weight:700">GRUPO IMPERIO MEDELLÍN SAS</div><div style="font-size:12px;color:var(--mut)">Comprobante de pago de nómina</div></div><button class="btn s" onclick="cerrarRecibo()">✕</button></div>'
-    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+avatar(e,48)+'<div><div style="font-weight:700;font-size:15px">'+esc(n.nombre)+'</div><div style="font-size:12px;color:var(--mut)">CC '+esc(e.cedula||n.cedula)+' · '+esc(n.cargo||'')+'</div></div></div>'
-    +'<div style="font-size:12px;color:var(--mut);margin-bottom:8px">Ciclo <strong>'+esc(n.quincena)+'</strong> · Días <strong>'+dias+'</strong>'+(n.pagado&&n.fecha_pago?' · Pagado el '+esc(n.fecha_pago):'')+'</div>'
-    +'<table style="width:100%;font-size:13px"><tbody>'
-    +'<tr><td colspan="2" style="font-size:11px;font-weight:700;color:var(--mut);padding-top:6px">DEVENGADO</td></tr>'
-    +fila('Salario básico ('+dias+' días)',basicoP)+(bonP?fila('Bonificación',bonP):'')+(hed?fila('Horas extra diurnas',hed):'')+(hen?fila('Horas extra nocturnas',hen):'')
-    +'<tr><td colspan="2" style="font-size:11px;font-weight:700;color:var(--mut);padding-top:8px">DEDUCCIONES</td></tr>'
-    +(prest?fila('Préstamo',prest,true):'<tr><td colspan="2" style="color:var(--mut);font-size:12px;padding:5px 0">Ninguna</td></tr>')
-    +'<tr style="border-top:2px solid var(--ink)"><td style="font-weight:700;padding-top:9px">NETO PAGADO</td><td class="r" style="font-weight:700;font-size:17px;padding-top:9px">'+fmt(neto)+'</td></tr>'
-    +'</tbody></table>'
-    +'<div style="font-size:12px;color:var(--mut);margin-top:10px">Pago: '+esc(n.metodo||'')+' '+esc(n.cuenta||'')+'</div>'
-    +'<div style="margin:32px auto 0;border-top:1px solid var(--ink);padding-top:5px;font-size:11px;color:var(--mut);text-align:center;width:210px">Firma del empleado</div>'
+  var salmes=+n.salario_mensual||+e.salario_basico||0, dias=+n.dias||0;
+  var basico=Math.round(SMLMV/30*dias);
+  var aplicaAux = salmes<=2*SMLMV;
+  var aux = aplicaAux ? Math.round(AUX_TRANSPORTE/30*dias) : 0;
+  var bonifMes = Math.max(0, salmes - SMLMV - (aplicaAux?AUX_TRANSPORTE:0));
+  var bonif = Math.round(bonifMes/30*dias);
+  var rateD=Math.round(salmes/192), rateN=Math.round(salmes/240*1.75);
+  var hd=+n.he_diurna||0, hn=+n.he_nocturna||0, heD=Math.round(hd*rateD), heN=Math.round(hn*rateN);
+  var prest=+n.prestamo||0, neto=+n.valor||0;
+  var salud=Math.round(basico*0.04), pension=Math.round(basico*0.04);
+  function row(l,r,bold){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed #d9dce3"><span>'+l+'</span><span style="font-weight:'+(bold===false?'400':'700')+';text-align:right">'+r+'</span></div>';}
+  var it='';
+  it+=row('Salario base mínimo · '+dias+' días', fmt(basico));
+  if(aux)it+=row('Auxilio de transporte · '+dias+' días', fmt(aux));
+  if(bonif)it+=row('Bonificación · '+dias+' días', fmt(bonif));
+  if(heD)it+=row('Horas extra diurnas', hd+' h × '+fmt(rateD)+' = '+fmt(heD));
+  if(heN)it+=row('Horas extra nocturnas', hn+' h × '+fmt(rateN)+' = '+fmt(heN));
+  if(prest)it+=row('Préstamo', (prest<0?'+ ':'− ')+fmt(Math.abs(prest)));
+  var body='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px"><div><div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Recibo de pago · Nómina</div><div style="font-size:12px;color:var(--mut)">Imperio Constructora · Quincena '+esc(n.quincena||'')+'</div></div><button class="btn s" onclick="cerrarRecibo()">✕</button></div>'
+    +'<div style="margin-bottom:14px">'
+    +row('Empleado', esc(n.nombre||e.nombre_completo||''))
+    +row('Cédula', esc(e.cedula||n.cedula||''))
+    +row('Cargo', esc(n.cargo||e.cargo||''))
+    +row('Obra', esc(n.proyecto||e.obra_id||''))
+    +row('Cuenta', esc(((n.metodo||'')+' '+(n.cuenta||'')).trim()))
+    +'</div>'
+    +'<div style="font-size:12px;font-weight:800;color:var(--acc);letter-spacing:.4px">LIQUIDACIÓN DE LA QUINCENA ('+dias+' DÍAS)</div>'
+    +'<div style="font-size:12px;color:var(--mut);margin-bottom:6px">Salario mensual: '+fmt(salmes)+' · esta liquidación es la quincena (medio mes)</div>'
+    +it
+    +'<div style="display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:#fff;border-radius:12px;padding:15px 18px;margin-top:14px"><span style="font-size:16px;font-weight:800">TOTAL A PAGAR</span><span style="font-size:19px;font-weight:800">'+fmt(neto)+'</span></div>'
+    +'<div style="background:#eef7f2;border:1px solid #cfe9dd;border-radius:12px;padding:14px;margin-top:14px;font-size:13px">'
+      +'<div style="font-weight:700;color:var(--grn);margin-bottom:8px">🛡 Beneficios que asume la empresa por ti <span style="font-weight:400;color:var(--mut)">(no se te descuentan):</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:3px 0"><span>Salud (4%)</span><span style="font-weight:700;color:var(--grn)">'+fmt(salud)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:3px 0"><span>Pensión (4%)</span><span style="font-weight:700;color:var(--grn)">'+fmt(pension)+'</span></div>'
+      +'<div style="color:var(--grn);margin-top:8px;font-size:12px">La empresa paga estos <strong>'+fmt(salud+pension)+'</strong> que normalmente se te descontarían del salario. Aquí los recibes completos, como un beneficio extra.</div>'
+    +'</div>'
     +'<div class="foot"><button class="btn s" onclick="window.print()">🖨 Imprimir</button><button class="btn" onclick="cerrarRecibo()">Cerrar</button></div>';
   document.getElementById("recibo-body").innerHTML=body;document.getElementById("ov-recibo").className="ov on";
 }
