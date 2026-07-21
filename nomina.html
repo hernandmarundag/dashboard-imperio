@@ -1,176 +1,257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Nómina · Pagar</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Imperio · Nómina</title>
 <style>
-:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--green:#16a34a;--greenbg:#dcfce7;--red:#dc2626;--redbg:#fee2e2;--blue:#2563eb}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;padding:14px 12px 40px}
-.wrap{max-width:540px;margin:0 auto}
-h1{font-size:19px;font-weight:800}
-.sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.4}
-.qsel{display:flex;align-items:center;gap:8px;margin-top:12px}
-.qsel select{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:14px;font-weight:700;background:#fff;color:var(--ink)}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
-.kc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
-.kc .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
-.kc .v{font-size:19px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums}
-.kc.g .v{color:var(--green)}.kc.a .v{color:#d97706}
-.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
-.filters::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;padding:8px 15px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;cursor:pointer}
-.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-.catbar{color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:8px 14px;border-radius:10px;margin:16px 0 10px}
-.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.pcard.paid{background:var(--greenbg);border-color:#86efac}
-.prow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.nm{font-weight:700;font-size:15.5px;line-height:1.25}
-.pcard.paid .nm{text-decoration:line-through;color:var(--muted)}
-.mt{font-weight:800;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.meta{color:var(--muted);font-size:13px;margin-top:6px;word-break:break-all;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.cpy{border:1px solid var(--blue);background:#eff6ff;color:var(--blue);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;cursor:pointer;flex:0 0 auto}
-.cpy:active{transform:translateY(1px)}
-.badges{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px}
-.t-ins{background:var(--greenbg);color:var(--green)}.t-sin{background:var(--redbg);color:var(--red)}.t-nd{background:#f1f5f9;color:var(--muted)}
-.alert{display:block;width:100%;font-size:12px;color:var(--red);font-weight:600;margin-top:2px;line-height:1.35}
-.acts{display:flex;gap:8px;margin-top:12px}
-.paybtn{flex:1;padding:12px;border:1.5px solid var(--green);background:#fff;color:var(--green);border-radius:10px;font-size:15px;font-weight:800;cursor:pointer}
-.paybtn.on{background:var(--green);color:#fff}
-.recbtn{flex:0 0 auto;padding:12px 14px;border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:10px;font-size:14px;font-weight:800;cursor:pointer}
-.compbtn{flex:0 0 auto;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:16px;cursor:pointer;text-decoration:none;color:var(--ink);display:flex;align-items:center}
-.subt{text-align:right;color:var(--muted);font-size:13px;padding:2px 4px 4px}
-.subt b{color:var(--ink);font-variant-numeric:tabular-nums}
-.warn{background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:13px;margin-top:18px;font-size:12.5px;color:#92400e;line-height:1.5}
-.foot{display:flex;gap:10px;margin-top:16px}
-.btn{flex:1;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
-.btn.p{background:var(--blue);color:#fff;border-color:var(--blue)}
-.load{text-align:center;color:var(--muted);padding:40px}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a7340;color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:.3s;z-index:40;pointer-events:none}
-.toast.on{opacity:1}.toast.err{background:var(--red)}
-.ov{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:flex-start;justify-content:center;padding:20px;z-index:50;overflow:auto}
-.ov.on{display:flex}
-.recibo{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:22px}
-.recibo h3{font-size:16px;font-weight:800}.recibo .rs{font-size:11.5px;color:var(--muted);margin-bottom:12px}
-.rsub{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--blue);margin:12px 0 2px;padding-top:8px;border-top:1px solid var(--line)}
-.rref{font-size:11.5px;color:var(--muted);margin-bottom:4px}
-.rr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px;gap:12px}
-.rr b{font-variant-numeric:tabular-nums;text-align:right}
-.rtot{background:var(--ink);color:#fff;border-radius:11px;padding:11px 13px;display:flex;justify-content:space-between;font-weight:800;margin-top:12px;font-size:16px}
-.benef{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:11px;padding:11px 13px;margin-top:12px;font-size:12.5px;color:#065f46;line-height:1.4}
-.benef .brow{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
-.benef .brow b{font-variant-numeric:tabular-nums}
-.benef .bnote{margin-top:6px;font-size:11.5px;color:#047857}
-.racts{display:flex;gap:8px;margin-top:14px}
-.racts button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;font-size:14px}
-.bx{background:#e2e8f0;color:var(--ink)}.bi{background:var(--blue);color:#fff}.bg{background:var(--green);color:#fff}
-@media print{.filters,.foot,.acts,.qsel,.racts,.warn{display:none!important}body{background:#fff}
- body *{visibility:hidden}#reciboBox,#reciboBox *{visibility:visible}#reciboBox{position:absolute;left:0;top:0}}
+:root{--bg:#f5f4f0;--card:#fff;--ink:#1b1b19;--mut:#7a786f;--line:#e7e4dc;--acc:#5b5bd6;--accbg:#eeeefb;--grn:#1d8a5f;--amb:#c98a12;--red:#c23b2e}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+.wrap{max-width:1080px;margin:0 auto;padding:18px}
+h1{font-size:19px;font-weight:700;margin:0}
+.sub{font-size:12px;color:var(--mut);margin-top:2px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.qsel{display:flex;align-items:center;gap:8px}
+.qsel select,.qsel input{height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px;font-size:14px;background:var(--card);font-family:inherit}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:9px 16px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:500;color:var(--mut);cursor:pointer}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:#999;font-size:11px;font-weight:600;padding:10px 12px;background:#fafafa;white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid #f0efe9;vertical-align:middle}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.inp{width:78px;height:32px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font-size:13px;text-align:right;font-family:inherit}
+.nm{font-weight:600}
+.cargo{font-size:11px;color:var(--mut)}
+.tot{font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .l{font-size:11px;color:var(--mut);font-weight:600;margin-bottom:6px}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.btn{height:40px;border:0;border-radius:10px;background:var(--acc);color:#fff;font-size:14px;font-weight:600;padding:0 18px;cursor:pointer}
+.btn.g{background:var(--grn)}
+.btn:active{transform:scale(.99)}
+.badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.pill-pag{background:#e1f5ee;color:#0f6e56}.pill-pend{background:#fdf0d8;color:#8a5a06}
+.foot-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.muted{color:var(--mut);font-size:13px;padding:14px}
+.hint{font-size:12px;color:var(--mut);margin:6px 2px 12px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:24px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+.obratag{font-size:10px;color:var(--mut);background:#f1efe8;padding:2px 7px;border-radius:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><h1>💰 Nómina · Pagar</h1>
-  <div class="sub">Imperio Constructora · Dispersión. Marque cada pago; copie cuenta y valor para pagar. Los totales se actualizan solos.</div>
-  <div class="qsel"><b style="font-size:13px;color:var(--muted)">Quincena:</b><select id="qsel" onchange="QUIN=this.value;render()"></select></div>
-  </header>
-  <div class="cards">
-    <div class="kc"><div class="l">Total a pagar</div><div class="v" id="cT">$0</div></div>
-    <div class="kc g"><div class="l">Pagado</div><div class="v" id="cP">$0</div></div>
-    <div class="kc a"><div class="l">Pendiente</div><div class="v" id="cN">$0</div></div>
-    <div class="kc"><div class="l">Pagos hechos</div><div class="v" id="cC">0 / 0</div></div>
+  <div class="top">
+    <div><h1>Nómina · Imperio</h1><div class="sub" id="sub">Cargando…</div></div>
+    <div class="qsel"><label style="font-size:12px;color:var(--mut)">Quincena</label>
+      <input type="text" id="quincena" value="" placeholder="1-15 jul 2026" style="width:150px"/></div>
   </div>
-  <div class="filters" id="filters"></div>
-  <div id="list"><div class="load">⏳ Cargando…</div></div>
-  <div class="warn" id="warn"></div>
-  <div class="foot">
-    <button class="btn p" onclick="window.print()">Imprimir / PDF</button>
+  <div class="tabs">
+    <div class="tab on" data-t="nomina" onclick="setTab('nomina')">🧮 Nómina de la quincena</div>
+    <div class="tab" data-t="pago" onclick="setTab('pago')">💸 Pago (tesorera)</div>
+    <div class="tab" data-t="prest" onclick="setTab('prest')">🛡 Seguridad social y prestaciones</div>
+    <div class="tab" data-t="empleados" onclick="setTab('empleados')">👥 Empleados</div>
   </div>
+  <div id="view"></div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="ov" id="ov"><div class="recibo" id="reciboBox"></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
-const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
-var NOM=[],QUIN='',curFilter='all';
-var catColor={"ADMINISTRACION":"#3b82f6","WELIVING":"#22c55e","ROBLEDO":"#f59e0b","NOVAEVA":"#0ea5e9","SEGURIDAD":"#8b5cf6","SIN CLASIFICAR":"#94a3b8"};
-function fmt(n){return "$"+Math.round(+n||0).toLocaleString("es-CO");}
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function hoy(){return new Date().toISOString().slice(0,10);}
-function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(function(r){return r.json();});}
-function patch(p,b){return fetch(SB_URL+'/rest/v1/'+p,{method:'PATCH',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(b)});}
-function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.classList.toggle('err',!!e);t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1500);}
-function copiar(t,el){var s=String(t);function ok(){var o=el.textContent;el.textContent='✅';setTimeout(function(){el.textContent=o;},1000);toast('Copiado: '+s);}
- if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(ok).catch(fb);}else fb();
- function fb(){var ta=document.createElement('textarea');ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('No se pudo copiar',true);}document.body.removeChild(ta);}}
-var SMMLV=1750905, SMDIA=SMMLV/30, AUXT=249095, AUXDIA=AUXT/30;
-function calc(r){var sm=+r.salario_mensual||0;var sd=sm/30;var dias=+r.dias||0;var base=dias*sd;var smBase=Math.min(SMDIA*dias,base);var rem=base-smBase;var aux=Math.min(AUXDIA*dias,rem);var bonif=rem-aux;var vhe=sm/240*1.25;var extra=(+r.horas_extra||0)*vhe;var prest=+r.prestamo||0;var total=base+extra-prest;var salud=smBase*0.04;var pension=smBase*0.04;return {sd:sd,base:base,smBase:smBase,aux:aux,bonif:bonif,vhe:vhe,extra:extra,prest:prest,total:total,salud:salud,pension:pension};}
-function esSin(x){return x.alerta&&/inscrib/i.test(x.alerta);}
-function qkey(q){var m=String(q).toLowerCase().match(/(\d+)\s*-\s*\d+\s+(\w+)\s+(\d{4})/);if(!m)return 0;var M={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12};return (+m[3])*10000+(M[(m[2]||'').slice(0,3)]||0)*100+(+m[1]);}
-function boot(){g('nomina?order=num&limit=1000').then(function(r){NOM=r||[];var qs=[];NOM.forEach(function(x){if(qs.indexOf(x.quincena)<0)qs.push(x.quincena);});qs.sort(function(a,b){return qkey(b)-qkey(a);});QUIN=QUIN||qs[0]||'';document.getElementById('qsel').innerHTML=qs.map(function(q){return '<option'+(q===QUIN?' selected':'')+'>'+esc(q)+'</option>';}).join('');render();}).catch(function(){document.getElementById('list').innerHTML='<div class="load">⚠️ No pude conectar. <button class="btn" onclick="boot()">Reintentar</button></div>';});}
-function lista(){return NOM.filter(function(x){return x.quincena===QUIN;});}
-function cats(){var o=[];lista().forEach(function(x){var c=x.proyecto||'SIN CLASIFICAR';if(o.indexOf(c)<0)o.push(c);});return o;}
-function buildFilters(){var cs=cats();var labels=[['all','Todos']].concat(cs.map(function(c){return [c,c.charAt(0)+c.slice(1).toLowerCase()];}));document.getElementById('filters').innerHTML=labels.map(function(l){return '<div class="chip'+(l[0]===curFilter?' active':'')+'" onclick="curFilter=\''+esc(l[0])+'\';render()">'+esc(l[1])+'</div>';}).join('');}
-function render(){
- buildFilters();
- var L=lista(),cs=cats(),out='';
- for(var oi=0;oi<cs.length;oi++){var cat=cs[oi];if(curFilter!=='all'&&curFilter!==cat)continue;
-  var rows=L.filter(function(x){return (x.proyecto||'SIN CLASIFICAR')===cat;});if(!rows.length)continue;
-  var sub=0;out+='<div class="catbar" style="background:'+(catColor[cat]||'#94a3b8')+'">'+esc(cat)+' · '+rows.length+'</div>';
-  rows.forEach(function(x){sub+=(+x.valor||0);
-   var sinTag=esSin(x)?'<span class="tag t-sin">SIN INSCRIBIR</span>':'<span class="tag t-ins">INSCRITO</span>';
-   var alert=x.alerta?'<span class="alert">⚠ '+esc(x.alerta)+(x.tercero?' · '+esc(x.tercero):'')+'</span>':(x.tercero?'<span class="alert">⚠ Cuenta de tercero: '+esc(x.tercero)+'</span>':'');
-   var comp=x.comprobante_url?'<a class="compbtn" href="'+esc(x.comprobante_url)+'" target="_blank" rel="noopener" title="Ver comprobante">🧾</a>':'<button class="compbtn" title="Subir comprobante" onclick="subirComp('+x.id+')">📎</button>';
-   out+='<div class="pcard'+(x.pagado?' paid':'')+'">'+
-    '<div class="prow"><div class="nm">'+esc(x.nombre)+'</div><div class="mt">'+fmt(x.valor)+' <button class="cpy" onclick="copiar('+(+x.valor||0)+',this)">📋</button></div></div>'+
-    '<div class="meta">CC '+esc(x.cedula||'')+' <button class="cpy" onclick="copiar(\''+esc(x.cedula||'')+'\',this)">📋</button> · '+esc(x.cargo||'')+'</div>'+
-    '<div class="meta">'+esc(x.metodo||'')+' · <b>'+esc(x.cuenta||'')+'</b> <button class="cpy" onclick="copiar(\''+esc(x.cuenta||'')+'\',this)">📋 cuenta</button></div>'+
-    '<div class="badges">'+sinTag+alert+'</div>'+
-    '<div class="acts"><button class="paybtn'+(x.pagado?' on':'')+'" onclick="pagar('+x.id+')">'+(x.pagado?'✓ Pagado':'Marcar pagado')+'</button>'+
-    '<button class="recbtn" onclick="recibo('+x.id+')">🧾 Recibo</button>'+comp+'</div></div>';
-  });
-  out+='<div class="subt">Subtotal '+esc(cat)+': <b>'+fmt(sub)+'</b></div>';
- }
- document.getElementById('list').innerHTML=out||'<div class="load">Sin nómina en esta quincena.</div>';
- var totV=L.reduce(function(a,x){return a+(+x.valor||0);},0),pagV=L.filter(function(x){return x.pagado;}).reduce(function(a,x){return a+(+x.valor||0);},0),hechos=L.filter(function(x){return x.pagado;}).length;
- document.getElementById('cT').textContent=fmt(totV);document.getElementById('cP').textContent=fmt(pagV);document.getElementById('cN').textContent=fmt(totV-pagV);document.getElementById('cC').textContent=hechos+' / '+L.length;
- var al=L.filter(function(x){return x.alerta||x.tercero;});
- document.getElementById('warn').innerHTML=al.length?('<b>⚠️ Revisar antes de pagar:</b> '+al.map(function(x){return esc(x.nombre)+' ('+esc(x.alerta||x.tercero)+')';}).join(' · ')):'';
- document.getElementById('warn').style.display=al.length?'block':'none';
+var SB="https://dghmgaaprlzpfnpsqzav.supabase.co";
+var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k";
+var H={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"};
+var emps=[], nom=[], tab="nomina", liq={};
+var FACTOR_PREST=0.2183; // cesantías 8.33 + int 1 + prima 8.33 + vacaciones 4.17
+// Aportes patronales mensuales (sobre el básico)
+var R={ces:0.0833,intces:0.01,prima:0.0833,vac:0.0417,salud:0.085,pension:0.12,arl:0.0696,caja:0.04};
+
+function fmt(n){return "$"+Math.round(n||0).toLocaleString("es-CO");}
+function num(v){return parseFloat(v)||0;}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.className="toast on";setTimeout(function(){t.className="toast";},2400);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+function defaultQuincena(){
+  var d=new Date(), day=d.getDate();
+  var mes=d.toLocaleString('es-CO',{month:'short'}).replace('.','');
+  var y=d.getFullYear();
+  return (day<=15?'1-15':'16-30')+' '+mes+' '+y;
 }
-function pagar(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;if(!x.pagado){if(!confirm('¿Marcar PAGADO?\n'+x.nombre+' · '+fmt(x.valor)+'\nCuenta: '+(x.cuenta||'')+(x.tercero?'\n⚠️ Tercero: '+x.tercero:'')))return;}
- var nv=!x.pagado;x.pagado=nv;x.fecha_pago=nv?hoy():null;patch('nomina?id=eq.'+id,{pagado:nv,fecha_pago:nv?hoy():null,estado:nv?'pagado':'pendiente'}).then(function(){toast(nv?'Pagado ✓':'Marca quitada');render();}).catch(function(){x.pagado=!nv;toast('Error',true);render();});}
-function subirComp(id){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;toast('⏳ subiendo…');var path='nomina/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f}).then(function(r){if(!r.ok)throw 0;var url=SB_URL+'/storage/v1/object/public/facturas/'+path;var x=NOM.find(function(y){return y.id===id;});if(x)x.comprobante_url=url;return patch('nomina?id=eq.'+id,{comprobante_url:url});}).then(function(){toast('Comprobante guardado ✓');render();}).catch(function(){toast('Error al subir',true);});};inp.click();}
-var RECNAME='';
-function recibo(id){var x=NOM.find(function(y){return y.id===id;});if(!x)return;var c=calc(x);RECNAME=(x.nombre||'nomina')+'_'+(x.quincena||'');
- var h='<h3>Recibo de pago · Nómina</h3><div class="rs">Imperio Constructora · Quincena '+esc(x.quincena)+'</div>'+
-  rr('Empleado',esc(x.nombre))+rr('Cédula',esc(x.cedula||''))+rr('Cargo',esc(x.cargo||''))+rr('Obra',esc(x.proyecto||''))+
-  rr('Cuenta',esc(x.metodo||'')+' · '+esc(x.cuenta||''))+(x.tercero?rr('⚠ Tercero',esc(x.tercero)):'')+
-  '<div style="height:8px"></div>'+
-  '<div class="rsub">Liquidación de la quincena ('+(+x.dias||0)+' días)</div>'+
-  '<div class="rref">Salario mensual: '+fmt(x.salario_mensual)+' · esta liquidación es la quincena (medio mes)</div>'+
-  rr('Salario base mínimo · '+(+x.dias||0)+' días',fmt(c.smBase))+
-  rr('Auxilio de transporte · '+(+x.dias||0)+' días',fmt(c.aux))+
-  rr('Bonificación · '+(+x.dias||0)+' días',fmt(c.bonif))+
-  rr('Horas extra',(+x.horas_extra||0)+' h × '+fmt(c.vhe)+' = '+fmt(c.extra))+
-  (c.prest!==0?rr('Préstamo',(c.prest>0?'− ':'+ ')+fmt(Math.abs(c.prest))):'')+
-  '<div class="rtot"><span>TOTAL A PAGAR</span><span>'+fmt(x.valor)+'</span></div>'+
-  '<div class="benef">🛡️ <b>Beneficios que asume la empresa por ti</b> (no se te descuentan):'+
-  '<div class="brow"><span>Salud (4%)</span><b>'+fmt(c.salud)+'</b></div>'+
-  '<div class="brow"><span>Pensión (4%)</span><b>'+fmt(c.pension)+'</b></div>'+
-  '<div class="bnote">La empresa paga estos <b>'+fmt(c.salud+c.pension)+'</b> que normalmente se te descontarían del salario. Aquí los recibes completos, como un beneficio extra.</div></div>'+
-  '<div class="racts"><button class="bx" onclick="cerrar()">Cerrar</button><button class="bg" onclick="descargarImg()">📥 Imagen</button><button class="bi" onclick="window.print()">🖨 Imprimir</button></div>';
- document.getElementById('reciboBox').innerHTML=h;document.getElementById('ov').classList.add('on');}
-function rr(l,v){return '<div class="rr"><span>'+l+'</span><b>'+v+'</b></div>';}
-function descarga(blob,fname){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1500);toast('Imagen descargada ✓');}
-function descargarImg(){if(typeof html2canvas==='undefined'){toast('Cargando… reintenta',true);return;}var box=document.getElementById('reciboBox');var acts=box.querySelector('.racts');if(acts)acts.style.display='none';toast('⏳ generando imagen…');var isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);html2canvas(box,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(function(canvas){if(acts)acts.style.display='';var fname='Recibo_'+RECNAME.replace(/[^a-zA-Z0-9]/g,'_')+'.png';canvas.toBlob(function(blob){if(!blob){toast('Error al generar',true);return;}if(isMobile&&navigator.canShare){try{var file=new File([blob],fname,{type:'image/png'});if(navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Recibo de pago'}).then(function(){toast('Listo ✓');}).catch(function(){descarga(blob,fname);});return;}}catch(e){}}descarga(blob,fname);},'image/png');}).catch(function(){if(acts)acts.style.display='';toast('No se pudo generar la imagen',true);});}
-function cerrar(){document.getElementById('ov').classList.remove('on');}
-document.getElementById('ov').addEventListener('click',function(e){if(e.target.id==='ov')cerrar();});
-boot();
+
+function pago(e, dias, he, prest){
+  var b=+e.salario_basico||0, bon=+e.bonificacion||0;
+  var basicoP=Math.round(b/30*dias);
+  var bonP=Math.round(bon/30*dias);
+  var heV=Math.round(he*(b/192));
+  var total=basicoP+bonP+heV-prest;
+  return {basicoP:basicoP,bonP:bonP,heV:heV,total:total};
+}
+
+function setTab(t){tab=t;
+  document.querySelectorAll('.tab').forEach(function(x){x.className='tab'+(x.dataset.t===t?' on':'');});
+  render();
+}
+
+function cargar(){
+  document.getElementById("sub").textContent="Cargando…";
+  var q=document.getElementById("quincena").value.trim();
+  Promise.all([
+    fetch(SB+"/rest/v1/empleados?select=id,cedula,nombre_completo,cargo,obra_id,salario_basico,bonificacion,metodo_pago,cuenta_pago,activo&order=obra_id,nombre_completo",{headers:H}).then(function(r){return r.json();}),
+    fetch(SB+"/rest/v1/nomina?quincena=eq."+encodeURIComponent(q)+"&order=area,valor.desc",{headers:H}).then(function(r){return r.json();})
+  ]).then(function(res){
+    emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
+    nom=Array.isArray(res[1])?res[1]:[];
+    // precargar liq desde nomina existente si hay
+    liq={};
+    emps.forEach(function(e){
+      var n=nom.find(function(x){return x.cedula===e.cedula;});
+      liq[e.cedula]={dias:n?(+n.dias||15):15, he:n?(+n.horas_extra||0):0, prest:n?(+n.prestamo||0):0};
+    });
+    document.getElementById("sub").textContent=emps.length+" empleados · quincena "+q;
+    render();
+  }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
+}
+
+function render(){
+  var v=document.getElementById("view");
+  if(tab==="nomina") return renderNomina(v);
+  if(tab==="empleados") return renderEmpleados(v);
+  if(tab==="pago") return renderPago(v);
+  if(tab==="prest") return renderPrest(v);
+}
+
+function renderNomina(v){
+  var totNet=0, totBasico=0, totPrest=0;
+  var rows=emps.map(function(e){
+    var l=liq[e.cedula]||{dias:15,he:0,prest:0};
+    var p=pago(e,l.dias,l.he,l.prest);
+    totNet+=p.total; totBasico+=p.basicoP; totPrest+=Math.round(p.basicoP*FACTOR_PREST);
+    return '<tr>'
+      +'<td><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · <span class="obratag">'+esc(e.obra_id||'')+'</span></div></td>'
+      +'<td class="r">'+fmt(e.salario_basico)+'</td>'
+      +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.dias+'" oninput="upd(\''+e.cedula+'\',\'dias\',this.value)"></td>'
+      +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.he+'" oninput="upd(\''+e.cedula+'\',\'he\',this.value)"></td>'
+      +'<td class="r"><input class="inp" type="number" value="'+l.prest+'" oninput="upd(\''+e.cedula+'\',\'prest\',this.value)"></td>'
+      +'<td class="r tot" id="tot-'+e.cedula+'">'+fmt(p.total)+'</td></tr>';
+  }).join("");
+  v.innerHTML=
+    '<div class="kpis">'
+    +'<div class="kpi"><div class="l">Total a pagar (quincena)</div><div class="v" id="k-net">'+fmt(totNet)+'</div></div>'
+    +'<div class="kpi"><div class="l">Base prestacional (básico)</div><div class="v" id="k-bas">'+fmt(totBasico)+'</div></div>'
+    +'<div class="kpi"><div class="l">Empleados</div><div class="v">'+emps.length+'</div></div>'
+    +'</div>'
+    +'<div class="hint">Marca los días trabajados y las horas extra de cada empleado. Se paga solo la nómina del ciclo: básico÷30×días + horas extra + bonificación − préstamos. Salud, pensión y prestaciones van en su pestaña aparte (se acumulan, no se pagan al trabajador cada quincena).</div>'
+    +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">Básico/mes</th><th class="r">Días</th><th class="r">H. extra</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div class="foot-actions"><button class="btn g" onclick="guardarNomina()">💾 Guardar nómina de la quincena</button></div>';
+}
+
+function upd(ced,campo,val){
+  if(!liq[ced]) liq[ced]={dias:15,he:0,prest:0};
+  liq[ced][campo]=num(val);
+  var e=emps.find(function(x){return x.cedula===ced;});
+  var p=pago(e,liq[ced].dias,liq[ced].he,liq[ced].prest);
+  var c=document.getElementById('tot-'+ced); if(c) c.textContent=fmt(p.total);
+  // recomputar KPIs
+  var totNet=0,totBas=0;
+  emps.forEach(function(x){var l=liq[x.cedula]||{dias:15,he:0,prest:0};var pp=pago(x,l.dias,l.he,l.prest);totNet+=pp.total;totBas+=pp.basicoP;});
+  document.getElementById('k-net').textContent=fmt(totNet);
+  document.getElementById('k-bas').textContent=fmt(totBas);
+}
+
+function guardarNomina(){
+  var q=document.getElementById("quincena").value.trim();
+  if(!q){toast("Escribe la quincena");return;}
+  var ops=emps.map(function(e){
+    var l=liq[e.cedula]||{dias:15,he:0,prest:0};
+    var p=pago(e,l.dias,l.he,l.prest);
+    var body={quincena:q,nombre:e.nombre_completo,cedula:e.cedula,proyecto:(e.obra_id||'').toUpperCase(),area:e.cargo,
+      cargo:e.cargo,salario_mensual:e.salario_basico,dias:l.dias,horas_extra:l.he,prestamo:l.prest,valor:p.total,
+      metodo:e.metodo_pago,cuenta:e.cuenta_pago,pagado:false,estado:'liquidada'};
+    var existing=nom.find(function(x){return x.cedula===e.cedula;});
+    if(existing){ return fetch(SB+"/rest/v1/nomina?id=eq."+existing.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)}); }
+    return fetch(SB+"/rest/v1/nomina",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)});
+  });
+  Promise.all(ops).then(function(){toast("Nómina guardada ✓");cargar();}).catch(function(){toast("Error al guardar");});
+}
+
+function renderEmpleados(v){
+  var rows=emps.map(function(e){
+    return '<tr>'
+      +'<td><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · <span class="obratag">'+esc(e.obra_id||'')+'</span></div></td>'
+      +'<td class="r"><input class="inp" style="width:110px" type="number" value="'+(+e.salario_basico||0)+'" oninput="updEmp(\''+e.id+'\',\'salario_basico\',this.value)"></td>'
+      +'<td class="r"><input class="inp" style="width:110px" type="number" value="'+(+e.bonificacion||0)+'" oninput="updEmp(\''+e.id+'\',\'bonificacion\',this.value)"></td>'
+      +'<td>'+esc(e.metodo_pago||'')+'</td>'
+      +'<td class="r">'+fmt((+e.salario_basico||0)+(+e.bonificacion||0))+'</td></tr>';
+  }).join("");
+  v.innerHTML='<div class="hint">Define el <strong>básico</strong> (base de prestaciones) y la <strong>bonificación</strong> (no prestacional) de cada empleado. El total es lo que gana al mes trabajando completo.</div>'
+    +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">Básico/mes</th><th class="r">Bonificación/mes</th><th>Pago</th><th class="r">Total/mes</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div class="foot-actions"><button class="btn" onclick="guardarEmpleados()">💾 Guardar empleados</button></div>';
+}
+var empEdits={};
+function updEmp(id,campo,val){ if(!empEdits[id])empEdits[id]={}; empEdits[id][campo]=num(val);
+  var e=emps.find(function(x){return x.id===id;}); if(e){e[campo]=num(val);} }
+function guardarEmpleados(){
+  var ids=Object.keys(empEdits);
+  if(!ids.length){toast("No hay cambios");return;}
+  Promise.all(ids.map(function(id){
+    return fetch(SB+"/rest/v1/empleados?id=eq."+id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(empEdits[id])});
+  })).then(function(){empEdits={};toast("Empleados guardados ✓");cargar();}).catch(function(){toast("Error al guardar");});
+}
+
+function renderPago(v){
+  if(!nom.length){ v.innerHTML='<div class="card"><div class="muted">Esta quincena aún no tiene nómina guardada. Ve a "Nómina de la quincena", marca la asistencia y guarda.</div></div>'; return; }
+  var total=nom.reduce(function(s,n){return s+(+n.valor||0);},0);
+  var pagado=nom.filter(function(n){return n.pagado;}).reduce(function(s,n){return s+(+n.valor||0);},0);
+  var rows=nom.map(function(n){
+    var tercero=n.tercero?('<div style="font-size:11px;color:var(--mut)">a nombre de '+esc(n.tercero)+'</div>'):'';
+    return '<tr>'
+      +'<td><div class="nm">'+esc(n.nombre)+'</div><div class="cargo">'+esc(n.cargo||n.area||'')+'</div></td>'
+      +'<td><div>'+esc(n.metodo||'')+'</div><div style="font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums">'+esc(n.cuenta||'')+'</div>'+tercero+'</td>'
+      +'<td class="r tot">'+fmt(n.valor)+'</td>'
+      +'<td class="r">'+(n.pagado?'<span class="badge pill-pag">Pagado</span>':'<button class="btn g" style="height:32px;padding:0 12px;font-size:12px" onclick="marcarPag('+n.id+')">Marcar pagado</button>')+'</td></tr>';
+  }).join("");
+  v.innerHTML='<div class="kpis">'
+    +'<div class="kpi"><div class="l">Total quincena</div><div class="v">'+fmt(total)+'</div></div>'
+    +'<div class="kpi"><div class="l">Pagado</div><div class="v" style="color:var(--grn)">'+fmt(pagado)+'</div></div>'
+    +'<div class="kpi"><div class="l">Falta pagar</div><div class="v" style="color:var(--red)">'+fmt(total-pagado)+'</div></div></div>'
+    +'<div class="hint">Lista para la tesorera: a quién, cuánto y a qué cuenta. Marca cada pago cuando lo hagas.</div>'
+    +'<div class="card"><table><thead><tr><th>Empleado</th><th>Pago a</th><th class="r">Valor</th><th class="r">Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function marcarPag(id){
+  fetch(SB+"/rest/v1/nomina?id=eq."+id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({pagado:true,fecha_pago:new Date().toISOString().slice(0,10)})})
+    .then(function(r){ if(!r.ok)throw 0; var n=nom.find(function(x){return x.id===id;}); if(n)n.pagado=true; toast("Marcado pagado ✓"); render(); })
+    .catch(function(){toast("Error");});
+}
+
+function renderPrest(v){
+  var sumAp=0, sumPr=0, sumBas=0;
+  var rows=emps.map(function(e){
+    var b=+e.salario_basico||0; sumBas+=b;
+    var salud=Math.round(b*R.salud), pension=Math.round(b*R.pension), arl=Math.round(b*R.arl), caja=Math.round(b*R.caja);
+    var ap=salud+pension+arl+caja;
+    var ces=Math.round(b*R.ces), intc=Math.round(b*R.intces), prima=Math.round(b*R.prima), vac=Math.round(b*R.vac);
+    var pr=ces+intc+prima+vac;
+    sumAp+=ap; sumPr+=pr;
+    return '<tr>'
+      +'<td><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></td>'
+      +'<td class="r">'+fmt(b)+'</td>'
+      +'<td class="r">'+fmt(salud)+'</td><td class="r">'+fmt(pension)+'</td><td class="r">'+fmt(arl)+'</td><td class="r">'+fmt(caja)+'</td>'
+      +'<td class="r tot">'+fmt(ap)+'</td>'
+      +'<td class="r" style="color:var(--amb)">'+fmt(pr)+'</td></tr>';
+  }).join("");
+  v.innerHTML='<div class="kpis">'
+    +'<div class="kpi"><div class="l">Aportes patronales / mes (PILA)</div><div class="v">'+fmt(sumAp)+'</div><div style="font-size:10px;color:var(--mut);margin-top:3px">salud + pensión + ARL + caja</div></div>'
+    +'<div class="kpi"><div class="l">Provisión prestaciones / mes</div><div class="v" style="color:var(--amb)">'+fmt(sumPr)+'</div><div style="font-size:10px;color:var(--mut);margin-top:3px">se acumula para la liquidación</div></div>'
+    +'<div class="kpi"><div class="l">Costo real / mes (aprox)</div><div class="v">'+fmt(sumBas+emps.reduce(function(s,e){return s+(+e.bonificacion||0);},0)+sumAp+sumPr)+'</div></div>'
+    +'</div>'
+    +'<div class="hint">Estos valores <strong>no se le pagan al trabajador cada quincena</strong>. Los aportes (salud/pensión/ARL/caja) se pagan mensual a la PILA; las prestaciones (cesantías, prima, vacaciones) <strong>se acumulan</strong> hasta la liquidación. Cálculo mensual sobre el básico. ARL clase V (construcción).</div>'
+    +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">Básico</th><th class="r">Salud</th><th class="r">Pensión</th><th class="r">ARL</th><th class="r">Caja</th><th class="r">Aportes/mes</th><th class="r">Provisión prest.</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+document.getElementById("quincena").value=defaultQuincena();
+document.getElementById("quincena").addEventListener("change",cargar);
+cargar();
 </script>
 </body>
 </html>
