@@ -2590,6 +2590,8 @@ canvas{border-radius:4px}
     <div class="ni" data-v="flujocaja" onclick="gotoView('flujocaja')"><span class="ni-ico">💵</span><span>Flujo de caja</span></div>
     <div class="sb-sect">Análisis</div>
     <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">💵</span><span>Abonos</span></div>
+    <div class="sb-sect">Empresa</div>
+    <div class="ni" data-v="facturacion" onclick="gotoView('facturacion')"><span class="ni-ico">🧾</span><span>Facturación</span></div>
   </nav>
   <div class="sb-foot">
     <div class="sb-foot-btn" onclick="openAbono()">💰 Ingreso</div>
@@ -2687,6 +2689,9 @@ canvas{border-radius:4px}
   </div>
   <div class="view" id="v-cronograma">
     <div id="cronograma-content"></div>
+  </div>
+  <div class="view" id="v-facturacion">
+    <div id="facturacion-content"></div>
   </div>
 
 
@@ -3808,6 +3813,7 @@ function renderView(v, skipHistory) {
   else if (v === 'abonos')  { rAbonos(); }
   else if (v === 'movimientos') { rMovimientos(); }
   else if (v === 'cronograma') { rCronograma(); }
+  else if (v === 'facturacion') { rFacturacion(); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5729,6 +5735,61 @@ function openNuevoDeudor(){
 /* ═══════════════════════════════════════════════════
    ABONOS — Capital recibido e ingresos por proyecto
 ═══════════════════════════════════════════════════ */
+function _facKpi(label,value,color,foot){
+  return '<div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px">'
+    +'<div style="font-size:11px;color:#888;margin-bottom:6px">'+label+'</div>'
+    +'<div style="font-size:22px;font-weight:700;color:'+color+';letter-spacing:-.02em">'+value+'</div>'
+    +'<div style="font-size:11px;color:#aaa;margin-top:4px">'+foot+'</div></div>';
+}
+function rFacturacion(){
+  var el=document.getElementById('facturacion-content'); if(!el) return;
+  el.innerHTML='<div class="sec"><div class="sec-tit">🧾 Facturación</div><div style="color:#888;font-size:13px">Cargando…</div></div>';
+  Promise.all([
+    fetch(SB_URL+'/rest/v1/intercompania_ciclos?order=fecha_hasta.desc',{headers:SB_H}).then(function(r){return r.json();}),
+    fetch(SB_URL+'/rest/v1/cuenta_corriente_intercompania?order=fecha.desc',{headers:SB_H}).then(function(r){return r.json();})
+  ]).then(function(res){
+    var ciclos=Array.isArray(res[0])?res[0]:[], cc=Array.isArray(res[1])?res[1]:[];
+    var pend=ciclos.filter(function(c){return c.estado==='pendiente'||c.estado==='soporte_listo';}).reduce(function(s,c){return s+(+c.total||0);},0);
+    var fact=ciclos.filter(function(c){return c.estado==='facturada'||c.estado==='pagada';}).reduce(function(s,c){return s+(+c.total||0);},0);
+    var saldo=cc.reduce(function(s,r){return s+(+r.valor||0)*(r.signo||1);},0);
+    var estCol={pendiente:'#c98a12',soporte_listo:'#2563eb',facturada:'#1d8a5f',pagada:'#1d8a5f',vencida:'#c23b2e'};
+    var estLbl={pendiente:'Pendiente',soporte_listo:'Soporte listo',facturada:'Facturada',pagada:'Pagada',vencida:'Vencida'};
+    var h='';
+    h+='<div class="sec"><div class="sec-tit">🧾 Facturación intercompañía</div>';
+    h+='<div style="font-size:13px;color:#888;margin-bottom:12px">Grupo Imperio ejecuta la obra y le factura a Imperio de Libertad. Cada quincena de nómina de obra genera una factura.</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">';
+    h+=_facKpi('Pendiente por facturar', fmt(pend), '#c98a12', 'Grupo Imperio → Imperio de Libertad');
+    h+=_facKpi('Ya facturado', fmt(fact), '#1d8a5f', ciclos.length+' ciclos en total');
+    h+=_facKpi('Cuenta corriente', fmt(saldo), '#2563eb', saldo>=0?'Imperio de Libertad le debe a Grupo Imperio':'A favor de Imperio de Libertad');
+    h+='</div></div>';
+    h+='<div class="sec"><div class="sec-tit">Facturas por ejecutar</div>';
+    if(!ciclos.length){ h+='<div style="color:#888;font-size:13px">Aún no hay ciclos de facturación registrados.</div>'; }
+    else {
+      h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+      h+='<tr style="text-align:left;color:#888;font-size:11px"><th style="padding:8px">Periodo</th><th>Concepto</th><th style="text-align:right">Valor</th><th style="text-align:right">Estado</th></tr>';
+      ciclos.forEach(function(c){
+        var col=estCol[c.estado]||'#888', lbl=estLbl[c.estado]||c.estado;
+        h+='<tr style="border-top:1px solid #eee"><td style="padding:8px;font-weight:600">'+(c.periodo||'')+'</td><td style="color:#555">'+(c.concepto||'')+'</td><td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">'+fmt(+c.total||0)+'</td><td style="text-align:right"><span style="background:'+col+'22;color:'+col+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">'+lbl+'</span></td></tr>';
+      });
+      h+='</table></div>';
+    }
+    h+='</div>';
+    h+='<div class="sec"><div class="sec-tit">Cuenta corriente entre empresas</div>';
+    if(!cc.length){ h+='<div style="color:#888;font-size:13px">Sin movimientos.</div>'; }
+    else {
+      h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+      h+='<tr style="text-align:left;color:#888;font-size:11px"><th style="padding:8px">Fecha</th><th>Concepto</th><th>Pagó</th><th style="text-align:right">Valor</th></tr>';
+      cc.forEach(function(r){
+        var pos=(r.signo||1)>0;
+        h+='<tr style="border-top:1px solid #eee"><td style="padding:8px">'+(r.fecha||'')+'</td><td style="color:#555">'+(r.concepto||'')+'</td><td style="color:#888;font-size:12px">'+(r.cuenta_pagadora||'')+'</td><td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:'+(pos?'#1d8a5f':'#c23b2e')+'">'+(pos?'+':'−')+fmt(+r.valor||0)+'</td></tr>';
+      });
+      h+='</table></div>';
+      h+='<div style="margin-top:10px;padding:12px;background:#f5f7ff;border-radius:10px;font-size:13px">Saldo: <strong>'+fmt(saldo)+'</strong> — lo que Imperio de Libertad le debe a Grupo Imperio por obra ejecutada, pendiente de formalizar en factura electrónica.</div>';
+    }
+    h+='</div>';
+    el.innerHTML=h;
+  }).catch(function(e){ el.innerHTML='<div class="sec"><div class="sec-tit">🧾 Facturación</div><div style="color:#c23b2e;font-size:13px">No se pudo cargar. '+(e.message||'')+'</div></div>'; });
+}
 function rAbonos() {
   var el = document.getElementById('abonos-content');
   if (!el) return;
