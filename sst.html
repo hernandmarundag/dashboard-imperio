@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imperio · SST y RRHH</title>
+<style>
+:root{--ind:#4f46e5;--pp:#7c5cf0;--ink:#1b2030;--mut:#6b7280;--line:#e6e8f0;--red:#dc2626;--grn:#16a34a;--amb:#d97706}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f5fb;color:var(--ink);padding:16px}
+.wrap{max-width:1000px;margin:0 auto}
+.hd{text-align:center;margin:6px 0 16px}.hd h1{font-size:20px}.hd p{font-size:12px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;display:flex;gap:10px;align-items:center;transition:.12s}
+.card:hover{border-color:var(--ind);box-shadow:0 4px 14px rgba(79,70,229,.1)}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c5cf0,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.nm{font-weight:700;font-size:14px}.cg{font-size:12px;color:var(--mut)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
+.ok{background:var(--grn)}.no{background:var(--red)}.wn{background:var(--amb)}
+.ov{position:fixed;inset:0;background:rgba(15,16,36,.55);display:none;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;z-index:50}
+.ov.on{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:640px;width:100%;padding:18px;margin:auto}
+.sec{font-size:13px;font-weight:800;color:var(--ind);border-top:1px solid var(--line);padding-top:12px;margin:14px 0 6px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{margin-bottom:8px}.fg label{font-size:11px;color:var(--mut);display:block;margin-bottom:3px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.4px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--ind)}
+.btn{background:var(--ind);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer}
+.btn.s{background:#eef0f6;color:var(--ink);padding:7px 11px;font-size:13px}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.hist{background:#f7f8fc;border-radius:10px;padding:10px;margin-top:6px;font-size:12.5px}
+.hrow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #edeef4}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b2030;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;z-index:99}
+.toast.on{opacity:1}
+.badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700}
+</style></head><body><div class="wrap">
+<div class="hd"><h1>🦺 Imperio · SST y RRHH</h1><p>Ficha de cada trabajador · afiliaciones, exámenes, alturas y dotación</p></div>
+<div id="grid" class="grid"><p style="color:var(--mut)">Cargando empleados…</p></div>
+</div>
+<div class="ov" id="ov"><div class="modal" id="mbody"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+var SB='https://dghmgaaprlzpfnpsqzav.supabase.co';
+var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+var H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+var emps=[],cur=null,edits={};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.className='toast on';setTimeout(function(){t.className='toast';},1800);}
+function ini(n){return (n||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();}
+function cargar(){
+  fetch(SB+'/rest/v1/empleados?activo=eq.true&order=nombre_completo',{headers:H}).then(function(r){return r.json();}).then(function(rows){
+    emps=Array.isArray(rows)?rows:[];
+    document.getElementById('grid').innerHTML=emps.map(function(e){
+      var arl=e.arl_activa?'<span class="dot ok"></span>ARL':'<span class="dot no"></span>sin ARL';
+      var alt=e.curso_alturas?'<span class="dot ok"></span>alturas':'<span class="dot wn"></span>alturas';
+      return '<div class="card" onclick="abrir(\''+e.id+'\')"><div class="av">'+ini(e.nombre_completo)+'</div><div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div><div style="font-size:11px;margin-top:3px">'+arl+' &nbsp; '+alt+'</div></div></div>';
+    }).join("")||'<p style="color:var(--mut)">Sin empleados activos.</p>';
+  }).catch(function(){document.getElementById('grid').innerHTML='<p style="color:var(--red)">Error de conexión.</p>';});
+}
+function abrir(id){cur=emps.find(function(x){return x.id===id;});edits={};if(!cur)return;var e=cur;
+  function f(l,k,t){return '<div class="fg"><label>'+l+'</label><input type="'+(t||'text')+'" value="'+esc(e[k]==null?'':e[k])+'" oninput="setv(\''+k+'\',this.value)"></div>';}
+  function sel(l,k){var y=e[k];return '<div class="fg"><label>'+l+'</label><select onchange="setv(\''+k+'\',this.value===\'si\')"><option value="no"'+(y?'':' selected')+'>No</option><option value="si"'+(y?' selected':'')+'>Sí</option></select></div>';}
+  document.getElementById('mbody').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div class="av">'+ini(e.nombre_completo)+'</div><div><div style="font-weight:800;font-size:17px">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div><button class="btn s" onclick="cerrar()">✕</button></div>'
+    +'<div class="sec">👤 Datos personales</div>'
+    +'<div class="frow">'+f('Nombre completo','nombre_completo')+f('Cédula','cedula')+'</div>'
+    +'<div class="frow">'+f('Fecha nacimiento','fecha_nacimiento','date')+f('Grupo sanguíneo / RH','rh')+'</div>'
+    +'<div class="frow">'+f('Teléfono','telefono')+f('Correo','email')+'</div>'
+    +'<div class="fg">'+f('Dirección','direccion').replace('<div class="fg">','').replace(/<\/div>$/,'')+'</div>'
+    +'<div class="frow">'+f('Contacto emergencia','contacto_emergencia')+f('Tel. emergencia','telefono_emergencia')+'</div>'
+    +'<div class="sec">💼 Vinculación</div>'
+    +'<div class="frow">'+f('Cargo','cargo')+f('Obra','obra_id')+'</div>'
+    +'<div class="frow">'+f('Fecha ingreso','fecha_ingreso','date')+f('Tipo de contrato','tipo_contrato')+'</div>'
+    +'<div class="sec">🏥 Afiliaciones (seguridad social)</div>'
+    +'<div class="frow">'+f('EPS','eps')+f('Afiliación EPS','fecha_afiliacion_eps','date')+'</div>'
+    +'<div class="frow">'+f('AFP (pensión)','afp')+f('Afiliación AFP','fecha_afiliacion_afp','date')+'</div>'
+    +'<div class="frow">'+f('ARL','arl')+f('Afiliación ARL','fecha_afiliacion_arl','date')+'</div>'
+    +'<div class="frow">'+f('Clase riesgo ARL (V=construcción)','clase_riesgo_arl','number')+f('Caja compensación','caja_compensacion')+'</div>'
+    +'<div class="frow">'+sel('¿ARL activa?','arl_activa')+'<div></div></div>'
+    +'<div class="sec">🩺 Salud ocupacional</div>'
+    +'<div class="frow">'+f('Examen ingreso','examen_ingreso_fecha','date')+f('Aptitud','examen_ingreso_aptitud')+'</div>'
+    +'<div class="frow">'+f('Examen periódico','examen_periodico_fecha','date')+f('Próximo examen','examen_proximo','date')+'</div>'
+    +'<div class="fg"><label>Restricciones médicas</label><input value="'+esc(e.restricciones_medicas||'')+'" oninput="setv(\'restricciones_medicas\',this.value)"></div>'
+    +'<div class="sec">🪜 Alturas · Inducción · Dotación</div>'
+    +'<div class="frow">'+sel('¿Curso trabajo en alturas?','curso_alturas')+f('Vence curso alturas','curso_alturas_vence','date')+'</div>'
+    +'<div class="frow">'+f('Inducción SST (fecha)','induccion_sst_fecha','date')+sel('¿EPP/dotación entregada?','epp_entregado')+'</div>'
+    +'<div class="frow">'+f('Talla camisa','talla_camisa')+f('Talla pantalón','talla_pantalon')+'</div>'
+    +'<div class="frow">'+f('Talla calzado','talla_calzado')+'<div></div></div>'
+    +'<div class="sec">📋 Historial (trazabilidad)</div>'
+    +'<div class="frow"><button class="btn s" onclick="addHist(\'examen\')">+ Examen médico</button><button class="btn s" onclick="addHist(\'capacitacion\')">+ Capacitación</button></div>'
+    +'<div class="frow" style="margin-top:6px"><button class="btn s" onclick="addHist(\'epp\')">+ Entrega EPP</button><div></div></div>'
+    +'<div id="histbox" class="hist">Cargando historial…</div>'
+    +'<div class="foot"><button class="btn s" onclick="cerrar()">Cancelar</button><button class="btn" onclick="guardar()">Guardar ficha</button></div>';
+  document.getElementById('ov').className='ov on';cargarHist(e);
+}
+function setv(k,v){edits[k]=(v===''?null:v);cur[k]=v;}
+function cerrar(){document.getElementById('ov').className='ov';}
+function guardar(){if(!cur||!Object.keys(edits).length){cerrar();return;}
+  fetch(SB+'/rest/v1/empleados?id=eq.'+cur.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(edits)})
+   .then(function(r){if(!r.ok)throw 0;toast('Ficha guardada ✓');cerrar();cargar();}).catch(function(){toast('Error al guardar');});
+}
+function cargarHist(e){var box=document.getElementById('histbox');
+  Promise.all([
+    fetch(SB+'/rest/v1/empleado_examenes?empleado_id=eq.'+e.id+'&order=fecha.desc',{headers:H}).then(function(r){return r.json();}),
+    fetch(SB+'/rest/v1/empleado_capacitaciones?empleado_id=eq.'+e.id+'&order=fecha.desc',{headers:H}).then(function(r){return r.json();}),
+    fetch(SB+'/rest/v1/empleado_epp?empleado_id=eq.'+e.id+'&order=fecha.desc',{headers:H}).then(function(r){return r.json();})
+  ]).then(function(a){var ex=a[0]||[],cap=a[1]||[],epp=a[2]||[];var h='';
+    if(ex.length)h+='<div style="font-weight:700;margin:2px 0">Exámenes</div>'+ex.map(function(x){return '<div class="hrow"><span>'+esc(x.tipo||'')+' · '+esc(x.fecha||'')+'</span><span class="badge" style="background:#eef;color:#4f46e5">'+esc(x.aptitud||'')+'</span></div>';}).join('');
+    if(cap.length)h+='<div style="font-weight:700;margin:6px 0 2px">Capacitaciones</div>'+cap.map(function(x){return '<div class="hrow"><span>'+esc(x.tema||'')+' · '+esc(x.fecha||'')+'</span><span>'+(x.vence?'vence '+esc(x.vence):'')+'</span></div>';}).join('');
+    if(epp.length)h+='<div style="font-weight:700;margin:6px 0 2px">Entregas EPP</div>'+epp.map(function(x){return '<div class="hrow"><span>'+esc(x.fecha||'')+'</span><span>'+esc(x.elementos||'')+'</span></div>';}).join('');
+    box.innerHTML=h||'<span style="color:var(--mut)">Sin registros. Usa los botones de arriba para agregar.</span>';
+  }).catch(function(){box.innerHTML='<span style="color:var(--red)">Error al cargar historial.</span>';});
+}
+function addHist(tipo){if(!cur)return;var e=cur;var body,url;
+  if(tipo==='examen'){var t=prompt('Tipo (ingreso/periodico/retiro):','periodico');if(t===null)return;var fe=prompt('Fecha (AAAA-MM-DD):',new Date().toISOString().slice(0,10));var ap=prompt('Aptitud:','apto');body={empleado_id:e.id,cedula:e.cedula,tipo:t,fecha:fe,aptitud:ap};url='empleado_examenes';}
+  else if(tipo==='capacitacion'){var tm=prompt('Tema (ej: Trabajo en alturas):','');if(tm===null)return;var fe2=prompt('Fecha (AAAA-MM-DD):',new Date().toISOString().slice(0,10));var vn=prompt('Vence (AAAA-MM-DD, opcional):','');body={empleado_id:e.id,cedula:e.cedula,tema:tm,fecha:fe2,vence:vn||null};url='empleado_capacitaciones';}
+  else{var el=prompt('Elementos entregados (casco, botas, arnés...):','');if(el===null)return;var fe3=prompt('Fecha (AAAA-MM-DD):',new Date().toISOString().slice(0,10));body={empleado_id:e.id,cedula:e.cedula,elementos:el,fecha:fe3};url='empleado_epp';}
+  fetch(SB+'/rest/v1/'+url,{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(body)})
+   .then(function(r){if(!r.ok)throw 0;toast('Registro agregado ✓');cargarHist(e);}).catch(function(){toast('Error al agregar');});
+}
+cargar();
+</script></body></html>
