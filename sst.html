@@ -15,7 +15,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;display:flex;gap:10px;align-items:center;transition:.12s}
 .card:hover{border-color:var(--ind);box-shadow:0 4px 14px rgba(79,70,229,.1)}
-.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c5cf0,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c5cf0,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
 .nm{font-weight:700;font-size:14px}.cg{font-size:12px;color:var(--mut)}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
 .ok{background:var(--grn)}.no{background:var(--red)}.wn{background:var(--amb)}
@@ -26,12 +27,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sec{font-size:13px;font-weight:800;color:var(--ind);border-top:1px solid var(--line);padding-top:12px;margin:14px 0 6px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fg{margin-bottom:8px}.fg label{font-size:11px;color:var(--mut);display:block;margin-bottom:3px}
-.fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.4px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 12px;border:1.4px solid var(--line);border-radius:9px;font-size:16px;font-family:inherit}
 .fg input:focus,.fg select:focus{outline:none;border-color:var(--ind)}
 .btn{background:var(--ind);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer}
 .btn.s{background:#eef0f6;color:var(--ink);padding:7px 11px;font-size:13px}
 .btn.g{background:var(--grn)}.btn.r{background:var(--red)}
-.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.foot{display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff;margin:14px -18px 0;padding:12px 18px;border-top:1px solid var(--line);border-radius:0 0 16px 16px;z-index:3}
+.mhead{position:sticky;top:0;background:#fff;margin:-18px -18px 4px;padding:14px 18px 10px;border-bottom:1px solid var(--line);border-radius:16px 16px 0 0;z-index:3;display:flex;justify-content:space-between;align-items:center}
 .hist{background:#f7f8fc;border-radius:10px;padding:10px;margin-top:6px;font-size:12.5px}
 .hrow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #edeef4;gap:8px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b2030;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;z-index:99}
@@ -45,6 +47,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .pill{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
 .tag{font-size:11px;color:var(--mut)}
 a.dl{color:var(--ind);font-weight:700;text-decoration:none;font-size:12px}
+@media(max-width:560px){
+ body{padding:12px}
+ .frow{grid-template-columns:1fr}
+ .grid{grid-template-columns:1fr}
+ .tabs{max-width:100%}
+ .modal{padding:16px;border-radius:16px 16px 0 0;margin:auto 0 0;min-height:92vh}
+ .ov{padding:0;align-items:flex-end}
+ .btn{padding:12px 16px}
+ .btn.s{padding:9px 12px}
+ .hrow{flex-wrap:wrap}
+}
 </style></head><body><div class="wrap">
 <div class="hd"><h1>🦺 Imperio · SST y RRHH</h1><p>Gestión del personal en obra · fichas, novedades, alertas y documentos</p></div>
 <div class="tabs">
@@ -68,6 +81,7 @@ function ini(n){return (n||'?').trim().split(/\s+/).slice(0,2).map(function(w){r
 function hoy(){return new Date().toISOString().slice(0,10);}
 function diasEntre(a,b){if(!a||!b)return null;var d=Math.round((new Date(b)-new Date(a))/86400000)+1;return d>0?d:null;}
 function empById(id){return emps.find(function(x){return x.id===id;});}
+function avHTML(e){return '<div class="av">'+(e.foto_url?'<img src="'+esc(e.foto_url)+'" alt="">':ini(e.nombre_completo))+'</div>';}
 
 // ── CARGA ──
 function cargar(){
@@ -95,7 +109,7 @@ function renderPersonal(v){
    +'<div class="grid">'+emps.map(function(e){
       var arl=e.arl_activa?'<span class="dot ok"></span>ARL':'<span class="dot no"></span>sin ARL';
       var alt=e.curso_alturas?'<span class="dot ok"></span>alturas':'<span class="dot wn"></span>alturas';
-      return '<div class="card" onclick="abrir(\''+e.id+'\')"><div class="av">'+ini(e.nombre_completo)+'</div><div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div><div style="font-size:11px;margin-top:3px">'+arl+' &nbsp; '+alt+'</div></div></div>';
+      return '<div class="card" onclick="abrir(\''+e.id+'\')">'+avHTML(e)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div><div style="font-size:11px;margin-top:3px">'+arl+' &nbsp; '+alt+'</div></div></div>';
     }).join('')+'</div>'+(emps.length?'':'<p style="color:var(--mut)">Sin empleados activos.</p>');
 }
 
@@ -106,18 +120,21 @@ function renderNovedades(v){
    +(novs.length?novs.map(function(n){
       var per=(n.fecha_inicio||'')+(n.fecha_fin&&n.fecha_fin!==n.fecha_inicio?' → '+n.fecha_fin:'');
       var rem=n.remunerada===false?'<span class="pill" style="background:#fde8e8;color:#b91c1c">no remunerada</span>':'<span class="pill" style="background:#e7f6ee;color:#15803d">remunerada</span>';
-      return '<div class="nrow"><div><div class="nm">'+(ic[n.tipo]||'•')+' '+esc(n.nombre||'')+' <span class="tag">· '+esc(n.tipo||'')+'</span></div><div class="tag" style="margin-top:2px">'+esc(per)+' · '+(n.dias||'?')+' día(s)'+(n.motivo?' · '+esc(n.motivo):'')+'</div></div><div style="display:flex;align-items:center;gap:8px">'+rem+'<button class="btn s" style="color:var(--red)" onclick="borrarNovedad('+n.id+')">✕</button></div></div>';
+      return '<div class="nrow"><div><div class="nm">'+(ic[n.tipo]||'•')+' '+esc(n.nombre||'')+' <span class="tag">· '+esc(n.tipo||'')+'</span></div><div class="tag" style="margin-top:2px">'+esc(per)+' · '+(n.dias||'?')+' día(s)'+(n.motivo?' · '+esc(n.motivo):'')+'</div></div><div style="display:flex;align-items:center;gap:8px">'+rem+'<button class="btn s" onclick="editarNovedad('+n.id+')">✎</button><button class="btn s" style="color:var(--red)" onclick="borrarNovedad('+n.id+')">✕</button></div></div>';
     }).join(''):'<p style="color:var(--mut)">Sin novedades registradas.</p>');
 }
-function nuevaNovedad(){
-  var op=emps.map(function(e){return '<option value="'+e.id+'">'+esc(e.nombre_completo)+'</option>';}).join('');
+var nvId=null;
+function editarNovedad(id){var n=novs.find(function(x){return x.id===id;});if(n)nuevaNovedad(n);}
+function nuevaNovedad(n){nvId=(n&&n.id)||null;
+  var op=emps.map(function(e){return '<option value="'+e.id+'"'+((n&&n.empleado_id===e.id)?' selected':'')+'>'+esc(e.nombre_completo)+'</option>';}).join('');
+  function to(t){return (n&&n.tipo===t)?' selected':'';}
   document.getElementById('mbody2').innerHTML=
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-weight:800;font-size:16px">Registrar novedad</div><button class="btn s" onclick="cerrar2()">✕</button></div>'
+    '<div class="mhead"><div style="font-weight:800;font-size:16px">'+(nvId?'Editar novedad':'Registrar novedad')+'</div><button class="btn s" onclick="cerrar2()">✕</button></div>'
     +'<div class="fg"><label>Empleado</label><select id="nv-emp">'+op+'</select></div>'
-    +'<div class="fg"><label>Tipo</label><select id="nv-tipo"><option value="ausencia">Ausencia</option><option value="incapacidad">Incapacidad</option><option value="permiso">Permiso</option><option value="vacaciones">Vacaciones</option></select></div>'
-    +'<div class="frow"><div class="fg"><label>Desde</label><input type="date" id="nv-ini" value="'+hoy()+'"></div><div class="fg"><label>Hasta</label><input type="date" id="nv-fin" value="'+hoy()+'"></div></div>'
-    +'<div class="frow"><div class="fg"><label>Días (auto)</label><input type="number" id="nv-dias" placeholder="auto"></div><div class="fg"><label>¿Remunerada?</label><select id="nv-rem"><option value="si">Sí</option><option value="no">No</option></select></div></div>'
-    +'<div class="fg"><label>Motivo / observación</label><input id="nv-mot" placeholder="ej: cita médica, EPS..."></div>'
+    +'<div class="fg"><label>Tipo</label><select id="nv-tipo"><option value="ausencia"'+to('ausencia')+'>Ausencia</option><option value="incapacidad"'+to('incapacidad')+'>Incapacidad</option><option value="permiso"'+to('permiso')+'>Permiso</option><option value="vacaciones"'+to('vacaciones')+'>Vacaciones</option></select></div>'
+    +'<div class="frow"><div class="fg"><label>Desde</label><input type="date" id="nv-ini" value="'+esc((n&&n.fecha_inicio)||hoy())+'"></div><div class="fg"><label>Hasta</label><input type="date" id="nv-fin" value="'+esc((n&&n.fecha_fin)||hoy())+'"></div></div>'
+    +'<div class="frow"><div class="fg"><label>Días (auto)</label><input type="number" id="nv-dias" value="'+esc(n&&n.dias!=null?n.dias:'')+'" placeholder="auto"></div><div class="fg"><label>¿Remunerada?</label><select id="nv-rem"><option value="si"'+(!n||n.remunerada!==false?' selected':'')+'>Sí</option><option value="no"'+(n&&n.remunerada===false?' selected':'')+'>No</option></select></div></div>'
+    +'<div class="fg"><label>Motivo / observación</label><input id="nv-mot" value="'+esc((n&&n.motivo)||'')+'" placeholder="ej: cita médica, EPS..."></div>'
     +'<div class="foot"><button class="btn s" onclick="cerrar2()">Cancelar</button><button class="btn" onclick="guardarNovedad()">Guardar</button></div>';
   document.getElementById('ov2').className='ov on';
 }
@@ -128,8 +145,10 @@ function guardarNovedad(){
   var body={empleado_id:e.id,cedula:e.cedula,nombre:e.nombre_completo,tipo:document.getElementById('nv-tipo').value,
     fecha_inicio:ini,fecha_fin:fin,dias:dias,remunerada:document.getElementById('nv-rem').value==='si',
     motivo:document.getElementById('nv-mot').value||null};
-  fetch(SB+'/rest/v1/empleado_novedades',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(body)})
-   .then(function(r){if(!r.ok)throw 0;toast('Novedad registrada ✓');cerrar2();cargar();setTab('novedades');}).catch(function(){toast('Error al guardar');});
+  var url=SB+'/rest/v1/empleado_novedades'+(nvId?'?id=eq.'+nvId:'');
+  var method=nvId?'PATCH':'POST';
+  fetch(url,{method:method,headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(body)})
+   .then(function(r){if(!r.ok)throw 0;toast(nvId?'Novedad actualizada ✓':'Novedad registrada ✓');cerrar2();cargar();setTab('novedades');}).catch(function(){toast('Error al guardar');});
 }
 function borrarNovedad(id){if(!confirm('¿Eliminar esta novedad?'))return;
   fetch(SB+'/rest/v1/empleado_novedades?id=eq.'+id,{method:'DELETE',headers:H})
@@ -164,7 +183,7 @@ function renderFicha(){var e=cur;
   function fcargo(){var v=e.cargo==null?'':e.cargo;var L=['Maestro de obra','Oficial','Ayudante','Obrero','Contramaestre','Residente de obra','Almacenista','Armador de hierro','Mampostero','Operario equipo','Conductor','Vigilante','Servicios generales','Ingeniero','SISO / SST','Administrativo'].slice();if(v&&L.indexOf(v)<0)L.unshift(v);return '<div class="fg"><label>Cargo</label><select onchange="setCargo(this.value)">'+'<option value="">— elegir cargo —</option>'+L.map(function(c){return '<option'+(c===v?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'<option value="__otro__">Otro (escribir)…</option></select></div>';}
   function sel(l,k){var y=e[k];return '<div class="fg"><label>'+l+'</label><select onchange="setv(\''+k+'\',this.value===\'si\')"><option value="no"'+(y?'':' selected')+'>No</option><option value="si"'+(y?' selected':'')+'>Sí</option></select></div>';}
   document.getElementById('mbody').innerHTML=
-    '<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div class="av">'+ini(e.nombre_completo)+'</div><div><div style="font-weight:800;font-size:17px">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div><button class="btn s" onclick="cerrar()">✕</button></div>'
+    '<div class="mhead"><div style="display:flex;gap:10px;align-items:center"><div style="position:relative">'+avHTML(e)+(e.id?'<label style="position:absolute;bottom:-4px;right:-4px;background:var(--ind);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;border:2px solid #fff">📷<input type="file" accept="image/*" capture="user" style="display:none" onchange="subirFotoCara(this)"></label>':'')+'</div><div><div style="font-weight:800;font-size:17px">'+esc(e.nombre_completo||'Nuevo empleado')+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div><button class="btn s" onclick="cerrar()">✕</button></div>'
     +(e.id?checklistIngreso(e):'')
     +'<div class="sec">👤 Datos personales</div>'
     +'<div class="frow">'+f('Nombre completo','nombre_completo')+f('Cédula','cedula')+'</div>'
@@ -206,6 +225,15 @@ function checklistIngreso(e){
   return '<div class="sec">✅ Checklist de ingreso'+(faltan?' <span class="pill" style="background:#fde8e8;color:#b91c1c">'+faltan+' pendiente(s)</span>':' <span class="pill" style="background:#e7f6ee;color:#15803d">completo</span>')+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+rows.join('')+'</div>'
     +'<div class="tag" style="margin-top:4px">El contrato se marca al subirlo en Documentos.</div>';
+}
+function subirFotoCara(inp){var file=inp.files[0];if(!file||!cur||!cur.id)return;var e=cur;
+  var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  var path=(e.cedula||e.id)+'/cara_'+Date.now()+'.'+ext;
+  toast('Subiendo foto…');
+  fetch(SB+'/storage/v1/object/avatars/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':file.type||'image/jpeg'},body:file})
+   .then(function(r){if(!r.ok)throw 0;var url=SB+'/storage/v1/object/public/avatars/'+path;
+     return fetch(SB+'/rest/v1/empleados?id=eq.'+e.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify({foto_url:url})}).then(function(r2){if(!r2.ok)throw 0;e.foto_url=url;var ix=emps.findIndex(function(x){return x.id===e.id;});if(ix>=0)emps[ix].foto_url=url;toast('Foto lista ✓');renderFicha();});})
+   .catch(function(){toast('Error al subir foto');});
 }
 function setv(k,v){edits[k]=(v===''?null:v);cur[k]=v;}
 function setCargo(val){if(val==='__otro__'){var c=prompt('Escribe el cargo:',cur.cargo||'');if(c===null){renderFicha();return;}setv('cargo',c);renderFicha();return;}setv('cargo',val);}
@@ -249,14 +277,15 @@ function cargarDocs(e){var box=document.getElementById('docbox');if(!box)return;
     var html=DOC_SLOTS.map(function(s){var k=s[0],lbl=s[1];var docs=byTipo[k]||[];
       var right=docs.length?docs.map(function(d){return '<a class="dl" href="'+esc(d.url)+'" target="_blank">Ver</a> <button class="btn s" style="color:var(--red);padding:3px 8px" onclick="borrarDoc('+d.id+')">✕</button>';}).join(' '):'';
       var estado=docs.length?'<span class="pill" style="background:#e7f6ee;color:#15803d">cargado</span>':'<span class="pill" style="background:#f1f2f6;color:#888">pendiente</span>';
-      return '<div class="hrow"><span>'+lbl+' '+estado+'</span><span style="display:flex;gap:8px;align-items:center">'+right
-        +'<label class="btn s" style="cursor:pointer;padding:5px 10px">'+(docs.length?'Reemplazar':'Subir')+'<input type="file" accept="image/*,application/pdf" style="display:none" onchange="subirDoc(this,\''+k+'\')"></label></span></div>';
+      return '<div class="hrow"><span>'+lbl+' '+estado+'</span><span style="display:flex;gap:6px;align-items:center">'+right
+        +'<label class="btn s" style="cursor:pointer;padding:6px 10px">📷 Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="subirDoc(this,\''+k+'\')"></label>'
+        +'<label class="btn s" style="cursor:pointer;padding:6px 10px">📎 Archivo<input type="file" accept="image/*,application/pdf" style="display:none" onchange="subirDoc(this,\''+k+'\')"></label></span></div>';
     }).join('');
     // otros documentos (tipos fuera de las casillas)
     var claves=DOC_SLOTS.map(function(s){return s[0];});
     var otros=rows.filter(function(d){return claves.indexOf(d.tipo)<0;});
     html+=otros.map(function(d){return '<div class="hrow"><span>📎 '+esc(d.nombre||d.tipo||'otro')+'</span><span style="display:flex;gap:8px;align-items:center"><a class="dl" href="'+esc(d.url)+'" target="_blank">Ver</a><button class="btn s" style="color:var(--red);padding:3px 8px" onclick="borrarDoc('+d.id+')">✕</button></span></div>';}).join('');
-    html+='<div class="hrow" style="border:0"><span class="tag">Otro documento</span><label class="btn s" style="cursor:pointer;padding:5px 10px">Subir<input type="file" accept="image/*,application/pdf" style="display:none" onchange="subirDoc(this,\'otro\')"></label></div>';
+    html+='<div class="hrow" style="border:0"><span class="tag">Otro documento</span><span style="display:flex;gap:6px"><label class="btn s" style="cursor:pointer;padding:6px 10px">📷 Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="subirDoc(this,\'otro\')"></label><label class="btn s" style="cursor:pointer;padding:6px 10px">📎 Archivo<input type="file" accept="image/*,application/pdf" style="display:none" onchange="subirDoc(this,\'otro\')"></label></span></div>';
     box.innerHTML=html;
     // marca el contrato en el checklist si existe
     var ci=document.getElementById('chk-contrato');if(ci){var ok=(byTipo['contrato']||[]).length>0;ci.style.background=ok?'var(--grn)':'#cbd0dc';ci.textContent=ok?'✓':'·';}
