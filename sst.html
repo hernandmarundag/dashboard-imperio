@@ -161,7 +161,7 @@ function abrir(id){cur=empById(id);if(!cur)return;edits={};renderFicha();}
 function nuevo(){cur={id:null,nombre_completo:"",cedula:"",obra_id:"weliving",activo:true};edits={};renderFicha();}
 function renderFicha(){var e=cur;
   function f(l,k,t){return '<div class="fg"><label>'+l+'</label><input type="'+(t||'text')+'" value="'+esc(e[k]==null?'':e[k])+'" oninput="setv(\''+k+'\',this.value)"></div>';}
-  function fcargo(){var v=e.cargo==null?'':e.cargo;return '<div class="fg"><label>Cargo</label><input list="cargos_dl" value="'+esc(v)+'" oninput="setv(\'cargo\',this.value)"><datalist id="cargos_dl"><option>Maestro de obra</option><option>Oficial</option><option>Ayudante</option><option>Obrero</option><option>Contramaestre</option><option>Residente de obra</option><option>Almacenista</option><option>Armador de hierro</option><option>Mampostero</option><option>Operario equipo</option><option>Conductor</option><option>Vigilante</option><option>Servicios generales</option><option>Ingeniero</option><option>SISO / SST</option><option>Administrativo</option></datalist></div>';}
+  function fcargo(){var v=e.cargo==null?'':e.cargo;var L=['Maestro de obra','Oficial','Ayudante','Obrero','Contramaestre','Residente de obra','Almacenista','Armador de hierro','Mampostero','Operario equipo','Conductor','Vigilante','Servicios generales','Ingeniero','SISO / SST','Administrativo'].slice();if(v&&L.indexOf(v)<0)L.unshift(v);return '<div class="fg"><label>Cargo</label><select onchange="setCargo(this.value)">'+'<option value="">— elegir cargo —</option>'+L.map(function(c){return '<option'+(c===v?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'<option value="__otro__">Otro (escribir)…</option></select></div>';}
   function sel(l,k){var y=e[k];return '<div class="fg"><label>'+l+'</label><select onchange="setv(\''+k+'\',this.value===\'si\')"><option value="no"'+(y?'':' selected')+'>No</option><option value="si"'+(y?' selected':'')+'>Sí</option></select></div>';}
   document.getElementById('mbody').innerHTML=
     '<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div class="av">'+ini(e.nombre_completo)+'</div><div><div style="font-weight:800;font-size:17px">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div><button class="btn s" onclick="cerrar()">✕</button></div>'
@@ -208,6 +208,7 @@ function checklistIngreso(e){
     +'<div class="tag" style="margin-top:4px">El contrato se marca al subirlo en Documentos.</div>';
 }
 function setv(k,v){edits[k]=(v===''?null:v);cur[k]=v;}
+function setCargo(val){if(val==='__otro__'){var c=prompt('Escribe el cargo:',cur.cargo||'');if(c===null){renderFicha();return;}setv('cargo',c);renderFicha();return;}setv('cargo',val);}
 function cerrar(){document.getElementById('ov').className='ov';}
 function cerrar2(){document.getElementById('ov2').className='ov';}
 function guardar(){if(!cur)return;

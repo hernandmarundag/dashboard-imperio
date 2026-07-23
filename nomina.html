@@ -341,7 +341,7 @@ function openFichaNuevo(){
 var fichaId=null, fichaEdits={}, _fe=null;
 function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(function(x){return x.id===id;});if(!e)return;_fe=e;fichaId=id;fichaEdits={};
   function f(lbl,key,type){var val=e[key]==null?'':e[key];return '<div class="fg"><label>'+lbl+'</label><input type="'+(type||'text')+'" value="'+esc(val)+'" oninput="fichaSet(\''+key+'\',this.value)"></div>';}
-  function fcargoN(){var v=e.cargo==null?'':e.cargo;return '<div class="fg"><label>Cargo</label><input list="cargos_dl_n" value="'+esc(v)+'" oninput="fichaSet(\'cargo\',this.value)"><datalist id="cargos_dl_n"><option>Maestro de obra</option><option>Oficial</option><option>Ayudante</option><option>Obrero</option><option>Contramaestre</option><option>Residente de obra</option><option>Almacenista</option><option>Armador de hierro</option><option>Mampostero</option><option>Operario equipo</option><option>Conductor</option><option>Vigilante</option><option>Servicios generales</option><option>Ingeniero</option><option>SISO / SST</option><option>Administrativo</option></datalist></div>';}
+  function fcargoN(){var v=e.cargo==null?'':e.cargo;var L=['Maestro de obra','Oficial','Ayudante','Obrero','Contramaestre','Residente de obra','Almacenista','Armador de hierro','Mampostero','Operario equipo','Conductor','Vigilante','Servicios generales','Ingeniero','SISO / SST','Administrativo'].slice();if(v&&L.indexOf(v)<0)L.unshift(v);return '<div class="fg"><label>Cargo</label><select onchange="setCargoN(this.value)">'+'<option value="">— elegir cargo —</option>'+L.map(function(c){return '<option'+(c===v?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'<option value="__otro__">Otro (escribir)…</option></select></div>';}
   var body='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div style="display:flex;align-items:center;gap:12px">'+avatar(e,64)
     +'<div><div style="font-size:18px;font-weight:700">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div>'
     +'<label class="btn s" style="display:inline-block;height:auto;padding:5px 10px;font-size:12px;margin-top:6px;cursor:pointer">📷 Cambiar foto<input type="file" accept="image/*" style="display:none" onchange="subirFoto(this)"></label></div></div>'
@@ -385,6 +385,7 @@ function cargarHistRecibos(ced){
   }).catch(function(){var el=document.getElementById("ficha-hist");if(el)el.innerHTML='<div style="color:var(--red);font-size:12px">Error al cargar recibos.</div>';});
 }
 function fichaSet(k,v){fichaEdits[k]=(v===''?null:v);if(_fe)_fe[k]=v;}
+function setCargoN(val){if(val==='__otro__'){var c=prompt('Escribe el cargo:',(_fe&&_fe.cargo)||'');if(c===null){openFicha(fichaId);return;}fichaSet('cargo',c);openFicha(fichaId);return;}fichaSet('cargo',val);}
 function cerrarFicha(){document.getElementById("ov-ficha").className="ov";var had=emps.some(function(x){return x.id===null;});emps=emps.filter(function(x){return x.id!==null;});fichaId=null;_fe=null;if(had&&tab==='empleados')render();}
 function subirFoto(inp){var f=inp.files[0];if(!f||!_fe)return;var e=_fe;
   var path=(_fe.id||_fe.cedula||('nuevo'+Date.now()))+'/'+Date.now()+'.'+(f.name.split('.').pop()||'jpg').toLowerCase();
