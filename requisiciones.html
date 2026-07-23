@@ -68,10 +68,29 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a7340;color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:.3s;z-index:9;pointer-events:none}
 .toast.on{opacity:1}.toast.err{background:var(--danger)}
 a.pl{color:var(--indigo);font-size:11px}
+.rev-ov{position:fixed;inset:0;background:rgba(15,16,36,.55);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.rev-ov.on{display:flex}
+.rev-modal{background:#fff;border-radius:16px 16px 0 0;max-width:640px;width:100%;padding:16px;max-height:92vh;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.rev-h{display:flex;justify-content:space-between;align-items:center;font-size:16px;margin-bottom:4px}
+.rev-h .x{border:0;background:#eef0f6;border-radius:8px;padding:6px 10px;cursor:pointer}
+.rev-sub{font-size:12px;color:#6b7280;margin-bottom:10px}
+.rvc{border:1px solid #e6e8f0;border-radius:10px;padding:10px;margin-bottom:8px}
+.rvc.best{border-color:#16a34a;background:#f2fbf6}
+.rvc.add{background:#f7f8fc}
+.rvc-t{display:flex;justify-content:space-between;font-weight:700}
+.rvc-i{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.rvc-i input{flex:1;min-width:78px;padding:9px;border:1px solid #e6e8f0;border-radius:8px;font-size:15px}
+.rvc-i button{background:#4f46e5;color:#fff;border:0;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}
+.rvc-i a,.rvc-i a{align-self:center;color:#4f46e5;font-weight:700;font-size:12px}
+.rev-best{background:#f2fbf6;border:1px solid #16a34a;border-radius:10px;padding:10px;font-size:13px;margin-bottom:8px}
+.rev-res{margin-top:8px}
+.rev-res textarea{width:100%;min-height:58px;border:1px solid #e6e8f0;border-radius:8px;padding:9px;font-size:15px;font-family:inherit;margin-top:4px}
+.rev-res button{margin-top:6px;background:#4f46e5;color:#fff;border:0;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}
 </style></head>
 <body>
 <div class="top"><h1>📋 Weliving · Requisiciones</h1><div class="d">pedido → aprobado → por pagar → pagado · conectado al flujo de caja</div></div>
 <div class="wrap"><div id="body"><div class="loading"><div style="font-size:30px">⏳</div><p style="margin-top:8px">Cargando requisiciones…</p></div></div></div>
+<div class="rev-ov" id="revov"><div class="rev-modal" id="revbody"></div></div>
 <div class="toast" id="toast"></div>
 <script>
 const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
@@ -150,7 +169,7 @@ function fb(k,t){return '<button class="'+(FILT===k?'on':'')+'" onclick="setF(\'
 function bdg(r){if(r.pagado&&r.contabilizado)return '<span class="bdg pag">📗 Contabilizada</span>';if(r.pagado)return '<span class="bdg aprob">💵 Pagada · x contab.</span>';var e=r.estado||'pendiente';if(e==='aprobado')return '<span class="bdg aprob">✅ Aprobada · x pagar</span>';if(e==='rechazado')return '<span class="bdg rech">✗ Rechazada</span>';return '<span class="bdg pend">⏳ Por aprobar</span>';}
 function fileIco(r,campo,emo,lbl){var u=r[campo];if(u)return '<a class="pl" href="'+esc(u)+'" target="_blank" rel="noopener" title="Ver '+lbl+'" style="font-size:15px">'+emo+'</a>';return '<span class="doc" title="Subir '+lbl+'" style="opacity:.5" onclick="subirDoc('+r.id+',\''+campo+'\')">📎</span>';}
 function docs(r){function d(c,l){return '<span class="doc" title="'+l+'" onclick="togDoc('+r.id+',\''+c+'\','+(r[c]?'false':'true')+')">'+(r[c]?'✅':'⬜')+'</span>';}return fileIco(r,'factura_url','📄','factura')+' '+fileIco(r,'comprobante_url','🧾','comprobante de pago')+' <span style="color:#cbd2e0">|</span> '+d('rut','RUT')+' '+d('cuenta_cobro','Cta cobro')+' '+d('certificado','Certif.');}
-function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'&&can('aprob')){h+='<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'&&can('pay')){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado&&can('cont')){h+='<button class="b ap" onclick="pasarAGasto('+r.id+')">📗 Pasar a gasto</button>';}return h||'—';}
+function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'&&can('aprob')){h+=(r.tipo!=='pago'?'<button class="b" style="background:#eef0fe;color:#4f46e5" onclick="revisar('+r.id+')">🔎 Revisar</button>':'')+'<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'&&can('pay')){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado&&can('cont')){h+='<button class="b ap" onclick="pasarAGasto('+r.id+')">📗 Pasar a gasto</button>';}return h||'—';}
 function pasarAGasto(id){var r=RQ.find(function(x){return x.id===id;});if(!r)return;
  if(!r.obra){toast('Esta requisici\u00f3n no tiene obra. Corr\u00edgela antes de pasarla a gasto.',true);return;}if(r.gasto_id){if(!confirm('Ya tiene gasto registrado. ¿Solo marcar contabilizada?')){return;}patch('requisiciones?id=eq.'+id,{contabilizado:true}).then(function(){r.contabilizado=true;toast('Contabilizada ✓');render();});return;}
  if(!confirm('¿Registrar en la HOJA DE GASTO y marcar contabilizada?\n'+r.proveedor+' · '+fmt(r.valor)+'\n(Se crea el gasto con la factura y los datos de la requisición.)'))return;
@@ -205,6 +224,29 @@ function rechazar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estad
 function pagar(id){var r=RQ.find(function(x){return x.id===id;});if(!r)return;if(!confirm('¿Marcar como PAGADA?\n'+r.proveedor+' · '+fmt(r.valor)+'\n\nRecuerda subir el comprobante de la transferencia con el 🧾📎 de la fila.'))return;r.pagado=true;r.fecha_pago=hoy();
  patch('requisiciones?id=eq.'+id,{pagado:true,fecha_pago:hoy()}).then(function(){toast('Pagada ✓ · sube el comprobante (🧾) si falta');render();}).catch(function(){toast('Error',true);render();});}
 function togDoc(id,campo,val){var r=RQ.find(function(x){return x.id===id;});var v=(val===true||val==='true');if(r)r[campo]=v;var b={};b[campo]=v;patch('requisiciones?id=eq.'+id,b).then(function(){render();}).catch(function(){toast('Error',true);});}
+var COTS=[],currentRev=null;
+function cerrarRev(){document.getElementById('revov').classList.remove('on');}
+function _cant(r,c){return (+((c&&c.cantidad))||parseFloat(String(r.cantidad||'').replace(/[^0-9.]/g,''))||1);}
+function revisar(id){currentRev=id;var r=RQ.find(function(x){return x.id===id;});if(!r)return;
+ g('cotizaciones_prov?requisicion_id=eq.'+id+'&order=id').then(function(rows){COTS=rows||[];renderRev(r);}).catch(function(){COTS=[];renderRev(r);});}
+function renderRev(r){
+ var cs=COTS.map(function(c){var cant=_cant(r,c);var tot=(+c.precio_unit||0)*cant+(+c.flete||0);return Object.assign({},c,{_tot:tot});});
+ var conP=cs.filter(function(x){return x._tot>0;});
+ var best=conP.length?conP.reduce(function(a,b){return b._tot<a._tot?b:a;}):null;
+ var h='<div class="rev-h"><b>&#128269; Revisar cotizaciones</b><button class="x" onclick="cerrarRev()">&#10005;</button></div>';
+ h+='<div class="rev-sub">'+esc(r.descripcion||'')+' &middot; '+obraNm(r.obra)+(r.cantidad?' &middot; '+esc(r.cantidad):'')+'</div>';
+ cs.forEach(function(c){h+='<div class="rvc'+(best&&c.id===best.id?' best':'')+'"><div class="rvc-t"><b>'+esc(c.proveedor_texto||'Proveedor')+(best&&c.id===best.id?' &#11088;':'')+'</b><span>'+(c._tot?fmt(c._tot):'&mdash;')+'</span></div><div class="rvc-i"><input type="number" placeholder="precio/und" value="'+(c.precio_unit||'')+'" onchange="setCot('+c.id+',&#39;precio_unit&#39;,this.value)"><input type="number" placeholder="flete" value="'+(c.flete||'')+'" onchange="setCot('+c.id+',&#39;flete&#39;,this.value)">'+(c.archivo_url?'<a href="'+esc(c.archivo_url)+'" target="_blank">ver</a>':'')+'<button onclick="elegir('+c.id+','+r.id+')">Elegir</button></div></div>';});
+ h+='<div class="rvc add"><b>+ Agregar cotización</b><div class="rvc-i"><input id="ac-prov" placeholder="proveedor"><input id="ac-precio" type="number" placeholder="precio/und"><input id="ac-flete" type="number" placeholder="flete"><button onclick="addCot('+r.id+')">A&ntilde;adir</button></div></div>';
+ if(best)h+='<div class="rev-best">Recomendado: '+esc(best.proveedor_texto||'')+' &middot; '+fmt(best._tot)+' (m&aacute;s barato con flete). <span id="rev-hist"></span></div>';
+ if(cs.length<2)h+='<div class="rev-res"><label style="font-size:12px;color:#6b7280">Solo hay '+cs.length+' cotizaci&oacute;n. Escribe la rese&ntilde;a (proveedor &uacute;nico / urgencia / monto bajo):</label><textarea id="rev-resena">'+esc(r.resena_unica||'')+'</textarea><button onclick="guardarResena('+r.id+')">Guardar rese&ntilde;a</button></div>';
+ document.getElementById('revbody').innerHTML=h;document.getElementById('revov').classList.add('on');
+ if(cs.length)histRev(r.descripcion);}
+function setCot(id,k,v){var b={};b[k]=+v||0;patch('cotizaciones_prov?id=eq.'+id,b).then(function(){var c=COTS.find(function(x){return x.id===id;});if(c)c[k]=+v||0;var r=RQ.find(function(x){return x.id===currentRev;});if(r)renderRev(r);});}
+function addCot(rid){var r=RQ.find(function(x){return x.id===rid;});var prov=(document.getElementById('ac-prov').value||'').trim(),precio=+document.getElementById('ac-precio').value||0,flete=+document.getElementById('ac-flete').value||0;if(!prov&&!precio){toast('Pon proveedor o precio',true);return;}post('cotizaciones_prov',{requisicion_id:rid,proveedor_texto:prov||null,precio_unit:precio||null,flete:flete,material:r.descripcion}).then(function(){revisar(rid);toast('Cotización agregada ✓');}).catch(function(){toast('Error',true);});}
+function elegir(cid,rid){var c=COTS.find(function(x){return x.id===cid;});var r=RQ.find(function(x){return x.id===rid;});if(!c||!r)return;var cant=_cant(r,c);var tot=(+c.precio_unit||0)*cant+(+c.flete||0);patch('cotizaciones_prov?requisicion_id=eq.'+rid,{elegida:false}).then(function(){return patch('cotizaciones_prov?id=eq.'+cid,{elegida:true});}).then(function(){return patch('requisiciones?id=eq.'+rid,{proveedor:(c.proveedor_texto||r.proveedor),valor:tot,cotizacion_unica:false});}).then(function(){r.proveedor=c.proveedor_texto||r.proveedor;r.valor=tot;toast('Elegida ✓ queda como proveedor y valor');cerrarRev();render();}).catch(function(){toast('Error',true);});}
+function guardarResena(rid){var t=(document.getElementById('rev-resena').value||'').trim();patch('requisiciones?id=eq.'+rid,{resena_unica:t||null,cotizacion_unica:true}).then(function(){var r=RQ.find(function(x){return x.id===rid;});if(r){r.resena_unica=t;r.cotizacion_unica=true;}toast('Reseña guardada ✓');}).catch(function(){toast('Error',true);});}
+function histRev(material){if(!material)return;var m=String(material).split(/[ ,]/)[0];g('precios_historicos?material=ilike.*'+encodeURIComponent(m)+'*&select=precio&limit=50').then(function(rows){rows=rows||[];if(!rows.length)return;var avg=rows.reduce(function(s,x){return s+(+x.precio||0);},0)/rows.length;var el=document.getElementById('rev-hist');if(el)el.textContent='Histórico ~'+fmt(Math.round(avg))+'/und ('+rows.length+').';}).catch(function(){});}
+
 boot();
 </script>
 </body></html>
