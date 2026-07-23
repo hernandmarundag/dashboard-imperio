@@ -31,7 +31,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .toast.on{opacity:1}
 .badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700}
 </style></head><body><div class="wrap">
-<div class="hd"><h1>🦺 Imperio · SST y RRHH</h1><p>Ficha de cada trabajador · afiliaciones, exámenes, alturas y dotación</p></div>
+<div class="hd"><h1>🦺 Imperio · SST y RRHH</h1><p>Ficha de cada trabajador · afiliaciones, exámenes, alturas y dotación</p><button class="btn" style="margin-top:10px" onclick="nuevo()">+ Nuevo empleado</button></div>
 <div id="grid" class="grid"><p style="color:var(--mut)">Cargando empleados…</p></div>
 </div>
 <div class="ov" id="ov"><div class="modal" id="mbody"></div></div>
@@ -54,7 +54,9 @@ function cargar(){
     }).join("")||'<p style="color:var(--mut)">Sin empleados activos.</p>';
   }).catch(function(){document.getElementById('grid').innerHTML='<p style="color:var(--red)">Error de conexión.</p>';});
 }
-function abrir(id){cur=emps.find(function(x){return x.id===id;});edits={};if(!cur)return;var e=cur;
+function abrir(id){cur=emps.find(function(x){return x.id===id;});if(!cur)return;edits={};render();}
+function nuevo(){cur={id:null,nombre_completo:"",cedula:"",obra_id:"weliving",activo:true};edits={};render();}
+function render(){var e=cur;
   function f(l,k,t){return '<div class="fg"><label>'+l+'</label><input type="'+(t||'text')+'" value="'+esc(e[k]==null?'':e[k])+'" oninput="setv(\''+k+'\',this.value)"></div>';}
   function sel(l,k){var y=e[k];return '<div class="fg"><label>'+l+'</label><select onchange="setv(\''+k+'\',this.value===\'si\')"><option value="no"'+(y?'':' selected')+'>No</option><option value="si"'+(y?' selected':'')+'>Sí</option></select></div>';}
   document.getElementById('mbody').innerHTML=
@@ -83,18 +85,26 @@ function abrir(id){cur=emps.find(function(x){return x.id===id;});edits={};if(!cu
     +'<div class="frow">'+f('Inducción SST (fecha)','induccion_sst_fecha','date')+sel('¿EPP/dotación entregada?','epp_entregado')+'</div>'
     +'<div class="frow">'+f('Talla camisa','talla_camisa')+f('Talla pantalón','talla_pantalon')+'</div>'
     +'<div class="frow">'+f('Talla calzado','talla_calzado')+'<div></div></div>'
-    +'<div class="sec">📋 Historial (trazabilidad)</div>'
+    +(e.id?'<div class="sec">📋 Historial (trazabilidad)</div>'
     +'<div class="frow"><button class="btn s" onclick="addHist(\'examen\')">+ Examen médico</button><button class="btn s" onclick="addHist(\'capacitacion\')">+ Capacitación</button></div>'
     +'<div class="frow" style="margin-top:6px"><button class="btn s" onclick="addHist(\'epp\')">+ Entrega EPP</button><div></div></div>'
-    +'<div id="histbox" class="hist">Cargando historial…</div>'
-    +'<div class="foot"><button class="btn s" onclick="cerrar()">Cancelar</button><button class="btn" onclick="guardar()">Guardar ficha</button></div>';
-  document.getElementById('ov').className='ov on';cargarHist(e);
+    +'<div id="histbox" class="hist">Cargando historial…</div>':'')
+    +'<div class="foot"><button class="btn s" onclick="cerrar()">Cancelar</button><button class="btn" onclick="guardar()">'+(e.id?'Guardar ficha':'Crear empleado')+'</button></div>';
+  document.getElementById('ov').className='ov on';if(e.id)cargarHist(e);
 }
 function setv(k,v){edits[k]=(v===''?null:v);cur[k]=v;}
 function cerrar(){document.getElementById('ov').className='ov';}
-function guardar(){if(!cur||!Object.keys(edits).length){cerrar();return;}
-  fetch(SB+'/rest/v1/empleados?id=eq.'+cur.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(edits)})
-   .then(function(r){if(!r.ok)throw 0;toast('Ficha guardada ✓');cerrar();cargar();}).catch(function(){toast('Error al guardar');});
+function guardar(){if(!cur)return;
+  if(cur.id){
+    if(!Object.keys(edits).length){cerrar();return;}
+    fetch(SB+'/rest/v1/empleados?id=eq.'+cur.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(edits)})
+     .then(function(r){if(!r.ok)throw 0;toast('Ficha guardada ✓');cerrar();cargar();}).catch(function(){toast('Error al guardar');});
+  } else {
+    var body=Object.assign({activo:true,empresa_id:'230ab43f-0f77-4f84-94bf-f9bb925b384b'},edits);
+    if(!body.nombre_completo||!body.cedula){toast('Falta nombre y cédula');return;}
+    fetch(SB+'/rest/v1/empleados',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(body)})
+     .then(function(r){if(!r.ok)throw 0;toast('Empleado creado ✓');cerrar();cargar();}).catch(function(){toast('Error al crear');});
+  }
 }
 function cargarHist(e){var box=document.getElementById('histbox');
   Promise.all([
