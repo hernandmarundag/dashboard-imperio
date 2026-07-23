@@ -124,6 +124,7 @@ function render(){
   '<div class="rq-list">'+(rows||'<div class="rq-none">Sin requisiciones</div>')+'</div></div>';
  var addf='<div class="sec"><button class="add" onclick="tog(\'nf\')">＋ Nueva requisición</button>'+
   '<div class="form" id="nf">'+
+   '<div class="fld big"><label>Tipo de solicitud</label><select id="n-tipo"><option value="compra">🧱 Compra nueva</option><option value="pago">🧾 Pago a proveedor</option></select></div>'+
    '<div class="fld"><label>Obra</label><select id="n-obra">'+OBRAS.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('')+'</select></div>'+
    '<div class="fld"><label>Fecha</label><input id="n-f" type="date" value="'+hoy()+'"></div>'+
    '<div class="fld"><label>🚦 Fecha límite de pago</label><input id="n-vence" type="date"></div>'+
@@ -179,6 +180,7 @@ function ctaBlk(r){
   return h+'</div>';}
 function cardCls(r){if(r.pagado&&r.contabilizado)return 'cont';if(r.pagado)return 'pagada';
   if(r.estado==='aprobado')return 'aprob';if(r.estado==='rechazado')return 'cont';return 'pend';}
+function tipoBdg(r){var t=(r.tipo==='pago')?['🧾 Pago','#7c3aed']:['🧱 Compra','#2563eb'];return '<span style="display:inline-block;font-size:10.5px;font-weight:700;color:'+t[1]+';background:'+t[1]+'18;padding:2px 8px;border-radius:20px">'+t[0]+'</span>';}
 function semaforo(r){
   if(r.pagado||!r.fecha_vence)return '';
   var dias=Math.round((new Date(r.fecha_vence+'T12:00:00')-new Date())/86400000);
@@ -191,12 +193,12 @@ function semaforo(r){
 function rowHTML(r){var a=acc(r);
  return '<div class="rq '+cardCls(r)+'">'
   +'<div class="l1"><span class="pv">'+esc(r.proveedor||'Sin proveedor')+'</span><span class="vl">'+fmt(r.valor)+'</span></div>'
-  +'<div class="l2">'+esc(r.descripcion||'')+'<br>'+(r.fecha||'')+' \u00b7 '+obraNm(r.obra)+' \u00b7 '+stBdg(r)+semaforo(r)+'</div>'
+  +'<div class="l2">'+esc(r.descripcion||'')+'<br>'+(r.fecha||'')+' \u00b7 '+obraNm(r.obra)+' \u00b7 '+tipoBdg(r)+' '+stBdg(r)+semaforo(r)+'</div>'
   +ctaBlk(r)
   +'<div class="rw"><div class="dcs">'+docs(r)+'</div>'+(a==='\u2014'?'':a)+'</div></div>';}
 function tog(id){document.getElementById(id).classList.toggle('on');}
 function setF(k){FILT=k;render();}
-function addReq(){var b={obra:(document.getElementById('n-obra').value||'weliving'),fecha:document.getElementById('n-f').value||hoy(),fecha_vence:((document.getElementById('n-vence')&&document.getElementById('n-vence').value)||null),proveedor:(document.getElementById('n-p').value||'').trim(),descripcion:(document.getElementById('n-d').value||'').trim(),cantidad:(document.getElementById('n-c').value||'').trim()||null,valor:num(document.getElementById('n-v').value),medio_pago:(document.getElementById('n-m').value||'').trim()||null,cuenta:(document.getElementById('n-cta').value||'').trim()||null,etapa:(document.getElementById('n-e').value||'').trim()||null,area:(document.getElementById('n-area').value||'')||null,num_factura:(document.getElementById('n-nf').value||'').trim()||null,iva:num(document.getElementById('n-iva').value),factura_url:FUP,estado:'pendiente'};if(!b.valor){toast('Pon el valor',true);return;}post('requisiciones',b).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])RQ.unshift(rows[0]);FUP=null;toast('Requisición creada ✓');render();}).catch(function(){toast('Error',true);});}
+function addReq(){var b={obra:(document.getElementById('n-obra').value||'weliving'),tipo:((document.getElementById('n-tipo')&&document.getElementById('n-tipo').value)||'compra'),fecha:document.getElementById('n-f').value||hoy(),fecha_vence:((document.getElementById('n-vence')&&document.getElementById('n-vence').value)||null),proveedor:(document.getElementById('n-p').value||'').trim(),descripcion:(document.getElementById('n-d').value||'').trim(),cantidad:(document.getElementById('n-c').value||'').trim()||null,valor:num(document.getElementById('n-v').value),medio_pago:(document.getElementById('n-m').value||'').trim()||null,cuenta:(document.getElementById('n-cta').value||'').trim()||null,etapa:(document.getElementById('n-e').value||'').trim()||null,area:(document.getElementById('n-area').value||'')||null,num_factura:(document.getElementById('n-nf').value||'').trim()||null,iva:num(document.getElementById('n-iva').value),factura_url:FUP,estado:'pendiente'};if(!b.valor){toast('Pon el valor',true);return;}post('requisiciones',b).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])RQ.unshift(rows[0]);FUP=null;toast('Requisición creada ✓');render();}).catch(function(){toast('Error',true);});}
 function subirDoc(id,campo){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;toast('⏳ subiendo…');var path='weliving/'+campo+'_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f}).then(function(r){if(!r.ok)throw 0;var url=SB_URL+'/storage/v1/object/public/facturas/'+path;var b={};b[campo]=url;var rr=RQ.find(function(x){return x.id===id;});if(rr)rr[campo]=url;return patch('requisiciones?id=eq.'+id,b);}).then(function(){toast('Archivo guardado ✓');render();}).catch(function(){toast('Error al subir',true);});};inp.click();}
 function aprobar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estado='aprobado';patch('requisiciones?id=eq.'+id,{estado:'aprobado'}).then(function(){toast('Aprobada ✓ (ya está en Por pagar del flujo)');render();}).catch(function(){toast('Error',true);});}
 function rechazar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estado='rechazado';patch('requisiciones?id=eq.'+id,{estado:'rechazado'}).then(function(){toast('Rechazada');render();}).catch(function(){toast('Error',true);});}
