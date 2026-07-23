@@ -31,7 +31,7 @@ th.emp,td.emp{position:sticky;left:0;background:var(--card);text-align:left;padd
 thead th.emp{z-index:2;background:#fafbfc}
 .emprow{display:flex;align-items:center;gap:10px}
 .av{width:34px;height:34px;border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex:0 0 auto}
-.nm{font-weight:600;font-size:13.5px;line-height:1.15}.cargo{font-size:10.5px;color:var(--mut)}
+.nm{font-weight:600;font-size:13.5px;line-height:1.15;white-space:normal;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.cargo{font-size:10.5px;color:var(--mut);white-space:normal}
 tbody tr{border-top:1px solid #f4f5f7}
 .cell{width:34px;height:38px;text-align:center;vertical-align:middle}
 .mk{width:30px;height:30px;margin:0 auto;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;background:#eef7f2;color:var(--grn)}
@@ -43,6 +43,18 @@ thead th.diash{position:sticky;right:0;background:#fafbfc;box-shadow:-1px 0 0 va
 .toast.on{opacity:1}
 .hint{font-size:12.5px;color:var(--mut);margin:2px 2px 12px;line-height:1.5}
 .muted{color:var(--mut);text-align:center;padding:24px}
+@media(max-width:560px){
+ .wrap{padding:10px}
+ h1{font-size:18px}
+ th.emp,td.emp{min-width:120px;max-width:140px;padding:7px 8px}
+ .emprow{gap:7px}
+ .av{width:28px;height:28px;font-size:11px}
+ .nm{font-size:11.5px}
+ .cargo{display:none}
+ .mk{width:26px;height:26px;font-size:12px}
+ .cell{width:30px;height:36px}
+ .dias{padding:0 8px;font-size:14px}
+}
 </style>
 </head>
 <body>
