@@ -341,6 +341,7 @@ function openFichaNuevo(){
 var fichaId=null, fichaEdits={}, _fe=null;
 function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(function(x){return x.id===id;});if(!e)return;_fe=e;fichaId=id;fichaEdits={};
   function f(lbl,key,type){var val=e[key]==null?'':e[key];return '<div class="fg"><label>'+lbl+'</label><input type="'+(type||'text')+'" value="'+esc(val)+'" oninput="fichaSet(\''+key+'\',this.value)"></div>';}
+  function fcargoN(){var v=e.cargo==null?'':e.cargo;return '<div class="fg"><label>Cargo</label><input list="cargos_dl_n" value="'+esc(v)+'" oninput="fichaSet(\'cargo\',this.value)"><datalist id="cargos_dl_n"><option>Maestro de obra</option><option>Oficial</option><option>Ayudante</option><option>Obrero</option><option>Contramaestre</option><option>Residente de obra</option><option>Almacenista</option><option>Armador de hierro</option><option>Mampostero</option><option>Operario equipo</option><option>Conductor</option><option>Vigilante</option><option>Servicios generales</option><option>Ingeniero</option><option>SISO / SST</option><option>Administrativo</option></datalist></div>';}
   var body='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div style="display:flex;align-items:center;gap:12px">'+avatar(e,64)
     +'<div><div style="font-size:18px;font-weight:700">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div>'
     +'<label class="btn s" style="display:inline-block;height:auto;padding:5px 10px;font-size:12px;margin-top:6px;cursor:pointer">📷 Cambiar foto<input type="file" accept="image/*" style="display:none" onchange="subirFoto(this)"></label></div></div>'
@@ -349,7 +350,7 @@ function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(fu
     +'<div class="frow">'+f('Fecha de nacimiento','fecha_nacimiento','date')+f('Teléfono','telefono')+'</div>'
     +'<div class="frow">'+f('Dirección','direccion')+f('Correo','email')+'</div>'
     +'<div class="frow">'+f('Contacto de emergencia','contacto_emergencia')+f('Tel. emergencia','telefono_emergencia')+'</div>'
-    +'<div class="frow">'+f('Cargo','cargo')+f('Obra','obra_id')+'</div>'
+    +'<div class="frow">'+fcargoN()+f('Obra','obra_id')+'</div>'
     +'<div class="frow">'+f('Fecha de ingreso','fecha_ingreso','date')+f('Clase riesgo ARL','clase_riesgo_arl','number')+'</div>'
     +'<div class="frow">'+f('EPS','eps')+f('AFP (pensión)','afp')+'</div>'
     +'<div class="frow">'+f('ARL','arl')+f('Caja compensación','caja_compensacion')+'</div>'

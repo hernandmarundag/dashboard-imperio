@@ -58,6 +58,7 @@ function abrir(id){cur=emps.find(function(x){return x.id===id;});if(!cur)return;
 function nuevo(){cur={id:null,nombre_completo:"",cedula:"",obra_id:"weliving",activo:true};edits={};render();}
 function render(){var e=cur;
   function f(l,k,t){return '<div class="fg"><label>'+l+'</label><input type="'+(t||'text')+'" value="'+esc(e[k]==null?'':e[k])+'" oninput="setv(\''+k+'\',this.value)"></div>';}
+  function fcargo(){var v=e.cargo==null?'':e.cargo;return '<div class="fg"><label>Cargo</label><input list="cargos_dl" value="'+esc(v)+'" oninput="setv(\'cargo\',this.value)"><datalist id="cargos_dl"><option>Maestro de obra</option><option>Oficial</option><option>Ayudante</option><option>Obrero</option><option>Contramaestre</option><option>Residente de obra</option><option>Almacenista</option><option>Armador de hierro</option><option>Mampostero</option><option>Operario equipo</option><option>Conductor</option><option>Vigilante</option><option>Servicios generales</option><option>Ingeniero</option><option>SISO / SST</option><option>Administrativo</option></datalist></div>';}
   function sel(l,k){var y=e[k];return '<div class="fg"><label>'+l+'</label><select onchange="setv(\''+k+'\',this.value===\'si\')"><option value="no"'+(y?'':' selected')+'>No</option><option value="si"'+(y?' selected':'')+'>Sí</option></select></div>';}
   document.getElementById('mbody').innerHTML=
     '<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div class="av">'+ini(e.nombre_completo)+'</div><div><div style="font-weight:800;font-size:17px">'+esc(e.nombre_completo)+'</div><div class="cg">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div><button class="btn s" onclick="cerrar()">✕</button></div>'
@@ -68,7 +69,7 @@ function render(){var e=cur;
     +'<div class="fg">'+f('Dirección','direccion').replace('<div class="fg">','').replace(/<\/div>$/,'')+'</div>'
     +'<div class="frow">'+f('Contacto emergencia','contacto_emergencia')+f('Tel. emergencia','telefono_emergencia')+'</div>'
     +'<div class="sec">💼 Vinculación</div>'
-    +'<div class="frow">'+f('Cargo','cargo')+f('Obra','obra_id')+'</div>'
+    +'<div class="frow">'+fcargo()+f('Obra','obra_id')+'</div>'
     +'<div class="frow">'+f('Fecha ingreso','fecha_ingreso','date')+f('Tipo de contrato','tipo_contrato')+'</div>'
     +'<div class="sec">🏥 Afiliaciones (seguridad social)</div>'
     +'<div class="frow">'+f('EPS','eps')+f('Afiliación EPS','fecha_afiliacion_eps','date')+'</div>'
