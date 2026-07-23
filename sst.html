@@ -190,9 +190,7 @@ function renderFicha(){var e=cur;
     +'<div class="frow">'+f('Inducción SST (fecha)','induccion_sst_fecha','date')+sel('¿EPP/dotación entregada?','epp_entregado')+'</div>'
     +'<div class="frow">'+f('Talla camisa','talla_camisa')+f('Talla pantalón','talla_pantalon')+'</div>'
     +'<div class="frow">'+f('Talla calzado','talla_calzado')+'<div></div></div>'
-    +(e.id?'<div class="sec">📎 Documentos / hoja de vida</div>'
-      +'<div class="frow" style="align-items:end"><div class="fg"><label>Tipo de documento</label><select id="doc-tipo"><option value="contrato">Contrato</option><option value="cedula">Cédula</option><option value="examen">Examen médico</option><option value="certificado">Certificado</option><option value="hoja_vida">Hoja de vida</option><option value="otro">Otro</option></select></div>'
-      +'<div class="fg"><label>Archivo</label><label class="btn s" style="display:block;text-align:center;cursor:pointer">Subir archivo<input type="file" style="display:none" onchange="subirDoc(this)"></label></div></div>'
+    +(e.id?'<div class="sec">📎 Documentos (imagen o PDF)</div>'
       +'<div id="docbox" class="hist">Cargando documentos…</div>':'')
     +(e.id?'<div class="sec">📋 Historial SST (trazabilidad)</div>'
       +'<div class="frow"><button class="btn s" onclick="addHist(\'examen\')">+ Examen médico</button><button class="btn s" onclick="addHist(\'capacitacion\')">+ Capacitación</button></div>'
@@ -202,9 +200,9 @@ function renderFicha(){var e=cur;
   document.getElementById('ov').className='ov on';if(e.id){cargarHist(e);cargarDocs(e);}
 }
 function checklistIngreso(e){
-  var items=[['EPS',!!e.eps],['AFP (pensión)',!!e.afp],['ARL activa',!!e.arl_activa],['Examen de ingreso',!!e.examen_ingreso_fecha],['Inducción SST',!!e.induccion_sst_fecha],['Curso alturas',!!e.curso_alturas],['EPP entregado',!!e.epp_entregado],['Contrato',false]];
+  var items=[['EPS',!!e.eps],['AFP (pensión)',!!e.afp],['ARL activa',!!e.arl_activa],['Examen de ingreso',!!e.examen_ingreso_fecha],['Inducción SST',!!e.induccion_sst_fecha],['Curso alturas',!!e.curso_alturas],['EPP entregado',!!e.epp_entregado],['Contrato',false,'contrato']];
   var faltan=items.filter(function(x){return !x[1];}).length;
-  var rows=items.map(function(x){return '<div class="chk"><span class="ic" style="background:'+(x[1]?'var(--grn)':'#cbd0dc')+'">'+(x[1]?'✓':'·')+'</span>'+esc(x[0])+'</div>';});
+  var rows=items.map(function(x){return '<div class="chk"><span class="ic"'+(x[2]?' id="chk-'+x[2]+'"':'')+' style="background:'+(x[1]?'var(--grn)':'#cbd0dc')+'">'+(x[1]?'✓':'·')+'</span>'+esc(x[0])+'</div>';});
   return '<div class="sec">✅ Checklist de ingreso'+(faltan?' <span class="pill" style="background:#fde8e8;color:#b91c1c">'+faltan+' pendiente(s)</span>':' <span class="pill" style="background:#e7f6ee;color:#15803d">completo</span>')+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+rows.join('')+'</div>'
     +'<div class="tag" style="margin-top:4px">El contrato se marca al subirlo en Documentos.</div>';
@@ -232,17 +230,40 @@ function registrarRetiro(){if(!cur||!cur.id)return;
    .then(function(r){if(!r.ok)throw 0;toast('Retiro registrado');cerrar();cargar();}).catch(function(){toast('Error');});
 }
 
-// ── DOCUMENTOS ──
+// ── DOCUMENTOS (casillas por tipo) ──
+var DOC_SLOTS=[
+  ['cedula','🪪 Cédula'],
+  ['contrato','📄 Contrato'],
+  ['examen_ingreso','🩺 Examen de ingreso'],
+  ['examen_periodico','🩺 Examen periódico'],
+  ['curso_alturas','🪜 Curso de alturas'],
+  ['afiliaciones','🏥 Afiliaciones (EPS/AFP/ARL)'],
+  ['hoja_vida','📋 Hoja de vida']
+];
 function cargarDocs(e){var box=document.getElementById('docbox');if(!box)return;
   fetch(SB+'/rest/v1/empleado_documentos?empleado_id=eq.'+e.id+'&order=created_at.desc',{headers:H}).then(function(r){return r.json();}).then(function(rows){
     rows=Array.isArray(rows)?rows:[];
-    box.innerHTML=rows.length?rows.map(function(d){return '<div class="hrow"><span>'+esc(d.tipo||'')+' · '+esc(d.nombre||'')+'</span><span style="display:flex;gap:10px;align-items:center"><a class="dl" href="'+esc(d.url)+'" target="_blank">Ver</a><button class="btn s" style="color:var(--red)" onclick="borrarDoc('+d.id+')">✕</button></span></div>';}).join(''):'<span style="color:var(--mut)">Sin documentos. Sube contrato, cédula, exámenes...</span>';
+    var byTipo={};rows.forEach(function(d){(byTipo[d.tipo]=byTipo[d.tipo]||[]).push(d);});
+    // casillas fijas
+    var html=DOC_SLOTS.map(function(s){var k=s[0],lbl=s[1];var docs=byTipo[k]||[];
+      var right=docs.length?docs.map(function(d){return '<a class="dl" href="'+esc(d.url)+'" target="_blank">Ver</a> <button class="btn s" style="color:var(--red);padding:3px 8px" onclick="borrarDoc('+d.id+')">✕</button>';}).join(' '):'';
+      var estado=docs.length?'<span class="pill" style="background:#e7f6ee;color:#15803d">cargado</span>':'<span class="pill" style="background:#f1f2f6;color:#888">pendiente</span>';
+      return '<div class="hrow"><span>'+lbl+' '+estado+'</span><span style="display:flex;gap:8px;align-items:center">'+right
+        +'<label class="btn s" style="cursor:pointer;padding:5px 10px">'+(docs.length?'Reemplazar':'Subir')+'<input type="file" accept="image/*,application/pdf" style="display:none" onchange="subirDoc(this,\''+k+'\')"></label></span></div>';
+    }).join('');
+    // otros documentos (tipos fuera de las casillas)
+    var claves=DOC_SLOTS.map(function(s){return s[0];});
+    var otros=rows.filter(function(d){return claves.indexOf(d.tipo)<0;});
+    html+=otros.map(function(d){return '<div class="hrow"><span>📎 '+esc(d.nombre||d.tipo||'otro')+'</span><span style="display:flex;gap:8px;align-items:center"><a class="dl" href="'+esc(d.url)+'" target="_blank">Ver</a><button class="btn s" style="color:var(--red);padding:3px 8px" onclick="borrarDoc('+d.id+')">✕</button></span></div>';}).join('');
+    html+='<div class="hrow" style="border:0"><span class="tag">Otro documento</span><label class="btn s" style="cursor:pointer;padding:5px 10px">Subir<input type="file" accept="image/*,application/pdf" style="display:none" onchange="subirDoc(this,\'otro\')"></label></div>';
+    box.innerHTML=html;
+    // marca el contrato en el checklist si existe
+    var ci=document.getElementById('chk-contrato');if(ci){var ok=(byTipo['contrato']||[]).length>0;ci.style.background=ok?'var(--grn)':'#cbd0dc';ci.textContent=ok?'✓':'·';}
   }).catch(function(){box.innerHTML='<span style="color:var(--red)">Error al cargar documentos.</span>';});
 }
-function subirDoc(inp){var file=inp.files[0];if(!file||!cur||!cur.id)return;var e=cur;
-  var tipo=document.getElementById('doc-tipo').value;
+function subirDoc(inp,tipo){var file=inp.files[0];if(!file||!cur||!cur.id)return;var e=cur;
   var safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  var path=(e.cedula||e.id)+'/'+Date.now()+'_'+safe;
+  var path=(e.cedula||e.id)+'/'+tipo+'_'+Date.now()+'_'+safe;
   toast('Subiendo…');
   fetch(SB+'/storage/v1/object/documentos/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':file.type||'application/octet-stream'},body:file})
    .then(function(r){if(!r.ok)throw 0;var url=SB+'/storage/v1/object/public/documentos/'+path;
