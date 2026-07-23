@@ -83,14 +83,15 @@ function renderObras(){document.getElementById("obras").innerHTML=['todas','weli
 function pickObra(o){obra=o;renderObras();render();}
 function setDirty(d){dirty=d;var b=document.getElementById("btn-save");b.className="save"+(d?" dirty":"");b.textContent=d?"● Guardar asistencia":"Guardar asistencia";}
 
+var hx={};
 function cargar(){
   cy=cycle();document.getElementById("sub").textContent="Cargando "+cy.label+"…";
   Promise.all([
     fetch(SB+"/rest/v1/empleados?select=id,cedula,nombre_completo,cargo,obra_id,foto_url,activo&order=obra_id,nombre_completo",{headers:H}).then(function(r){return r.json();}),
-    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado",{headers:H}).then(function(r){return r.json();})
+    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H}).then(function(r){return r.json();})
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
-    marks={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){if(a.estado==='falta'||a.estado==='incapacidad'){if(!marks[a.cedula])marks[a.cedula]={};marks[a.cedula][a.fecha]=a.estado;}});
+    marks={};hx={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){if(a.estado==='falta'||a.estado==='incapacidad'){if(!marks[a.cedula])marks[a.cedula]={};marks[a.cedula][a.fecha]=a.estado;}if(a.estado==='extras'){hx[a.cedula]={hed:+a.he_diurna||0,hen:+a.he_nocturna||0};}});
     document.getElementById("sub").textContent=emps.length+" empleados · ciclo "+cy.label;
     setDirty(false);render();
   }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
@@ -108,7 +109,7 @@ function diasDe(ced){
 function render(){
   var list=emps.filter(function(e){return obra==='todas'||e.obra_id===obra;});
   if(!list.length){document.getElementById("grid").innerHTML='<div class="muted">Sin empleados.</div>';return;}
-  var head='<tr><th class="emp">Empleado</th>'+cy.days.map(function(d){var dn=new Date(d+'T12:00:00').getDay();return '<th>'+(+d.split('-')[2])+'<div style="font-weight:400;color:#c3c6cc;font-size:9px">'+['D','L','M','X','J','V','S'][dn]+'</div></th>';}).join('')+'<th class="diash">Días</th></tr>';
+  var head='<tr><th class="emp">Empleado</th>'+cy.days.map(function(d){var dn=new Date(d+'T12:00:00').getDay();return '<th>'+(+d.split('-')[2])+'<div style="font-weight:400;color:#c3c6cc;font-size:9px">'+['D','L','M','X','J','V','S'][dn]+'</div></th>';}).join('')+'<th class="diash">Días</th><th>HE día</th><th>HE noche</th></tr>';
   var body=list.map(function(e){
     var hoy=new Date().toISOString().slice(0,10);
     var cells=cy.days.map(function(d){var st=(marks[e.cedula]||{})[d];
@@ -116,7 +117,7 @@ function render(){
       if(d>hoy)return '<td class="cell"><div class="mk dom" title="aún no llega">·</div></td>';
       var cls=st==='falta'?'f':st==='incapacidad'?'i':'';var lab=st==='falta'?'F':st==='incapacidad'?'I':'✓';
       return '<td class="cell"><div class="mk '+cls+'" onclick="toggle(\''+e.cedula+'\',\''+d+'\')">'+lab+'</div></td>';}).join('');
-    return '<tr><td class="emp"><div class="emprow">'+avatar(e)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td>'+cells+'<td class="dias" id="d-'+e.cedula+'">'+diasDe(e.cedula)+'</td></tr>';
+    return '<tr><td class="emp"><div class="emprow">'+avatar(e)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td>'+cells+'<td class="dias" id="d-'+e.cedula+'">'+diasDe(e.cedula)+'</td>'+'<td><input type="number" step="0.5" min="0" style="width:50px" value="'+((hx[e.cedula]||{}).hed||0)+'" oninput="setHx(\''+e.cedula+'\',\'hed\',this.value)"></td>'+'<td><input type="number" step="0.5" min="0" style="width:50px" value="'+((hx[e.cedula]||{}).hen||0)+'" oninput="setHx(\''+e.cedula+'\',\'hen\',this.value)"></td></tr>';
   }).join('');
   document.getElementById("grid").innerHTML='<table><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
 }
@@ -124,9 +125,10 @@ function toggle(ced,d){if(!marks[ced])marks[ced]={};var cur=marks[ced][d];
   var nx=cur===undefined?'falta':cur==='falta'?'incapacidad':undefined;
   if(nx===undefined)delete marks[ced][d];else marks[ced][d]=nx;
   setDirty(true);render();}
+function setHx(ced,k,v){if(!hx[ced])hx[ced]={hed:0,hen:0};hx[ced][k]=+v||0;setDirty(true);}
 
 function guardar(){
-  var rows=[];Object.keys(marks).forEach(function(ced){Object.keys(marks[ced]).forEach(function(d){var e=emps.find(function(x){return x.cedula===ced;});rows.push({cedula:ced,nombre:e?e.nombre_completo:'',fecha:d,quincena:cy.label,obra_id:e?e.obra_id:'',estado:marks[ced][d],dias:1});});});
+  var rows=[];Object.keys(marks).forEach(function(ced){Object.keys(marks[ced]).forEach(function(d){var e=emps.find(function(x){return x.cedula===ced;});rows.push({cedula:ced,nombre:e?e.nombre_completo:'',fecha:d,quincena:cy.label,obra_id:e?e.obra_id:'',estado:marks[ced][d],dias:1});});});Object.keys(hx).forEach(function(ced){var h=hx[ced]||{};if((+h.hed||0)>0||(+h.hen||0)>0){var e=emps.find(function(x){return x.cedula===ced;});rows.push({cedula:ced,nombre:e?e.nombre_completo:'',fecha:cy.days[0],quincena:cy.label,obra_id:e?e.obra_id:'',estado:'extras',dias:0,he_diurna:h.hed||0,he_nocturna:h.hen||0});}});
   var b=document.getElementById("btn-save");b.textContent="Guardando…";
   fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label),{method:"DELETE",headers:H})
     .then(function(r){if(!r.ok)throw 0;return rows.length?fetch(SB+"/rest/v1/asistencia",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(rows)}):{ok:true};})

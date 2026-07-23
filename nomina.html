@@ -131,24 +131,25 @@ function pago(e,dias,hed,hen,prest){
 
 function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(function(x){x.className='tab'+(x.dataset.t===t?' on':'');});render();}
 
+var hxA={};
 function cargar(){
   document.getElementById("sub").textContent="Cargando…";
   var cy=cycle();
   Promise.all([
     fetch(SB+"/rest/v1/empleados?select=*&order=obra_id,nombre_completo",{headers:H}).then(function(r){return r.json();}),
     fetch(SB+"/rest/v1/nomina?quincena=eq."+encodeURIComponent(cy.label)+"&order=valor.desc",{headers:H}).then(function(r){return r.json();}),
-    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado",{headers:H}).then(function(r){return r.json();})
+    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H}).then(function(r){return r.json();})
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
     nom=Array.isArray(res[1])?res[1]:[];
-    att={};(Array.isArray(res[2])?res[2]:[]).forEach(function(a){if(!att[a.cedula])att[a.cedula]={};att[a.cedula][a.fecha]=a.estado;});
+    att={};hxA={};(Array.isArray(res[2])?res[2]:[]).forEach(function(a){if(a.estado==='extras'){hxA[a.cedula]={hed:+a.he_diurna||0,hen:+a.he_nocturna||0};return;}if(!att[a.cedula])att[a.cedula]={};att[a.cedula][a.fecha]=a.estado;});
     snap=nom.length>0; // quincena ya guardada = foto congelada
     rost = snap ? nom.map(function(n){
         var e=emps.find(function(x){return x.cedula===n.cedula;})||{cedula:n.cedula,nombre_completo:n.nombre,cargo:(n.cargo||n.area||''),obra_id:(n.proyecto||'').toLowerCase(),salario_basico:n.salario_mensual,bonificacion:0,metodo_pago:n.metodo,cuenta_pago:n.cuenta,__inactivo:true};
         if(!emps.some(function(x){return x.cedula===n.cedula;})) e.__inactivo=true; else e.__inactivo=false;
         return {e:e,n:n};
       }) : emps.map(function(e){return {e:e,n:null};});
-    liq={};rost.forEach(function(it){liq[it.e.cedula]={hed:it.n?(+it.n.he_diurna||0):0,hen:it.n?(+it.n.he_nocturna||0):0,prest:it.n?(+it.n.prestamo||0):0};});
+    liq={};rost.forEach(function(it){var ha=hxA[it.e.cedula]||{};liq[it.e.cedula]={hed:it.n?(+it.n.he_diurna||0):(ha.hed||0),hen:it.n?(+it.n.he_nocturna||0):(ha.hen||0),prest:it.n?(+it.n.prestamo||0):0};});
     document.getElementById("sub").textContent=rost.length+(snap?" empleados (guardada)":" empleados")+" · ciclo "+cy.label+" · se paga el 15 y el 30";
     render();
   }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
