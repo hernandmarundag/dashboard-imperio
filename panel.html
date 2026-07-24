@@ -2604,7 +2604,8 @@ canvas{border-radius:4px}
 </aside>
 <main class="main-content">
   <div class="view on" id="v-inicio">
-    <div class="sec">📊 Resumen ejecutivo · 16 Jun 2026</div>
+    <div id="mente-brief"></div>
+    <div class="sec">📊 Detalle financiero</div>
     <div id="fin-hero" style="margin-bottom:16px"></div>
     <div class="kpi-grid" id="kpi-row"></div>
 
@@ -4108,6 +4109,55 @@ function rDesface(){
     +'</div>'
     +'</div>';
 }
+function rBrief(){
+  var el=document.getElementById('mente-brief'); if(!el) return;
+  var now=new Date();
+  var dd=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][now.getDay()];
+  var mm=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][now.getMonth()];
+  var saludo=now.getHours()<12?'Buenos días':(now.getHours()<19?'Buenas tardes':'Buenas noches');
+  var fecha=dd+', '+now.getDate()+' de '+mm+' '+now.getFullYear();
+  var caja=cajaT(); var sfc=0;(S.tcs||[]).forEach(function(t){if(t.saldoFavor)sfc+=t.saldoFavor;}); var cajaTot=caja+sfc;
+  var deudP=(S.deudores||[]).filter(function(d){return d.estado!=='cobrado';});
+  var cobrar=deudP.reduce(function(a,d){return a+(d.monto||0);},0);
+  el.innerHTML=
+   '<div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:20px;padding:22px 24px;color:#fff;margin-bottom:14px">'
+   +'<div style="font-size:14px;font-weight:700">'+saludo+', Hernán</div>'
+   +'<div style="font-size:12px;opacity:.8;margin-top:1px">🧠 Mente Maestra · '+fecha+' · en vivo</div>'
+   +'<div style="display:flex;gap:28px;flex-wrap:wrap;margin-top:16px">'
+     +'<div><div style="font-size:10.5px;opacity:.75;font-weight:700;letter-spacing:.5px">CAJA HOY</div><div style="font-size:29px;font-weight:900;line-height:1.1">'+fmt(cajaTot)+'</div></div>'
+     +'<div><div style="font-size:10.5px;opacity:.75;font-weight:700;letter-spacing:.5px">POR COBRAR</div><div style="font-size:29px;font-weight:900;line-height:1.1">'+fmtM(cobrar)+'</div></div>'
+     +'<div><div style="font-size:10.5px;opacity:.75;font-weight:700;letter-spacing:.5px">POR PAGAR</div><div id="brief-pagar-num" style="font-size:29px;font-weight:900;line-height:1.1">…</div></div>'
+   +'</div></div>'
+   +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:18px">'
+     +'<div id="brief-pagar" class="chart-card" style="padding:15px"><div style="font-weight:800;font-size:14px;margin-bottom:8px">💳 Pagar pronto</div><div style="color:var(--tx2);font-size:13px">Cargando…</div></div>'
+     +'<div class="chart-card" style="padding:15px"><div style="font-weight:800;font-size:14px;margin-bottom:8px">💰 Por cobrar</div>'
+        +(deudP.length? deudP.slice(0,4).map(function(d){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--br)"><span>'+d.nombre+'</span><span style="font-weight:700">'+fmtM(d.monto)+'</span></div>';}).join('') : '<div style="color:var(--tx2);font-size:13px">Nada por cobrar ✓</div>')
+     +'</div>'
+     +'<div id="brief-alertas" class="chart-card" style="padding:15px"><div style="font-weight:800;font-size:14px;margin-bottom:8px">🎯 Decisiones del día</div><div style="color:var(--tx2);font-size:13px">Analizando…</div></div>'
+   +'</div>';
+  sbFetch('requisiciones','pagado=eq.false&limit=300').then(function(rows){
+    rows=Array.isArray(rows)?rows:[];
+    var aprob=rows.filter(function(r){return (r.estado==='aprobado'||r.estado==='aprobada');});
+    var total=aprob.reduce(function(a,r){return a+(+r.valor||0);},0);
+    var hoyd=new Date();
+    function sem(r){if(!r.fecha_vence)return 2;var d=Math.ceil((new Date(r.fecha_vence+'T12:00:00')-hoyd)/86400000);return d<0?0:(d<=3?1:2);}
+    aprob.sort(function(a,b){return sem(a)-sem(b);});
+    var venc=aprob.filter(function(r){return sem(r)===0;});
+    var ic=['🔴','🟠','🟢'];
+    var pn=document.getElementById('brief-pagar-num'); if(pn) pn.textContent=fmtM(total);
+    var pb=document.getElementById('brief-pagar');
+    if(pb) pb.innerHTML='<div style="font-weight:800;font-size:14px;margin-bottom:8px">💳 Pagar pronto '+(venc.length?'<span style="color:#e0463d">· '+venc.length+' vencidas</span>':'')+'</div>'
+       +(aprob.length? aprob.slice(0,4).map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--br)"><span>'+ic[sem(r)]+' '+String(r.descripcion||r.proveedor||'—').slice(0,26)+'</span><span style="font-weight:700">'+fmtM(r.valor)+'</span></div>';}).join('') : '<div style="color:var(--tx2);font-size:13px">Nada aprobado por pagar ✓</div>');
+    var ab=document.getElementById('brief-alertas');
+    if(ab){var dec=[];
+      if(venc.length) dec.push('🔴 Pagar YA '+venc.length+' requisición(es) vencida(s) · '+fmtM(venc.reduce(function(a,r){return a+(+r.valor||0);},0)));
+      if(cobrar>0) dec.push('💰 Cobrar '+fmtM(cobrar)+' a '+deudP.length+' deudor(es)');
+      var disp=cajaTot-total; if(disp<0) dec.push('⚠️ Faltan '+fmtM(-disp)+' para cubrir lo por pagar — conseguir caja');
+      if(!dec.length) dec.push('✅ Todo bajo control hoy');
+      ab.innerHTML='<div style="font-weight:800;font-size:14px;margin-bottom:8px">🎯 Decisiones del día</div>'+dec.map(function(x){return '<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--br)">'+x+'</div>';}).join('');
+    }
+  }).catch(function(){var pb=document.getElementById('brief-pagar');if(pb)pb.innerHTML='<div style="color:var(--tx2);font-size:13px">No pude cargar por pagar.</div>';});
+}
 function rKpi() {
   var caja = cajaT();
   var sfc = 0; S.tcs.forEach(function(t){ if(t.saldoFavor) sfc += t.saldoFavor; });
@@ -4128,9 +4178,9 @@ function rKpi() {
     var libreCol = libre>=30000000?'#4ade80':libre>=0?'#fbbf24':'#f87171';
     heroEl.innerHTML =
       '<div class="fin-hero">'
-     +'<div class="fin-hero-lbl">💰 Caja total · Jun 2026</div>'
+     +'<div class="fin-hero-lbl">💰 Caja total</div>'
      +'<div class="fin-hero-num">'+fmt(cajaTot)+'</div>'
-     +'<div class="fin-hero-sub">Bancolombia · Snapshot 16 Jun</div>'
+     +'<div class="fin-hero-sub">Saldo actual</div>'
      +'<div class="fin-hero-row">'
      +'<div class="fin-hero-item"><div class="fhi-l">Por cobrar</div><div class="fhi-v">'+fmtM(billetera)+'</div></div>'
      +'<div class="fin-hero-item"><div class="fhi-l">Compromisos 30D</div><div class="fhi-v">'+fmtM(pp)+'</div></div>'
@@ -4143,6 +4193,7 @@ function rKpi() {
     kpiEl('⚠️ Compromisos próx. 30D','or', fmtM(pp)) +
     kpiEl('✅ Disponible 30D', libre>=0?'gr':'rd', fmtM(libre)) +
     kpiEl('⚖️ Posición neta', posNeta>=0?'gr':'rd', fmtM(posNeta));
+  try{rBrief();}catch(e){console.warn('brief',e);}
 }
 function kpiEl(l,c,v) { return '<div class="kpi"><div class="kpi-l">'+l+'</div><div class="kpi-v c-'+c+'">'+v+'</div></div>'; }
 
