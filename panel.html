@@ -76,10 +76,10 @@ body{
 ══════════════════════════════════════════ */
 .sidebar{
   width:var(--sw);
-  background:linear-gradient(180deg,#13113A 0%,#1A1740 60%,#0F0E2E 100%);
+  background:linear-gradient(180deg,#171630 0%,#131228 58%,#0f0e22 100%);
   position:fixed;top:0;left:0;height:100vh;
   z-index:400;overflow:hidden;
-  border-right:1px solid rgba(255,255,255,.06);
+  border-right:1px solid rgba(255,255,255,.05);
   transition:transform .28s cubic-bezier(.4,0,.2,1);
 }
 /* Overlay for mobile sidebar */
@@ -117,10 +117,19 @@ nav:not(.sb-nav){display:none!important}
 }
 .sb-nav::-webkit-scrollbar{display:none}
 .sb-sect{
-  font-size:9px;color:rgba(255,255,255,.28);
-  text-transform:uppercase;letter-spacing:1.4px;
-  padding:14px 8px 4px;font-weight:700;
+  font-size:9px;color:rgba(255,255,255,.34);
+  text-transform:uppercase;letter-spacing:1.8px;
+  padding:17px 10px 6px;font-weight:700;
 }
+.sb-nav > .sb-sect:first-child{padding-top:8px}
+/* Mente Maestra — entrada al cerebro, acento cálido */
+.ni-mm{text-decoration:none;color:#e7d6b0!important;font-weight:600;
+  background:linear-gradient(135deg,rgba(169,123,59,.16),rgba(169,123,59,.05));
+  border:1px solid rgba(169,123,59,.22)}
+.ni-mm:hover{background:linear-gradient(135deg,rgba(169,123,59,.26),rgba(169,123,59,.08))!important;color:#f3e6c6!important}
+/* Nueva obra — acción secundaria discreta */
+.ni-add{color:rgba(165,180,252,.85)!important;font-size:12px}
+.ni-add:hover{color:#c7d2fe!important}
 .ni{
   display:flex!important;visibility:visible!important;
   align-items:center!important;gap:9px;
@@ -2548,7 +2557,7 @@ canvas{border-radius:4px}
   </button>
   <button class="bn-item" data-v="flujo" onclick="gotoViewMobile('flujo',this)">
     <span class="bn-ico">💸</span>
-    <span class="bn-lbl">Flujo</span>
+    <span class="bn-lbl">Pagos</span>
   </button>
   <button class="bn-item" data-v="cuentas" onclick="gotoViewMobile('cuentas',this)">
     <span class="bn-ico">💳</span>
@@ -2562,10 +2571,14 @@ canvas{border-radius:4px}
 <!-- ── More panel ── -->
 <div class="bn-more-panel" id="bn-more-panel">
   <div class="bn-more-grid">
-    <div class="bn-more-item" onclick="gotoViewMobile('analisis');toggleMorePanel()"><span class="bn-more-ico">📈</span><span class="bn-more-lbl">Análisis</span></div>
+    <a class="bn-more-item" href="mente-maestra.html"><span class="bn-more-ico">🧠</span><span class="bn-more-lbl">Mente Maestra</span></a>
+    <div class="bn-more-item" onclick="gotoViewMobile('flujocaja');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Flujo de caja</span></div>
     <div class="bn-more-item" onclick="gotoViewMobile('tesoreria');toggleMorePanel()"><span class="bn-more-ico">💎</span><span class="bn-more-lbl">Tesorería</span></div>
-    <div class="bn-more-item" onclick="gotoViewMobile('cobrar');toggleMorePanel()"><span class="bn-more-ico">💰</span><span class="bn-more-lbl">Cobrar</span></div>
-    <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">💵</span><span class="bn-more-lbl">Abonos</span></div>
+    <div class="bn-more-item" onclick="gotoViewMobile('analisis');toggleMorePanel()"><span class="bn-more-ico">📈</span><span class="bn-more-lbl">Análisis</span></div>
+    <div class="bn-more-item" onclick="gotoViewMobile('cobrar');toggleMorePanel()"><span class="bn-more-ico">💰</span><span class="bn-more-lbl">Cobros</span></div>
+    <div class="bn-more-item" onclick="gotoViewMobile('abonos');toggleMorePanel()"><span class="bn-more-ico">🪙</span><span class="bn-more-lbl">Abonos</span></div>
+    <div class="bn-more-item" onclick="gotoViewMobile('facturacion');toggleMorePanel()"><span class="bn-more-ico">🧾</span><span class="bn-more-lbl">Facturación</span></div>
+    <div class="bn-more-item" onclick="gotoViewMobile('presupuesto');toggleMorePanel()"><span class="bn-more-ico">📊</span><span class="bn-more-lbl">Presupuesto</span></div>
     <div class="bn-more-item" onclick="openGasto();toggleMorePanel()"><span class="bn-more-ico">➕</span><span class="bn-more-lbl">Gasto</span></div>
   </div>
 </div>
@@ -2576,24 +2589,32 @@ canvas{border-radius:4px}
     <div class="sb-brand">Imperio ERP<span>Constructora</span></div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-sect">Principal</div>
+    <div class="sb-sect">Dirección</div>
+    <a class="ni ni-mm" href="mente-maestra.html"><span class="ni-ico">🧠</span><span>Mente Maestra</span></a>
     <div class="ni on" data-v="inicio" onclick="gotoView('inicio')"><span class="ni-ico">🏠</span><span>Inicio</span></div>
-    <div class="sb-sect">Obras</div>
+
+    <div class="sb-sect">Proyectos</div>
     <div id="obras-nav"></div>
-    <div class="ni" style="cursor:pointer;color:var(--bl);font-size:12px;padding:6px 12px" onclick="openNuevaObra()">+ Nueva obra</div>
-    <div class="sb-sect">🏗 Obra</div>
+    <div class="ni ni-add" onclick="openNuevaObra()"><span class="ni-ico">＋</span><span>Nueva obra</span></div>
+
+    <div class="sb-sect">Obra</div>
     <div class="ni" data-v="presupuesto" onclick="gotoView('presupuesto')"><span class="ni-ico">📊</span><span>Presupuesto</span></div>
     <div class="ni" data-v="requisiciones" onclick="gotoView('requisiciones')"><span class="ni-ico">📋</span><span>Requisiciones</span></div>
     <div class="ni" data-v="bitacora" onclick="gotoView('bitacora')"><span class="ni-ico">📓</span><span>Bitácora</span></div>
     <div class="ni" data-v="asistencia" onclick="gotoView('asistencia')"><span class="ni-ico">✅</span><span>Asistencia</span></div>
-    <div class="sb-sect">💰 Finanzas</div>
-    <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas</span></div>
+
+    <div class="sb-sect">Finanzas</div>
+    <div class="ni" data-v="cuentas" onclick="gotoView('cuentas')"><span class="ni-ico">💳</span><span>Cuentas y tarjetas</span></div>
     <div class="ni" data-v="tesoreria" onclick="gotoView('tesoreria')"><span class="ni-ico">💎</span><span>Tesorería</span></div>
-    <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobrar</span></div>
     <div class="ni" data-v="flujocaja" onclick="gotoView('flujocaja')"><span class="ni-ico">💵</span><span>Flujo de caja</span></div>
-    <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">🪙</span><span>Abonos / ingresos</span></div>
+    <div class="ni" data-v="analisis" onclick="gotoView('analisis')"><span class="ni-ico">📈</span><span>Análisis</span></div>
+
+    <div class="sb-sect">Ingresos</div>
+    <div class="ni" data-v="cobrar" onclick="gotoView('cobrar')"><span class="ni-ico">💰</span><span>Cobros y cartera</span></div>
+    <div class="ni" data-v="abonos" onclick="gotoView('abonos')"><span class="ni-ico">🪙</span><span>Abonos recibidos</span></div>
     <div class="ni" data-v="facturacion" onclick="gotoView('facturacion')"><span class="ni-ico">🧾</span><span>Facturación</span></div>
-    <div class="sb-sect">👥 Talento</div>
+
+    <div class="sb-sect">Talento</div>
     <div class="ni" data-v="nomina" onclick="gotoView('nomina')"><span class="ni-ico">👥</span><span>Nómina</span></div>
   </nav>
   <div class="sb-foot">
