@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imperio · Mente Maestra</title>
+<style>
+:root{--bg:#fbfaf7;--panel:#fff;--txt:#262b35;--mut:#6f7684;--dim:#a6abb4;--line:rgba(40,40,60,.12);
+ --viva:#c98a3a;--desp:#d9a24e;--dorm:#c4bdb2;--alerta:#e0552e;--gold:#b9812f;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);height:100vh;overflow:hidden}
+.top{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:#fff}
+.top .n{font-weight:800;letter-spacing:3px;color:var(--gold)}
+.top .s{font-size:11px;color:var(--dim)}
+.sp{flex:1}
+.sync{font-size:10.5px;color:var(--dim)}
+.sync b{color:#3f9d63}
+.nav{display:flex;gap:8px;overflow-x:auto;padding:9px 16px;border-bottom:1px solid var(--line);background:#faf9f6}
+.nav a{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--line);border-radius:20px;background:#fff;font-size:12.5px;color:#3a3f4a;text-decoration:none;font-weight:600;white-space:nowrap}
+.nav a:hover{border-color:var(--desp)}
+.nav a.on{background:#fdf3e2;border-color:var(--gold);color:var(--gold)}
+.stage{display:grid;grid-template-columns:230px 1fr 250px;height:calc(100vh - 104px)}
+@media(max-width:1000px){.stage{grid-template-columns:1fr}.rail{display:none}}
+.rail{padding:15px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.rail.l{border-right:1px solid var(--line)}.rail.r{border-left:1px solid var(--line);background:#faf9f6}
+.rhead{font-size:10px;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;font-weight:700}
+.card{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;box-shadow:0 1px 3px rgba(30,30,50,.04)}
+.kpi{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(40,40,60,.08);font-size:12.5px}
+.kpi:last-child{border:0}.kpi b{font-weight:800}
+.obar{height:7px;background:#eee6da;border-radius:5px;overflow:hidden;margin-top:3px}
+.obar>i{display:block;height:100%}
+.rem{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;margin-bottom:8px;font-size:12px;cursor:pointer}
+.rem:hover{border-color:var(--alerta)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.brain{position:relative;overflow:hidden;background:radial-gradient(600px 500px at 50% 45%,#fff,var(--bg) 72%)}
+#syn{position:absolute;inset:0;width:100%;height:100%}
+.core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:3}
+.corep{width:120px;height:120px;border-radius:50%;border:1px solid rgba(200,140,60,.25);background:radial-gradient(circle at 50% 45%,rgba(224,140,60,.22),transparent 70%);display:flex;align-items:center;justify-content:center;animation:br 4s ease-in-out infinite}
+@keyframes br{50%{transform:scale(1.08);filter:brightness(1.15)}}
+.core .l{font-size:11px;letter-spacing:3px;color:var(--gold);font-weight:800}
+.node{position:absolute;transform:translate(-50%,-50%);z-index:4;cursor:pointer;text-align:center}
+.node:hover{transform:translate(-50%,-50%) scale(1.14)}
+.bulb{width:18px;height:18px;border-radius:50%;margin:0 auto 4px}
+.node .t{font-size:10.5px;font-weight:600;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,.95)}
+@keyframes al{0%,100%{box-shadow:0 0 0 0 rgba(224,85,46,.5)}50%{box-shadow:0 0 0 8px rgba(224,85,46,0)}}
+.hud{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:11px;color:var(--mut);display:flex;gap:8px;align-items:center}
+.ld{width:8px;height:8px;border-radius:50%;background:var(--alerta);box-shadow:0 0 8px var(--alerta);animation:bl 1.4s infinite}
+@keyframes bl{50%{opacity:.3}}
+.detail{position:absolute;bottom:12px;left:12px;right:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;z-index:6;box-shadow:0 6px 20px rgba(30,30,50,.12);display:none}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px;z-index:7}
+</style></head>
+<body>
+<div class="top">
+  <span class="n">IMPERIO</span><span class="s">· MENTE MAESTRA · centro de mando</span>
+  <span class="sp"></span>
+  <span class="sync" id="sync">Conectando a la base real…</span>
+</div>
+
+<div class="nav">
+  <a class="on" href="mente-maestra.html">🧠 Mente Maestra</a>
+  <a href="panel.html">🏛️ Panel completo</a>
+  <a href="flujo.html">💵 Flujo de caja</a>
+  <a href="requisiciones.html">📄 Requisiciones</a>
+  <a href="presupuesto.html">🧾 Presupuesto</a>
+  <a href="nomina.html">👷 Nómina</a>
+  <a href="asistencia.html">📋 Asistencia</a>
+  <a href="bitacora.html">📔 Bitácora</a>
+  <a href="compras.html">🛒 Compras</a>
+  <a href="sst.html">🦺 SST / RRHH</a>
+  <a href="robledo.html">🏗️ Robledo</a>
+</div>
+
+<div class="stage">
+  <div class="rail l">
+    <div class="rhead">📊 Pulso del imperio</div>
+    <div class="card" id="pulso"><div style="font-size:12px;color:var(--dim)">Cargando…</div></div>
+    <div class="rhead" style="margin-top:6px">🏗️ Obras</div>
+    <div id="obras"></div>
+  </div>
+
+  <div class="brain" id="brain">
+    <div class="loading" id="loading">🧠 Cargando el imperio…</div>
+    <svg id="syn" viewBox="0 0 100 100" preserveAspectRatio="none"><g id="lines"></g><g id="flow"></g></svg>
+    <div class="hud"><span class="ld"></span><span id="hudtx">Escuchando el imperio…</span></div>
+    <div class="core"><div class="corep"><div class="l">MENTE<br>MAESTRA</div></div></div>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <div class="rail r">
+    <div class="rhead">🔴 Áreas en alerta</div>
+    <div id="alertas"></div>
+    <div class="rhead" style="margin-top:6px">⚠️ Riesgos abiertos</div>
+    <div id="riesgos"></div>
+  </div>
+</div>
+
+<script>
+var SB='https://dghmgaaprlzpfnpsqzav.supabase.co';
+var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+var H={'apikey':KEY,'Authorization':'Bearer '+KEY};
+function q(t,query){return fetch(SB+'/rest/v1/'+t+'?'+(query||''),{headers:H}).then(function(r){return r.ok?r.json():[];}).catch(function(){return[];});}
+function money(n){return '$'+Math.round(n).toLocaleString('es-CO');}
+function short(n){return n>=1e6?'$'+(n/1e6).toFixed(1).replace('.0','')+'M':money(n);}
+function abierto(e){return e!=='cerrado'&&e!=='mitigado'&&e!=='resuelta';}
+var COL={viva:'#c98a3a',alerta:'#e0552e',dormida:'#c4bdb2'};
+
+Promise.all([
+  q('areas','select=id,codigo,nombre,activa,orden&order=orden'),
+  q('area_conexiones','select=origen_id,destino_id,activa'),
+  q('matriz_riesgos','select=codigo,area_id,estado,categoria,riesgo'),
+  q('cuentas','select=nombre,banco,saldo_actual,es_personal,activa,deleted_at'),
+  q('obras','select=nombre,pct_avance,estado,activa,orden&order=orden'),
+  q('pasivos','select=nombre,monto,pagado,deleted_at')
+]).then(function(res){
+  var areas=res[0]||[],conex=res[1]||[],riesgos=res[2]||[],cuentas=res[3]||[],obras=res[4]||[],pasivos=res[5]||[];
+  var rAb=riesgos.filter(function(r){return abierto(r.estado);});
+  var caja=cuentas.filter(function(c){return c.activa&&!c.es_personal&&!c.deleted_at;}).reduce(function(s,c){return s+(Number(c.saldo_actual)||0);},0);
+  var pas=pasivos.filter(function(p){return !p.pagado&&!p.deleted_at;}).reduce(function(s,p){return s+(Number(p.monto)||0);},0);
+  var obrasA=obras.filter(function(o){return o.activa||o.estado==='activa';});
+
+  areas.forEach(function(a){var rc=rAb.filter(function(r){return r.area_id===a.id;}).length;a._r=rc;a._s=rc>0?'alerta':(a.activa?'viva':'dormida');});
+
+  // pulso
+  document.getElementById('pulso').innerHTML=
+    row('Caja disponible',short(caja))+
+    row('Pasivos','<b style="color:#c0431f">'+short(pas)+'</b>')+
+    row('Obras activas','<b>'+obrasA.length+'</b>')+
+    row('Riesgos abiertos','<b style="color:#c0431f">'+rAb.length+'</b>');
+  document.getElementById('obras').innerHTML=obrasA.map(function(o){var p=Number(o.pct_avance)||0;var c=p>66?'#3fd18a':p>33?'#d9a24e':'#e0552e';
+    return '<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>'+(o.nombre||'Obra')+'</span><b>'+p+'%</b></div><div class="obar"><i style="width:'+Math.min(100,p)+'%;background:'+c+'"></i></div></div>';}).join('')||'<div style="font-size:12px;color:var(--dim)">Sin obras</div>';
+
+  // áreas en alerta + riesgos
+  var alertAreas=areas.filter(function(a){return a._s==='alerta';});
+  document.getElementById('alertas').innerHTML=alertAreas.map(function(a){return '<div class="rem" onclick="sel(\''+a.id+'\')"><span class="dot" style="background:#e0552e"></span><span><b>'+a.nombre+'</b> · '+a._r+' riesgo(s)</span></div>';}).join('')||'<div style="font-size:12px;color:var(--dim)">Ninguna 🎉</div>';
+  document.getElementById('riesgos').innerHTML=rAb.slice(0,8).map(function(r){return '<div style="font-size:11.5px;padding:7px 9px;border-left:3px solid #e0552e;background:rgba(224,85,46,.05);border-radius:8px;margin-bottom:6px;line-height:1.35"><b>'+(r.codigo||'')+'</b> <span style="color:var(--mut)">· '+(r.categoria||'')+'</span><br><span style="color:var(--mut)">'+String(r.riesgo||'').slice(0,70)+'</span></div>';}).join('');
+
+  // cerebro
+  var brain=document.getElementById('brain');
+  var pos={},n=areas.length||1;
+  areas.forEach(function(a,i){var ang=(i/n)*Math.PI*2-Math.PI/2;pos[a.id]={x:50+37*Math.cos(ang),y:50+40*Math.sin(ang)};});
+  var lines='';
+  areas.forEach(function(a){var p=pos[a.id];lines+='<line x1="50" y1="50" x2="'+p.x+'" y2="'+p.y+'" stroke="'+(a._s==='alerta'?'rgba(224,85,46,.25)':'rgba(200,150,90,.13)')+'" stroke-width="'+(a._s==='alerta'?.3:.14)+'"/>';});
+  var edges=conex.filter(function(c){return pos[c.origen_id]&&pos[c.destino_id]&&c.activa!==false;});
+  edges.forEach(function(e){var a=pos[e.origen_id],b=pos[e.destino_id];lines+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="rgba(185,129,47,.2)" stroke-width=".16"/>';});
+  document.getElementById('lines').innerHTML=lines;
+  areas.forEach(function(a){var p=pos[a.id];var el=document.createElement('div');el.className='node';el.style.left=p.x+'%';el.style.top=p.y+'%';
+    var bg=a._s==='dormida'?'#fff':'radial-gradient(circle at 38% 32%,#fff,'+COL[a._s]+')';
+    var st=a._s==='dormida'?'border:1.5px solid '+COL.dormida+';width:14px;height:14px':'box-shadow:0 2px 8px '+COL[a._s]+'55'+(a._s==='alerta'?';animation:al 1.7s ease-in-out infinite':'');
+    var tc=a._s==='alerta'?'#c0431f':a._s==='dormida'?'#a6abb4':'#8a6220';
+    el.innerHTML='<div class="bulb" style="background:'+bg+';'+st+'"></div><div class="t" style="color:'+tc+'">'+a.nombre+'</div>';
+    el.onclick=function(){sel(a.id);};brain.appendChild(el);
+    a._pos=p;});
+
+  window._areas=areas;
+
+  // flujo de particulas
+  var flow=document.getElementById('flow'),sig=[];
+  edges.concat(areas.map(function(a){return {origen_id:'core',destino_id:a.id,al:a._s==='alerta'};})).forEach(function(e,i){
+    var a=e.origen_id==='core'?{x:50,y:50}:pos[e.origen_id],b=pos[e.destino_id];if(!a||!b)return;
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r',e.al?.7:.55);c.setAttribute('fill',e.al?'#ff6a3a':'#e0a24a');flow.appendChild(c);
+    sig.push({c:c,a:a,b:b,t:(i*0.11)%1,sp:.003+(i%5)*.0012});
+  });
+  function tick(){for(var i=0;i<sig.length;i++){var s=sig[i];s.t+=s.sp;if(s.t>1)s.t-=1;s.c.setAttribute('cx',s.a.x+(s.b.x-s.a.x)*s.t);s.c.setAttribute('cy',s.a.y+(s.b.y-s.a.y)*s.t);}requestAnimationFrame(tick);}
+  requestAnimationFrame(tick);
+
+  // hud ticker
+  var V=['Revisando','Detectando en','Aprendiendo de','Analizando','Vigilando'];
+  setInterval(function(){if(!areas.length)return;var a=areas[Math.floor(Math.random()*areas.length)];document.getElementById('hudtx').textContent=V[Math.floor(Math.random()*V.length)]+' '+a.nombre+'…';},2100);
+
+  document.getElementById('loading').style.display='none';
+  document.getElementById('sync').innerHTML='<b>●</b> Conectado a la base real · '+new Date().toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'});
+}).catch(function(){document.getElementById('loading').textContent='No pude conectar a la base. Reintenta.';});
+
+function row(l,v){return '<div class="kpi"><span style="color:var(--mut)">'+l+'</span><span>'+v+'</span></div>';}
+function sel(id){var a=(window._areas||[]).filter(function(x){return x.id===id;})[0];if(!a)return;var d=document.getElementById('detail');
+  d.style.display='block';d.innerHTML='<div style="display:flex;justify-content:space-between"><b>'+a.nombre+' <span style="font-size:10px;color:'+COL[a._s]+'">● '+a._s+'</span></b><span style="cursor:pointer;color:var(--dim)" onclick="document.getElementById(\'detail\').style.display=\'none\'">✕</span></div><div style="font-size:12px;color:var(--mut);margin-top:5px">'+(a._r>0?a._r+' riesgo(s) abierto(s) en esta área.':'Sin riesgos abiertos.')+' Código: '+(a.codigo||'—')+'.</div>';}
+</script>
+</body></html>
