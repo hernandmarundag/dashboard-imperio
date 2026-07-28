@@ -269,11 +269,7 @@ function compHTML(lote,legales,obra,indir,dot,total,gastado){
  return '<div class="grp"><span>Composición de la inversión</span><span class="gt">'+fmt(total)+'</span></div>'+
   '<div class="grpnote">El <b>lote ya está comprado</b>, por eso no cuenta como "falta por invertir". Lo demás es lo que se construye.</div>'+
   '<div class="dl" style="padding:16px">'+body+'<div class="lgrow" style="border-top:1px solid #eceef4;margin-top:8px;padding-top:10px;font-weight:800"><span class="dot" style="background:#111827"></span><span class="ln">TOTAL DEL PROYECTO</span><span class="lp"></span><span class="lv">'+fmt(total)+'</span></div></div>'+
-  '<div class="sum" style="margin-top:10px">'+
-   '<div class="sc ej"><div class="l">✅ Ya invertido</div><div class="v">'+fmt(invertido)+'</div><div class="n">lote '+fmt(lote)+' + obra '+fmt(gastado)+'</div></div>'+
-   '<div class="sc fa"><div class="l">⏳ Falta por invertir</div><div class="v">'+fmt(faltaInv)+'</div><div class="n">construcción + dotación + legales restantes</div></div>'+
-   '<div class="sc to"><div class="l">📊 Valor total</div><div class="v">'+fmt(total)+'</div><div class="n">todo incluido</div></div>'+
-   (CUR==='weliving'?'<div class="sc" style="border-left:3px solid #c9a24a"><div class="l">🎯 Meta CEO</div><div class="v" style="color:#b8860b">$5.000M</div><div class="n">'+(total>5000000000?'por recortar '+fmt(total-5000000000):'✓ dentro de la meta')+'</div></div>':'')+'</div>';
+  '';
 }
 function hasGroups(){return CAPS.some(function(c){return /·/.test(c.nombre||'');});}
 function obraGrupos(){var P={},G={},ord={},AV={},AD={};CAPS.forEach(function(c){var gr=((c.nombre||'').split(' · ')[0])||'(otros)';P[gr]=(P[gr]||0)+(+c.ppto||0);if(ord[gr]==null)ord[gr]=+c.orden||999;if(c.avance!=null){AV[gr]=(AV[gr]||0)+(+c.ppto||0)*(+c.avance);AD[gr]=(AD[gr]||0)+(+c.ppto||0);}});GAS.forEach(function(g){var c=capByNum[g.cap_num];var gr=c?(((c.nombre||'').split(' · ')[0])||'(otros)'):'Sin asignar';G[gr]=(G[gr]||0)+(+g.monto||0);});var keys={};Object.keys(P).forEach(function(k){keys[k]=1;});Object.keys(G).forEach(function(k){keys[k]=1;});return Object.keys(keys).map(function(k){return {grupo:k,presup:P[k]||0,gastado:G[k]||0,saldo:(P[k]||0)-(G[k]||0),avance:(AD[k]?Math.round(AV[k]/AD[k]):null),ord:(ord[k]!=null?ord[k]:998)};}).sort(function(a,b){return b.presup-a.presup;});}
@@ -315,29 +311,30 @@ function renderGeneral(){var gastado=gastadoTotal(),hasPres=ACP.length>0,total=h
  var legend=cats.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var catsC=gastoConcepto();var legendC=catsC.map(function(c,i){var p=gastado?(c.v/gastado*100):0;return '<div class="lgrow"><span class="dot" style="background:'+col(i)+'"></span><span class="ln">'+c.nm+'</span><span class="lp">'+p.toFixed(0)+'%</span><span class="lv">'+fmt(c.v)+'</span></div>';}).join('');
  var html='<div class="itemh"><span class="nm0">📊</span><h3>Dashboard general</h3></div>'+
-  '<div class="sum">'+
+  ((caja!=null||prc!=null)?'<div class="sum">'+
    '<div class="sc"><div class="l">💵 Caja disponible</div><div class="v">'+pd(caja)+'</div><div class="n">'+(caja!=null?'efectivo hoy':'sin cargar')+'</div></div>'+
    '<div class="sc"><div class="l">📥 Falta por recibir</div><div class="v" style="color:#2451b8">'+pd(prc)+'</div><div class="n">'+(prc!=null?'al 80%':'sin cargar')+'</div></div>'+
-   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+pd((caja!=null&&prc!=null)?(caja+prc):null)+'</div><div class="n">caja + por recibir</div></div></div>'+
+   '<div class="sc to"><div class="l">💰 Disponible total</div><div class="v">'+pd((caja!=null&&prc!=null)?(caja+prc):null)+'</div><div class="n">caja + por recibir</div></div></div>':'')+
   '<div class="grp"><span>Resumen ejecutivo · en vivo</span><span class="gt">'+pd(total)+'</span></div>'+
   '<div class="sum">'+
    '<div class="sc ej"><div class="l">✅ Ejecutado real</div><div class="v">'+fmt(gastado)+'</div><div class="n">de tu hoja ('+GAS.length+' gastos)</div></div>'+
    '<div class="sc fa"><div class="l">⏳ Falta por invertir</div><div class="v">'+pd(falta)+'</div><div class="n">'+(hasPres?'obra + dotación + legales (sin el lote)':'presupuesto por definir')+'</div></div>'+
-   '<div class="sc to"><div class="l">📊 Valor total del proyecto</div><div class="v">'+pd(total)+'</div><div class="n">incluye el lote ya comprado</div></div></div>'+
+   '<div class="sc to"><div class="l">📊 Valor total del proyecto</div><div class="v">'+pd(total)+'</div><div class="n">incluye el lote ya comprado</div></div>'+(CUR==='weliving'&&total?'<div class="sc" style="border-left:3px solid #c9a24a"><div class="l">🎯 Meta CEO</div><div class="v" style="color:#b8860b">$5.000M</div><div class="n">'+(total>5e9?'por recortar '+fmt(total-5e9):'✓ en meta')+'</div></div>':'')+'</div>'+
   (av!=null?'<div class="barrow" style="margin:4px 0 16px"><div class="bn">Avance de inversión (obra)</div><div class="bt"><div class="bf" style="width:'+av+'%"></div></div><div class="bv">'+av+'% invertido</div></div>':'')+
+  '<div class="grp"><span>Entrar al detalle</span></div>'+
+  '<div class="cards">'+
+   '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
+   '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">'+(hasPres?('Falta '+fmt(falta)+' · Total '+fmt(total)):'Por definir')+'</div></div>'+
+   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CUR==='weliving'?'Plan semanal · cascada a ene 2027':(CRONO.length?(CRONO.length+' actividades'):'Por definir'))+'</div></div>'+
+   '<div class="navc" data-sec="flujo"><div class="navic">💸</div><div class="navt">Flujo y pagos</div><div class="navs">'+(PAGOS.filter(function(p){return p.estado!=='pagado';}).length||0)+' pagos programados</div></div>'+
+   '<a class="navc" href="bitacora.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="navic">📒</div><div class="navt">Bitácora del día</div><div class="navs">Reportar apertura · durante · cierre ↗</div></a>'+
+  '</div>'+
   (hasPres&&lote>0?compHTML(lote,legales,obraCivil,indir,dot,total,gastado):'')+
   '<div class="grp"><span>Distribución del gasto · por etapa</span><span class="gt">'+fmt(gastado)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(cats,gastado)+'</div><div class="legend">'+legend+'</div></div></div>'+
   (catsC.length?('<div class="grp"><span>Gasto por concepto · máquina, MO, material, indirecto</span><span class="gt">'+fmt(gastado)+'</span></div>'+
   '<div class="dl" style="padding:18px 16px"><div class="donutwrap"><div>'+donut(catsC,gastado)+'</div><div class="legend">'+legendC+'</div></div></div>'):'')+
-  '<div class="grp"><span>Entrar al detalle</span></div>'+
-  '<div class="cards">'+
-   '<div class="navc" data-sec="hoja"><div class="navic">📒</div><div class="navt">Hoja de gasto</div><div class="navs">'+GAS.length+' gastos · '+fmt(gastado)+'</div></div>'+
-   '<div class="navc" data-sec="presupuesto"><div class="navic">💰</div><div class="navt">Presupuesto general</div><div class="navs">'+(hasPres?('Falta '+fmt(falta)+' · Total '+fmt(total)):'Por definir')+'</div></div>'+
-   '<div class="navc" data-sec="planner"><div class="navic">📅</div><div class="navt">Last Planner</div><div class="navs">'+(CUR==='weliving'?'Plan por cuadrillas · 12 días':(CRONO.length?(CRONO.length+' actividades'):'Por definir'))+'</div></div>'+
-   '<div class="navc" data-sec="flujo"><div class="navic">💸</div><div class="navt">Flujo y pagos</div><div class="navs">'+(PAGOS.filter(function(p){return p.estado!=='pagado';}).length||0)+' pagos programados</div></div>'+
-   '<a class="navc" href="bitacora.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="navic">📒</div><div class="navt">Bitácora del día</div><div class="navs">Reportar apertura · durante · cierre ↗</div></a>'+
-  '</div>';
+  '';
  document.getElementById('d-body').innerHTML=html;
  document.querySelectorAll('#d-body .navc').forEach(function(n){if(n.dataset.sec)n.onclick=function(){goSection(n.dataset.sec);};});
  window.scrollTo(0,0);}
