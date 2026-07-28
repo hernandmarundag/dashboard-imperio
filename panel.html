@@ -3065,7 +3065,7 @@ async function _autoDedup(obra) {
 // OBRAS_REG — Registro maestro de obras (dinámico)
 // ═══════════════════════════════════════════════
 var OBRAS_REG = {
-  weliving: {id:'weliving', nm:'Weliving',  ico:'🏗', col:'#007AFF', badge:'En estructura', bcls:'ba', prog:42, etapa:'Losa P3 → P4', nota:'Nómina Jun 1-15 pagada. Total socios: $755.69M.'},
+  weliving: {id:'weliving', nm:'Weliving',  ico:'🏗', col:'#007AFF', badge:'En estructura', bcls:'ba', prog:45, etapa:'Losa P5 → P7 · inicia gris', nota:'Avance manual al 3-ago-2026. Fin estructura: 18 ago. Cascada gris/blanca hasta ene 2027.'},
   robledo:  {id:'robledo',  nm:'Robledo',   ico:'🏠', col:'#FF9500', badge:'En ejecución',  bcls:'bn', prog:55, etapa:'Mampostería',   nota:'Losa entrepiso ejecutada.'},
   novaeva:  {id:'novaeva',  nm:'Novaeva',   ico:'🏢', col:'#34C759', badge:'Acabados',      bcls:'bv', prog:95, etapa:'Acabados finales', nota:'Etapa final.'},
 };
@@ -3130,7 +3130,8 @@ var BASE = JSON.parse(JSON.stringify(BASE_DEFAULT));
 (function(){
   try {
     var ov = JSON.parse(localStorage.getItem('imp_base_gastos')||'{}');
-    Object.keys(ov).forEach(function(o){ if(BASE[o]) BASE[o].gastos = ov[o]; });
+    // weliving se excluye: su verdad es 100% Supabase (sumLive); el override por dispositivo causaba cifras distintas en cada equipo
+    Object.keys(ov).forEach(function(o){ if(BASE[o] && o!=='weliving') BASE[o].gastos = ov[o]; });
   } catch(e){}
 })();
 function setBaseGastos(obra, valor) {
@@ -3169,7 +3170,7 @@ const CAT_DEFS = [
 
 
 const PC = {
-  weliving:{nm:'Weliving',col:'#007AFF',badge:'En estructura',bcls:'ba',prog:42,etapa:'Col P3-P4 → Losa P4',nota:'Col P3-P4 vaciado 25/06. Enc losa P4: 26/06-30/06. Vaciado losa P4: 03/07. Fin estructura: 18 Ago 2026. Hierro: pagar 12d antes de cada amarre.'},
+  weliving:{nm:'Weliving',col:'#007AFF',badge:'En estructura',bcls:'ba',prog:45,etapa:'Losa P5 → P7 · inicia gris',nota:'Avance manual al 3-ago-2026. Fin estructura: 18 ago. Mampostería arranca 4-ago. Cascada gris/blanca hasta ene 2027. Hierro: pagar 12d antes de cada amarre.'},
   robledo: {nm:'Robledo', col:'#FF9500',badge:'En ejecución', bcls:'bn',prog:55,etapa:'Mampostería',nota:'Losa entrepiso ejecutada. Pendiente: mampostería, cubierta, acabados.'},
   novaeva: {nm:'Novaeva', col:'#34C759',badge:'Por cerrar',   bcls:'bg',prog:95,etapa:'Acabados finales',nota:'Abono $20M recibido Jun 10. Saldo pendiente cliente: $5M. Cierre inminente.'},
 };
@@ -3895,7 +3896,7 @@ function rObrasView() {
   var cards = proyectos.map(function(p) {
     var saldo = saldoVirtualObra(p.id);
     var abonos = sumAbonos(p.id);
-    var gastos = sumLiveDesdeJun9(p.id) + sumHist(p.id);
+    var gastos = gastosT(p.id); // fuente canónica: misma que el resto del panel (suma viva completa de Supabase)
     var compromisos = pagosXObra(p.id);
     var saldoCol = saldo > 10000000 ? '#22c55e' : saldo > 0 ? '#f59e0b' : '#ef4444';
     var saldoIco = saldo > 10000000 ? '✅' : saldo > 0 ? '⚠️' : '🔴';
@@ -4189,7 +4190,9 @@ function rKpi() {
   var pp = pagosUrgentes(30); // solo vencidos + próximos 30 días
   var libre = cajaTot - pp;
   var billetera = S.deudores.reduce(function(a,d){return a+d.monto;},0);
-  var debemos = 50000000 + 124090000;
+  // Pasivos vivos (no pagados); fallback al valor histórico si aún no cargan
+  var _pasV = (S.pasivos||[]).filter(function(p){return p.estado!=='pagado';}).reduce(function(a,p){return a+(p.monto||0);},0);
+  var debemos = _pasV > 0 ? _pasV : (50000000 + 124090000);
   var posNeta = cajaTot + billetera - debemos;
   // Próximo pago urgente
   var nextPago = (S.pagos||[]).filter(function(p){
@@ -4205,6 +4208,7 @@ function rKpi() {
      +'<div class="fin-hero-lbl">💰 Caja total</div>'
      +'<div class="fin-hero-num">'+fmt(cajaTot)+'</div>'
      +'<div class="fin-hero-sub">Saldo actual</div>'
+     +'<div class="fin-hero-sub" style="opacity:.7;font-size:11px;margin-top:2px">Datos al '+new Date().toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})+' · '+(LIVE_LOADED.weliving?'🟢 en vivo':'🟡 cache — recarga para actualizar')+'</div>'
      +'<div class="fin-hero-row">'
      +'<div class="fin-hero-item"><div class="fhi-l">Por cobrar</div><div class="fhi-v">'+fmtM(billetera)+'</div></div>'
      +'<div class="fin-hero-item"><div class="fhi-l">Compromisos 30D</div><div class="fhi-v">'+fmtM(pp)+'</div></div>'

@@ -134,11 +134,11 @@ function grupoDe(nm){return (nm||'').split(' · ')[0];}
 function capTit(nm){var p=(nm||'').split(' · ');return p.length>1?p.slice(1).join(' · '):nm;}
 function capByNum(n){return CAPS.find(function(c){return String(c.num)===String(n);});}
 function itemsOf(c){return ITEMS.filter(function(i){return String(i.cap_num)===String(c.num);});}
-function capTotal(c){var its=itemsOf(c);return its.length?its.reduce(function(a,i){return a+(+i.total||0);},0):(+c.ppto||0);}
+function capTotal(c){var its=itemsOf(c);var s=its.reduce(function(a,i){return a+(+i.total||0);},0);return (its.length&&s>0)?s:(+c.ppto||0);} // fallback a ppto si los ítems suman 0 (ej. cap 34 placeholder)
 function capEjec(c){return itemsOf(c).reduce(function(a,i){return a+(i.estado==='hecho'?(+i.total||0):0);},0);}
 function capPagMarc(c){return itemsOf(c).reduce(function(a,i){return a+(+i.pagado||0);},0);}
 function pagoBtn(i){var p=(+i.pagado||0)>0;return '<button class="pb'+(p?' on':'')+'" onclick="togPago('+i.id+',this)">'+(p?'✅ Pagado':'⬜ Pagar')+'</button>';}
-function capGasto(c){return (c.pagado_manual!=null)?(+c.pagado_manual):(PC[String(c.num)]||0);}
+function capGasto(c){return (PC[String(c.num)]!=null&&PC[String(c.num)]>0)?PC[String(c.num)]:(+c.pagado_manual||0);} // prioriza gasto real reconciliado (reclasificación 3-ago-2026); pagado_manual solo como respaldo
 function totalObra(){return CAPS.reduce(function(a,c){return a+capTotal(c);},0);}
 function gastadoReal(){return GAS.reduce(function(a,x){return a+(+x.monto||0);},0);}
 function grpTot(gr){return CAPS.filter(function(c){return grupoDe(c.nombre)===gr;}).reduce(function(x,c){return x+capTotal(c);},0);}

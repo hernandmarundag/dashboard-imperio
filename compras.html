@@ -226,16 +226,28 @@ function pagar(id){cur=req(id);var r=cur;
 function setComp(inp){var f=inp.files[0];if(!f)return;window._comp=f;document.getElementById('comp-st').textContent='archivo ✓';}
 function confirmarPago(id){var r=req(id);
   var prov=document.getElementById('pg-prov').value||null,valor=+document.getElementById('pg-valor').value||null,flete=+document.getElementById('pg-flete').value||0,medio=document.getElementById('pg-medio').value||null;
+  if(!valor){toast('Pon el valor pagado');return;}
+  if(!r.obra){toast('La solicitud no tiene obra. Corrígela antes de pagar.');return;}
   function finish(compUrl){
-    var body={pagado:true,fecha_pago:hoy(),estado:'pagada',proveedor:prov,valor:valor,flete:flete,medio_pago:medio};
-    if(compUrl)body.comprobante_url=compUrl;
-    fetch(SB+'/rest/v1/requisiciones?id=eq.'+id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(body)})
-     .then(function(rr){if(!rr.ok)throw 0;
-       // alimentar base de precios
-       var cant=+r.cantidad||1;var punit=valor?Math.round(valor/cant):null;
-       fetch(SB+'/rest/v1/precios_historicos',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify({material:r.descripcion,proveedor_texto:prov,precio:punit,cantidad:cant,obra:r.obra,fecha:hoy()})}).catch(function(){});
-       toast('Pago registrado ✓');cerrar();cargar();
-     }).catch(function(){toast('Error al pagar');});
+    var fp=hoy();
+    // 1º crear el gasto (recibo) — mismo shape que "Pasar a gasto" de requisiciones
+    var cantg=parseFloat(String(r.cantidad||'').replace(/[^0-9.]/g,''))||null;
+    var gasto={obra:r.obra,fecha:fp,nombre:prov||r.proveedor,descripcion:r.descripcion,material:r.material||r.descripcion,area:r.area||null,cantidad:cantg,iva:r.iva||0,monto:(valor||0)+(flete||0),mp:medio||r.medio_pago,cuenta:r.cuenta||null,etapa:r.etapa||null,cap_num:r.cap_num||null,factura_url:r.factura_url||compUrl||null,fuente:'requisicion'};
+    var pG=r.gasto_id?Promise.resolve(r.gasto_id)
+      :fetch(SB+'/rest/v1/gastos',{method:'POST',headers:Object.assign({Prefer:'return=representation'},H),body:JSON.stringify(gasto)})
+       .then(function(res){if(!res.ok)throw 0;return res.json();}).then(function(rows){var gid=rows&&rows[0]&&rows[0].id;if(!gid)throw 0;r.gasto_id=gid;return gid;});
+    // 2º marcar pagada + gasto_id + contabilizado (solo si el gasto quedó creado)
+    pG.then(function(gid){
+      var body={pagado:true,fecha_pago:fp,estado:'pagada',proveedor:prov,valor:valor,flete:flete,medio_pago:medio,gasto_id:gid,contabilizado:true};
+      if(compUrl)body.comprobante_url=compUrl;
+      return fetch(SB+'/rest/v1/requisiciones?id=eq.'+id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(body)})
+       .then(function(rr){if(!rr.ok)throw 0;
+         // alimentar base de precios
+         var cant=+r.cantidad||1;var punit=valor?Math.round(valor/cant):null;
+         fetch(SB+'/rest/v1/precios_historicos',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify({material:r.descripcion,proveedor_texto:prov,precio:punit,cantidad:cant,obra:r.obra,fecha:fp})}).catch(function(){});
+         toast('Pago registrado ✓ y gasto creado');cerrar();cargar();
+       });
+    }).catch(function(){toast('Error: NO quedó pagada (falló el registro del gasto). Reintenta.');});
   }
   if(window._comp){var f=window._comp;var path='pago'+id+'/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
     fetch(SB+'/storage/v1/object/compras/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':f.type||'application/octet-stream'},body:f})

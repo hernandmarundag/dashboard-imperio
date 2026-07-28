@@ -50,13 +50,17 @@ function fmt(n){return '$'+Math.round(n||0).toLocaleString('es-CO');}
 function etapaDe(nom){var s=(nom||'').toUpperCase();if(s.indexOf('NEGRA')>=0)return 'Negra';if(s.indexOf('GRIS')>=0)return 'Gris';if(s.indexOf('BLANCA')>=0)return 'Blanca';if(s.indexOf('INDIRECTO')>=0)return 'Indirectos';if(s.indexOf('PROYECTO')>=0)return 'Proyecto';return 'Otros';}
 Promise.all([
   get('presupuesto_caps','obra_id=eq.weliving&select=num,nombre,ppto,avance'),
-  get('gastos','obra=eq.weliving&select=monto,cap_num')
+  get('gastos','obra=eq.weliving&select=monto,cap_num'),
+  get('dotacion_airbnb','select=precio,cant_apto,es_comun&limit=1000')
 ]).then(function(res){
   var caps=res[0]||[],gastos=res[1]||[];
+  // Dotación viva desde Supabase (misma lógica que presupuesto.html: común=cant, no común=cant×20 aptos); fallback a la constante
+  var _dot=(res[2]||[]).reduce(function(s,d){var q=d.es_comun?(+d.cant_apto||0):(+d.cant_apto||0)*20;return s+(+d.precio||0)*q;},0);
+  if(_dot>0) DOTACION=_dot;
   var pptoTot=caps.reduce(function(s,c){return s+(+c.ppto||0);},0);
   var fisico=caps.reduce(function(s,c){return s+(+c.ppto||0)*(+c.avance||0)/100;},0);
-  var noCosto={'X-PREST':1,'X-AJUSTE':1};
-  var gastado=gastos.reduce(function(s,g){return noCosto[g.cap_num]?s:s+(+g.monto||0);},0);
+  // Gastado real = TODO el gasto (incluye X-PREST/X-AJUSTE) para conciliar con contabilidad ($912.8M al 3-ago-2026)
+  var gastado=gastos.reduce(function(s,g){return s+(+g.monto||0);},0);
   var construccion=caps.filter(function(c){return etapaDe(c.nombre)!=='Proyecto';}).reduce(function(s,c){return s+(+c.ppto||0);},0);
   var fisicoConstr=caps.filter(function(c){return etapaDe(c.nombre)!=='Proyecto';}).reduce(function(s,c){return s+(+c.ppto||0)*(+c.avance||0)/100;},0);
   var pctConstr=construccion?Math.round(fisicoConstr/construccion*100):0;

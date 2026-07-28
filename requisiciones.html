@@ -124,7 +124,7 @@ function boot(){
 function estOf(r){return r.pagado?'pag':(r.estado||'pendiente').slice(0,5).replace('pendi','pend').replace('aprob','aprob').replace('recha','rech');}
 function render(){
  var pend=RQ.filter(function(r){return !r.pagado&&(r.estado||'pendiente')==='pendiente';});
- var aprob=RQ.filter(function(r){return !r.pagado&&r.estado==='aprobado';});
+ var aprob=RQ.filter(function(r){return !r.pagado&&esAprob(r);});
  var pag=RQ.filter(function(r){return r.pagado;});
  var xcont=RQ.filter(function(r){return r.pagado&&!r.contabilizado;});
  var venc=RQ.filter(function(r){return !r.pagado&&r.fecha_vence&&r.fecha_vence<hoy();});
@@ -139,7 +139,7 @@ function render(){
  if(FILT==='pend')lista=pend;else if(FILT==='aprob')lista=aprob;else if(FILT==='pag')lista=pag;else if(FILT==='cont')lista=xcont;
  var filt='<div class="filt">'+fb('todas','Todas')+fb('pend','⏳ Por aprobar')+fb('aprob','✅ Por pagar')+fb('pag','💵 Pagadas')+fb('cont','📗 Por contabilizar')+'</div>';
  var rows=lista.map(rowHTML).join('')||'<tr><td colspan="9" class="note" style="text-align:center;padding:18px">Sin requisiciones en este filtro.</td></tr>';
- var tabla='<div class="sec"><h2>📋 Requisiciones</h2><div class="note">Ing crea con factura 📄 → Hernán aprueba (entra a Por pagar del flujo) → Tesorera paga y sube comprobante 🧾 → Contabilidad da "Pasar a gasto" (crea el gasto con todo, sin retdigitar). 📄=factura · 🧾=comprobante · 📎=subir.</div>'+filt+
+ var tabla='<div class="sec"><h2>📋 Requisiciones</h2><div class="note">Ing crea con factura 📄 → Hernán aprueba (entra a Por pagar del flujo) → Tesorera paga y sube comprobante 🧾 (el gasto se crea automático al pagar). "Pasar a gasto" queda solo como respaldo para pagadas viejas sin recibo. 📄=factura · 🧾=comprobante · 📎=subir.</div>'+filt+
   '<div class="rq-list">'+(rows||'<div class="rq-none">Sin requisiciones</div>')+'</div></div>';
  var addf='<div class="sec"><button class="add" onclick="tog(\'nf\')">＋ Nueva requisición</button>'+
   '<div class="form" id="nf">'+
@@ -166,15 +166,17 @@ function render(){
 }
 function kc(c,l,v,n){return '<div class="kc '+c+'"><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(n?'<div class="note" style="margin:3px 0 0">'+n+'</div>':'')+'</div>';}
 function fb(k,t){return '<button class="'+(FILT===k?'on':'')+'" onclick="setF(\''+k+'\')">'+t+'</button>';}
-function bdg(r){if(r.pagado&&r.contabilizado)return '<span class="bdg pag">📗 Contabilizada</span>';if(r.pagado)return '<span class="bdg aprob">💵 Pagada · x contab.</span>';var e=r.estado||'pendiente';if(e==='aprobado')return '<span class="bdg aprob">✅ Aprobada · x pagar</span>';if(e==='rechazado')return '<span class="bdg rech">✗ Rechazada</span>';return '<span class="bdg pend">⏳ Por aprobar</span>';}
+function bdg(r){if(r.pagado&&r.contabilizado)return '<span class="bdg pag">📗 Contabilizada</span>';if(r.pagado)return '<span class="bdg aprob">💵 Pagada · x contab.</span>';var e=r.estado||'pendiente';if(e.startsWith('aprobad'))return '<span class="bdg aprob">✅ Aprobada · x pagar</span>';if(e==='rechazado')return '<span class="bdg rech">✗ Rechazada</span>';return '<span class="bdg pend">⏳ Por aprobar</span>';}
 function fileIco(r,campo,emo,lbl){var u=r[campo];if(u)return '<a class="pl" href="'+esc(u)+'" target="_blank" rel="noopener" title="Ver '+lbl+'" style="font-size:15px">'+emo+'</a>';return '<span class="doc" title="Subir '+lbl+'" style="opacity:.5" onclick="subirDoc('+r.id+',\''+campo+'\')">📎</span>';}
 function docs(r){function d(c,l){return '<span class="doc" title="'+l+'" onclick="togDoc('+r.id+',\''+c+'\','+(r[c]?'false':'true')+')">'+(r[c]?'✅':'⬜')+'</span>';}return fileIco(r,'factura_url','📄','factura')+' '+fileIco(r,'comprobante_url','🧾','comprobante de pago')+' <span style="color:#cbd2e0">|</span> '+d('rut','RUT')+' '+d('cuenta_cobro','Cta cobro')+' '+d('certificado','Certif.');}
-function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'&&can('aprob')){h+=(r.tipo!=='pago'?'<button class="b" style="background:#eef0fe;color:#4f46e5" onclick="revisar('+r.id+')">🔎 Revisar</button>':'')+'<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&r.estado==='aprobado'&&can('pay')){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado&&can('cont')){h+='<button class="b ap" onclick="pasarAGasto('+r.id+')">📗 Pasar a gasto</button>';}return h||'—';}
+function acc(r){var h='';if(!r.pagado&&(r.estado||'pendiente')==='pendiente'&&can('aprob')){h+=(r.tipo!=='pago'?'<button class="b" style="background:#eef0fe;color:#4f46e5" onclick="revisar('+r.id+')">🔎 Revisar</button>':'')+'<button class="b ap" onclick="aprobar('+r.id+')">✓ Aprobar</button><button class="b no" onclick="rechazar('+r.id+')">✗</button>';}else if(!r.pagado&&esAprob(r)&&can('pay')){h+='<button class="b pay" onclick="pagar('+r.id+')">💵 Pagada</button>';}else if(r.pagado&&!r.contabilizado&&can('cont')){h+='<button class="b ap" onclick="pasarAGasto('+r.id+')">📗 Pasar a gasto</button>';}return h||'—';}
+function esAprob(r){return String(r.estado||'').startsWith('aprobad');}
+function gastoPayload(r,fecha){var cant=parseFloat(String(r.cantidad||'').replace(/[^0-9.]/g,''))||null;
+ return {obra:r.obra,fecha:fecha||r.fecha_pago||r.fecha,nombre:r.proveedor,descripcion:r.descripcion,material:r.material||r.descripcion,area:r.area,cantidad:cant,iva:r.iva||0,monto:r.valor,mp:r.medio_pago,cuenta:r.cuenta,etapa:r.etapa,cap_num:r.cap_num,factura_url:r.factura_url,fuente:'requisicion'};}
 function pasarAGasto(id){var r=RQ.find(function(x){return x.id===id;});if(!r)return;
  if(!r.obra){toast('Esta requisici\u00f3n no tiene obra. Corr\u00edgela antes de pasarla a gasto.',true);return;}if(r.gasto_id){if(!confirm('Ya tiene gasto registrado. ¿Solo marcar contabilizada?')){return;}patch('requisiciones?id=eq.'+id,{contabilizado:true}).then(function(){r.contabilizado=true;toast('Contabilizada ✓');render();});return;}
  if(!confirm('¿Registrar en la HOJA DE GASTO y marcar contabilizada?\n'+r.proveedor+' · '+fmt(r.valor)+'\n(Se crea el gasto con la factura y los datos de la requisición.)'))return;
- var cant=parseFloat(String(r.cantidad||'').replace(/[^0-9.]/g,''))||null;
- post('gastos',{obra:r.obra,fecha:r.fecha_pago||r.fecha,nombre:r.proveedor,descripcion:r.descripcion,material:r.material||r.descripcion,area:r.area,cantidad:cant,iva:r.iva||0,monto:r.valor,mp:r.medio_pago,cuenta:r.cuenta,etapa:r.etapa,cap_num:r.cap_num,factura_url:r.factura_url,fuente:'requisicion'})
+ post('gastos',gastoPayload(r))
  .then(function(res){return res.json();}).then(function(rows){var gid=(rows&&rows[0])?rows[0].id:null;r.contabilizado=true;r.gasto_id=gid;return patch('requisiciones?id=eq.'+id,{contabilizado:true,gasto_id:gid});})
  .then(function(){toast('Registrada en la hoja de gasto y contabilizada ✓');render();}).catch(function(){toast('Error al pasar a gasto',true);});}
 function copiar(el){var t=el.dataset.c;
@@ -186,7 +188,7 @@ function stBdg(r){
   if(r.pagado&&r.contabilizado)return '<span class="st d">\ud83d\udcd7 Contabilizada</span>';
   if(r.pagado)return '<span class="st c">\ud83d\udcb5 Pagada \u00b7 falta contabilizar</span>';
   if(r.estado==='rechazado')return '<span class="st e">\u2717 Rechazada</span>';
-  if(r.estado==='aprobado')return '<span class="st b">\u2705 Aprobada \u00b7 por pagar</span>';
+  if(esAprob(r))return '<span class="st b">\u2705 Aprobada \u00b7 por pagar</span>';
   return '<span class="st a">\u23f3 Por aprobar</span>';}
 function ctaBlk(r){
   if(r.pagado)return '';
@@ -198,7 +200,7 @@ function ctaBlk(r){
   if(r.link_pago){h+='<a class="lnk" href="'+esc(r.link_pago)+'" target="_blank" rel="noopener" title="Abrir link">\ud83d\udd17</a>';}
   return h+'</div>';}
 function cardCls(r){if(r.pagado&&r.contabilizado)return 'cont';if(r.pagado)return 'pagada';
-  if(r.estado==='aprobado')return 'aprob';if(r.estado==='rechazado')return 'cont';return 'pend';}
+  if(esAprob(r))return 'aprob';if(r.estado==='rechazado')return 'cont';return 'pend';}
 function tipoBdg(r){var t=(r.tipo==='pago')?['🧾 Pago','#7c3aed']:['🧱 Compra','#2563eb'];return '<span style="display:inline-block;font-size:10.5px;font-weight:700;color:'+t[1]+';background:'+t[1]+'18;padding:2px 8px;border-radius:20px">'+t[0]+'</span>';}
 function semaforo(r){
   if(r.pagado||!r.fecha_vence)return '';
@@ -221,8 +223,14 @@ function addReq(){var b={obra:(document.getElementById('n-obra').value||'welivin
 function subirDoc(id,campo){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;toast('⏳ subiendo…');var path='weliving/'+campo+'_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');fetch(SB_URL+'/storage/v1/object/facturas/'+encodeURIComponent(path),{method:'POST',headers:Object.assign({},SBH,{'Content-Type':f.type||'application/octet-stream'}),body:f}).then(function(r){if(!r.ok)throw 0;var url=SB_URL+'/storage/v1/object/public/facturas/'+path;var b={};b[campo]=url;var rr=RQ.find(function(x){return x.id===id;});if(rr)rr[campo]=url;return patch('requisiciones?id=eq.'+id,b);}).then(function(){toast('Archivo guardado ✓');render();}).catch(function(){toast('Error al subir',true);});};inp.click();}
 function aprobar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estado='aprobado';patch('requisiciones?id=eq.'+id,{estado:'aprobado'}).then(function(){toast('Aprobada ✓ (ya está en Por pagar del flujo)');render();}).catch(function(){toast('Error',true);});}
 function rechazar(id){var r=RQ.find(function(x){return x.id===id;});if(r)r.estado='rechazado';patch('requisiciones?id=eq.'+id,{estado:'rechazado'}).then(function(){toast('Rechazada');render();}).catch(function(){toast('Error',true);});}
-function pagar(id){var r=RQ.find(function(x){return x.id===id;});if(!r)return;if(!confirm('¿Marcar como PAGADA?\n'+r.proveedor+' · '+fmt(r.valor)+'\n\nRecuerda subir el comprobante de la transferencia con el 🧾📎 de la fila.'))return;r.pagado=true;r.fecha_pago=hoy();
- patch('requisiciones?id=eq.'+id,{pagado:true,fecha_pago:hoy()}).then(function(){toast('Pagada ✓ · sube el comprobante (🧾) si falta');render();}).catch(function(){toast('Error',true);render();});}
+function pagar(id){var r=RQ.find(function(x){return x.id===id;});if(!r)return;
+ if(!r.obra){toast('Esta requisición no tiene obra. Corrígela antes de pagarla.',true);return;}
+ if(!confirm('¿Marcar como PAGADA?\n'+r.proveedor+' · '+fmt(r.valor)+'\n\nSe registra también en la HOJA DE GASTO automáticamente.\nRecuerda subir el comprobante de la transferencia con el 🧾📎 de la fila.'))return;
+ var fp=hoy();
+ var pGasto=r.gasto_id?Promise.resolve(r.gasto_id):post('gastos',gastoPayload(r,fp)).then(function(res){if(!res.ok)throw 0;return res.json();}).then(function(rows){var gid=(rows&&rows[0])?rows[0].id:null;if(!gid)throw 0;r.gasto_id=gid;return gid;});
+ pGasto.then(function(gid){return patch('requisiciones?id=eq.'+id,{pagado:true,fecha_pago:fp,gasto_id:gid,contabilizado:true}).then(function(pr){if(!pr.ok)throw 0;});})
+ .then(function(){r.pagado=true;r.fecha_pago=fp;r.contabilizado=true;toast('Pagada ✓ y registrada en la hoja de gasto');render();})
+ .catch(function(){toast('Error: NO quedó marcada como pagada (falló el registro del gasto). Reintenta.',true);render();});}
 function togDoc(id,campo,val){var r=RQ.find(function(x){return x.id===id;});var v=(val===true||val==='true');if(r)r[campo]=v;var b={};b[campo]=v;patch('requisiciones?id=eq.'+id,b).then(function(){render();}).catch(function(){toast('Error',true);});}
 var COTS=[],currentRev=null;
 function cerrarRev(){document.getElementById('revov').classList.remove('on');}

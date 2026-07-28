@@ -103,7 +103,7 @@ function cargar(){
     fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H}).then(function(r){return r.json();})
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
-    marks={};hx={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){if(a.estado==='falta'||a.estado==='incapacidad'){if(!marks[a.cedula])marks[a.cedula]={};marks[a.cedula][a.fecha]=a.estado;}if(a.estado==='extras'){hx[a.cedula]={hed:+a.he_diurna||0,hen:+a.he_nocturna||0};}});
+    marks={};hx={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){if(a.estado==='falta'||a.estado==='incapacidad'){if(!marks[a.cedula])marks[a.cedula]={};marks[a.cedula][a.fecha]=a.estado;}if((+a.he_diurna||0)>0||(+a.he_nocturna||0)>0){var hp=hx[a.cedula]||{hed:0,hen:0};hp.hed+=(+a.he_diurna||0);hp.hen+=(+a.he_nocturna||0);hx[a.cedula]=hp;}});
     document.getElementById("sub").textContent=emps.length+" empleados · ciclo "+cy.label;
     setDirty(false);render();
   }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
@@ -140,11 +140,24 @@ function toggle(ced,d){if(!marks[ced])marks[ced]={};var cur=marks[ced][d];
 function setHx(ced,k,v){if(!hx[ced])hx[ced]={hed:0,hen:0};hx[ced][k]=+v||0;setDirty(true);}
 
 function guardar(){
-  var rows=[];Object.keys(marks).forEach(function(ced){Object.keys(marks[ced]).forEach(function(d){var e=emps.find(function(x){return x.cedula===ced;});rows.push({cedula:ced,nombre:e?e.nombre_completo:'',fecha:d,quincena:cy.label,obra_id:e?e.obra_id:'',estado:marks[ced][d],dias:1});});});Object.keys(hx).forEach(function(ced){var h=hx[ced]||{};if((+h.hed||0)>0||(+h.hen||0)>0){var e=emps.find(function(x){return x.cedula===ced;});rows.push({cedula:ced,nombre:e?e.nombre_completo:'',fecha:cy.days[0],quincena:cy.label,obra_id:e?e.obra_id:'',estado:'extras',dias:0,he_diurna:h.hed||0,he_nocturna:h.hen||0});}});
+  // UPSERT (sin DELETE masivo): guarda TODOS los días transcurridos de la quincena, incluido 'asistio',
+  // para que asistencia sea la fuente de verdad. Las horas extra van en el registro del primer día.
+  var hoy=new Date().toISOString().slice(0,10);
+  var rows=[];
+  emps.forEach(function(e){
+    var ced=e.cedula;if(!ced)return;
+    cy.days.forEach(function(d){
+      if(d>hoy)return; // no registrar días futuros
+      var st=(marks[ced]||{})[d]||'asistio';
+      var row={cedula:ced,nombre:e.nombre_completo||'',fecha:d,quincena:cy.label,obra_id:e.obra_id||'',estado:st,dias:(st==='falta'||st==='incapacidad')?0:1,he_diurna:0,he_nocturna:0};
+      if(d===cy.days[0]){var h=hx[ced]||{};row.he_diurna=+h.hed||0;row.he_nocturna=+h.hen||0;}
+      rows.push(row);
+    });
+  });
   var b=document.getElementById("btn-save");b.textContent="Guardando…";
-  fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label),{method:"DELETE",headers:H})
-    .then(function(r){if(!r.ok)throw 0;return rows.length?fetch(SB+"/rest/v1/asistencia",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(rows)}):{ok:true};})
-    .then(function(r){if(r&&r.ok===false)throw 0;toast("Asistencia guardada ✓ ("+rows.length+" novedades)");setDirty(false);})
+  if(!rows.length){toast("Esta quincena aún no tiene días transcurridos");setDirty(false);return;}
+  fetch(SB+"/rest/v1/asistencia?on_conflict=cedula,fecha",{method:"POST",headers:Object.assign({Prefer:"resolution=merge-duplicates,return=minimal"},H),body:JSON.stringify(rows)})
+    .then(function(r){if(!r.ok)throw 0;toast("Asistencia guardada ✓ ("+rows.length+" registros)");setDirty(false);})
     .catch(function(){b.textContent="● Guardar asistencia";toast("Error al guardar");});
 }
 

@@ -115,13 +115,14 @@ function cycle(){
 }
 
 function diasTrab(ced,cy){
-  var hoy=new Date().toISOString().slice(0,10);
-  var transcurridos=cy.days.filter(function(d){return d<=hoy;}).length;
-  var base=Math.min(15,transcurridos); // asalariado 15, topado a días ya transcurridos (no cuenta quincena futura)
-  var ex=att[ced]||{};
-  cy.days.forEach(function(d){if(d<=hoy && (ex[d]==='falta'||ex[d]==='incapacidad'||ex[d]==='inc'))base--;});
-  return Math.max(0,base);
+  // Fuente de verdad: asistencia registrada. Sin registros = 0 días (NUNCA 15 por defecto).
+  var reg=att[ced];
+  if(!reg)return 0;
+  var dias=0;
+  cy.days.forEach(function(d){var st=reg[d];if(st===undefined)return;if(st==='falta'||st==='incapacidad'||st==='inc')return;dias++;});
+  return Math.min(15,dias);
 }
+function sinAsist(ced){return !att[ced];}
 function pago(e,dias,hed,hen,prest){
   var b=+e.salario_basico||0, bon=+e.bonificacion||0;
   var devB=Math.round(b/30*dias), devBon=Math.round(bon/30*dias);
@@ -143,7 +144,7 @@ function cargar(){
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
     nom=Array.isArray(res[1])?res[1]:[];
-    att={};hxA={};(Array.isArray(res[2])?res[2]:[]).forEach(function(a){if(a.estado==='extras'){hxA[a.cedula]={hed:+a.he_diurna||0,hen:+a.he_nocturna||0};return;}if(!att[a.cedula])att[a.cedula]={};att[a.cedula][a.fecha]=a.estado;});
+    att={};hxA={};(Array.isArray(res[2])?res[2]:[]).forEach(function(a){if((+a.he_diurna||0)>0||(+a.he_nocturna||0)>0){var hp=hxA[a.cedula]||{hed:0,hen:0};hp.hed+=(+a.he_diurna||0);hp.hen+=(+a.he_nocturna||0);hxA[a.cedula]=hp;}if(a.estado==='extras')return;if(!att[a.cedula])att[a.cedula]={};att[a.cedula][a.fecha]=a.estado;});
     snap=nom.length>0; // quincena ya guardada = foto congelada
     rost = snap ? nom.map(function(n){
         var e=emps.find(function(x){return x.cedula===n.cedula;})||{cedula:n.cedula,nombre_completo:n.nombre,cargo:(n.cargo||n.area||''),obra_id:(n.proyecto||'').toLowerCase(),salario_basico:n.salario_mensual,bonificacion:0,metodo_pago:n.metodo,cuenta_pago:n.cuenta,__inactivo:true};
@@ -166,7 +167,9 @@ function render(){var v=document.getElementById("view");
 }
 
 // ── NÓMINA + ASISTENCIA ──
-function diasItem(it,cy){if(it.n&&it.n.pagado)return +it.n.dias||0;return diasTrab(it.e.cedula,cy);}
+function diasItem(it,cy){if(it.n&&it.n.pagado)return +it.n.dias||0;
+  var l=liq[it.e.cedula];if(l&&l.diasOv!=null&&sinAsist(it.e.cedula))return Math.max(0,Math.min(15,+l.diasOv||0)); // override manual consciente
+  return diasTrab(it.e.cedula,cy);}
 function pagoItem(it,cy,l){
   if(it.n&&it.n.pagado)return {total:+it.n.valor||0,locked:true,dias:+it.n.dias||0};
   var dias=diasItem(it,cy);var p=pago(it.e,dias,l.hed,l.hen,l.prest);
@@ -184,14 +187,20 @@ function renderNomina(v){
         +'<td class="r">'+(n.he_diurna||0)+'</td><td class="r">'+(n.he_nocturna||0)+'</td><td class="r">'+fmt(n.prestamo||0)+'</td>'
         +'<td class="r tot">'+fmt(pi.total)+' <span class="badge pill-pag" style="font-size:9px">pagada</span></td></tr>';
     }
-    return '<tr>'+name+'<td><span class="diaspill">'+pi.dias+' días</span></td>'
+    var diasCell='<td><span class="diaspill">'+pi.dias+' días</span></td>';
+    if(sinAsist(e.cedula)){
+      var dv=(l.diasOv!=null?l.diasOv:0);
+      diasCell='<td><input class="inp" type="number" min="0" max="15" step="0.5" style="width:56px;border-color:var(--amb);background:#fdf6e7" value="'+dv+'" oninput="upd(\''+e.cedula+'\',\'diasOv\',this.value)"><div class="diassub">⚠ sin asistencia registrada — marca asistencia antes de liquidar</div></td>';
+    }
+    return '<tr>'+name+diasCell
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hed+'" oninput="upd(\''+e.cedula+'\',\'hed\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hen+'" oninput="upd(\''+e.cedula+'\',\'hen\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" value="'+l.prest+'" oninput="upd(\''+e.cedula+'\',\'prest\',this.value)"></td>'
       +'<td class="r tot" id="tot-'+e.cedula+'">'+fmt(pi.total)+'</td></tr>';
   }).join("");
   var aviso=snap?'<div class="hint" style="background:#eef7f2;border-radius:10px;padding:10px 12px"><strong>Quincena guardada</strong> — muestra lo que se registró y pagó (queda congelada; incluye empleados ya inactivos con su valor real). Puedes ajustar horas extra/préstamo de las que no estén pagadas.</div>':'<div class="hint">Los <strong>días vienen de Asistencia</strong>, donde el ingeniero marca a diario. Aquí ajustas horas extra (diurna ×1,25 · nocturna ×1,75) y préstamos, y guardas para pagar.</div>';
-  v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Total '+(snap?'de la quincena':'a pagar')+'</div><div class="v" id="k-net">'+fmt(totNet)+'</div></div>'
+  var bannerAtt=Object.keys(att).length===0?'<div class="hint" style="background:#fbf1dd;border:1px solid #ecd9a8;color:#8a5a06;border-radius:10px;padding:11px 13px;font-weight:600">⚠ Esta quincena no tiene asistencia registrada. La liquidación partirá de 0 días.</div>':'';
+  v.innerHTML=bannerAtt+'<div class="kpis"><div class="kpi"><div class="l">Total '+(snap?'de la quincena':'a pagar')+'</div><div class="v" id="k-net">'+fmt(totNet)+'</div></div>'
     +'<div class="kpi"><div class="l">Ciclo</div><div class="v" style="font-size:17px">'+cy.label+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">pago el 15 y el 30</div></div>'
     +'<div class="kpi"><div class="l">Personas</div><div class="v">'+rost.length+'</div></div></div>'
     +aviso
