@@ -471,6 +471,39 @@ function plannerFechas(){var cr=CRONO.filter(function(c){return c.fecha_ini;}).s
  var iniL=cr[0]?fd(cr[0].fecha_ini):'',finL=cr.length?fd(cr[cr.length-1].fecha_fin||cr[cr.length-1].fecha_ini):'';
  return backG()+'<div class="itemh"><span class="nm0">📅</span><h3>Last Planner · gasto por periodo</h3></div>'+'<div class="grp"><span>Programación + gasto real por periodo ('+iniL+' → '+finL+')</span><span class="gt">'+fmt(totP)+'</span></div><div class="grpnote">Cada actividad muestra lo gastado en su periodo (por fecha): directo (a la obra) e indirecto (admin, servicios). Verde = gasto real; ámbar = pago programado.</div><div class="dl" style="padding:6px 0">'+rows+'</div>';}
 var PLAN=[];var planViewC='tablero';
+// ── PLAN SEMANAL WELIVING · cascada real (actualizado 3-ago-2026 con bitácora) ──
+function plannerSemanalWL(){
+ var acts=[{n:'Estructura (losa P6→P7)',tot:465,ini:1,sem:5},{n:'Mampostería',tot:745,ini:1,sem:6},
+  {n:'Pañetes/morteros',tot:1795,ini:5,sem:12},{n:'Impermeab.',tot:710,ini:8,sem:6},
+  {n:'Drywall',tot:2430,ini:9,sem:11},{n:'Enchapes (baños/cocina)',tot:361,ini:12,sem:5},
+  {n:'Pisos',tot:1197,ini:14,sem:7},{n:'Pintura',tot:2830,ini:17,sem:9}];
+ var sc=[{n:'Eléctrico (sub)',ini:4,sem:7},{n:'Hidráulico (sub)',ini:4,sem:7},{n:'Fachada+ventanería',ini:10,sem:6},
+  {n:'Ascensor',ini:12,sem:6},{n:'Carpintería (sub)',ini:17,sem:5},{n:'Cocinas',ini:20,sem:5}];
+ var W0=new Date(2026,7,3); // lunes 3-ago = semana 1
+ var hoyD=new Date();var semAct=Math.max(1,Math.min(26,Math.floor((hoyD-W0)/(7*86400000))+1));
+ function fx(i){var d=new Date(W0);d.setDate(d.getDate()+(i-1)*7);var f=new Date(d);f.setDate(f.getDate()+5);
+  var m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return d.getDate()+'\u2013'+f.getDate()+' '+m[f.getMonth()];}
+ function fase(i){return i<=9?['GRIS','#0ea5a3']:i<=24?['BLANCA','#7c5cf0']:['ENTREGA','#16a34a'];}
+ function gente(i){return i<=17?13:i<=22?11:7;}
+ var rows='';
+ for(var i=1;i<=26;i++){var fs=fase(i);var ch=[];
+  acts.forEach(function(a){if(i>=a.ini&&i<a.ini+a.sem){ch.push('<span style="display:inline-block;background:#eef0ff;color:#3b3f8c;border-radius:14px;padding:2px 9px;font-size:11px;margin:1px 2px;font-weight:600"><b>'+Math.round(a.tot/a.sem)+' m\u00b2</b> '+a.n+'</span>');}});
+  sc.forEach(function(x){if(i>=x.ini&&i<x.ini+x.sem){ch.push('<span style="display:inline-block;background:#fdf3e2;color:#8a5a06;border-radius:14px;padding:2px 9px;font-size:11px;margin:1px 2px;font-weight:600">'+x.n+'</span>');}});
+  if(i>=25)ch.push('<span style="display:inline-block;background:#e7f6ec;color:#166534;border-radius:14px;padding:2px 9px;font-size:11px;margin:1px 2px;font-weight:700">Aseo + entrega</span>');
+  var esAct=(i===semAct);
+  rows+='<tr style="'+(esAct?'background:#f4f3ff;outline:2px solid #7c5cf0;outline-offset:-2px':'')+'"><td style="padding:7px 8px;font-weight:800;color:#5b5f77">'+i+(esAct?' \u25c0':'')+'</td><td style="padding:7px 8px;white-space:nowrap;color:#8a90a6;font-size:11.5px">'+fx(i)+'</td><td style="padding:7px 8px"><span style="background:'+fs[1]+'1a;color:'+fs[1]+';border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800">'+fs[0]+'</span></td><td style="padding:7px 8px;line-height:1.9">'+(ch.join(' ')||'\u2014')+'</td><td style="padding:7px 8px;text-align:center;font-weight:800">'+gente(i)+'</td></tr>';}
+ var rend=[['Mamposter\u00eda','30 m\u00b2/d\u00eda \u00b7 1 of + 1 ay (dato real obra)'],['Losa (ciclo)','13 d\u00edas por losa (dato real obra)'],['Drywall','16 m\u00b2/d\u00eda por pareja'],['Pisos','14 m\u00b2/d\u00eda por pareja'],['Pintura','25 m\u00b2/d\u00eda por persona']];
+ return backG()+'<div class="itemh"><span class="nm0">\ud83d\udcc5</span><h3>Last Planner \u00b7 Plan semanal a enero 2027</h3></div>'+
+  '<div class="grpnote"><b>Actualizado 3-ago-2026 con bit\u00e1cora real</b>: losa P5 \u2714 (18-jul) \u00b7 losa P6 en encofrado \u00b7 vaciado P6 ~12-ago \u00b7 fin estructura ~1-sep \u00b7 mamposter\u00eda arranca 4-ago \u00b7 entrega total enero 2027. N\u00f3mina m\u00e1x 13 \u00b7 subcontratado solo el\u00e9ctrico, hidr\u00e1ulico y carpinter\u00eda.</div>'+
+  '<div class="sum">'+
+   '<div class="sc to"><div class="l">Semana actual</div><div class="v">'+semAct+' / 26</div><div class="n">'+fx(semAct)+'</div></div>'+
+   '<div class="sc ej"><div class="l">Fase</div><div class="v">'+fase(semAct)[0]+'</div><div class="n">gris \u2192 blanca \u2192 entrega</div></div>'+
+   '<div class="sc fa"><div class="l">N\u00f3mina esta semana</div><div class="v">'+gente(semAct)+'</div><div class="n">m\u00e1x 13 personas</div></div></div>'+
+  '<div class="grp"><span>Metas de producci\u00f3n por cuadrilla</span></div><div class="dl" style="padding:12px 16px">'+rend.map(function(r){return '<div class="lgrow"><span class="ln"><b>'+r[0]+'</b></span><span class="lv" style="font-weight:600;color:#5b5f77">'+r[1]+'</span></div>';}).join('')+'</div>'+
+  '<div class="grp" style="margin-top:14px"><span>Plan semanal \u00b7 metas en m\u00b2</span><span class="gt">26 semanas</span></div>'+
+  '<div class="dl" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px"><tr style="text-align:left;color:#8a90a6;font-size:10px;text-transform:uppercase;letter-spacing:.6px"><th style="padding:8px">Sem</th><th style="padding:8px">Fechas</th><th style="padding:8px">Fase</th><th style="padding:8px">Metas de la semana</th><th style="padding:8px">N\u00f3m.</th></tr>'+rows+'</table></div>'+
+  '<div class="grpnote" style="margin-top:10px">El residente reporta el m\u00b2 real ejecutado en la bit\u00e1cora (campo cantidad) \u2014 el corte semanal compara real vs meta.</div>';}
+
 var ESTP={pendiente:{ic:'⚪',nx:'en_curso'},en_curso:{ic:'🔵',nx:'hecho'},hecho:{ic:'✅',nx:'pendiente'}};
 function fp(f){if(!f)return '';var M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];var p=(''+f).slice(0,10).split('-');return (+p[2])+' '+M[(+p[1])-1];}
 function loadPlan(cb){fetch(SB_URL+'/rest/v1/planner_cuadrillas?obra=eq.'+CUR+'&order=orden',{headers:SBH}).then(function(r){return r.json();}).then(function(rows){PLAN=rows||[];if(cb)cb();}).catch(function(){PLAN=[];if(cb)cb();});}
@@ -519,7 +552,7 @@ function plannerCuadrillas(){if(!PLAN.length){return backG()+'<div class="canvas
 function goSection(sec){var b=document.getElementById('d-body');
  if(sec==='hoja'){hojaPage=0;b.innerHTML=hojaHTML();attach();}
  else if(sec==='presupuesto'){if(CUR==='weliving'){b.innerHTML=backG()+'<iframe src="presupuesto.html?t='+Date.now()+'" style="width:100%;height:calc(100vh - 120px);border:0;border-radius:14px;background:#f4f5f8"></iframe>';}else if(!CAPS.length){b.innerHTML=backG()+'<div class="canvas">💰 <b>Presupuesto por definir</b><br>Cada obra tiene sus propios capítulos e ítems. Cuando tengas el presupuesto de esta obra lo cargamos con la misma lógica que Robledo.</div>';}else{b.innerHTML=presSec();attach();recompute();}}
- else if(sec==='planner'){if(CUR==='weliving'){b.innerHTML=backG()+'<div class="canvas">📅 Cargando plan…</div>';loadPlan(function(){b.innerHTML=plannerCuadrillas();attachPlan();});}else if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b></div>';}else if(CRONO.some(function(c){return c.fecha_ini;})){b.innerHTML=plannerFechas();}else{b.innerHTML=renderPlanner();attachPlanner();}}
+ else if(sec==='planner'){if(CUR==='weliving'){b.innerHTML=plannerSemanalWL();}else if(!CRONO.length){b.innerHTML=backG()+'<div class="canvas">📅 <b>Last Planner por definir</b></div>';}else if(CRONO.some(function(c){return c.fecha_ini;})){b.innerHTML=plannerFechas();}else{b.innerHTML=renderPlanner();attachPlanner();}}
  else if(sec==='flujo'){b.innerHTML=flujoSec();}
  else if(sec==='informe'){b.innerHTML=backG()+'<div class="canvas">📊 <b>Informe general</b><br>Lo construimos paso a paso. Aquí irá el resumen ejecutivo: semáforo, gastado vs presupuesto, alertas.</div>';}
  window.scrollTo(0,0);}
