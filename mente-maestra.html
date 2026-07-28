@@ -2,19 +2,19 @@
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Imperio · Mente Maestra</title>
 <style>
-:root{--bg:#f7f5f0;--ink:#2c2a26;--soft:#726e65;--mut:#a9a49a;--line:rgba(60,55,45,.09);
- --gold:#a97b3b;--viva:#b58a49;--alerta:#bd6240;--dorm:#d0ccc2}
+:root{--bg:#fbfdff;--ink:#0a1533;--soft:#5b6b8c;--mut:#9aa7c2;--line:rgba(19,60,120,.10);
+ --gold:#4f46e5;--viva:#14b8a6;--alerta:#f43f5e;--dorm:#c7d2e8}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:ui-sans-serif,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);
  height:100vh;overflow:hidden;display:flex;flex-direction:column;
- background-image:radial-gradient(1100px 620px at 50% 8%,#fbf9f4,transparent 62%)}
+ background-image:radial-gradient(1100px 620px at 50% 8%,#eaf2ff,transparent 62%)}
 .serif{font-family:ui-serif,Georgia,serif}
 header{display:flex;align-items:center;justify-content:space-between;padding:20px 30px;position:relative;z-index:5}
 .brand{font-size:12px;letter-spacing:6px;color:var(--mut);font-weight:600}
 .status{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:8px}
 .status .d{width:7px;height:7px;border-radius:50%;background:var(--viva)}
-.status.alert .d{background:var(--alerta);box-shadow:0 0 8px rgba(189,98,64,.5);animation:bl 1.8s infinite}
+.status.alert .d{background:var(--alerta);box-shadow:0 0 8px rgba(244,63,94,.5);animation:bl 1.8s infinite}
 @keyframes bl{50%{opacity:.4}}
 .line{text-align:center;font-size:14px;color:var(--soft);padding:2px 20px 6px;position:relative;z-index:5}
 .line b{color:var(--ink);font-weight:600}
@@ -23,15 +23,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 #syn{position:absolute;inset:0;width:100%;height:100%;z-index:1}
 .core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:3;pointer-events:none}
 .aura{position:absolute;left:50%;top:50%;width:230px;height:230px;transform:translate(-50%,-50%);border-radius:50%;
- background:radial-gradient(circle,rgba(169,123,59,.13),transparent 68%);animation:breathe 7s ease-in-out infinite}
+ background:radial-gradient(circle,rgba(79,70,229,.12),transparent 68%);animation:breathe 7s ease-in-out infinite}
 @keyframes breathe{50%{transform:translate(-50%,-50%) scale(1.12);opacity:.8}}
 .core .lbl{font-size:10.5px;letter-spacing:4px;color:var(--gold);font-weight:700}
 .node{position:absolute;transform:translate(-50%,-50%);z-index:4;cursor:pointer;text-align:center}
 .node:hover .fl{transform:scale(1.18)}
 .bulb{border-radius:50%;margin:0 auto}
 .node .t{font-size:10px;font-weight:600;color:var(--soft);white-space:nowrap;margin-top:5px;text-shadow:0 1px 3px var(--bg)}
-.node.alerta .t{color:#a04e30}
-@keyframes al{0%,100%{box-shadow:0 0 0 0 rgba(189,98,64,.4)}50%{box-shadow:0 0 0 8px rgba(189,98,64,0)}}
+.node.alerta .t{color:#d1344f}
+@keyframes al{0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,.4)}50%{box-shadow:0 0 0 8px rgba(244,63,94,0)}}
 @keyframes flA{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes flB{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,4px)}}
 @keyframes flC{0%,100%{transform:translate(0,0)}50%{transform:translate(-4px,5px)}}
@@ -78,7 +78,7 @@ var Hh={'apikey':KEY,'Authorization':'Bearer '+KEY};
 function q(t,query){return fetch(SB+'/rest/v1/'+t+'?'+(query||''),{headers:Hh}).then(function(r){return r.ok?r.json():[];}).catch(function(){return[];});}
 function short(n){return n>=1e6?'$'+(n/1e6).toFixed(1).replace('.0','')+'M':'$'+Math.round(n).toLocaleString('es-CO');}
 function abierto(e){return e!=='cerrado'&&e!=='mitigado'&&e!=='resuelta';}
-var COL={viva:'#b58a49',alerta:'#bd6240',dorm:'#d0ccc2'},FLS=['flA','flB','flC'];
+var COL={viva:'#14b8a6',alerta:'#f43f5e',dorm:'#c7d2e8'},FLS=['flA','flB','flC'];
 
 Promise.all([
   q('areas','select=id,codigo,nombre,activa,orden&order=orden'),
@@ -103,9 +103,9 @@ Promise.all([
   var stage=document.getElementById('stage'),pos={},n=areas.length||1;
   areas.forEach(function(a,i){var ang=(i/n)*Math.PI*2-Math.PI/2;pos[a.id]={x:50+38*Math.cos(ang),y:50+42*Math.sin(ang)};});
   var lines='';
-  areas.forEach(function(a){var p=pos[a.id];lines+='<line x1="50" y1="50" x2="'+p.x+'" y2="'+p.y+'" stroke="'+(a._s==='alerta'?'rgba(189,98,64,.22)':'rgba(169,123,59,.12)')+'" stroke-width="'+(a._s==='alerta'?.26:.13)+'"/>';});
+  areas.forEach(function(a){var p=pos[a.id];lines+='<line x1="50" y1="50" x2="'+p.x+'" y2="'+p.y+'" stroke="'+(a._s==='alerta'?'rgba(244,63,94,.22)':'rgba(6,182,212,.14)')+'" stroke-width="'+(a._s==='alerta'?.26:.13)+'"/>';});
   var edges=conex.filter(function(c){return pos[c.origen_id]&&pos[c.destino_id]&&c.activa!==false;});
-  edges.forEach(function(e){var a=pos[e.origen_id],b=pos[e.destino_id];lines+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="rgba(169,123,59,.14)" stroke-width=".14"/>';});
+  edges.forEach(function(e){var a=pos[e.origen_id],b=pos[e.destino_id];lines+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="rgba(6,182,212,.14)" stroke-width=".14"/>';});
   document.getElementById('lines').innerHTML=lines;
 
   areas.forEach(function(a,i){var p=pos[a.id];var el=document.createElement('div');el.className='node '+a._s;el.style.left=p.x+'%';el.style.top=p.y+'%';el.title=a.nombre;
@@ -119,7 +119,7 @@ Promise.all([
   var flow=document.getElementById('flow'),sig=[];
   edges.concat(areas.map(function(a){return {o:'core',d:a.id,al:a._s==='alerta'};})).forEach(function(e,i){
     var a=(e.o==='core'||e.origen_id==='core')?{x:50,y:50}:pos[e.origen_id],b=pos[e.destino_id||e.d];if(!a||!b)return;
-    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r',e.al?.6:.5);c.setAttribute('fill',e.al?'#c06a44':'#bd9550');c.setAttribute('opacity','.7');flow.appendChild(c);
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r',e.al?.6:.5);c.setAttribute('fill',e.al?'#f43f5e':'#06b6d4');c.setAttribute('opacity','.7');flow.appendChild(c);
     sig.push({c:c,a:a,b:b,t:(i*0.12)%1,sp:.0022+(i%5)*.0009});
   });
   function tick(){for(var i=0;i<sig.length;i++){var s=sig[i];s.t+=s.sp;if(s.t>1)s.t-=1;s.c.setAttribute('cx',s.a.x+(s.b.x-s.a.x)*s.t);s.c.setAttribute('cy',s.a.y+(s.b.y-s.a.y)*s.t);}requestAnimationFrame(tick);}
