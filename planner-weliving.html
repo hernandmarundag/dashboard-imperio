@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planner · Weliving</title>
+<style>
+  :root{
+    --bg:#0f1115;--panel:#171a21;--panel2:#1e222b;--line:#2a2f3a;--txt:#e8eaed;--mut:#9aa0ab;
+    --gold:#c9a24a;--gold2:#e6c579;--nom:#8ea9c9;--sub:#d8b24a;--sum:#7f9ac9;--danger:#d98a6a;--ok:#7fb08a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:22px;line-height:1.4}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--gold);padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+  h1{font-size:22px;font-weight:700}h1 span{color:var(--gold)}
+  .sub{color:var(--mut);font-size:12.5px;margin-top:3px}
+  .corte{color:var(--mut);font-size:12px;text-align:right}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--gold2);margin:24px 0 11px;font-weight:600}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+  .kpi .v{font-size:20px;font-weight:700;color:var(--gold2)}
+  .kpi .l{font-size:11.5px;color:var(--mut);margin-top:4px}.kpi .s{font-size:11px;color:var(--mut);margin-top:2px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:12px}
+  th,td{padding:6px 6px;border:1px solid var(--line);text-align:center}
+  th{background:var(--panel2);color:var(--mut);font-weight:600;font-size:10.5px}
+  /* Gantt cascada */
+  #gantt{min-width:860px;font-size:11px}
+  #gantt td.act{text-align:left;font-weight:600;white-space:nowrap;padding-left:10px;font-size:11px}
+  .cell{border-radius:4px;font-size:10px;font-weight:700;color:#0f1115;padding:3px 2px}
+  .nom{background:#8ea9c9}.sub{background:#d8b24a}.sum{background:#7f9ac9}
+  .hito td{background:#241c18;color:var(--gold2);font-weight:700;font-size:10px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--mut)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+  /* semanal */
+  td.l{text-align:left}.sem{background:var(--panel2);width:40px}
+  .fechas{color:var(--mut);font-size:11px;white-space:nowrap}
+  .fase{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:10px;display:inline-block}
+  .f-gris{background:#4a3d24;color:#e6c579}.f-blanca{background:#26402c;color:#a9d8b5}.f-ent{background:#241c18;color:var(--gold2)}
+  .metas{text-align:left}
+  .chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin:2px 3px 2px 0;font-size:11px}
+  .chip b{color:var(--gold2)}.chip.sc{border-color:#6a5a2a;color:#e6c579}.chip.sm{border-color:#3a4a6a;color:#a9c1e6}
+  .gente{font-weight:700;color:var(--nom)}
+  .rend td.big{color:var(--gold2);font-weight:700}.rend td.l{color:var(--txt)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  .mbar{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:end;height:150px;padding-top:6px}
+  .mb{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+  .mb .stack{width:60%;display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden}
+  .mb .seg{width:100%}.mb .fill{width:60%;border-radius:4px 4px 0 0}
+  .mb .cap{font-size:10.5px;color:var(--mut);margin-top:5px}.mb .val{font-size:10.5px;font-weight:700}
+  .etapa{background:var(--panel2);border-left:3px solid var(--gold);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+  .etapa .t{font-weight:700;font-size:12.5px}.etapa .d{color:var(--mut);font-size:11px;margin-top:2px}.etapa .m{color:var(--gold2);font-size:11.5px;font-weight:600;float:right}
+  .alert{background:#2a1d18;border:1px solid var(--danger);color:var(--gold2);border-radius:8px;padding:10px 13px;font-size:12px;margin-top:12px}.alert b{color:var(--danger)}
+  .note{color:var(--mut);font-size:11.5px;margin-top:10px;font-style:italic}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>PLANNER DE OBRA · <span>WELIVING</span></h1>
+      <div class="sub">Cascada vertical · escenario ENERO · nómina propia máx. 13</div>
+    </div>
+    <div class="corte">Corte 3-ago-2026 · bitácora: losa P5 ✔ · P6 en curso<br>18 aptos + 2 locales</div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <h2>Cronograma en cascada (vista general)</h2>
+  <div class="panel">
+    <table id="gantt"></table>
+    <div class="legend">
+      <span><i class="nom"></i>Tu nómina (13)</span>
+      <span><i class="sub"></i>Subcontrato (carpintería·eléctrico·hidráulico)</span>
+      <span><i class="sum"></i>Suministro (fachada·ascensor·cocinas)</span>
+      <span><i style="background:#241c18;border:1px solid #c9a24a"></i>Hito</span>
+    </div>
+    <div class="note">Mientras la estructura remata losas arriba (P6/P7), las cuadrillas ya tiran mampostería, cielos y morteros abajo. Cada oficio sube piso por piso detrás del anterior.</div>
+  </div>
+
+  <h2>Rendimientos y meta por cuadrilla</h2>
+  <div class="panel">
+    <table class="rend" id="rend"></table>
+    <div class="note">Rendimientos en verde = reales de tu obra (bitácora). Los demás son del APU y se calibran a medida que se ejecuten. Estructura ~13 días/losa es el que marca el ritmo de los pisos altos. La cuadrilla cobra por m² medido en el corte, no por día.</div>
+  </div>
+
+  <h2>Plan semanal de ejecución (metas en m²)</h2>
+  <div class="panel">
+    <table id="semanal"></table>
+    <div class="legend">
+      <span><i style="background:var(--nom)"></i>Nómina (m² meta)</span>
+      <span><i style="background:var(--sub)"></i>Subcontrato</span>
+      <span><i style="background:var(--sum)"></i>Suministro</span>
+      <span>⚡ = frente con sobrecupo a destajo</span>
+    </div>
+    <div class="note">Cada semana su meta de m². En el corte se compara producido vs meta; el frente que no cumple se ve de una.</div>
+  </div>
+
+  <div class="two">
+    <div><h2>Gente en obra por mes</h2>
+      <div class="panel"><div class="mbar" id="crew"></div>
+        <div class="legend"><span><i style="background:var(--nom)"></i>Tu nómina (máx 13)</span><span><i style="background:var(--sub)"></i>Terceros (subcontrato+sobrecupo)</span></div>
+        <div class="note">Tu planilla se queda en 13. Los terceros traen su propia gente y se pagan por contrato/m² — no van a tu nómina.</div>
+      </div>
+    </div>
+    <div><h2>Flujo de caja por mes ($M)</h2>
+      <div class="panel"><div class="mbar" id="flow"></div>
+        <div class="note">Suma = $2.476M (falta). Los $924M gastados no van aquí. Dotación aparte.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div><h2>Entrega por fases</h2>
+      <div class="etapa"><span class="m">dic 2026</span><div class="t">Unidades rentables (P1–N5)</div><div class="d">16 apartaestudios + 2 locales → arrancan a rentar</div></div>
+      <div class="etapa"><span class="m">ene 2027</span><div class="t">Dúplex N6 + rooftop + entrega total</div><div class="d">2 dúplex, jacuzzi, pérgola, aseo y acta</div></div>
+    </div>
+    <div><h2>Para lograr enero</h2>
+      <div class="etapa"><span class="m">⚡</span><div class="t">Sobrecupo drywall + pisos</div><div class="d">Cuadrilla extra a destajo en el pico (oct–nov). ~$40–80M, pero adelanta arriendo.</div></div>
+      <div class="alert"><b>SIN ESTO NO HAY ENERO:</b> firmar ascensor + fachada esta semana. Curso de alturas para los 13 (Res. 4272/2021).</div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:20px;text-align:center">Cantidades reales de Supabase (obra weliving) · Plan de mano de obra, producción y flujo</div>
+</div>
+
+<script>
+// ===== KPIs =====
+document.getElementById('kpis').innerHTML=[
+  {v:'$3.400M',l:'Costo TOTAL construcción',s:'= $924M gastado + $2.476M falta'},
+  {v:'ENE 2027',l:'Entrega TOTAL (acelerado)',s:'rentables dic · dúplex+rooftop ene'},
+  {v:'~10.500 m²',l:'Producción propia por ejecutar',s:'medida semanal'},
+  {v:'13',l:'Tu nómina (máx)',s:'terceros aparte, por contrato'},
+].map(k=>`<div class="kpi"><div class="v">${k.v}</div><div class="l">${k.l}</div><div class="s">${k.s}</div></div>`).join('');
+
+// ===== CASCADA (vista general por quincena) =====
+const Q=['Ago-1','Ago-2','Sep-1','Sep-2','Oct-1','Oct-2','Nov-1','Nov-2','Dic-1','Dic-2','Ene-1','Ene-2'];
+const rows=[
+  ['Estructura (remate losas)','nom',{0:'P6',1:'P7+cub'}],
+  ['Mampostería','nom',{0:'P1-P2',1:'P3-P4',2:'P5-N6'}],
+  ['Eléctrico embebido','sub',{1:'P1-P2',2:'P3-P4',3:'P5-N6'}],
+  ['Hidráulico / sanitario','sub',{1:'P1-P2',2:'P3-P4',3:'P5-N6'}],
+  ['Pañetes / morteros','nom',{2:'P1-P2',3:'P3-P4',4:'P5-N6'}],
+  ['Impermeabilización','nom',{3:'Cub',4:'Baños'}],
+  ['Drywall (cielos+muros) ⚡','nom',{4:'P1-P3',5:'P4-N6'}],
+  ['Fachada + ventanería','sum',{4:'Inicio',5:'Frente',6:'Remate'}],
+  ['Ascensor','sum',{5:'Montaje',6:'Montaje',7:'Pruebas'}],
+  ['Enchapes (baños/cocina)','nom',{5:'P1-P3',6:'P4-N6'}],
+  ['Pisos porcelanato ⚡','nom',{6:'P1-P3',7:'P4-N6'}],
+  ['Carpintería (puertas/closet)','sub',{7:'P1-P3',8:'P4-N6'}],
+  ['Pintura','nom',{8:'P1-P3',9:'P4-N6'}],
+  ['Cocinas + aparatos','sum',{9:'P1-N5',10:'N6'}],
+  ['Rooftop (jacuzzi/pérgola)','nom',{9:'Civil',10:'Acab.'}],
+  ['Aseo + entrega','nom',{10:'P1-N5',11:'Total'}],
+];
+const hitos={1:'Estructura coronada',6:'Gris lista',9:'Entrega parcial',11:'ENTREGA TOTAL'};
+let g='<tr><th>Actividad</th>'+Q.map(q=>`<th>${q}</th>`).join('')+'</tr>';
+rows.forEach(([act,tipo,cells])=>{
+  g+=`<tr><td class="act">${act}</td>`;
+  for(let i=0;i<12;i++) g+= cells[i]!==undefined?`<td><div class="cell ${tipo}">${cells[i]}</div></td>`:'<td></td>';
+  g+='</tr>';
+});
+g+='<tr class="hito"><td class="act">HITOS</td>'+Q.map((q,i)=>`<td>${hitos[i]||''}</td>`).join('')+'</tr>';
+document.getElementById('gantt').innerHTML=g;
+
+// ===== RENDIMIENTOS =====
+const rend=[
+  ['Estructura (losa+columnas)','~13 días/losa','—',465,'real (obra)'],
+  ['Mampostería',30,180,745,'real (obra)'],
+  ['Pañetes / morteros',14,84,1795,'APU · confirmar'],
+  ['Impermeabilización',20,120,710,'APU · confirmar'],
+  ['Drywall (muros+cielos)',16,96,2430,'APU · confirmar'],
+  ['Enchapes (baños/cocina)',14,84,361,'APU · confirmar'],
+  ['Pisos porcelanato',14,84,1197,'APU · confirmar'],
+  ['Pintura',25,150,2830,'APU · confirmar'],
+];
+document.getElementById('rend').innerHTML='<tr><th>Oficio</th><th>Rendimiento/día</th><th>Meta/semana</th><th>Cantidad total</th><th>Fuente</th></tr>'+
+  rend.map(r=>{const src=r[4]==='real (obra)';const md=typeof r[1]==='number'?r[1]+' m²':r[1];const mw=typeof r[2]==='number'?r[2]+' m²':r[2];
+  return `<tr><td class="l">${r[0]}</td><td class="big">${md}</td><td class="big">${mw}</td><td>${r[3].toLocaleString('es')} m²</td><td style="font-size:10.5px;color:${src?'#7fb08a':'#9aa0ab'}">${r[4]}</td></tr>`;}).join('');
+
+// ===== PLAN SEMANAL =====
+const acts=[
+  {n:'Estructura losas',tot:465,ini:1,sem:5},{n:'Mampostería',tot:745,ini:1,sem:5},
+  {n:'Pañetes/morteros',tot:1795,ini:4,sem:13},{n:'Impermeab.',tot:710,ini:7,sem:6},
+  {n:'Drywall',tot:2430,ini:8,sem:11,x:1},{n:'Enchapes',tot:361,ini:11,sem:5},
+  {n:'Pisos',tot:1197,ini:13,sem:7,x:1},{n:'Pintura',tot:2830,ini:16,sem:9},
+];
+const sc=[{n:'Eléctrico',ini:5,sem:6,t:'sc'},{n:'Hidráulico',ini:5,sem:6,t:'sc'},
+  {n:'Carpintería',ini:17,sem:5,t:'sc'},{n:'Fachada+vent.',ini:11,sem:6,t:'sm'},
+  {n:'Ascensor',ini:13,sem:5,t:'sm'},{n:'Cocinas',ini:20,sem:5,t:'sm'}];
+const faseSem=i=> i<=10?['GRIS','f-gris']: i<=24?['BLANCA','f-blanca']:['ENTREGA','f-ent'];
+const genteSem=i=> i<=4?13:i<=17?13:i<=22?11:7;
+function fechaSem(i){const d=new Date(2026,7,4);d.setDate(d.getDate()+(i-1)*7);const f=new Date(d);f.setDate(f.getDate()+5);
+  const m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return `${d.getDate()}–${f.getDate()} ${m[f.getMonth()]}`;}
+let H='<tr><th class="sem">Sem</th><th>Fechas</th><th>Fase</th><th style="text-align:left">Metas de la semana (m²)</th><th>Nómina</th></tr>';
+for(let i=1;i<=26;i++){
+  const [fn,fc]=faseSem(i);let chips=[];
+  acts.forEach(a=>{if(i>=a.ini&&i<a.ini+a.sem){const pw=Math.round(a.tot/a.sem);chips.push(`<span class="chip"><b>${pw} m²</b> ${a.n}${a.x?' ⚡':''}</span>`);}});
+  sc.forEach(s=>{if(i>=s.ini&&i<s.ini+s.sem)chips.push(`<span class="chip ${s.t}">${s.n}</span>`);});
+  if(i>=25)chips.push('<span class="chip"><b>Aseo + entrega</b></span>');
+  H+=`<tr><td class="sem">${i}</td><td class="fechas">${fechaSem(i)}</td><td><span class="fase ${fc}">${fn}</span></td><td class="metas">${chips.join(' ')||'—'}</td><td class="gente">${genteSem(i)}</td></tr>`;
+}
+document.getElementById('semanal').innerHTML=H;
+
+// ===== GENTE y FLUJO por mes =====
+const meses=['Ago','Sep','Oct','Nov','Dic','Ene'];
+const nomM=[13,13,13,13,11,7], terM=[4,8,16,16,12,7];
+const flujo=[230,370,600,690,430,156];
+const maxG=Math.max(...nomM.map((n,i)=>n+terM[i]));
+document.getElementById('crew').innerHTML=meses.map((m,i)=>{
+  const tot=nomM[i]+terM[i];
+  return `<div class="mb"><div class="val">${nomM[i]}+${terM[i]}</div>
+   <div class="stack" style="height:${(tot/maxG)*116}px">
+     <div class="seg" style="height:${(terM[i]/tot)*100}%;background:var(--sub)"></div>
+     <div class="seg" style="height:${(nomM[i]/tot)*100}%;background:var(--nom)"></div>
+   </div><div class="cap">${m}</div></div>`;}).join('');
+const maxF=Math.max(...flujo);
+document.getElementById('flow').innerHTML=meses.map((m,i)=>{const pk=flujo[i]>=600;
+  return `<div class="mb"><div class="val" style="color:var(--gold2)">${flujo[i]}</div>
+   <div class="fill" style="height:${(flujo[i]/maxF)*116}px;background:linear-gradient(180deg,${pk?'#e6a05a,#d98a6a':'var(--gold2),var(--gold)'})"></div>
+   <div class="cap">${m}</div></div>`;}).join('');
+</script>
+</body>
+</html>
