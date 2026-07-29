@@ -236,7 +236,7 @@ function renderNomina(v){
     +'<div class="kpi"><div class="l">Ciclo</div><div class="v" style="font-size:17px">'+cy.label+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">pago el 15 y el 30</div></div>'
     +'<div class="kpi"><div class="l">Personas</div><div class="v">'+rost.length+'</div></div></div>'
     +aviso
-    +'<div class="card"><table><thead><tr><th>Empleado</th><th>Marca el día (✓ asistió · F falta · I incap.)</th><th>Días</th><th class="r">HE día</th><th class="r">HE noche</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div class="card" style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Marca el día (✓ asistió · F falta · I incap.)</th><th>Días</th><th class="r">HE día</th><th class="r">HE noche</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
     +'<div class="foot"><button class="btn g" onclick="guardarNomina()">Guardar nómina del ciclo</button></div>';
 }
 function toggleDay(ced,d){if(!att[ced])att[ced]={};var cur=att[ced][d];
