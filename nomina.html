@@ -124,6 +124,14 @@ function diasTrab(ced,cy){
   return Math.min(15,dias);
 }
 function sinAsist(ced){return !att[ced];}
+function editDias(el,ced,cur){
+  var inp=document.createElement('input');inp.type='number';inp.min=0;inp.max=15;inp.step=0.5;inp.value=cur;
+  inp.className='inp';inp.style.cssText='width:64px;font-weight:700;text-align:center';
+  el.parentNode.replaceChild(inp,el);inp.focus();inp.select();
+  function done(){var v=inp.value;upd(ced,'diasOv',v);render();}
+  inp.addEventListener('blur',done);
+  inp.addEventListener('keydown',function(ev){if(ev.key==='Enter'){inp.blur();}});
+}
 function pago(e,dias,hed,hen,prest){
   var b=+e.salario_basico||0, bon=+e.bonificacion||0;
   var devB=Math.round(b/30*dias), devBon=Math.round(bon/30*dias);
@@ -169,7 +177,7 @@ function render(){var v=document.getElementById("view");
 
 // ── NÓMINA + ASISTENCIA ──
 function diasItem(it,cy){if(it.n&&it.n.pagado)return +it.n.dias||0;
-  var l=liq[it.e.cedula];if(l&&l.diasOv!=null&&sinAsist(it.e.cedula))return Math.max(0,Math.min(15,+l.diasOv||0)); // override manual consciente
+  var l=liq[it.e.cedula];if(l&&l.diasOv!=null&&l.diasOv!=='')return Math.max(0,Math.min(15,+l.diasOv||0)); // mezclado: asistencia marca, la pastilla se puede ajustar
   return diasTrab(it.e.cedula,cy);}
 function pagoItem(it,cy,l){
   if(it.n&&it.n.pagado)return {total:+it.n.valor||0,locked:true,dias:+it.n.dias||0};
@@ -188,11 +196,8 @@ function renderNomina(v){
         +'<td class="r">'+(n.he_diurna||0)+'</td><td class="r">'+(n.he_nocturna||0)+'</td><td class="r">'+fmt(n.prestamo||0)+'</td>'
         +'<td class="r tot">'+fmt(pi.total)+' <span class="badge pill-pag" style="font-size:9px">pagada</span></td></tr>';
     }
-    var diasCell='<td><span class="diaspill">'+pi.dias+' días</span></td>';
-    if(sinAsist(e.cedula)){
-      var dv=(l.diasOv!=null?l.diasOv:0);
-      diasCell='<td><input class="inp" type="number" min="0" max="15" step="0.5" style="width:56px;border-color:var(--amb);background:#fdf6e7" value="'+dv+'" oninput="upd(\''+e.cedula+'\',\'diasOv\',this.value)"><div class="diassub">⚠ sin asistencia registrada — marca asistencia antes de liquidar</div></td>';
-    }
+    var _sa=sinAsist(e.cedula);
+    var diasCell='<td><span class="diaspill" style="cursor:pointer'+(_sa?';box-shadow:inset 0 0 0 1.5px var(--amb);background:#fdf6e7;color:#8a5a06':'')+'" title="'+(_sa?'Sin asistencia registrada — toca para ajustar':'Días de asistencia — toca para ajustar')+'" onclick="editDias(this,\''+e.cedula+'\','+pi.dias+')">'+pi.dias+' días'+(_sa?' •':'')+' <span style="opacity:.55;font-size:11px">✎</span></span></td>';
     return '<tr>'+name+diasCell
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hed+'" oninput="upd(\''+e.cedula+'\',\'hed\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hen+'" oninput="upd(\''+e.cedula+'\',\'hen\',this.value)"></td>'
