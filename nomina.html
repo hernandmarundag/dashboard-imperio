@@ -91,6 +91,9 @@ var H={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"}
 var R={ces:0.0833,intces:0.01,prima:0.0833,vac:0.0417,salud:0.085,pension:0.12,arl:0.0696,caja:0.04};
 var SMLMV=1750905, AUX_TRANSPORTE=249095; // paramétricas 2026
 var emps=[], nom=[], tab="nomina", liq={}, att={}, snap=false, rost=[];
+var ROL=(new URLSearchParams(location.search).get('rol')||'').toLowerCase();
+var SOLO_OBRA=(ROL==='ing'||ROL==='obra'); // el ingeniero solo ve nomina (marcar/ajustar dias); sin pago, liquidacion ni seguridad social
+if(SOLO_OBRA){document.addEventListener('DOMContentLoaded',function(){['pago','hist','liq','prest','empleados'].forEach(function(t){var el=document.querySelector('.tab[data-t="'+t+'"]');if(el)el.style.display='none';});});}
 var COLORS=['#5b5bd6','#1d8a5f','#c98a12','#c23b2e','#2563eb','#7c3aed','#0f766e','#b45309'];
 
 function fmt(n){return "$"+Math.round(n||0).toLocaleString("es-CO");}
@@ -140,7 +143,7 @@ function pago(e,dias,hed,hen,prest){
   return {devB:devB,devBon:devBon,hed:vHed,hen:vHen,total:devB+devBon+vHed+vHen-prest};
 }
 
-function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(function(x){x.className='tab'+(x.dataset.t===t?' on':'');});render();}
+function setTab(t){if(SOLO_OBRA&&['pago','hist','liq','prest','empleados'].indexOf(t)>=0)return;tab=t;document.querySelectorAll('.tab').forEach(function(x){x.className='tab'+(x.dataset.t===t?' on':'');});render();}
 
 var hxA={};
 function cargar(){
