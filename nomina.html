@@ -127,6 +127,19 @@ function diasTrab(ced,cy){
   return Math.min(15,dias);
 }
 function sinAsist(ced){return !att[ced];}
+// Marcar dia en la rejilla de Empleados: asistio -> falta -> incap -> asistio. Escribe en la tabla asistencia (upsert cedula,fecha)
+function markDia(ced,fecha,nombre,obra){
+  if(!att[ced])att[ced]={};
+  var cur=att[ced][fecha];
+  var nx=(cur===undefined||cur==='asistio')?((cur===undefined)?'asistio':'falta'):(cur==='falta'?'incapacidad':'asistio');
+  att[ced][fecha]=nx;
+  var l=liq[ced];if(l&&l.diasOv!=null)delete l.diasOv; // al marcar dia a dia, manda la asistencia
+  var cy=cycle();
+  var row={cedula:ced,nombre:nombre,fecha:fecha,quincena:cy.label,obra_id:obra||'weliving',estado:nx,dias:(nx==='falta'||nx==='incapacidad')?0:1,he_diurna:0,he_nocturna:0};
+  fetch(SB+"/rest/v1/asistencia?on_conflict=cedula,fecha",{method:"POST",headers:Object.assign({Prefer:"resolution=merge-duplicates,return=minimal"},H),body:JSON.stringify([row])})
+    .then(function(r){if(!r.ok)throw 0;}).catch(function(){alert('No se pudo guardar el día — revisa internet y vuelve a marcar');});
+  render();
+}
 function editDias(el,ced,cur){
   var inp=document.createElement('input');inp.type='number';inp.min=0;inp.max=15;inp.step=0.5;inp.value=cur;
   inp.className='inp';inp.style.cssText='width:64px;font-weight:700;text-align:center';
@@ -195,13 +208,23 @@ function renderNomina(v){
     var inact=e.__inactivo?' <span style="font-size:10px;color:var(--mut)">· inactivo</span>':'';
     var name='<td><div class="emprow">'+avatar(e,40)+'<div><div class="nm">'+esc(e.nombre_completo)+inact+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'')+'</div></div></div></td>';
     if(pi.locked){
-      return '<tr>'+name+'<td><span class="diaspill">'+pi.dias+' días</span></td>'
+      return '<tr>'+name+'<td style="color:var(--mut);font-size:11px">quincena pagada</td><td><span class="diaspill">'+pi.dias+' días</span></td>'
         +'<td class="r">'+(n.he_diurna||0)+'</td><td class="r">'+(n.he_nocturna||0)+'</td><td class="r">'+fmt(n.prestamo||0)+'</td>'
         +'<td class="r tot">'+fmt(pi.total)+' <span class="badge pill-pag" style="font-size:9px">pagada</span></td></tr>';
     }
+    var hoyISO=new Date().toISOString().slice(0,10);
+    var reg=att[e.cedula]||{};
+    var stripCells=cy.days.map(function(d){
+      var st=reg[d];var fut=d>hoyISO;var dd=+d.slice(8);
+      var bg=fut?'#f4f5f7':st==='falta'?'#fde8e6':st==='incapacidad'||st==='inc'?'#fdf3dd':st?'#e7f4ee':'#fff';
+      var fg=fut?'#c2c7d6':st==='falta'?'#c2372f':st==='incapacidad'||st==='inc'?'#a06a08':st?'#0f6e56':'#a7adbf';
+      var mark=st==='falta'?'F':st==='incapacidad'||st==='inc'?'I':st?'✓':dd;
+      return '<span '+(fut?'':'onclick="markDia(\''+e.cedula+'\',\''+d+'\',\''+esc(e.nombre_completo)+'\',\''+esc(e.obra_id||'')+'\')"')+' title="'+d+'" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:26px;border-radius:6px;margin:1px;font-size:10.5px;font-weight:700;background:'+bg+';color:'+fg+';border:1px solid '+(st&&!fut?'transparent':'#edeef1')+';cursor:'+(fut?'default':'pointer')+'">'+mark+'</span>';
+    }).join('');
+    var stripCell='<td style="min-width:'+ (cy.days.length*27+10) +'px">'+stripCells+'</td>';
     var _sa=sinAsist(e.cedula);
     var diasCell='<td><span class="diaspill" style="cursor:pointer'+(_sa?';box-shadow:inset 0 0 0 1.5px var(--amb);background:#fdf6e7;color:#8a5a06':'')+'" title="'+(_sa?'Sin asistencia registrada — toca para ajustar':'Días de asistencia — toca para ajustar')+'" onclick="editDias(this,\''+e.cedula+'\','+pi.dias+')">'+pi.dias+' días'+(_sa?' •':'')+' <span style="opacity:.55;font-size:11px">✎</span></span></td>';
-    return '<tr>'+name+diasCell
+    return '<tr>'+name+stripCell+diasCell
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hed+'" oninput="upd(\''+e.cedula+'\',\'hed\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" step="0.5" value="'+l.hen+'" oninput="upd(\''+e.cedula+'\',\'hen\',this.value)"></td>'
       +'<td class="r"><input class="inp" type="number" value="'+l.prest+'" oninput="upd(\''+e.cedula+'\',\'prest\',this.value)"></td>'
@@ -213,7 +236,7 @@ function renderNomina(v){
     +'<div class="kpi"><div class="l">Ciclo</div><div class="v" style="font-size:17px">'+cy.label+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">pago el 15 y el 30</div></div>'
     +'<div class="kpi"><div class="l">Personas</div><div class="v">'+rost.length+'</div></div></div>'
     +aviso
-    +'<div class="card"><table><thead><tr><th>Empleado</th><th>Días trabajados</th><th class="r">HE día</th><th class="r">HE noche</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div class="card"><table><thead><tr><th>Empleado</th><th>Marca el día (✓ asistió · F falta · I incap.)</th><th>Días</th><th class="r">HE día</th><th class="r">HE noche</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
     +'<div class="foot"><button class="btn g" onclick="guardarNomina()">Guardar nómina del ciclo</button></div>';
 }
 function toggleDay(ced,d){if(!att[ced])att[ced]={};var cur=att[ced][d];
