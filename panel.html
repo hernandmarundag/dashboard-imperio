@@ -3258,6 +3258,23 @@ const DEF = {
     {id:'wl-25',obra:'weliving',act:'Encofrado losa P7',         tipo:'encofrado',  fi:'2026-08-10',ff:'2026-08-13',mat:2476679, nom:2152500,  estado:'pendiente', avance:0},
     {id:'wl-26',obra:'weliving',act:'Amarre acero losa P7',      tipo:'acero',      fi:'2026-08-13',ff:'2026-08-15',mat:21543165,nom:2870000,  estado:'pendiente', avance:0},
     {id:'wl-27',obra:'weliving',act:'Vaciado losa P7',           tipo:'vaciado',    fi:'2026-08-18',ff:'2026-08-18',mat:24164644,nom:2152500,  estado:'pendiente', avance:0},
+    // ── GRIS + BLANCA · plan en cascada vertical hasta enero 2027 (escenario acelerado) ──
+    {id:'wl-28',obra:'weliving',act:'Mampostería P1-P3',                 tipo:'mamposteria',fi:'2026-08-04',ff:'2026-08-15',mat:16000000, nom:9000000, estado:'pendiente',avance:0},
+    {id:'wl-29',obra:'weliving',act:'Mampostería P4-N6 + áticos',        tipo:'mamposteria',fi:'2026-08-17',ff:'2026-09-05',mat:16000000, nom:8000000, estado:'pendiente',avance:0},
+    {id:'wl-30',obra:'weliving',act:'Red eléctrica embebida (subcontrato)',tipo:'redes',    fi:'2026-08-24',ff:'2026-10-03',mat:152000000,nom:0,       estado:'pendiente',avance:0},
+    {id:'wl-31',obra:'weliving',act:'Red hidráulica/sanitaria (subcontrato)',tipo:'redes',  fi:'2026-08-24',ff:'2026-10-03',mat:183000000,nom:0,       estado:'pendiente',avance:0},
+    {id:'wl-32',obra:'weliving',act:'Pañetes / morteros P1-N6',          tipo:'panete',     fi:'2026-09-07',ff:'2026-10-17',mat:12000000, nom:18000000,estado:'pendiente',avance:0},
+    {id:'wl-33',obra:'weliving',act:'Impermeabilización cubierta+baños',  tipo:'impermeab',  fi:'2026-09-21',ff:'2026-10-24',mat:15000000, nom:6000000, estado:'pendiente',avance:0},
+    {id:'wl-34',obra:'weliving',act:'Drywall cielos+muros P1-N6 (sobrecupo)',tipo:'drywall', fi:'2026-10-05',ff:'2026-11-21',mat:66000000, nom:38000000,estado:'pendiente',avance:0},
+    {id:'wl-35',obra:'weliving',act:'Fachada + ventanería (suministro+montaje)',tipo:'fachada',fi:'2026-10-05',ff:'2026-11-14',mat:320000000,nom:0,     estado:'pendiente',avance:0},
+    {id:'wl-36',obra:'weliving',act:'Ascensor (suministro+montaje)',      tipo:'ascensor',   fi:'2026-10-19',ff:'2026-11-28',mat:169000000,nom:0,       estado:'pendiente',avance:0},
+    {id:'wl-37',obra:'weliving',act:'Enchapes baños/cocina P1-N6',        tipo:'enchape',    fi:'2026-10-19',ff:'2026-11-21',mat:12000000, nom:8000000, estado:'pendiente',avance:0},
+    {id:'wl-38',obra:'weliving',act:'Pisos porcelanato P1-N6 (sobrecupo)',tipo:'piso',       fi:'2026-11-02',ff:'2026-12-12',mat:80000000, nom:25000000,estado:'pendiente',avance:0},
+    {id:'wl-39',obra:'weliving',act:'Carpintería puertas+closets (subcontrato)',tipo:'carpinteria',fi:'2026-11-23',ff:'2026-12-19',mat:57000000,nom:0,  estado:'pendiente',avance:0},
+    {id:'wl-40',obra:'weliving',act:'Pintura P1-N6',                     tipo:'pintura',    fi:'2026-12-01',ff:'2027-01-09',mat:20000000, nom:25000000,estado:'pendiente',avance:0},
+    {id:'wl-41',obra:'weliving',act:'Cocinas + aparatos (suministro)',    tipo:'acabados',   fi:'2026-12-14',ff:'2027-01-16',mat:143000000,nom:0,       estado:'pendiente',avance:0},
+    {id:'wl-42',obra:'weliving',act:'Rooftop social + jacuzzi + pérgola', tipo:'acabados',   fi:'2026-12-14',ff:'2027-01-23',mat:100000000,nom:20000000,estado:'pendiente',avance:0},
+    {id:'wl-43',obra:'weliving',act:'Aseo + entrega final',              tipo:'acabados',   fi:'2027-01-18',ff:'2027-01-31',mat:10000000, nom:8000000, estado:'pendiente',avance:0},
   ],
   pagos:[
     /* ── PILA MAYO — VENCIDA 11 JUN · dividida entre obras ─────────── */
@@ -8413,7 +8430,7 @@ function rCronograma() {
 
   var TODAY = new Date(); TODAY.setHours(0,0,0,0);
   var PROJ_START = new Date('2026-06-22'); PROJ_START.setHours(0,0,0,0);
-  var PROJ_END   = new Date('2026-08-18'); PROJ_END.setHours(0,0,0,0);
+  var PROJ_END   = new Date('2027-01-31'); PROJ_END.setHours(0,0,0,0);
   var TOTAL_DAYS = Math.ceil((PROJ_END - PROJ_START)/86400000)+1;
 
   function dDate(s){var d=new Date(s+'T00:00:00');return d;}
@@ -8454,7 +8471,7 @@ function rCronograma() {
   });
 
   // ── Tipo color bar
-  var TIPO_COL={acero:'#6366f1',encofrado:'#f59e0b',vaciado:'#10b981'};
+  var TIPO_COL={acero:'#6366f1',encofrado:'#f59e0b',vaciado:'#10b981',mamposteria:'#a855f7',redes:'#06b6d4',panete:'#eab308',impermeab:'#0ea5e9',drywall:'#ec4899',fachada:'#3b82f6',ascensor:'#64748b',enchape:'#14b8a6',piso:'#f97316',pintura:'#84cc16',carpinteria:'#b45309',acabados:'#22c55e'};
 
   // ── Construir HTML
   // Header
@@ -8462,8 +8479,8 @@ function rCronograma() {
     +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
     +'<div>'
     +'<div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:#94a3b8;text-transform:uppercase">Last Planner · Weliving</div>'
-    +'<div style="font-size:20px;font-weight:900;margin:4px 0">📅 Programación Estructura Belén</div>'
-    +'<div style="font-size:12px;color:#94a3b8">22 Jun → 18 Ago 2026 · 45 días hábiles · 58 calendario</div>'
+    +'<div style="font-size:20px;font-weight:900;margin:4px 0">📅 Plan completo en cascada · a enero 2027</div>'
+    +'<div style="font-size:12px;color:#94a3b8">22 Jun 2026 → 31 Ene 2027 · estructura + gris + blanca · entrega rentables dic, total ene</div>'
     +'</div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
     +'<div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 16px">'
