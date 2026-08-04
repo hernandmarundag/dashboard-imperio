@@ -61,7 +61,8 @@ a.dl{color:var(--ind);font-weight:700;text-decoration:none;font-size:12px}
 </style></head><body><div class="wrap">
 <div class="hd"><h1>🦺 Imperio · SST y RRHH</h1><p>Gestión del personal en obra · fichas, novedades, alertas y documentos</p></div>
 <div class="tabs">
-  <button class="tab on" id="t-personal" onclick="setTab('personal')">Personal</button>
+  <button class="tab on" id="t-cumplimiento" onclick="setTab('cumplimiento')">Cumplimiento</button>
+  <button class="tab" id="t-personal" onclick="setTab('personal')">Personal</button>
   <button class="tab" id="t-novedades" onclick="setTab('novedades')">Novedades</button>
   <button class="tab" id="t-alertas" onclick="setTab('alertas')">Alertas <span class="bdg" id="alert-bdg" style="display:none">0</span></button>
 </div>
@@ -74,7 +75,7 @@ a.dl{color:var(--ind);font-weight:700;text-decoration:none;font-size:12px}
 var SB='https://dghmgaaprlzpfnpsqzav.supabase.co';
 var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
 var H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
-var emps=[],cur=null,edits={},novs=[],tab='personal';
+var emps=[],cur=null,edits={},novs=[],tab='cumplimiento';
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.className='toast on';setTimeout(function(){t.className='toast';},1900);}
 function ini(n){return (n||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();}
@@ -96,11 +97,53 @@ function cargar(){
     render();
   }).catch(function(){document.getElementById('view').innerHTML='<p style="color:var(--red)">Error de conexión.</p>';});
 }
-function setTab(t){tab=t;['personal','novedades','alertas'].forEach(function(x){document.getElementById('t-'+x).className='tab'+(x===t?' on':'');});render();}
+function setTab(t){tab=t;['cumplimiento','personal','novedades','alertas'].forEach(function(x){document.getElementById('t-'+x).className='tab'+(x===t?' on':'');});render();}
 function render(){var v=document.getElementById('view');
+  if(tab==='cumplimiento')return renderCumplimiento(v);
   if(tab==='personal')return renderPersonal(v);
   if(tab==='novedades')return renderNovedades(v);
   return renderAlertas(v);
+}
+
+// ── CUMPLIMIENTO (semáforo de vencimientos SST) ──
+function estadoVenc(fecha,faltaTxt){
+  var h=hoy();
+  if(!fecha)return {cls:'no',ic:'●',txt:faltaTxt||'falta',ord:0};
+  if(fecha<h)return {cls:'no',ic:'●',txt:'vencido',ord:0};
+  var d=diasEntre(h,fecha); // dias hasta vencer (incluye hoy)
+  if(d!=null&&d<=30)return {cls:'wn',ic:'●',txt:d+'d',ord:1};
+  return {cls:'ok',ic:'●',txt:'al día',ord:2};
+}
+function estadoDotacion(e){
+  var h=hoy();
+  if(!e.dotacion_ultima)return {cls:'no',ic:'●',txt:'sin entregar',ord:0};
+  var next=new Date(e.dotacion_ultima); next.setMonth(next.getMonth()+4);
+  var nx=next.toISOString().slice(0,10);
+  if(nx<h)return {cls:'wn',ic:'●',txt:'toca entregar',ord:1};
+  return {cls:'ok',ic:'●',txt:'al día',ord:2};
+}
+function cellHTML(st){var col={ok:'var(--grn)',wn:'var(--amb)',no:'var(--red)'}[st.cls];
+  return '<td style="text-align:center"><span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1.15"><span style="color:'+col+';font-size:13px">'+st.ic+'</span><span style="font-size:10px;color:var(--mut)">'+st.txt+'</span></span></td>';}
+function renderCumplimiento(v){
+  var h=hoy();
+  var rows=emps.map(function(e){
+    var ex=estadoVenc(e.examen_proximo,'sin examen');
+    var al=e.curso_alturas?estadoVenc(e.curso_alturas_vence,'sin fecha'):{cls:'no',ic:'●',txt:'sin curso',ord:0};
+    var ind=e.induccion_sst_fecha?{cls:'ok',ic:'●',txt:'firmada',ord:2}:{cls:'no',ic:'●',txt:'falta',ord:0};
+    var dot=estadoDotacion(e);
+    var arl=e.arl_activa?{cls:'ok',ic:'●',txt:'activa',ord:2}:{cls:'no',ic:'●',txt:'sin ARL',ord:0};
+    var score=[ex,al,ind,dot,arl].reduce(function(a,x){return a+(x.cls==='no'?100:x.cls==='wn'?10:0);},0);
+    return {e:e,score:score,html:'<tr style="cursor:pointer" onclick="abrir(\''+e.id+'\')"><td style="padding:8px 6px"><div style="font-weight:700;font-size:13px">'+esc(e.nombre_completo)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(e.cargo||'')+'</div></td>'+cellHTML(ex)+cellHTML(al)+cellHTML(ind)+cellHTML(dot)+cellHTML(arl)+'</tr>'};
+  });
+  rows.sort(function(a,b){return b.score-a.score;});
+  var criticos=rows.filter(function(r){return r.score>=100;}).length;
+  var head='<tr style="font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:8px 6px">Trabajador</th><th>Examen<br>periódico</th><th>Trabajo<br>en alturas</th><th>Inducción<br>SST</th><th>Dotación</th><th>ARL</th></tr>';
+  v.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">'
+    +'<div class="tag">Semáforo de cumplimiento legal por trabajador (Res. 0312/2019). '+(criticos?'<b style="color:var(--red)">'+criticos+' con vencimiento crítico</b>':'<b style="color:var(--grn)">todo al día</b>')+'</div>'
+    +'<div class="tag"><span style="color:var(--grn)">●</span> al día &nbsp;<span style="color:var(--amb)">●</span> por vencer &nbsp;<span style="color:var(--red)">●</span> vencido/falta</div></div>'
+    +'<div style="background:#fff;border:1px solid var(--line);border-radius:14px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead>'+head+'</thead><tbody>'
+    +rows.map(function(r){return r.html;}).join('')+'</tbody></table></div>'
+    +(emps.length?'':'<p style="color:var(--mut)">Sin empleados activos.</p>');
 }
 
 // ── PERSONAL ──
@@ -207,6 +250,7 @@ function renderFicha(){var e=cur;
     +'<div class="sec">🪜 Alturas · Inducción · Dotación</div>'
     +'<div class="frow">'+sel('¿Curso trabajo en alturas?','curso_alturas')+f('Vence curso alturas','curso_alturas_vence','date')+'</div>'
     +'<div class="frow">'+f('Inducción SST (fecha)','induccion_sst_fecha','date')+sel('¿EPP/dotación entregada?','epp_entregado')+'</div>'
+    +(e.id?'<div class="frow" style="margin-top:4px"><button class="btn s" onclick="modalDotacion()">🧾 Registrar entrega de dotación</button><button class="btn s" onclick="registrarInduccion()">✍️ Inducción SST firmada</button></div>':'')
     +'<div class="frow">'+f('Talla camisa','talla_camisa')+f('Talla pantalón','talla_pantalon')+'</div>'
     +'<div class="frow">'+f('Talla calzado','talla_calzado')+'<div></div></div>'
     +(e.id?'<div class="sec">📎 Documentos (imagen o PDF)</div>'
@@ -251,12 +295,52 @@ function guardar(){if(!cur)return;
      .then(function(r){if(!r.ok)throw 0;toast('Empleado creado ✓');cerrar();cargar();}).catch(function(){toast('Error al crear');});
   }
 }
-function registrarRetiro(){if(!cur||!cur.id)return;
+function registrarRetiro(){if(!cur||!cur.id)return;var e=cur;
   var m=prompt('Motivo del retiro (renuncia / terminación / fin de obra...):','');if(m===null)return;
   var f=prompt('Fecha de retiro (AAAA-MM-DD):',hoy());if(f===null)return;
-  if(!confirm('¿Registrar retiro de '+cur.nombre_completo+'? Deja de aparecer en el personal activo (se conserva el histórico).'))return;
-  fetch(SB+'/rest/v1/empleados?id=eq.'+cur.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify({activo:false,fecha_retiro:f,motivo_retiro:m})})
-   .then(function(r){if(!r.ok)throw 0;toast('Retiro registrado');cerrar();cargar();}).catch(function(){toast('Error');});
+  var ex=prompt('EXAMEN MÉDICO DE RETIRO (obligatorio · Res. 2346/2007).\nFecha del examen (AAAA-MM-DD), o deja vacío si queda PENDIENTE:', '');
+  if(ex===null)return;
+  ex=(ex||'').trim();
+  if(!confirm('¿Registrar retiro de '+e.nombre_completo+'?'+(ex?'\nCon examen de retiro '+ex+'.':'\n⚠ SIN examen de retiro — queda como PENDIENTE (obligación legal).')+'\nDeja de aparecer en el personal activo (se conserva el histórico).'))return;
+  var patch={activo:false,fecha_retiro:f,motivo_retiro:m};
+  var chain=Promise.resolve();
+  if(ex){
+    patch.examen_retiro_fecha=ex;
+    chain=fetch(SB+'/rest/v1/empleado_examenes',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify([{empleado_id:e.id,cedula:e.cedula,tipo:'retiro',fecha:ex,aptitud:'—',entidad:null,notas:'Examen de egreso'}])}).catch(function(){});
+  }
+  chain.then(function(){return fetch(SB+'/rest/v1/empleados?id=eq.'+e.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify(patch)});})
+   .then(function(r){if(!r.ok)throw 0;toast(ex?'Retiro + examen registrados ✓':'Retiro registrado (examen PENDIENTE)');cerrar();cargar();}).catch(function(){toast('Error');});
+}
+// ── INDUCCIÓN SST firmada ──
+function registrarInduccion(){if(!cur||!cur.id)return;var e=cur;
+  if(!confirm('¿Registrar INDUCCIÓN SST firmada de '+e.nombre_completo+' con fecha de hoy?\nQueda en el historial y actualiza su ficha (Res. 0312/2019).'))return;
+  var f=hoy();
+  fetch(SB+'/rest/v1/empleado_capacitaciones',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify([{empleado_id:e.id,cedula:e.cedula,tema:'Inducción SST (firmada)',fecha:f,horas:2,notas:'Inducción de ingreso firmada por el trabajador'}])})
+   .then(function(r){if(!r.ok)throw 0;return fetch(SB+'/rest/v1/empleados?id=eq.'+e.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify({induccion_sst_fecha:f})});})
+   .then(function(){toast('Inducción registrada ✓');cur.induccion_sst_fecha=f;var ix=emps.findIndex(function(x){return x.id===e.id;});if(ix>=0)emps[ix].induccion_sst_fecha=f;renderFicha();}).catch(function(){toast('Error');});
+}
+// ── DOTACIÓN con checklist + firma ──
+var DOT_ITEMS=['Botas de seguridad','Pantalón de labor','Camisa/camibuso','Casco','Guantes','Impermeable'];
+function modalDotacion(){if(!cur||!cur.id)return;var e=cur;
+  var mes=new Date().getMonth()+1;var per=mes<=4?'Abril':mes<=8?'Agosto':'Diciembre';
+  document.getElementById('mbody2').innerHTML='<div class="mhead"><div style="font-weight:800">🧾 Entrega de dotación</div><button class="btn s" onclick="cerrar2()">✕</button></div>'
+    +'<div class="tag" style="margin-bottom:8px">'+esc(e.nombre_completo)+' · tallas: camisa '+esc(e.talla_camisa||'—')+' · pantalón '+esc(e.talla_pantalon||'—')+' · calzado '+esc(e.talla_calzado||'—')+'</div>'
+    +'<div class="frow"><div class="fg"><label>Período (3 al año)</label><select id="d-per"><option'+(per==='Abril'?' selected':'')+'>Abril</option><option'+(per==='Agosto'?' selected':'')+'>Agosto</option><option'+(per==='Diciembre'?' selected':'')+'>Diciembre</option></select></div><div class="fg"><label>Fecha de entrega</label><input type="date" id="d-fecha" value="'+hoy()+'"></div></div>'
+    +'<div class="sec">Elementos entregados (checklist)</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px">'+DOT_ITEMS.map(function(it,i){return '<label class="chk" style="cursor:pointer"><input type="checkbox" id="di-'+i+'" '+(i<3?'checked':'')+' style="width:18px;height:18px"> '+esc(it)+'</label>';}).join('')+'</div>'
+    +'<div class="fg" style="margin-top:8px"><label>Entregado por</label><input id="d-por" placeholder="Nombre de quien entrega"></div>'
+    +'<label class="chk" style="cursor:pointer;margin-top:4px"><input type="checkbox" id="d-firma" checked style="width:18px;height:18px"> El trabajador firmó el recibido</label>'
+    +'<div class="foot"><button class="btn s" onclick="cerrar2()">Cancelar</button><button class="btn g" onclick="guardarDotacion()">Registrar entrega</button></div>';
+  document.getElementById('ov2').className='ov on';
+}
+function guardarDotacion(){if(!cur||!cur.id)return;var e=cur;
+  var items=DOT_ITEMS.filter(function(it,i){var el=document.getElementById('di-'+i);return el&&el.checked;});
+  if(!items.length){toast('Marca al menos un elemento');return;}
+  var per=document.getElementById('d-per').value;var fecha=document.getElementById('d-fecha').value||hoy();
+  var por=(document.getElementById('d-por').value||'').trim();var firma=document.getElementById('d-firma').checked;
+  fetch(SB+'/rest/v1/dotaciones',{method:'POST',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify([{empleado_id:e.id,fecha_entrega:fecha,periodo:per,items:items,firmado:firma,entregado_por:por||null}])})
+   .then(function(r){if(!r.ok)throw 0;return fetch(SB+'/rest/v1/empleados?id=eq.'+e.id,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},H),body:JSON.stringify({dotacion_ultima:fecha,epp_entregado:true})});})
+   .then(function(){toast('Dotación registrada ✓');cur.dotacion_ultima=fecha;cur.epp_entregado=true;var ix=emps.findIndex(function(x){return x.id===e.id;});if(ix>=0){emps[ix].dotacion_ultima=fecha;emps[ix].epp_entregado=true;}cerrar2();renderFicha();}).catch(function(){toast('Error al guardar');});
 }
 
 // ── DOCUMENTOS (casillas por tipo) ──
