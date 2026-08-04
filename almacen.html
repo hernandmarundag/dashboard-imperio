@@ -1,0 +1,227 @@
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache">
+<title>Imperio · Almacén</title>
+<style>
+:root{--indigo:#4f46e5;--bg:#f6f7fb;--card:#fff;--line:#e6e8f0;--mut:#8a90a6;--ink:#1b2030;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:linear-gradient(120deg,#4f46e5,#7c3aed);color:#fff;padding:16px 18px}
+.top h1{margin:0;font-size:19px}.top .d{font-size:12px;opacity:.9;margin-top:3px}
+.wrap{max-width:1050px;margin:0 auto;padding:14px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:12px 0;-webkit-overflow-scrolling:touch}
+.tabs button{flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;color:#4b5163;white-space:nowrap}
+.tabs button.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.tabs button .n{background:#dc2626;color:#fff;border-radius:20px;padding:0 6px;font-size:10px;margin-left:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.kpi .l{font-size:11px;color:var(--mut);font-weight:600}.kpi .v{font-size:18px;font-weight:800;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;padding:7px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid #f0f1f6}tr:last-child td{border-bottom:0}
+.r{text-align:right}.c{text-align:center}
+.badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px}
+.b-ok{background:#e7f6ee;color:#0f7a3d}.b-low{background:#fdeaea;color:#b42318}.b-mid{background:#fef3e2;color:#b45309}
+.b-ent{background:#e7f0fd;color:#1d4ed8}.b-sal{background:#fdeaea;color:#b42318}
+.b-epp{background:#eaf6ff;color:#0369a1}.b-mat{background:#f0eafe;color:#6d28d9}.b-her{background:#fef3e2;color:#b45309}
+.b-en_obra{background:#e7f6ee;color:#0f7a3d}.b-prestada{background:#fef3e2;color:#b45309}.b-reparacion{background:#eaf1ff;color:#1d4ed8}.b-baja{background:#f0f1f6;color:#6b7280}
+.fld{margin-bottom:9px}.fld label{display:block;font-size:12px;color:#6b7280;font-weight:700;margin-bottom:3px}
+.fld input,.fld select,.fld textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.save{background:var(--green);color:#fff;border:0;border-radius:9px;padding:11px 14px;font-weight:700;cursor:pointer;font-size:14px;width:100%}
+.save.ent{background:var(--indigo)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+.btn.pri{background:var(--green);color:#fff;border-color:var(--green)}
+.h2{font-weight:800;font-size:15px;margin:2px 0 10px}
+.note{font-size:12px;color:var(--mut);margin:2px 0 10px}
+.banner{background:#eef0fe;border:1px solid #c7d2fe;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+.banner b{color:var(--indigo)}
+.recv{background:#f2fbf6;border:1px solid #bbe8cd;border-radius:12px;padding:11px;margin-bottom:9px}
+.recv .l1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.recv .pv{font-weight:800}.recv .vl{font-weight:800;color:#0f7a3d}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:99;pointer-events:none}
+.toast.on{opacity:1}.toast.err{background:#b42318}
+.loading{text-align:center;padding:40px;color:var(--mut)}
+.pill{background:#f1f2f8;border-radius:6px;padding:2px 7px;font-size:11px;color:#555}
+.del{background:none;border:0;color:#c0392b;cursor:pointer;font-size:13px}
+.lnk{color:var(--indigo);text-decoration:none;font-weight:700}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}.wrap{padding:10px}}
+</style></head>
+<body>
+<div class="top"><h1>📦 Imperio · Almacén</h1><div class="d">Por recibir · Stock · Salidas · Herramientas · Kardex</div></div>
+<div class="wrap"><div id="banner"></div>
+<div class="tabs" id="tabs"></div>
+<div id="view"><div class="loading">⏳ Cargando almacén…</div></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+var ROL=((new URLSearchParams(location.search).get('rol'))||'admin').toLowerCase();
+var OBRA=((new URLSearchParams(location.search).get('obra'))||'weliving').toLowerCase();
+var PUEDE_EDITAR=(ROL==='almacenista'||ROL==='admin');
+var OBRAS=[['weliving','Weliving'],['robledo','Robledo'],['novaeva','Novaeva']];
+var MAT=[],MOV=[],REQS=[],HER=[],TAB='recibir',KMAT=null,RECV=null;
+function obraNm(id){var o=OBRAS.find(function(x){return x[0]===id;});return o?o[1]:id;}
+function fmtN(n){n=+n||0;return (Math.round(n*100)/100).toLocaleString('es-CO');}
+function fmtM(n){return '$'+Math.round(+n||0).toLocaleString('es-CO');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function js(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function hoy(){return new Date().toISOString().slice(0,10);}
+function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH,cache:'no-store'}).then(function(r){return r.json();});}
+function post(p,b){return fetch(SB_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(b)});}
+function patch(p,b){return fetch(SB_URL+'/rest/v1/'+p,{method:'PATCH',headers:Object.assign({},SBH,{'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(b)});}
+function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.classList.toggle('err',!!e);t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on');},1800);}
+function boot(){
+ document.getElementById('view').innerHTML='<div class="loading">⏳ Cargando almacén…</div>';
+ Promise.all([
+  g('almacen_materiales?obra=eq.'+OBRA+'&activo=is.true&order=nombre'),
+  g('almacen_movimientos?obra=eq.'+OBRA+'&eliminado=is.false&order=fecha.desc,id.desc&limit=4000'),
+  g('requisiciones?obra=eq.'+OBRA+'&tipo=eq.compra&pagado=is.true&order=fecha.desc&limit=300'),
+  g('almacen_herramientas?obra=eq.'+OBRA+'&activo=is.true&order=nombre')
+ ]).then(function(res){MAT=res[0]||[];MOV=res[1]||[];REQS=res[2]||[];HER=res[3]||[];render();})
+ .catch(function(){document.getElementById('view').innerHTML='<div class="loading">⚠️ No pude conectar. <button class="btn" onclick="boot()">Reintentar</button></div>';});
+}
+function porRecibir(){return REQS.filter(function(r){return !r.recibido_almacen;});}
+function stockDe(nombre){var e=0,s=0;MOV.forEach(function(m){if((m.material||'')!==nombre)return;if(m.tipo==='entrada')e+=(+m.cantidad||0);else s+=(+m.cantidad||0);});return {ent:e,sal:s,saldo:e-s};}
+function listaMateriales(){var nombres={};MAT.forEach(function(x){nombres[x.nombre]={unidad:x.unidad,min:+x.stock_min||0};});MOV.forEach(function(m){if(m.material&&!nombres[m.material])nombres[m.material]={unidad:m.unidad||'un',min:0};});return Object.keys(nombres).map(function(nm){var st=stockDe(nm);return {nombre:nm,unidad:nombres[nm].unidad,min:nombres[nm].min,ent:st.ent,sal:st.sal,saldo:st.saldo};}).sort(function(a,b){return a.nombre.localeCompare(b.nombre);});}
+function estadoStock(it){if(it.saldo<=0)return ['b-low','Agotado'];if(it.min>0&&it.saldo<=it.min)return ['b-mid','Bajo'];return ['b-ok','OK'];}
+function render(){
+ var pr=porRecibir().length;
+ var tabs=[['recibir','📥 Por recibir',pr],['stock','📊 Stock',0],['salida','⬆️ Salida',0],['herram','🔧 Herramientas',0],['kardex','📜 Kardex',0]];
+ document.getElementById('tabs').innerHTML=tabs.map(function(t){return '<button class="'+(TAB===t[0]?'on':'')+'" onclick="setTab(\''+t[0]+'\')">'+t[1]+(t[2]?'<span class="n">'+t[2]+'</span>':'')+'</button>';}).join('');
+ var rolN={almacenista:'📦 Almacenista',admin:'🔑 Admin',ing:'👷 Ingeniero'}[ROL]||ROL;
+ document.getElementById('banner').innerHTML='<div class="banner"><b>'+rolN+'</b> · Obra: '+obraNm(OBRA)+(PUEDE_EDITAR?'':' · solo lectura')+' &nbsp;<select onchange="cambiaObra(this.value)" style="border:1px solid #c7d2fe;border-radius:6px;padding:3px 6px;font-size:12px">'+OBRAS.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===OBRA?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>';
+ var v=document.getElementById('view');
+ if(TAB==='recibir')v.innerHTML=viewRecibir();
+ else if(TAB==='stock')v.innerHTML=viewStock();
+ else if(TAB==='salida')v.innerHTML=viewSalida();
+ else if(TAB==='herram')v.innerHTML=viewHerram();
+ else if(TAB==='kardex')v.innerHTML=viewKardex();
+}
+function setTab(t){TAB=t;RECV=null;render();}
+function cambiaObra(o){OBRA=o;var u=new URL(location.href);u.searchParams.set('obra',o);history.replaceState(null,'',u);boot();}
+// ---- POR RECIBIR ----
+function viewRecibir(){
+ if(RECV)return formRecibir(RECV);
+ var pr=porRecibir();
+ var head='<div class="card"><div class="h2">📥 Por recibir en el almacén</div><div class="note">Compras pagadas que aún no han llegado físicamente. Ábrela, revisa la factura, y márcala como recibida — entra al stock.</div>';
+ if(!PUEDE_EDITAR)head+='<div class="note">Solo el almacenista o admin pueden recibir.</div>';
+ if(!pr.length)return head+'<div class="note">✅ Todo al día — no hay compras pendientes por recibir.</div></div>'+manualBtn();
+ var cards=pr.map(function(r){var fac=r.factura_url?'<a class="lnk" href="'+esc(r.factura_url)+'" target="_blank" rel="noopener">📄 ver factura</a>':'<span class="pill">sin factura</span>';return '<div class="recv"><div class="l1"><span class="pv">'+esc(r.proveedor||'Sin proveedor')+'</span><span class="vl">'+fmtM(r.valor)+'</span></div><div class="note" style="margin:4px 0">'+esc(r.descripcion||'')+(r.cantidad?' · '+esc(r.cantidad):'')+' · '+esc(r.fecha||'')+' · '+fac+'</div>'+(PUEDE_EDITAR?'<button class="btn pri" onclick="abrirRecibir('+r.id+')">✓ Recibir</button>':'')+'</div>';}).join('');
+ return head+cards+'</div>'+manualBtn();
+}
+function manualBtn(){if(!PUEDE_EDITAR)return '';return '<div class="card"><div class="h2">➕ Entrada manual</div><div class="note">Material que llegó sin requisición (donación, sobrante, compra directa).</div><button class="btn" onclick="abrirRecibir(0)">Registrar entrada manual</button></div>';}
+function abrirRecibir(id){RECV=id;render();window.scrollTo(0,0);}
+function formRecibir(id){
+ var r=id?REQS.find(function(x){return x.id===id;}):null;
+ var titulo=r?('Recibir · '+esc(r.proveedor||'')):'Entrada manual';
+ var mat=r?(r.descripcion||r.material||''):'';
+ var cant=r&&r.cantidad?(parseFloat(String(r.cantidad).replace(/[^0-9.]/g,''))||1):1;
+ var clase=(r&&r.clase_item)||'MATERIAL';
+ return '<div class="card"><div class="h2">✓ '+titulo+'</div>'
+  +(r&&r.factura_url?'<div class="note"><a class="lnk" href="'+esc(r.factura_url)+'" target="_blank" rel="noopener">📄 Abrir factura / cotización para verificar</a></div>':'')
+  +'<div class="fld"><label>¿Qué es?</label><select id="r-clase"><option value="MATERIAL"'+(clase==='MATERIAL'?' selected':'')+'>🧱 Material (se consume)</option><option value="EPP"'+(clase==='EPP'?' selected':'')+'>🦺 EPP / dotación</option><option value="HERRAMIENTA"'+(clase==='HERRAMIENTA'?' selected':'')+'>🔧 Herramienta (activo)</option></select></div>'
+  +'<div class="fld"><label>Material / ítem que llegó</label><input id="r-mat" value="'+esc(mat)+'" placeholder="Ej: Guantes de carnaza"></div>'
+  +'<div class="grid2"><div class="fld"><label>Cantidad recibida</label><input id="r-cant" type="number" step="any" value="'+cant+'"></div><div class="fld"><label>Unidad</label><input id="r-und" list="undlist" value="un" placeholder="un, par, bulto, kg"><datalist id="undlist"><option value="un"><option value="par"><option value="kg"><option value="bulto"><option value="m³"><option value="m"><option value="gl"><option value="lb"></datalist></div></div>'
+  +'<div class="grid2"><div class="fld"><label>Proveedor</label><input id="r-prov" value="'+esc(r?r.proveedor:'')+'"></div><div class="fld"><label>Fecha de llegada</label><input id="r-fecha" type="date" value="'+hoy()+'"></div></div>'
+  +'<div class="fld"><label>Recibido por</label><input id="r-resp" placeholder="Nombre del almacenista"></div>'
+  +'<div class="note" id="r-hint"></div>'
+  +'<button class="save ent" onclick="confirmarRecibido('+id+')">✓ Confirmar recibido — entra al almacén</button>'
+  +'<button class="btn" style="width:100%;margin-top:8px" onclick="RECV=null;render()">Cancelar</button></div>';
+}
+function confirmarRecibido(id){
+ var r=id?REQS.find(function(x){return x.id===id;}):null;
+ var clase=document.getElementById('r-clase').value;
+ var mat=(document.getElementById('r-mat').value||'').trim();
+ var cant=parseFloat(document.getElementById('r-cant').value)||0;
+ var und=(document.getElementById('r-und').value||'un').trim();
+ var prov=(document.getElementById('r-prov').value||'').trim()||null;
+ var fecha=document.getElementById('r-fecha').value||hoy();
+ var resp=(document.getElementById('r-resp').value||'').trim()||null;
+ if(!mat){toast('Escribe qué llegó',true);return;}
+ if(cant<=0){toast('Cantidad debe ser mayor a 0',true);return;}
+ toast('Registrando…');
+ var done=function(){if(r){r.recibido_almacen=true;patch('requisiciones?id=eq.'+id,{recibido_almacen:true,clase_item:clase}).catch(function(){});}RECV=null;TAB=(clase==='HERRAMIENTA'?'herram':'stock');toast('Recibido ✓ · en el almacén');render();};
+ if(clase==='HERRAMIENTA'){
+  post('almacen_herramientas',{obra:OBRA,nombre:mat,cantidad:cant,estado:'en_obra',asignada_a:resp,valor:r?r.valor:null,notas:(prov?('Recibido de '+prov):null)}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])HER.push(rows[0]);done();}).catch(function(){toast('Error al registrar herramienta',true);});
+ }else{
+  crearMaterialSiFalta(mat,und);
+  post('almacen_movimientos',{obra:OBRA,material:mat,tipo:'entrada',clase:clase,cantidad:cant,unidad:und,proveedor:prov,fecha:fecha,responsable:resp,requisicion_id:(id||null),referencia:(id?('Req #'+id):'Entrada manual')}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])MOV.unshift(rows[0]);done();}).catch(function(){toast('Error al registrar entrada',true);});
+ }
+}
+function crearMaterialSiFalta(nombre,unidad){var existe=MAT.find(function(x){return x.nombre===nombre;});if(existe)return;post('almacen_materiales',{obra:OBRA,nombre:nombre,unidad:unidad||'un'}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])MAT.push(rows[0]);}).catch(function(){});}
+// ---- STOCK ----
+function claseBadge(c){var m={EPP:['b-epp','EPP'],MATERIAL:['b-mat','Material'],HERRAMIENTA:['b-her','Herram']};var x=m[c]||['b-mat',(c||'Material')];return '<span class="badge '+x[0]+'">'+x[1]+'</span>';}
+function viewStock(){
+ var items=listaMateriales();
+ var agot=items.filter(function(i){return i.saldo<=0;}).length,bajo=items.filter(function(i){return i.min>0&&i.saldo>0&&i.saldo<=i.min;}).length;
+ var kpis='<div class="kpis"><div class="kpi"><div class="l">Materiales</div><div class="v">'+items.length+'</div></div><div class="kpi"><div class="l">Movimientos</div><div class="v">'+MOV.length+'</div></div><div class="kpi"><div class="l" style="color:var(--amber)">Bajo stock</div><div class="v" style="color:var(--amber)">'+bajo+'</div></div><div class="kpi"><div class="l" style="color:var(--red)">Agotados</div><div class="v" style="color:var(--red)">'+agot+'</div></div></div>';
+ if(!items.length)return kpis+'<div class="card"><div class="note">Aún no hay materiales en stock. Recibe una compra en la pestaña <b>Por recibir</b>.</div></div>';
+ var rows=items.map(function(it){var e=estadoStock(it);return '<tr><td><b>'+esc(it.nombre)+'</b></td><td class="c pill">'+esc(it.unidad)+'</td><td class="r" style="color:#1d4ed8">'+fmtN(it.ent)+'</td><td class="r" style="color:#b42318">'+fmtN(it.sal)+'</td><td class="r"><b>'+fmtN(it.saldo)+'</b></td><td class="c"><span class="badge '+e[0]+'">'+e[1]+'</span></td><td class="c"><button class="pill" style="cursor:pointer;border:0" onclick="verKardex(\''+js(it.nombre)+'\')">ver</button></td></tr>';}).join('');
+ return kpis+'<div class="card"><div class="h2">Existencias · '+obraNm(OBRA)+'</div><div style="overflow-x:auto"><table><tr><th>Material</th><th class="c">Und</th><th class="r">Entradas</th><th class="r">Salidas</th><th class="r">Saldo</th><th class="c">Estado</th><th></th></tr>'+rows+'</table></div></div>';
+}
+// ---- SALIDA ----
+function matOptions(sel){return listaMateriales().map(function(i){return '<option value="'+esc(i.nombre)+'"'+(sel===i.nombre?' selected':'')+'>'+esc(i.nombre)+' ('+esc(i.unidad)+')</option>';}).join('');}
+function viewSalida(){
+ if(!PUEDE_EDITAR)return '<div class="card"><div class="note">Solo el almacenista o admin registran salidas.</div></div>';
+ var items=listaMateriales();
+ if(!items.length)return '<div class="card"><div class="note">No hay material en stock todavía.</div></div>';
+ return '<div class="card"><div class="h2">⬆️ Salida / vale de consumo</div><div class="note">Material que sale hacia la obra. Descuenta del stock.</div>'
+  +'<div class="fld"><label>Material</label><select id="s-mat" onchange="mostrarSaldoSel()"><option value="">-- Escoge --</option>'+matOptions()+'</select><div id="s-saldo" class="note" style="margin:4px 0 0"></div></div>'
+  +'<div class="grid2"><div class="fld"><label>Cantidad que sale</label><input id="s-cant" type="number" step="any" placeholder="0"></div><div class="fld"><label>Fecha</label><input id="s-fecha" type="date" value="'+hoy()+'"></div></div>'
+  +'<div class="fld"><label>¿Para qué? (actividad / ubicación)</label><input id="s-ref" placeholder="Ej: Vaciado losa 2, Subsótano…"></div>'
+  +'<div class="grid2"><div class="fld"><label>Quién lo pide</label><input id="s-sol" placeholder="Oficial / cuadrilla"></div><div class="fld"><label>Entregado por</label><input id="s-resp" placeholder="Almacenista"></div></div>'
+  +'<button class="save" onclick="guardarSalida()">Registrar salida</button></div>'+movRecientes('salida');
+}
+function mostrarSaldoSel(){var nm=document.getElementById('s-mat').value;var el=document.getElementById('s-saldo');if(!nm){el.textContent='';return;}var st=stockDe(nm);el.innerHTML='Saldo actual: <b>'+fmtN(st.saldo)+'</b>';}
+function guardarSalida(){
+ var mat=(document.getElementById('s-mat').value||'').trim();
+ var cant=parseFloat(document.getElementById('s-cant').value)||0;
+ if(!mat){toast('Escoge el material',true);return;}
+ if(cant<=0){toast('Pon una cantidad mayor a 0',true);return;}
+ var st=stockDe(mat);
+ if(cant>st.saldo){if(!confirm('Vas a sacar '+fmtN(cant)+' pero el saldo es '+fmtN(st.saldo)+'. ¿Continuar?'))return;}
+ var it=listaMateriales().find(function(x){return x.nombre===mat;});
+ var body={obra:OBRA,material:mat,tipo:'salida',cantidad:cant,unidad:it?it.unidad:'un',fecha:(document.getElementById('s-fecha').value||hoy()),referencia:(document.getElementById('s-ref').value||'').trim()||null,solicita:(document.getElementById('s-sol').value||'').trim()||null,responsable:(document.getElementById('s-resp').value||'').trim()||null};
+ toast('Guardando…');
+ post('almacen_movimientos',body).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])MOV.unshift(rows[0]);toast('Salida registrada ✓');render();}).catch(function(){toast('Error al guardar',true);});
+}
+function movRecientes(tipo){
+ var list=MOV.filter(function(m){return m.tipo===tipo;}).slice(0,15);
+ if(!list.length)return '';
+ var rows=list.map(function(m){return '<tr><td class="pill">'+esc(m.fecha||'')+'</td><td><b>'+esc(m.material||'')+'</b></td><td class="r">'+fmtN(m.cantidad)+' '+esc(m.unidad||'')+'</td><td>'+esc(tipo==='entrada'?(m.proveedor||m.referencia||''):(m.referencia||''))+'</td>'+(PUEDE_EDITAR?'<td class="c"><button class="del" onclick="borrarMov('+m.id+')">🗑</button></td>':'')+'</tr>';}).join('');
+ return '<div class="card"><div class="h2">'+(tipo==='entrada'?'Últimas entradas':'Últimas salidas')+'</div><div style="overflow-x:auto"><table><tr><th>Fecha</th><th>Material</th><th class="r">Cant.</th><th>'+(tipo==='entrada'?'Proveedor/ref':'Para qué')+'</th>'+(PUEDE_EDITAR?'<th></th>':'')+'</tr>'+rows+'</table></div></div>';
+}
+function borrarMov(id){var m=MOV.find(function(x){return x.id===id;});if(!m)return;if(!confirm('¿Eliminar este movimiento?\n'+m.tipo+' · '+m.material+' · '+fmtN(m.cantidad)))return;patch('almacen_movimientos?id=eq.'+id,{eliminado:true}).then(function(){MOV=MOV.filter(function(x){return x.id!==id;});toast('Eliminado ✓');render();}).catch(function(){toast('Error',true);});}
+// ---- HERRAMIENTAS ----
+var EST_HER=[['en_obra','En obra'],['prestada','Prestada'],['reparacion','En reparación'],['baja','Dada de baja']];
+function estHerLbl(e){var x=EST_HER.find(function(y){return y[0]===e;});return x?x[1]:e;}
+function viewHerram(){
+ var enObra=HER.filter(function(h){return h.estado==='en_obra';}).reduce(function(a,h){return a+(+h.cantidad||0);},0);
+ var prest=HER.filter(function(h){return h.estado==='prestada';}).length;
+ var rep=HER.filter(function(h){return h.estado==='reparacion';}).length;
+ var kpis='<div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="l">Herramientas en obra</div><div class="v">'+fmtN(enObra)+'</div></div><div class="kpi"><div class="l" style="color:var(--amber)">Prestadas</div><div class="v" style="color:var(--amber)">'+prest+'</div></div><div class="kpi"><div class="l" style="color:#1d4ed8">En reparación</div><div class="v" style="color:#1d4ed8">'+rep+'</div></div></div>';
+ var form=PUEDE_EDITAR?('<div class="card"><div class="h2">➕ Agregar herramienta</div><div class="grid2"><div class="fld"><label>Nombre</label><input id="h-nom" placeholder="Ej: Taladro demoledor"></div><div class="fld"><label>Cantidad</label><input id="h-cant" type="number" step="any" value="1"></div></div><div class="grid3"><div class="fld"><label>Marca</label><input id="h-marca" placeholder="Stanley, Makita…"></div><div class="fld"><label>Rótulo</label><input id="h-rot" placeholder="TD-01"></div><div class="fld"><label>Serial</label><input id="h-ser" placeholder="Serial"></div></div><div class="grid2"><div class="fld"><label>Responsable / dónde está</label><input id="h-asig" placeholder="Ej: Maestro Milton"></div><div class="fld"><label>Valor aprox (opcional)</label><input id="h-val" type="number" placeholder="$"></div></div><button class="save ent" onclick="agregarHer()">Guardar herramienta</button></div>'):'';
+ if(!HER.length)return kpis+form+'<div class="card"><div class="note">Aún no hay herramientas registradas.</div></div>';
+ var rows=HER.map(function(h){var acc=PUEDE_EDITAR?('<select onchange="cambiarEstadoHer('+h.id+',this.value)" style="font-size:11px;padding:3px 5px;border:1px solid var(--line);border-radius:6px">'+EST_HER.map(function(e){return '<option value="'+e[0]+'"'+(h.estado===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select> <button class="del" onclick="borrarHer('+h.id+')">🗑</button>'):estHerLbl(h.estado);
+  return '<tr><td><b>'+esc(h.nombre)+'</b></td><td>'+esc(h.marca||'')+'</td><td class="c pill">'+esc(h.rotulo||'')+'</td><td class="pill" style="font-size:10px">'+esc(h.serial||'')+'</td><td class="c">'+fmtN(h.cantidad)+'</td><td class="c"><span class="badge b-'+h.estado+'">'+estHerLbl(h.estado)+'</span></td><td>'+esc(h.asignada_a||'')+'</td><td class="c">'+acc+'</td></tr>';}).join('');
+ return kpis+form+'<div class="card"><div class="h2">🔧 Herramientas de la empresa · '+obraNm(OBRA)+'</div><div style="overflow-x:auto"><table style="min-width:720px"><tr><th>Herramienta</th><th>Marca</th><th class="c">Rótulo</th><th>Serial</th><th class="c">Cant.</th><th class="c">Estado</th><th>Responsable</th><th class="c">Acción</th></tr>'+rows+'</table></div></div>';
+}
+function agregarHer(){var nom=(document.getElementById('h-nom').value||'').trim();var cant=parseFloat(document.getElementById('h-cant').value)||1;var asig=(document.getElementById('h-asig').value||'').trim()||null;var val=parseFloat(document.getElementById('h-val').value)||null;var marca=(document.getElementById('h-marca').value||'').trim()||null;var rot=(document.getElementById('h-rot').value||'').trim()||null;var ser=(document.getElementById('h-ser').value||'').trim()||null;if(!nom){toast('Escribe el nombre',true);return;}toast('Guardando…');post('almacen_herramientas',{obra:OBRA,nombre:nom,cantidad:cant,estado:'en_obra',asignada_a:asig,valor:val,marca:marca,rotulo:rot,serial:ser}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])HER.push(rows[0]);toast('Herramienta agregada ✓');render();}).catch(function(){toast('Error',true);});}
+function cambiarEstadoHer(id,est){var h=HER.find(function(x){return x.id===id;});if(!h)return;var extra={estado:est};if(est==='prestada'){var q=prompt('¿A quién se prestó?',h.asignada_a||'');if(q!==null&&q.trim())extra.asignada_a=q.trim();}h.estado=est;if(extra.asignada_a)h.asignada_a=extra.asignada_a;patch('almacen_herramientas?id=eq.'+id,extra).then(function(){toast('Actualizada ✓');render();}).catch(function(){toast('Error',true);});}
+function borrarHer(id){var h=HER.find(function(x){return x.id===id;});if(!h)return;if(!confirm('¿Quitar "'+h.nombre+'" del registro?'))return;patch('almacen_herramientas?id=eq.'+id,{activo:false}).then(function(){HER=HER.filter(function(x){return x.id!==id;});toast('Quitada ✓');render();}).catch(function(){toast('Error',true);});}
+// ---- KARDEX ----
+function verKardex(nombre){KMAT=nombre;TAB='kardex';render();window.scrollTo(0,0);}
+function viewKardex(){
+ var items=listaMateriales();
+ var sel='<div class="fld"><label>Material</label><select onchange="KMAT=this.value;render()"><option value="">-- Escoge un material --</option>'+items.map(function(i){return '<option value="'+esc(i.nombre)+'"'+(KMAT===i.nombre?' selected':'')+'>'+esc(i.nombre)+'</option>';}).join('')+'</select></div>';
+ if(!KMAT)return '<div class="card"><div class="h2">📜 Kardex</div>'+sel+'<div class="note">Escoge un material para ver su historial con saldo.</div></div>';
+ var movs=MOV.filter(function(m){return (m.material||'')===KMAT;}).slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.id-b.id);});
+ var saldo=0;var rows=movs.map(function(m){var q=+m.cantidad||0;if(m.tipo==='entrada')saldo+=q;else saldo-=q;var det=m.tipo==='entrada'?(m.proveedor||m.referencia||''):((m.referencia||'')+(m.solicita?(' · '+m.solicita):''));return '<tr><td class="pill">'+esc(m.fecha||'')+'</td><td><span class="badge '+(m.tipo==='entrada'?'b-ent':'b-sal')+'">'+(m.tipo==='entrada'?'Entra':'Sale')+'</span></td><td class="r" style="color:#1d4ed8">'+(m.tipo==='entrada'?fmtN(q):'')+'</td><td class="r" style="color:#b42318">'+(m.tipo==='salida'?fmtN(q):'')+'</td><td class="r"><b>'+fmtN(saldo)+'</b></td><td>'+esc(det)+'</td></tr>';}).join('');
+ var st=stockDe(KMAT);
+ return '<div class="card"><div class="h2">📜 Kardex · '+esc(KMAT)+'</div>'+sel+'<div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="l">Entradas</div><div class="v" style="color:#1d4ed8">'+fmtN(st.ent)+'</div></div><div class="kpi"><div class="l">Salidas</div><div class="v" style="color:#b42318">'+fmtN(st.sal)+'</div></div><div class="kpi"><div class="l">Saldo</div><div class="v">'+fmtN(st.saldo)+'</div></div></div><div style="overflow-x:auto"><table><tr><th>Fecha</th><th>Mov.</th><th class="r">Entra</th><th class="r">Sale</th><th class="r">Saldo</th><th>Detalle</th></tr>'+rows+'</table></div></div>';
+}
+boot();
+</script>
+</body></html>
