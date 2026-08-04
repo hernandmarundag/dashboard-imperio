@@ -92,7 +92,9 @@ var R={ces:0.0833,intces:0.01,prima:0.0833,vac:0.0417,salud:0.085,pension:0.12,a
 var SMLMV=1750905, AUX_TRANSPORTE=249095; // paramétricas 2026
 var emps=[], nom=[], tab="nomina", liq={}, att={}, snap=false, rost=[];
 var ROL=(new URLSearchParams(location.search).get('rol')||'').toLowerCase();
-var SOLO_OBRA=(ROL==='ing'||ROL==='obra'); // el ingeniero solo ve nomina (marcar/ajustar dias); sin pago, liquidacion ni seguridad social
+var SOLO_OBRA=(ROL==='ing'||ROL==='obra');
+var TESORERA=(ROL==='tesorera');
+if(TESORERA){tab='pago';document.addEventListener('DOMContentLoaded',function(){['nomina','liq','prest','empleados'].forEach(function(t){var el=document.querySelector('.tab[data-t="'+t+'"]');if(el)el.style.display='none';});var p=document.querySelector('.tab[data-t="pago"]');if(p){document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});p.classList.add('on');}});} // el ingeniero solo ve nomina (marcar/ajustar dias); sin pago, liquidacion ni seguridad social
 if(SOLO_OBRA){document.addEventListener('DOMContentLoaded',function(){['pago','hist','liq','prest','empleados'].forEach(function(t){var el=document.querySelector('.tab[data-t="'+t+'"]');if(el)el.style.display='none';});});}
 var COLORS=['#5b5bd6','#1d8a5f','#c98a12','#c23b2e','#2563eb','#7c3aed','#0f766e','#b45309'];
 
@@ -156,10 +158,10 @@ function pago(e,dias,hed,hen,prest){
   return {devB:devB,devBon:devBon,hed:vHed,hen:vHen,total:devB+devBon+vHed+vHen-prest};
 }
 
-function setTab(t){if(SOLO_OBRA&&['pago','hist','liq','prest','empleados'].indexOf(t)>=0)return;tab=t;document.querySelectorAll('.tab').forEach(function(x){x.className='tab'+(x.dataset.t===t?' on':'');});render();}
+function setTab(t){if(SOLO_OBRA&&['pago','hist','liq','prest','empleados'].indexOf(t)>=0)return;if(TESORERA&&['nomina','liq','prest','empleados'].indexOf(t)>=0)return;tab=t;document.querySelectorAll('.tab').forEach(function(x){x.className='tab'+(x.dataset.t===t?' on':'');});render();}
 
 var hxA={};
-function cargar(){
+function cargar(cb){
   document.getElementById("sub").textContent="Cargando…";
   var cy=cycle();
   Promise.all([
@@ -178,7 +180,7 @@ function cargar(){
       }) : emps.map(function(e){return {e:e,n:null};});
     liq={};rost.forEach(function(it){var ha=hxA[it.e.cedula]||{};liq[it.e.cedula]={hed:it.n?(+it.n.he_diurna||0):(ha.hed||0),hen:it.n?(+it.n.he_nocturna||0):(ha.hen||0),prest:it.n?(+it.n.prestamo||0):0};});
     document.getElementById("sub").textContent=rost.length+(snap?" empleados (guardada)":" empleados")+" · ciclo "+cy.label+" · se paga el 15 y el 30";
-    render();
+    render();if(typeof cb==='function')cb();
   }).catch(function(){document.getElementById("sub").textContent="Error de conexión";});
 }
 
@@ -238,7 +240,8 @@ function renderNomina(v){
     +'<div class="kpi"><div class="l">Personas</div><div class="v">'+rost.length+'</div></div></div>'
     +aviso
     +'<div class="card" style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Marca el día (✓ asistió · F falta · I incap.)</th><th>Días</th><th class="r">HE día</th><th class="r">HE noche</th><th class="r">Préstamo</th><th class="r">A pagar</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +'<div class="foot"><button class="btn g" onclick="guardarNomina()">Guardar nómina del ciclo</button></div>';
+    +(SOLO_OBRA?'':(function(){var cumplida=new Date().toISOString().slice(0,10)>cy.hasta;
+      return '<div class="foot">'+(cumplida?'<button class="btn g" style="font-size:15px;padding:0 22px" onclick="liquidarQuincena()">🧾 Liquidar quincena → pasa a Tesorería</button><div style="font-size:11.5px;color:var(--mut);margin-top:6px">La quincena ya se cumplió. Al liquidar queda por empleado con su cuenta, en Pago, lista para marcar pagado y generar el recibo.</div>':'<button class="btn g" onclick="guardarNomina()">Guardar nómina del ciclo</button>')+'</div>';})());
 }
 function toggleDay(ced,d){if(!att[ced])att[ced]={};var cur=att[ced][d];
   var nx=cur===undefined?'falta':cur==='falta'?'inc':undefined;
@@ -258,6 +261,8 @@ function upd(ced,c,val){if(!liq[ced])liq[ced]={hed:0,hen:0,prest:0};liq[ced][c]=
   var tot=0;rost.forEach(function(x){tot+=pagoItem(x,cy,liq[x.e.cedula]||{hed:0,hen:0,prest:0}).total;});
   document.getElementById('k-net').textContent=fmt(tot);
 }
+var _liqFlow=false;
+function liquidarQuincena(){_liqFlow=true;guardarNomina();}
 function guardarNomina(){
   var cy=cycle();
   var nomOps=rost.map(function(it){var e=it.e,n=it.n;
@@ -269,7 +274,7 @@ function guardarNomina(){
     if(n&&n.id)return fetch(SB+"/rest/v1/nomina?id=eq."+n.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)});
     return fetch(SB+"/rest/v1/nomina",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(body)});
   });
-  Promise.all(nomOps).then(function(){toast("Nómina guardada ✓");cargar();}).catch(function(){toast("Error al guardar");});
+  Promise.all(nomOps).then(function(){toast(_liqFlow?"Quincena liquidada ✓ — en Tesorería":"Nómina guardada ✓");var _f=_liqFlow;_liqFlow=false;cargar(function(){if(_f)setTab("pago");});}).catch(function(){toast("Error al guardar");});
 }
 
 // ── PAGO ──
