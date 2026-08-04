@@ -100,8 +100,8 @@ var hx={};
 function cargar(){
   cy=cycle();document.getElementById("sub").textContent="Cargando "+cy.label+"…";
   Promise.all([
-    fetch(SB+"/rest/v1/empleados?select=id,cedula,nombre_completo,cargo,obra_id,foto_url,activo&order=obra_id,nombre_completo",{headers:H}).then(function(r){return r.json();}),
-    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H}).then(function(r){return r.json();})
+    fetch(SB+"/rest/v1/empleados?select=id,cedula,nombre_completo,cargo,obra_id,foto_url,activo&order=obra_id,nombre_completo",{headers:H,cache:'no-store'}).then(function(r){return r.json();}),
+    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H,cache:'no-store'}).then(function(r){return r.json();})
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
     marks={};hx={};(Array.isArray(res[1])?res[1]:[]).forEach(function(a){if(a.estado==='falta'||a.estado==='incapacidad'){if(!marks[a.cedula])marks[a.cedula]={};marks[a.cedula][a.fecha]=a.estado;}if((+a.he_diurna||0)>0||(+a.he_nocturna||0)>0){var hp=hx[a.cedula]||{hed:0,hen:0};hp.hed+=(+a.he_diurna||0);hp.hen+=(+a.he_nocturna||0);hx[a.cedula]=hp;}});

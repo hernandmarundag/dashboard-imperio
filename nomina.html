@@ -165,9 +165,9 @@ function cargar(cb){
   document.getElementById("sub").textContent="Cargando…";
   var cy=cycle();
   Promise.all([
-    fetch(SB+"/rest/v1/empleados?select=*&order=obra_id,nombre_completo",{headers:H}).then(function(r){return r.json();}),
-    fetch(SB+"/rest/v1/nomina?quincena=eq."+encodeURIComponent(cy.label)+"&order=valor.desc",{headers:H}).then(function(r){return r.json();}),
-    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H}).then(function(r){return r.json();})
+    fetch(SB+"/rest/v1/empleados?select=*&order=obra_id,nombre_completo",{headers:H,cache:'no-store'}).then(function(r){return r.json();}),
+    fetch(SB+"/rest/v1/nomina?quincena=eq."+encodeURIComponent(cy.label)+"&order=valor.desc",{headers:H,cache:'no-store'}).then(function(r){return r.json();}),
+    fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H,cache:'no-store'}).then(function(r){return r.json();})
   ]).then(function(res){
     emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
     nom=Array.isArray(res[1])?res[1]:[];
@@ -430,7 +430,7 @@ function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(fu
   if(e.id&&e.cedula)cargarHistRecibos(e.cedula);
 }
 function cargarHistRecibos(ced){
-  fetch(SB+"/rest/v1/nomina?cedula=eq."+encodeURIComponent(ced)+"&order=id.desc",{headers:H}).then(function(r){return r.json();}).then(function(rows){
+  fetch(SB+"/rest/v1/nomina?cedula=eq."+encodeURIComponent(ced)+"&order=id.desc",{headers:H,cache:'no-store'}).then(function(r){return r.json();}).then(function(rows){
     var el=document.getElementById("ficha-hist");if(!el)return;
     rows=Array.isArray(rows)?rows:[];
     if(!rows.length){el.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:8px">🧾 Historial de recibos</div><div style="color:var(--mut);font-size:12px">Aún no tiene recibos.</div>';return;}
@@ -473,7 +473,7 @@ var MESN={ene:'01',feb:'02',mar:'03',abr:'04',may:'05',jun:'06',jul:'07',ago:'08
 function histKey(q){var p=(q||'').split(' ');var y=+p[2]||0,mo=+(MESN[p[1]]||0),q2=(p[0]||'').indexOf('16')===0?2:1;return y*100+mo*2+q2;}
 function renderHistorial(v){
   v.innerHTML='<div class="hint">Cargando historial…</div>';
-  fetch(SB+"/rest/v1/nomina?select=quincena,valor,pagado",{headers:H}).then(function(r){return r.json();}).then(function(rows){
+  fetch(SB+"/rest/v1/nomina?select=quincena,valor,pagado",{headers:H,cache:'no-store'}).then(function(r){return r.json();}).then(function(rows){
     var g={};(Array.isArray(rows)?rows:[]).forEach(function(n){var q=n.quincena||'—';if(!g[q])g[q]={q:q,n:0,tot:0,pag:0};g[q].n++;g[q].tot+=(+n.valor||0);if(n.pagado)g[q].pag++;});
     var arr=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return histKey(b.q)-histKey(a.q);});
     if(!arr.length){v.innerHTML='<div class="hint">Aún no hay quincenas registradas.</div>';return;}
