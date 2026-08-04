@@ -294,7 +294,7 @@ function renderPago(v){
     +'<div class="card"><table><thead><tr><th>Empleado</th><th>Pago a</th><th class="r">Valor</th><th class="r">Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function marcarPag(id){var f=new Date().toISOString().slice(0,10);fetch(SB+"/rest/v1/nomina?id=eq."+id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({pagado:true,fecha_pago:f,estado:'pagada'})})
-  .then(function(r){if(!r.ok)throw 0;var n=nom.find(function(x){return x.id===id;});if(n){n.pagado=true;n.fecha_pago=f;}toast("Pagado ✓");render();}).catch(function(){toast("Error");});}
+  .then(function(r){if(!r.ok)throw 0;var n=nom.find(function(x){return x.id===id;});if(n){n.pagado=true;n.fecha_pago=f;}toast("Pagado ✓");render();if(n)mostrarRecibo(n);}).catch(function(){toast("Error");});}
 var histN={};
 function openRecibo(id){mostrarRecibo(nom.find(function(x){return x.id===id;}));}
 function openReciboHist(id){mostrarRecibo(histN[id]);}
