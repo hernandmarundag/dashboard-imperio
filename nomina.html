@@ -100,7 +100,8 @@ var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im
 var H={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"};
 var R={ces:0.0833,intces:0.01,prima:0.0833,vac:0.0417,salud:0.085,pension:0.12,arl:0.0696,caja:0.04};
 var SMLMV=1750905, AUX_TRANSPORTE=249095; // paramétricas 2026
-var emps=[], nom=[], tab="nomina", liq={}, att={}, snap=false, rost=[];
+var emps=[], empsAll=[], empFilter='activos', nom=[], tab="nomina", liq={}, att={}, snap=false, rost=[];
+function hoy(){return new Date().toISOString().slice(0,10);}
 var ROL=(new URLSearchParams(location.search).get('rol')||'').toLowerCase();
 var SOLO_OBRA=(ROL==='ing'||ROL==='obra');
 var TESORERA=(ROL==='tesorera');
@@ -179,7 +180,8 @@ function cargar(cb){
     fetch(SB+"/rest/v1/nomina?quincena=eq."+encodeURIComponent(cy.label)+"&order=valor.desc",{headers:H,cache:'no-store'}).then(function(r){return r.json();}),
     fetch(SB+"/rest/v1/asistencia?quincena=eq."+encodeURIComponent(cy.label)+"&select=cedula,fecha,estado,he_diurna,he_nocturna",{headers:H,cache:'no-store'}).then(function(r){return r.json();})
   ]).then(function(res){
-    emps=(Array.isArray(res[0])?res[0]:[]).filter(function(e){return e.activo!==false;});
+    empsAll=(Array.isArray(res[0])?res[0]:[]);
+    emps=empsAll.filter(function(e){return e.activo!==false;});
     nom=Array.isArray(res[1])?res[1]:[];
     att={};hxA={};(Array.isArray(res[2])?res[2]:[]).forEach(function(a){if((+a.he_diurna||0)>0||(+a.he_nocturna||0)>0){var hp=hxA[a.cedula]||{hed:0,hen:0};hp.hed+=(+a.he_diurna||0);hp.hen+=(+a.he_nocturna||0);hxA[a.cedula]=hp;}if(a.estado==='extras')return;if(!att[a.cedula])att[a.cedula]={};att[a.cedula][a.fecha]=a.estado;});
     snap=nom.length>0; // quincena ya guardada = foto congelada
@@ -363,22 +365,44 @@ function mostrarRecibo(n){
 function cerrarRecibo(){document.getElementById("ov-recibo").className="ov";}
 
 // ── LIQUIDACIÓN ──
+function calcLiq(e,hasta){
+  var base=(+e.salario_basico||0)+(+e.bonificacion||0);
+  if(!e.fecha_ingreso)return null;
+  var ing=new Date(e.fecha_ingreso+'T12:00:00');var fin=new Date((hasta||new Date().toISOString().slice(0,10))+'T12:00:00');
+  var dias=Math.max(0,Math.round((fin-ing)/86400000));
+  var iniPrima=new Date(Math.max(ing.getTime(),new Date('2026-07-01T12:00:00').getTime()));var diasPrima=Math.max(0,Math.round((fin-iniPrima)/86400000));
+  var ces=Math.round(base*dias/360),intc=Math.round(ces*0.12*dias/360),prima=Math.round(base*diasPrima/360),vac=Math.round(base*dias/720);
+  return {base:base,dias:dias,ces:ces,intc:intc,prima:prima,vac:vac,total:ces+intc+prima+vac};
+}
+function liqRow(e,hasta,retObj){
+  var c=calcLiq(e,hasta);
+  if(!c)return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td><td colspan="5" style="color:var(--amb);font-size:12px">Falta fecha de ingreso — edítala en la ficha</td></tr>';
+  var sub='desde '+esc(e.fecha_ingreso)+(retObj?' → '+(e.fecha_retiro?esc(e.fecha_retiro):'sin fecha retiro'):'')+' · '+c.dias+' días';
+  return '<tr'+(retObj?' style="background:#fff7f6"':'')+'><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+(retObj?' <span class="badge" style="background:#fde8e6;color:#c2372f;font-size:9px">retirado</span>':'')+'</div><div class="cargo">'+sub+'</div></div></div></td>'
+    +'<td class="r">'+fmt(c.ces)+'</td><td class="r">'+fmt(c.intc)+'</td><td class="r">'+fmt(c.prima)+'</td><td class="r">'+fmt(c.vac)+'</td><td class="r tot">'+fmt(c.total)+(retObj?' <button class="btn s" style="padding:3px 8px;font-size:11px;margin-left:4px" onclick="fixRetiro(\''+e.id+'\')">✎ fecha</button>':'')+'</td></tr>';
+}
 function renderLiq(v){
-  var hoy=new Date();var totLiq=0;
-  var rows=emps.map(function(e){
-    var base=(+e.salario_basico||0)+(+e.bonificacion||0);
-    if(!e.fecha_ingreso) return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td><td colspan="6" style="color:var(--amb);font-size:12px">Falta fecha de ingreso — edítala en la ficha del empleado</td></tr>';
-    var ing=new Date(e.fecha_ingreso+'T12:00:00');var dias=Math.max(0,Math.round((hoy-ing)/86400000));
-    // La prima se pagó hasta el 30-jun-2026; la nueva acumula solo desde el 1-jul
-    var iniPrima=new Date(Math.max(ing.getTime(), new Date('2026-07-01T12:00:00').getTime()));var diasPrima=Math.max(0,Math.round((hoy-iniPrima)/86400000));
-    var ces=Math.round(base*dias/360);var intc=Math.round(ces*0.12*dias/360);var prima=Math.round(base*diasPrima/360);var vac=Math.round(base*dias/720);
-    var tl=ces+intc+prima+vac;totLiq+=tl;
-    return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">desde '+esc(e.fecha_ingreso)+' · '+dias+' días</div></div></div></td>'
-      +'<td class="r">'+fmt(ces)+'</td><td class="r">'+fmt(intc)+'</td><td class="r">'+fmt(prima)+'</td><td class="r">'+fmt(vac)+'</td><td class="r tot">'+fmt(tl)+'</td></tr>';
-  }).join("");
-  v.innerHTML='<div class="kpis"><div class="kpi"><div class="l">Liquidación acumulada total</div><div class="v" style="color:var(--amb)">'+fmt(totLiq)+'</div><div style="font-size:10px;color:var(--mut)">si se liquidara hoy</div></div></div>'
-    +'<div class="hint">Prestaciones acumuladas por empleado, según fecha de ingreso y días laborados. <strong>No se paga cada quincena</strong>; se acumula hasta la liquidación. Base = básico + bonificación. <strong>La prima acumula solo desde el 1-jul</strong> (la anterior se pagó el 30-jun-2026); cesantías y vacaciones van desde el ingreso.</div>'
-    +'<div class="card"><table><thead><tr><th>Empleado</th><th class="r">Cesantías</th><th class="r">Int. cesantías</th><th class="r">Prima</th><th class="r">Vacaciones</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var hoy=new Date().toISOString().slice(0,10);
+  var rets=empsAll.filter(function(e){return e.activo===false;});
+  var acts=empsAll.filter(function(e){return e.activo!==false;});
+  var totRet=rets.reduce(function(a,e){var c=calcLiq(e,e.fecha_retiro||hoy);return a+(c?c.total:0);},0);
+  var totAcc=acts.reduce(function(a,e){var c=calcLiq(e,hoy);return a+(c?c.total:0);},0);
+  var thead='<thead><tr><th>Empleado</th><th class="r">Cesantías</th><th class="r">Int. ces.</th><th class="r">Prima</th><th class="r">Vacaciones</th><th class="r">Total</th></tr></thead>';
+  var sec='';
+  if(rets.length){
+    sec+='<div class="kpis"><div class="kpi" style="border:1.5px solid #f3c7c3"><div class="l">🔴 Por liquidar (retirados)</div><div class="v" style="color:#c2372f">'+fmt(totRet)+'</div><div style="font-size:10px;color:var(--mut)">'+rets.length+' persona(s) · calculado a su fecha de retiro</div></div></div>'
+      +'<div class="hint" style="background:#fdeceb;border:1px solid #f3c7c3;color:#a3352c">Estas personas ya no están activas y hay que liquidarlas. Si a alguna le falta la fecha de retiro, ponla con ✎ para que el cálculo sea exacto.</div>'
+      +'<div class="card" style="overflow-x:auto"><table>'+thead+'<tbody>'+rets.map(function(e){return liqRow(e,e.fecha_retiro||hoy,true);}).join('')+'</tbody></table></div>';
+  }
+  sec+='<div class="kpis" style="margin-top:14px"><div class="kpi"><div class="l">Prestaciones acumuladas (activos)</div><div class="v" style="color:var(--amb)">'+fmt(totAcc)+'</div><div style="font-size:10px;color:var(--mut)">si se liquidara hoy</div></div></div>'
+    +'<div class="hint">Prestaciones por empleado según fecha de ingreso. No se paga cada quincena; se acumula hasta la liquidación. Base = básico + bonificación. La prima acumula desde el 1-jul (la anterior se pagó el 30-jun-2026).</div>'
+    +'<div class="card" style="overflow-x:auto"><table>'+thead+'<tbody>'+acts.map(function(e){return liqRow(e,hoy,false);}).join('')+'</tbody></table></div>';
+  v.innerHTML=sec;
+}
+function fixRetiro(id){var e=empsAll.find(function(x){return x.id===id;});if(!e)return;
+  var f=prompt('Fecha de retiro de '+e.nombre_completo+' (AAAA-MM-DD):',e.fecha_retiro||hoy());if(f===null)return;
+  fetch(SB+"/rest/v1/empleados?id=eq."+id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({fecha_retiro:f,activo:false})})
+   .then(function(r){if(!r.ok)throw 0;e.fecha_retiro=f;toast('Fecha de retiro guardada ✓');render();}).catch(function(){toast('Error');});
 }
 
 // ── SEGURIDAD SOCIAL ──
@@ -398,16 +422,30 @@ function renderPrest(v){
 }
 
 // ── EMPLEADOS + FICHA ──
+function setEmpFilter(f){empFilter=f;render();}
+function fmtFecha(d){if(!d)return '—';var p=String(d).slice(0,10).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;}
 function renderEmpleados(v){
-  v.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="hint" style="margin:0">Toca un empleado para abrir su ficha técnica: foto, datos demográficos, afiliaciones y salario.</div><button class="btn" onclick="openFichaNuevo()">+ Nuevo empleado</button></div>'
-    +'<div class="grid-emp">'+emps.map(function(e){return '<div class="empcard" onclick="openFicha(\''+e.id+'\')">'+avatar(e,46)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div><div style="margin-top:3px"><span class="obratag">'+esc(e.obra_id||'')+'</span></div></div></div>';}).join("")+'</div>';
+  var acts=empsAll.filter(function(e){return e.activo!==false;});
+  var rets=empsAll.filter(function(e){return e.activo===false;});
+  var lista=empFilter==='retirados'?rets:empFilter==='todos'?empsAll.slice():acts;
+  lista.sort(function(a,b){return (a.activo===false?1:0)-(b.activo===false?1:0)||String(a.nombre_completo||'').localeCompare(String(b.nombre_completo||''));});
+  function chip(f,txt,n){return '<button class="tab'+(empFilter===f?' on':'')+'" style="flex:none;padding:7px 13px" onclick="setEmpFilter(\''+f+'\')">'+txt+' <span style="opacity:.7">('+n+')</span></button>';}
+  var head='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+    +'<div class="tabs" style="margin:0;max-width:none">'+chip('activos','Activos',acts.length)+chip('retirados','Retirados',rets.length)+chip('todos','Todos',empsAll.length)+'</div>'
+    +'<button class="btn" onclick="openFichaNuevo()">+ Nuevo empleado</button></div>';
+  if(empFilter==='retirados'&&rets.length){head+='<div class="hint" style="background:#fdeceb;border:1px solid #f3c7c3;color:#a3352c;font-weight:600">'+rets.length+' persona(s) retirada(s) — revisa que tengan fecha de retiro y liquídalas en la pestaña <b>Liquidación</b>.</div>';}
+  v.innerHTML=head+'<div class="grid-emp">'+lista.map(function(e){
+    var ret=e.activo===false;
+    var estado=ret?'<span class="obratag" style="background:#fdeceb;color:#c2372f">Retirado'+(e.fecha_retiro?' '+fmtFecha(e.fecha_retiro):' · sin fecha')+'</span>':'<span class="obratag" style="background:#e7f6ee;color:#15803d">Activo</span>';
+    return '<div class="empcard" onclick="openFicha(\''+e.id+'\')" style="'+(ret?'opacity:.92;border-color:#f3c7c3':'')+'">'+avatar(e,46)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+' · '+esc(e.obra_id||'—')+'</div><div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+estado+'<span class="cargo" style="font-size:11px">ingreso '+fmtFecha(e.fecha_ingreso)+'</span></div></div></div>';
+  }).join("")+'</div>'+(lista.length?'':'<p style="color:var(--mut)">Sin empleados en este filtro.</p>');
 }
 function openFichaNuevo(){
   var nuevo={id:null,activo:true,nombre_completo:'',cedula:'',cargo:'',obra_id:'weliving'};
   emps.push(nuevo);nuevo.__i=emps.length-1;openFicha('__nuevo__');
 }
 var fichaId=null, fichaEdits={}, _fe=null;
-function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(function(x){return x.id===id;});if(!e)return;_fe=e;fichaId=id;fichaEdits={};
+function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:empsAll.find(function(x){return x.id===id;});if(!e)return;_fe=e;fichaId=id;fichaEdits={};
   function f(lbl,key,type){var val=e[key]==null?'':e[key];return '<div class="fg"><label>'+lbl+'</label><input type="'+(type||'text')+'" value="'+esc(val)+'" oninput="fichaSet(\''+key+'\',this.value)"></div>';}
   function fcargoN(){var v=e.cargo==null?'':e.cargo;var L=['Maestro de obra','Oficial','Ayudante','Obrero','Contramaestre','Residente de obra','Almacenista','Armador de hierro','Mampostero','Operario equipo','Conductor','Vigilante','Servicios generales','Ingeniero','SISO / SST','Administrativo'].slice();if(v&&L.indexOf(v)<0)L.unshift(v);return '<div class="fg"><label>Cargo</label><select onchange="setCargoN(this.value)">'+'<option value="">— elegir cargo —</option>'+L.map(function(c){return '<option'+(c===v?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'<option value="__otro__">Otro (escribir)…</option></select></div>';}
   var body='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div style="display:flex;align-items:center;gap:12px">'+avatar(e,64)
@@ -420,6 +458,7 @@ function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(fu
     +'<div class="frow">'+f('Contacto de emergencia','contacto_emergencia')+f('Tel. emergencia','telefono_emergencia')+'</div>'
     +'<div class="frow">'+fcargoN()+f('Obra','obra_id')+'</div>'
     +'<div class="frow">'+f('Fecha de ingreso','fecha_ingreso','date')+f('Clase riesgo ARL','clase_riesgo_arl','number')+'</div>'
+    +'<div class="frow">'+f('Fecha de retiro (si aplica)','fecha_retiro','date')+f('Motivo de retiro','motivo_retiro')+'</div>'
     +'<div class="frow">'+f('EPS','eps')+f('AFP (pensión)','afp')+'</div>'
     +'<div class="frow">'+f('ARL','arl')+f('Caja compensación','caja_compensacion')+'</div>'
     +'<div style="margin:16px 0 6px;font-size:13px;font-weight:800;color:#4f46e5;border-top:1px solid var(--line);padding-top:12px">🦺 Seguridad y Salud en el Trabajo (SST)</div>'
@@ -435,7 +474,7 @@ function openFicha(id){var e=(id==='__nuevo__')?emps[emps.length-1]:emps.find(fu
     +'<div class="frow">'+f('Método de pago','metodo_pago')+f('Cuenta','cuenta_pago')+'</div>'
     +'<div class="frow">'+f('Saldo préstamo','prestamo_saldo','number')+'<div class="fg"><label>Activo</label><select onchange="fichaSet(\'activo\',this.value===\'si\')"><option value="si"'+(e.activo!==false?' selected':'')+'>Sí</option><option value="no"'+(e.activo===false?' selected':'')+'>No</option></select></div></div>'
     +(e.id?'<div id="ficha-hist" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">🧾 Historial de recibos</div><div style="color:var(--mut);font-size:12px">Cargando…</div></div>':'')
-    +'<div class="foot">'+(e.id?'<button class="btn s" style="color:var(--red)" onclick="inactivarEmp()">Inactivar</button>':'')+'<button class="btn s" onclick="cerrarFicha()">Cancelar</button><button class="btn g" onclick="guardarFicha()">'+(e.id?'Guardar ficha':'Crear empleado')+'</button></div>';
+    +'<div class="foot">'+(e.id?(e.activo===false?'<button class="btn s" style="margin-right:auto;color:#15803d" onclick="reactivarEmp()">↺ Reactivar</button>':'<button class="btn s" style="margin-right:auto;color:var(--red)" onclick="inactivarEmp()">Registrar retiro</button>'):'')+'<button class="btn s" onclick="cerrarFicha()">Cancelar</button><button class="btn g" onclick="guardarFicha()">'+(e.id?'Guardar ficha':'Crear empleado')+'</button></div>';
   document.getElementById("ficha-body").innerHTML=body;document.getElementById("ov-ficha").className="ov on";
   if(e.id&&e.cedula)cargarHistRecibos(e.cedula);
 }
@@ -473,9 +512,15 @@ function guardarFicha(){if(!_fe)return;
       .then(function(r){if(!r.ok)throw 0;toast("Empleado creado ✓");cerrarFicha();cargar();}).catch(function(){toast("Error al crear");});
   }
 }
-function inactivarEmp(){if(!_fe||!_fe.id)return;if(!confirm('¿Inactivar a '+_fe.nombre_completo+'? Deja de aparecer en nómina, pero se conserva el histórico.'))return;
-  fetch(SB+"/rest/v1/empleados?id=eq."+_fe.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({activo:false})})
-    .then(function(r){if(!r.ok)throw 0;toast("Empleado inactivado");cerrarFicha();cargar();}).catch(function(){toast("Error");});
+function reactivarEmp(){if(!_fe||!_fe.id)return;if(!confirm('¿Reactivar a '+_fe.nombre_completo+'? Vuelve al personal activo.'))return;
+  fetch(SB+"/rest/v1/empleados?id=eq."+_fe.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({activo:true,fecha_retiro:null,motivo_retiro:null})})
+   .then(function(r){if(!r.ok)throw 0;toast('Reactivado ✓');cerrarFicha();cargar();}).catch(function(){toast('Error');});
+}
+function inactivarEmp(){if(!_fe||!_fe.id)return;
+  var f=prompt('Registrar RETIRO de '+_fe.nombre_completo+'.\nFecha de retiro (AAAA-MM-DD):',hoy());if(f===null)return;
+  var mo=prompt('Motivo (renuncia / terminación / fin de obra):','');if(mo===null)return;
+  fetch(SB+"/rest/v1/empleados?id=eq."+_fe.id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify({activo:false,fecha_retiro:f,motivo_retiro:mo||null})})
+    .then(function(r){if(!r.ok)throw 0;toast("Retiro registrado ✓ · liquídalo en Liquidación");cerrarFicha();cargar();}).catch(function(){toast("Error");});
 }
 
 // init
