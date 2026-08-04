@@ -59,7 +59,17 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
 .leg span{display:inline-flex;align-items:center;gap:4px}
 .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
 @media print{body *{visibility:hidden}#ov-recibo,#ov-recibo *{visibility:visible}#ov-recibo{position:absolute;inset:0;background:#fff;display:block;padding:0}#ov-recibo .modal{box-shadow:none;max-width:100%}#ov-recibo .btn,#ov-recibo .foot{display:none}}
-@media(max-width:560px){.tabs{width:100%;box-sizing:border-box;justify-content:flex-start}.tab{padding:8px 11px;font-size:13px}}
+@media(max-width:560px){
+ .tabs{width:100%;box-sizing:border-box;justify-content:flex-start;overflow-x:auto}.tab{padding:8px 11px;font-size:13px;white-space:nowrap}
+ .kpis{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+ .kpi{padding:10px 9px;border-radius:12px}
+ .kpi .l{font-size:9.5px;margin-bottom:3px}
+ .kpi .v{font-size:16px}
+ th,td{padding:9px 7px;font-size:12.5px}
+ .diaspill{font-size:12.5px;padding:6px 10px}
+ .inp{width:56px;height:36px}
+ .btn{padding:11px 16px}
+}
 </style>
 </head>
 <body>
@@ -224,7 +234,7 @@ function renderNomina(v){
       var wd=['D','L','M','X','J','V','S'][new Date(d+'T12:00:00').getDay()];
       return '<span '+(fut?'':'onclick="markDia(\''+e.cedula+'\',\''+d+'\',\''+esc(e.nombre_completo)+'\',\''+esc(e.obra_id||'')+'\')"')+' title="'+d+'" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:25px;height:34px;border-radius:6px;margin:1px;background:'+bg+';color:'+fg+';border:1px solid '+(st&&!fut?'transparent':'#edeef1')+';cursor:'+(fut?'default':'pointer')+';line-height:1.1"><span style="font-size:8px;font-weight:400;color:'+(fut?'#c2c7d6':'#a7adbf')+'">'+wd+'</span><span style="font-size:10.5px;font-weight:700">'+mark+'</span></span>';
     }).join('');
-    var stripCell='<td style="min-width:'+ (cy.days.length*27+10) +'px">'+stripCells+'</td>';
+    var stripCell='<td style="min-width:'+ (cy.days.length*27+10) +'px;white-space:nowrap">'+stripCells+'</td>';
     var _sa=sinAsist(e.cedula);
     var diasCell='<td><span class="diaspill" style="cursor:pointer'+(_sa?';box-shadow:inset 0 0 0 1.5px var(--amb);background:#fdf6e7;color:#8a5a06':'')+'" title="'+(_sa?'Sin asistencia registrada — toca para ajustar':'Días de asistencia — toca para ajustar')+'" onclick="editDias(this,\''+e.cedula+'\','+pi.dias+')">'+pi.dias+' días'+(_sa?' •':'')+' <span style="opacity:.55;font-size:11px">✎</span></span></td>';
     return '<tr>'+name+stripCell+diasCell
