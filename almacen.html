@@ -108,11 +108,12 @@ function viewRecibir(){
  var head='<div class="card"><div class="h2">📥 Por recibir en el almacén</div><div class="note">Compras pagadas que aún no han llegado físicamente. Ábrela, revisa la factura, y márcala como recibida — entra al stock.</div>';
  if(!PUEDE_EDITAR)head+='<div class="note">Solo el almacenista o admin pueden recibir.</div>';
  if(!pr.length)return head+'<div class="note">✅ Todo al día — no hay compras pendientes por recibir.</div></div>'+manualBtn();
- var cards=pr.map(function(r){var fac=r.factura_url?'<a class="lnk" href="'+esc(r.factura_url)+'" target="_blank" rel="noopener">📄 ver factura</a>':'<span class="pill">sin factura</span>';return '<div class="recv"><div class="l1"><span class="pv">'+esc(r.proveedor||'Sin proveedor')+'</span><span class="vl">'+fmtM(r.valor)+'</span></div><div class="note" style="margin:4px 0">'+esc(r.descripcion||'')+(r.cantidad?' · '+esc(r.cantidad):'')+' · '+esc(r.fecha||'')+' · '+fac+'</div>'+(PUEDE_EDITAR?'<button class="btn pri" onclick="abrirRecibir('+r.id+')">✓ Recibir</button>':'')+'</div>';}).join('');
+ var cards=pr.map(function(r){var fac=r.factura_url?'<a class="lnk" href="'+esc(r.factura_url)+'" target="_blank" rel="noopener">📄 ver factura</a>':'<span class="pill">sin factura</span>';return '<div class="recv"><div class="l1"><span class="pv">'+esc(r.proveedor||'Sin proveedor')+'</span><span class="vl">'+fmtM(r.valor)+'</span></div><div class="note" style="margin:4px 0">'+esc(r.descripcion||'')+(r.cantidad?' · '+esc(r.cantidad):'')+' · '+esc(r.fecha||'')+' · '+fac+'</div>'+(PUEDE_EDITAR?'<button class="btn pri" onclick="abrirRecibir('+r.id+')">✓ Recibir</button> <button class="btn" onclick="descartarRecibir('+r.id+')">✕ No es material (MO/servicio)</button>':'')+'</div>';}).join('');
  return head+cards+'</div>'+manualBtn();
 }
 function manualBtn(){if(!PUEDE_EDITAR)return '';return '<div class="card"><div class="h2">➕ Entrada manual</div><div class="note">Material que llegó sin requisición (donación, sobrante, compra directa).</div><button class="btn" onclick="abrirRecibir(0)">Registrar entrada manual</button></div>';}
 function abrirRecibir(id){RECV=id;render();window.scrollTo(0,0);}
+function descartarRecibir(id){var r=REQS.find(function(x){return x.id===id;});if(!r)return;if(!confirm('¿Marcar "'+(r.proveedor||'')+'" como que NO es material de almacén?\n(mano de obra, servicio, etc.)\nSale de la bandeja sin entrar al stock.'))return;patch('requisiciones?id=eq.'+id,{recibido_almacen:true,clase_item:'SERVICIO'}).then(function(){r.recibido_almacen=true;toast('Marcada — no entra al almacén ✓');render();}).catch(function(){toast('Error',true);});}
 function formRecibir(id){
  var r=id?REQS.find(function(x){return x.id===id;}):null;
  var titulo=r?('Recibir · '+esc(r.proveedor||'')):'Entrada manual';
@@ -122,6 +123,7 @@ function formRecibir(id){
  return '<div class="card"><div class="h2">✓ '+titulo+'</div>'
   +(r&&r.factura_url?'<div class="note"><a class="lnk" href="'+esc(r.factura_url)+'" target="_blank" rel="noopener">📄 Abrir factura / cotización para verificar</a></div>':'')
   +'<div class="fld"><label>¿Qué es?</label><select id="r-clase"><option value="MATERIAL"'+(clase==='MATERIAL'?' selected':'')+'>🧱 Material (se consume)</option><option value="EPP"'+(clase==='EPP'?' selected':'')+'>🦺 EPP / dotación</option><option value="HERRAMIENTA"'+(clase==='HERRAMIENTA'?' selected':'')+'>🔧 Herramienta (activo)</option></select></div>'
+  +'<div class="fld"><label>¿A dónde va?</label><select id="r-destino"><option value="stock">📦 Al almacén — queda en stock</option><option value="consumo">🔥 Consumo inmediato — se usa al llegar (no queda en stock)</option></select></div>'
   +'<div class="fld"><label>Material / ítem que llegó</label><input id="r-mat" value="'+esc(mat)+'" placeholder="Ej: Guantes de carnaza"></div>'
   +'<div class="grid2"><div class="fld"><label>Cantidad recibida</label><input id="r-cant" type="number" step="any" value="'+cant+'"></div><div class="fld"><label>Unidad</label><input id="r-und" list="undlist" value="un" placeholder="un, par, bulto, kg"><datalist id="undlist"><option value="un"><option value="par"><option value="kg"><option value="bulto"><option value="m³"><option value="m"><option value="gl"><option value="lb"></datalist></div></div>'
   +'<div class="grid2"><div class="fld"><label>Proveedor</label><input id="r-prov" value="'+esc(r?r.proveedor:'')+'"></div><div class="fld"><label>Fecha de llegada</label><input id="r-fecha" type="date" value="'+hoy()+'"></div></div>'
@@ -133,6 +135,7 @@ function formRecibir(id){
 function confirmarRecibido(id){
  var r=id?REQS.find(function(x){return x.id===id;}):null;
  var clase=document.getElementById('r-clase').value;
+ var destino=(document.getElementById('r-destino')||{}).value||'stock';
  var mat=(document.getElementById('r-mat').value||'').trim();
  var cant=parseFloat(document.getElementById('r-cant').value)||0;
  var und=(document.getElementById('r-und').value||'un').trim();
@@ -142,13 +145,17 @@ function confirmarRecibido(id){
  if(!mat){toast('Escribe qué llegó',true);return;}
  if(cant<=0){toast('Cantidad debe ser mayor a 0',true);return;}
  toast('Registrando…');
- var done=function(){if(r){r.recibido_almacen=true;patch('requisiciones?id=eq.'+id,{recibido_almacen:true,clase_item:clase}).catch(function(){});}RECV=null;TAB=(clase==='HERRAMIENTA'?'herram':'stock');toast('Recibido ✓ · en el almacén');render();};
+ var marcar=function(ci){if(r){r.recibido_almacen=true;patch('requisiciones?id=eq.'+id,{recibido_almacen:true,clase_item:ci}).catch(function(){});}};
  if(clase==='HERRAMIENTA'){
-  post('almacen_herramientas',{obra:OBRA,nombre:mat,cantidad:cant,estado:'en_obra',asignada_a:resp,valor:r?r.valor:null,notas:(prov?('Recibido de '+prov):null)}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])HER.push(rows[0]);done();}).catch(function(){toast('Error al registrar herramienta',true);});
- }else{
-  crearMaterialSiFalta(mat,und);
-  post('almacen_movimientos',{obra:OBRA,material:mat,tipo:'entrada',clase:clase,cantidad:cant,unidad:und,proveedor:prov,fecha:fecha,responsable:resp,requisicion_id:(id||null),referencia:(id?('Req #'+id):'Entrada manual')}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])MOV.unshift(rows[0]);done();}).catch(function(){toast('Error al registrar entrada',true);});
+  post('almacen_herramientas',{obra:OBRA,nombre:mat,cantidad:cant,estado:'en_obra',asignada_a:resp,valor:r?r.valor:null,notas:(prov?('Recibido de '+prov):null)}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])HER.push(rows[0]);marcar('HERRAMIENTA');RECV=null;TAB='herram';toast('Herramienta registrada ✓');render();}).catch(function(){toast('Error al registrar herramienta',true);});
+  return;
  }
+ if(destino==='consumo'){
+  marcar('CONSUMO_DIRECTO');RECV=null;TAB='recibir';toast('Recibido — consumo inmediato, no queda en stock ✓');render();
+  return;
+ }
+ crearMaterialSiFalta(mat,und);
+ post('almacen_movimientos',{obra:OBRA,material:mat,tipo:'entrada',clase:clase,cantidad:cant,unidad:und,proveedor:prov,fecha:fecha,responsable:resp,requisicion_id:(id||null),referencia:(id?('Req #'+id):'Entrada manual')}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])MOV.unshift(rows[0]);marcar(clase);RECV=null;TAB='stock';toast('Recibido ✓ · en el almacén');render();}).catch(function(){toast('Error al registrar entrada',true);});
 }
 function crearMaterialSiFalta(nombre,unidad){var existe=MAT.find(function(x){return x.nombre===nombre;});if(existe)return;post('almacen_materiales',{obra:OBRA,nombre:nombre,unidad:unidad||'un'}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])MAT.push(rows[0]);}).catch(function(){});}
 // ---- STOCK ----
