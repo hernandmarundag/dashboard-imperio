@@ -571,7 +571,7 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
  CUR=id;loadEstados();
  document.getElementById('d-body').innerHTML='<div class="loading">⏳ Leyendo tu hoja de gastos en vivo…</div>';
  try{
-  var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH}).then(r=>r.json());
+  var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH,cache:'no-store'}).then(r=>r.json());
   var res=await Promise.all([g('gastos?obra=eq.'+id+'&select=id,etapa,etapa_contable,clase,concepto_costo,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000'),g('presupuesto_caps?obra_id=eq.'+id+'&order=orden'),g('presupuesto_items?obra_id=eq.'+id+'&order=orden&limit=5000'),g('cronograma?obra=eq.'+id+'&order=orden'),g('pagos_proyectados?obra=eq.'+id+'&order=fecha'),g('cuentas?deleted_at=is.null&order=orden'),g('dotacion_airbnb?select=precio,cant_apto,es_comun&limit=1000')]);
   GAS=res[0]||[];CAPS=res[1]||[];ITEMS=res[2]||[];CRONO=res[3]||[];PAGOS=res[4]||[];CUENTAS=res[5]||[];DOT=(id==='weliving')?(res[6]||[]):[];
   capByNum={};CAPS.forEach(c=>capByNum[c.num]=c);
@@ -579,6 +579,17 @@ async function verObra(id){var o=OBRAS.find(x=>x.id===id);
   document.getElementById('d-meta').textContent=(o.avance!=null?('Avance '+o.avance+'% · '):'')+GAS.length+' gastos reales (en vivo)';
   renderGeneral();
  }catch(e){document.getElementById('d-body').innerHTML='<div class="canvas" style="border-color:#f3c0c0;color:#a32020">No se pudo conectar a tu base. Revisa el internet y vuelve a entrar.<br><span style="font-size:11px">('+e+')</span></div>';document.getElementById('d-meta').textContent='Sin conexión';}}
+var _refBusy=false;
+function refrescarObra(){
+  if(_refBusy||!CUR)return;var det=document.getElementById('detalle');if(!det||det.classList.contains('hidden'))return;
+  _refBusy=true;
+  var g=u=>fetch(SB_URL+'/rest/v1/'+u,{headers:SBH,cache:'no-store'}).then(r=>r.json());
+  g('gastos?obra=eq.'+CUR+'&select=id,etapa,etapa_contable,clase,concepto_costo,fecha,descripcion,monto,nombre,mp,cuenta,factura_url,cap_num&order=fecha,id&limit=2000')
+    .then(function(rows){if(Array.isArray(rows)){GAS=rows;var b=document.getElementById('d-body');var sec=(document.querySelector('#d-body .hojahead')||document.querySelector('#d-body table'))?'hoja':'general';if(b){ if(document.querySelector('#d-body .navc')){renderGeneral();}else{ b.innerHTML=hojaHTML();attach(); } }}})
+    .catch(function(){}).then(function(){_refBusy=false;});
+}
+window.addEventListener('focus',refrescarObra);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)refrescarObra();});
 function verHome(){document.getElementById('detalle').classList.add('hidden');document.getElementById('home').classList.remove('hidden');}
 function bootApp(){cardsHome();var _h=(location.hash||'').replace('#','');verObra(OBRAS.some(function(o){return o.id===_h;})?_h:'robledo');}
 (function(){var CODE='imperio2026';if(sessionStorage.getItem('imp_auth')==='1'){bootApp();return;}

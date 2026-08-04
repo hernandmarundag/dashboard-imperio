@@ -2998,7 +2998,7 @@ var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var SB_H = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
 
 function sbFetch(table, query) {
-  return fetch(SB_URL+'/rest/v1/'+table+'?'+(query||''), {headers:SB_H}).then(function(r){return r.json();});
+  return fetch(SB_URL+'/rest/v1/'+table+'?'+(query||''), {headers:SB_H, cache:'no-store'}).then(function(r){return r.json();});
 }
 function sbPost(table, data) {
   return fetch(SB_URL+'/rest/v1/'+table, {method:'POST',headers:SB_H,body:JSON.stringify(data)}).then(function(r){return r.json();});
