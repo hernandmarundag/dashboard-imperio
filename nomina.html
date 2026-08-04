@@ -219,7 +219,8 @@ function renderNomina(v){
       var bg=fut?'#f4f5f7':st==='falta'?'#fde8e6':st==='incapacidad'||st==='inc'?'#fdf3dd':st?'#e7f4ee':'#fff';
       var fg=fut?'#c2c7d6':st==='falta'?'#c2372f':st==='incapacidad'||st==='inc'?'#a06a08':st?'#0f6e56':'#a7adbf';
       var mark=st==='falta'?'F':st==='incapacidad'||st==='inc'?'I':st?'✓':dd;
-      return '<span '+(fut?'':'onclick="markDia(\''+e.cedula+'\',\''+d+'\',\''+esc(e.nombre_completo)+'\',\''+esc(e.obra_id||'')+'\')"')+' title="'+d+'" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:26px;border-radius:6px;margin:1px;font-size:10.5px;font-weight:700;background:'+bg+';color:'+fg+';border:1px solid '+(st&&!fut?'transparent':'#edeef1')+';cursor:'+(fut?'default':'pointer')+'">'+mark+'</span>';
+      var wd=['D','L','M','X','J','V','S'][new Date(d+'T12:00:00').getDay()];
+      return '<span '+(fut?'':'onclick="markDia(\''+e.cedula+'\',\''+d+'\',\''+esc(e.nombre_completo)+'\',\''+esc(e.obra_id||'')+'\')"')+' title="'+d+'" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:25px;height:34px;border-radius:6px;margin:1px;background:'+bg+';color:'+fg+';border:1px solid '+(st&&!fut?'transparent':'#edeef1')+';cursor:'+(fut?'default':'pointer')+';line-height:1.1"><span style="font-size:8px;font-weight:400;color:'+(fut?'#c2c7d6':'#a7adbf')+'">'+wd+'</span><span style="font-size:10.5px;font-weight:700">'+mark+'</span></span>';
     }).join('');
     var stripCell='<td style="min-width:'+ (cy.days.length*27+10) +'px">'+stripCells+'</td>';
     var _sa=sinAsist(e.cedula);
