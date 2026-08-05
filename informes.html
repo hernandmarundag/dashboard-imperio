@@ -1,0 +1,105 @@
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache">
+<title>Imperio · Informe de Obra</title>
+<style>
+:root{--indigo:#4f46e5;--bg:#f6f7fb;--card:#fff;--line:#e6e8f0;--mut:#8a90a6;--ink:#1b2030;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:linear-gradient(120deg,#4f46e5,#7c3aed);color:#fff;padding:16px 18px}
+.top h1{margin:0;font-size:19px}.top .d{font-size:12px;opacity:.9;margin-top:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:14px}
+.titular{border-radius:14px;padding:16px 18px;margin-bottom:14px;color:#fff}
+.titular .big{font-size:22px;font-weight:800}.titular .sub{font-size:13px;opacity:.95;margin-top:4px}
+.t-ok{background:linear-gradient(120deg,#12894e,#16a34a)}.t-warn{background:linear-gradient(120deg,#b45309,#d97706)}.t-bad{background:linear-gradient(120deg,#b42318,#dc2626)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi .l{font-size:11px;color:var(--mut);font-weight:700}.kpi .v{font-size:19px;font-weight:800;margin-top:3px}.kpi .n{font-size:11px;color:var(--mut);margin-top:2px}
+.kpi.gris{background:repeating-linear-gradient(45deg,#fafbfc,#fafbfc 10px,#f2f3f7 10px,#f2f3f7 20px);border-style:dashed}
+.kpi.gris .v{color:#b6bccb}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px}
+.h2{font-weight:800;font-size:15px;margin:0 0 3px}.note{font-size:12px;color:var(--mut);margin:0 0 12px}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0}
+.bar .nm{flex:0 0 40%;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .track{flex:1;background:#f0f1f6;border-radius:6px;height:16px;overflow:hidden;display:block}
+.bar .fill{display:block;height:100%;border-radius:6px}
+.bar .val{flex:0 0 auto;font-size:12px;font-weight:700;text-align:right;min-width:74px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:700;font-size:11px;padding:7px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid #f0f1f6}tr:last-child td{border-bottom:0}
+.r{text-align:right}.badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px}
+.b-ok{background:#e7f6ee;color:#0f7a3d}.b-over{background:#fdeaea;color:#b42318}
+.banner{background:#eef0fe;border:1px solid #c7d2fe;border-radius:12px;padding:9px 13px;margin-bottom:12px;font-size:12.5px}
+.loading{text-align:center;padding:44px;color:var(--mut)}
+.foot{font-size:11px;color:var(--mut);text-align:center;margin:8px 0 20px}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.bar .nm{flex-basis:46%}.wrap{padding:10px}}
+</style></head>
+<body>
+<div class="top"><h1>📊 Imperio · Informe de Obra</h1><div class="d">Control del dinero en vivo · cada 8 días</div></div>
+<div class="wrap"><div id="banner"></div><div id="view"><div class="loading">⏳ Leyendo tu obra en vivo…</div></div></div>
+<script>
+const SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+const SBH={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+var OBRA=((new URLSearchParams(location.search).get('obra'))||'weliving').toLowerCase();
+var OBRAS=[['weliving','Weliving'],['robledo','Robledo'],['novaeva','Novaeva']];
+var GAS=[],CAPS=[];
+var PAL=['#5b53d6','#3ba9f4','#36b37e','#f59324','#e2574c','#7c5cf0','#f2b01e','#1ab59b','#9aa0b4'];
+function obraNm(id){var o=OBRAS.find(function(x){return x[0]===id;});return o?o[1]:id;}
+function fmtM(n){n=+n||0;if(Math.abs(n)>=1e6)return '$'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return '$'+Math.round(n/1e3)+'k';return '$'+Math.round(n);}
+function fmt(n){return '$'+Math.round(+n||0).toLocaleString('es-CO');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:SBH,cache:'no-store'}).then(function(r){return r.json();});}
+var lblE={PRELIMINARES:'Preliminares',EXCAVACION:'Excavación',CIMENTACION:'Cimentación',ESTRUCTURA:'Estructura',ACABADOS:'Acabados',INDIRECTOS:'Indirectos',POR_CONCILIAR:'Por conciliar'};
+var lblC={MATERIAL:'Material',MO:'Mano de obra',EQUIPO:'Equipo / máquina',INDIRECTO:'Indirectos (adm, seguros)'};
+function boot(){
+ document.getElementById('view').innerHTML='<div class="loading">⏳ Leyendo tu obra en vivo…</div>';
+ Promise.all([
+  g('gastos?obra=eq.'+OBRA+'&eliminado=is.false&select=etapa_contable,concepto_costo,monto,nombre,cap_num,fecha&limit=5000'),
+  g('presupuesto_caps?obra_id=eq.'+OBRA+'&select=num,nombre,ppto&order=orden&limit=500')
+ ]).then(function(res){GAS=res[0]||[];CAPS=res[1]||[];render();})
+ .catch(function(){document.getElementById('view').innerHTML='<div class="loading">⚠️ No pude conectar. <button onclick="boot()">Reintentar</button></div>';});
+}
+function grp(arr,key){var m={};arr.forEach(function(x){var k=x[key]||'(sin)';m[k]=(m[k]||0)+(+x.monto||0);});return Object.keys(m).map(function(k){return {k:k,v:m[k]};}).sort(function(a,b){return b.v-a.v;});}
+function sum(arr){return arr.reduce(function(a,x){return a+(+x.monto||0);},0);}
+function barras(items,tot,lbls){var mx=items.length?items[0].v:1;return items.map(function(it,i){var w=Math.max(2,(it.v/mx*100));var pct=tot?(it.v/tot*100):0;var nm=(lbls&&lbls[it.k])||it.k;return '<div class="bar"><span class="nm" title="'+esc(nm)+'">'+esc(nm)+'</span><span class="track"><span class="fill" style="width:'+w.toFixed(1)+'%;background:'+PAL[i%PAL.length]+'"></span></span><span class="val">'+fmt(it.v)+' · '+pct.toFixed(0)+'%</span></div>';}).join('');}
+function render(){
+ var total=sum(GAS);
+ var pptoTot=CAPS.reduce(function(a,c){return a+(+c.ppto||0);},0);
+ var pctEjec=pptoTot?(total/pptoTot*100):0;
+ document.getElementById('banner').innerHTML='<div class="banner">Obra: <b>'+obraNm(OBRA)+'</b> · '+GAS.length+' gastos · <select onchange="OBRA=this.value;boot()" style="border:1px solid #c7d2fe;border-radius:6px;padding:2px 6px;font-size:12px">'+OBRAS.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===OBRA?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>';
+ // titular
+ var tClass='t-ok',tMsg='La obra ejecutó '+fmt(total)+' — el '+pctEjec.toFixed(0)+'% del presupuesto.';
+ if(pctEjec>100){tClass='t-bad';tMsg='⚠️ Gasto por encima del presupuesto: '+fmt(total)+' vs '+fmt(pptoTot)+'.';}
+ var v='<div class="titular '+tClass+'"><div class="big">'+obraNm(OBRA)+' · '+fmt(total)+' ejecutado</div><div class="sub">'+tMsg+' Presupuesto total: '+fmt(pptoTot)+'.</div></div>';
+ // KPIs de tope (dinero real + físicos en gris)
+ var porConcepto=grp(GAS,'concepto_costo');
+ var mat=(porConcepto.find(function(x){return x.k==='MATERIAL';})||{}).v||0;
+ var mo=(porConcepto.find(function(x){return x.k==='MO';})||{}).v||0;
+ v+='<div class="kpis">'
+  +'<div class="kpi"><div class="l">💰 Ejecutado</div><div class="v">'+fmtM(total)+'</div><div class="n">'+pctEjec.toFixed(0)+'% del ppto</div></div>'
+  +'<div class="kpi"><div class="l">🧱 Material</div><div class="v">'+fmtM(mat)+'</div><div class="n">'+(total?(mat/total*100).toFixed(0):0)+'% del gasto</div></div>'
+  +'<div class="kpi"><div class="l">👷 Mano de obra</div><div class="v">'+fmtM(mo)+'</div><div class="n">'+(total?(mo/total*100).toFixed(0):0)+'% del gasto</div></div>'
+  +'<div class="kpi gris"><div class="l">📐 Avance físico / SPI</div><div class="v">—</div><div class="n">pendiente: bitácora con cantidad</div></div>'
+  +'</div>';
+ // Card: por etapa
+ var porEtapa=grp(GAS,'etapa_contable');
+ v+='<div class="card"><div class="h2">🏗️ En qué etapa se va la plata</div><div class="note">Gasto real por etapa de obra.</div>'+barras(porEtapa,total,lblE)+'</div>';
+ // Card: por concepto
+ v+='<div class="card"><div class="h2">📦 En qué tipo de costo</div><div class="note">Material vs mano de obra vs equipo vs indirectos.</div>'+barras(porConcepto,total,lblC)+'</div>';
+ // Card: ejecución por capítulo (gasto vs ppto)
+ var capMap={};GAS.forEach(function(x){var k=x.cap_num||'(sin capítulo)';capMap[k]=(capMap[k]||0)+(+x.monto||0);});
+ var capNom={};CAPS.forEach(function(c){capNom[c.num]={n:c.nombre,ppto:+c.ppto||0};});
+ var caps=Object.keys(capMap).map(function(k){var info=capNom[k]||{n:k,ppto:0};return {num:k,nombre:info.n||k,gasto:capMap[k],ppto:info.ppto};}).sort(function(a,b){return b.gasto-a.gasto;}).slice(0,10);
+ var filas=caps.map(function(c){var pct=c.ppto?(c.gasto/c.ppto*100):null;var over=pct!=null&&pct>100;return '<tr><td><b>'+esc((''+c.num).slice(0,4))+'</b> '+esc((c.nombre||'').slice(0,32))+'</td><td class="r">'+fmt(c.gasto)+'</td><td class="r">'+(c.ppto?fmt(c.ppto):'—')+'</td><td class="r">'+(pct!=null?'<span class="badge '+(over?'b-over':'b-ok')+'">'+pct.toFixed(0)+'%</span>':'—')+'</td></tr>';}).join('');
+ v+='<div class="card"><div class="h2">📋 Ejecución por capítulo</div><div class="note">Lo gastado vs lo presupuestado en cada capítulo (los 10 de mayor gasto). Rojo = pasado del presupuesto.</div><div style="overflow-x:auto"><table><tr><th>Capítulo</th><th class="r">Gastado</th><th class="r">Presupuesto</th><th class="r">% ejec.</th></tr>'+filas+'</table></div></div>';
+ // Card: top proveedores
+ var prov=grp(GAS,'nombre').slice(0,10);
+ v+='<div class="card"><div class="h2">🏢 A quién se le paga más</div><div class="note">Top 10 proveedores por gasto acumulado.</div>'+barras(prov,total)+'</div>';
+ // Físicas pendientes
+ v+='<div class="card" style="border-style:dashed;background:#fafbfc"><div class="h2" style="color:#8a90a6">⏳ Próximas etapas (se encienden con la captura de obra)</div><div class="note">Avance planeado vs real (SPI), nómina justificada por actividad, y material vs APU con desperdicio — aparecen cuando la bitácora diaria capture actividad + cantidad. Ver el plan de etapas.</div></div>';
+ v+='<div class="foot">Informe del dinero en vivo · Imperio Constructora · el detalle individual de nómina se activa con acceso por clave (Etapa 0.5).</div>';
+ document.getElementById('view').innerHTML=v;
+}
+boot();
+</script>
+</body></html>
