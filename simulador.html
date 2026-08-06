@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Simulador de presupuesto · Weliving · Meta $5.400M</title>
+<style>
+:root{--bg:#0f172a;--card:#ffffff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--pri:#4f46e5;--pri2:#7c3aed}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f1f5f9;color:var(--ink);font-size:15px;line-height:1.4}
+.wrap{max-width:1040px;margin:0 auto;padding:14px 14px 60px}
+.top{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(79,70,229,.25)}
+.top h1{margin:0 0 2px;font-size:18px;font-weight:800;letter-spacing:.2px}
+.top .sub{opacity:.85;font-size:12.5px}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.hbox{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:11px 12px}
+.hbox .l{font-size:11px;text-transform:uppercase;letter-spacing:.6px;opacity:.85}
+.hbox .v{font-size:21px;font-weight:800;margin-top:2px}
+.hbox .n{font-size:11.5px;opacity:.8;margin-top:1px}
+.chip{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:13px}
+.chip.ok{background:#dcfce7;color:#166534}
+.chip.bad{background:#fee2e2;color:#991b1b}
+.stack{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:12px 0 4px;background:rgba(255,255,255,.2)}
+.stack span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;opacity:.92;margin-top:6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.card h2{margin:0 0 3px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px}
+.card .note{color:var(--mut);font-size:12.5px;margin-bottom:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px dashed var(--line)}
+.row:first-of-type{border-top:none}
+.row .lab{font-size:13.5px;font-weight:600}
+.row .labn{font-size:11.5px;color:var(--mut);font-weight:500;margin-top:1px}
+.seg{display:inline-flex;background:#f1f5f9;border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px;flex-shrink:0}
+.seg button{border:none;background:transparent;padding:5px 9px;border-radius:7px;font-size:12px;font-weight:700;color:var(--mut);cursor:pointer;white-space:nowrap}
+.seg button.on{background:#fff;color:var(--pri);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg.tri button.on{color:var(--ok)}
+.seg.tri button.on[data-lv="med"]{color:var(--warn)}
+.seg.tri button.on[data-lv="off"]{color:var(--bad)}
+.rng{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.rng input[type=range]{width:130px;accent-color:var(--pri)}
+.rng .val{font-weight:800;font-size:14px;min-width:34px;text-align:right}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.presets button{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:10px;font-weight:800;font-size:12.5px;cursor:pointer;color:var(--ink)}
+.presets button.p-meta{background:#ecfdf5;border-color:#a7f3d0;color:#166534}
+.presets button.p-eq{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+.presets button.p-base{background:#f8fafc}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 6px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);border-bottom:2px solid var(--line)}
+tbody td{border-bottom:1px solid #f1f5f9}
+tr.grp td{font-weight:800;background:#f8fafc}
+tr.tot td{font-weight:800;border-top:2px solid var(--line);font-size:14px}
+.pos{color:var(--ok);font-weight:700}
+.zero{color:var(--mut)}
+.tag{display:inline-block;font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px;margin-left:6px;vertical-align:middle}
+.tag.fix{background:#f1f5f9;color:#475569}
+.tag.piso{background:#fef3c7;color:#92400e}
+.warnbox{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:6px}
+.foot{color:var(--mut);font-size:11.5px;text-align:center;margin-top:8px}
+@media(max-width:640px){.hero{grid-template-columns:1fr}.row{flex-direction:column;align-items:stretch}.row .seg,.row .rng{align-self:flex-end}.rng input[type=range]{width:110px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🎯 Simulador de presupuesto · Weliving</h1>
+    <div class="sub">Mueve los supuestos de alcance y mira el costo total <b>con dotación</b> contra la meta. <b>No modifica la base</b> — es solo simulación.</div>
+    <div class="hero">
+      <div class="hbox"><div class="l">Gran total simulado</div><div class="v" id="hGran">—</div><div class="n" id="hGranN">obra + dotación mueble</div></div>
+      <div class="hbox"><div class="l">Meta</div><div class="v">$5.400.000.000</div><div class="n" id="hDelta">—</div></div>
+    </div>
+    <div class="stack" id="stack"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="presets">
+    <span style="align-self:center;font-size:12px;color:#475569;font-weight:700;margin-right:2px">Escenarios:</span>
+    <button class="p-base" onclick="preset('base')">↺ Base (hoy)</button>
+    <button class="p-eq" onclick="preset('eq')">⚖️ Equilibrado</button>
+    <button class="p-meta" onclick="preset('meta')">🎯 Llegar a $5.400M</button>
+  </div>
+
+  <div class="card">
+    <h2>🛋 Dotación mueble (alcance)</h2>
+    <div class="note">Es el rubro más flexible: escala con cuántos apartamentos se amoblan y con el nivel de la ficha.</div>
+    <div class="row"><div><div class="lab">Apartamentos amoblados</div><div class="labn">De 20 unidades del edificio</div></div>
+      <div class="rng"><input type="range" id="apts" min="0" max="20" step="1" value="20" oninput="calc()"><span class="val" id="aptsV">20</span></div></div>
+    <div class="row"><div><div class="lab">Nivel de la ficha por apto</div><div class="labn">Premium $25.0M · Estándar ~$19.5M · Básico ~$15.0M</div></div>
+      <div class="seg" id="spec"></div></div>
+    <div class="row"><div><div class="lab">Dotación de zonas comunes</div><div class="labn">Lobby, rooftop, lockers, CCTV… (1 vez) $34.3M</div></div>
+      <div class="seg tri" id="com"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>🎨 Acabados / lujo (obra blanca · alcance)</h2>
+    <div class="note">Obra blanca aún no arranca ($0 ejecutado): es 100% flexible. Baja el estándar general o recorta/quita los ítems premium.</div>
+    <div class="row"><div><div class="lab">Resto de acabados</div><div class="labn">Pisos, cocinas, pintura, carpintería… base $753.0M</div></div>
+      <div class="seg" id="resto"></div></div>
+    <div class="row"><div><div class="lab">Fachada premium y ventanería</div><div class="labn">Premium $320M · Estándar $200M</div></div>
+      <div class="seg tri" id="fach"></div></div>
+    <div class="row"><div><div class="lab">Ascensor</div><div class="labn">Premium $168.7M · Estándar $130M</div></div>
+      <div class="seg tri" id="asc"></div></div>
+    <div class="row"><div><div class="lab">Rooftop social (mobiliario/acabado)</div><div class="labn">Completo $67.3M · Reducido $40M</div></div>
+      <div class="seg tri" id="roof"></div></div>
+    <div class="row"><div><div class="lab">Iluminación arquitectónica LED</div><div class="labn">Full $39M · Básica $22M</div></div>
+      <div class="seg tri" id="ilu"></div></div>
+    <div class="row"><div><div class="lab">Jacuzzi rooftop</div><div class="labn">$44M</div></div>
+      <div class="seg tri" id="jac"></div></div>
+    <div class="row"><div><div class="lab">Pérgola rooftop</div><div class="labn">$21.4M</div></div>
+      <div class="seg tri" id="per"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>🔧 Redes e indirectos</h2>
+    <div class="row"><div><div class="lab">Redes (obra gris)</div><div class="labn">Eléctrica, hidráulica, sanitaria, gas… base $629.4M ($0 ejecutado)</div></div>
+      <div class="seg" id="gris"></div></div>
+    <div class="row"><div><div class="lab">Imprevistos</div><div class="labn">Colchón ante sobrecostos · base 4% = $115.6M</div></div>
+      <div class="rng"><input type="range" id="imp" min="0" max="4" step="0.5" value="4" oninput="calc()"><span class="val" id="impV">4%</span></div></div>
+    <div class="warnbox" id="indNote" style="display:none"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧱 Lo que no se recorta</h2>
+    <div class="note">Ya comprometido o físico. Se muestra para que la simulación sea honesta.</div>
+    <div class="row"><div><div class="lab">Lote y legales <span class="tag fix">fijo</span></div><div class="labn">Terreno ya adquirido + trámites</div></div><div class="val" id="fLote">$1.915.000.000</div></div>
+    <div class="row"><div><div class="lab">Estructura / obra negra <span class="tag piso">63% ejecutado</span></div><div class="labn">Losas P1–P7, columnas, cimentación · $752.3M ya gastado</div></div><div class="val" id="fNeg">$1.198.861.376</div></div>
+    <div class="row"><div><div class="lab">Administración <span class="tag fix">fijo</span></div><div class="labn">Honorarios / dirección de obra</div></div><div class="val">$90.000.000</div></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Desglose · base vs simulado</h2>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Rubro</th><th>Base hoy</th><th>Simulado</th><th>Ahorro</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+    <div class="foot" id="src">Datos: base real de la plataforma (snapshot). Actualizando en vivo…</div>
+  </div>
+</div>
+
+<script>
+/* ====== BASE REAL (snapshot de la plataforma · presupuesto_caps + dotacion_airbnb) ====== */
+var BASE={
+  lote:1915000000,           // PROYECTO · fijo
+  negra:1198861376,          // estructura · piso (gastado 752.3M)
+  negraSpent:752289403,
+  gris:629365000,            // obra gris · 0 ejecutado
+  admin:90000000,            // INDIRECTOS · admin fijo
+  imprev:115620379,          // INDIRECTOS · imprevistos 4%
+  indSpent:148934829,        // indirectos ya consumidos (piso)
+  // Obra blanca (acabados) — 0 ejecutado
+  restoBlanca:753008721,     // blanca total 1.413.378.721 - premium expuestos
+  fachada:320000000, ascensor:168700000, roof:67300000, ilu:39000000, jac:44000000, per:21370000,
+  // Dotación
+  dotApto:25014000,          // por apartamento (spec premium)
+  dotComun:34340000          // zonas comunes (1 vez)
+};
+var META=5400000000;
+var blancaTotalBase=BASE.restoBlanca+BASE.fachada+BASE.ascensor+BASE.roof+BASE.ilu+BASE.jac+BASE.per; // 1.413.378.721
+var indTotalBase=BASE.admin+BASE.imprev; // 205.620.379
+var obraBase=BASE.lote+BASE.negra+BASE.gris+blancaTotalBase+indTotalBase; // 5.362.225.476
+var dotBase=BASE.dotApto*20+BASE.dotComun; // 534.620.000
+var granBase=obraBase+dotBase; // 5.896.845.476
+
+/* ====== ESTADO DE CONTROLES ====== */
+var S={apts:20,spec:'pre',com:'full',resto:'pre',fach:'full',asc:'full',roof:'full',ilu:'full',jac:'full',per:'full',gris:'std',imp:4};
+
+/* factores */
+var SPEC={pre:1.0,std:0.78,bas:0.60};
+var COM={full:1.0,med:0.6,off:0};
+var RESTO={pre:1.0,std:0.85,aus:0.72};
+var GRIS={std:1.0,opt:0.93};
+/* items premium: valor por estado */
+var FACH={full:BASE.fachada,med:200000000,off:0};
+var ASC={full:BASE.ascensor,med:130000000,off:0};
+var ROOF={full:BASE.roof,med:40000000,off:0};
+var ILU={full:BASE.ilu,med:22000000,off:0};
+var JAC={full:BASE.jac,med:BASE.jac,off:0};
+var PER={full:BASE.per,med:BASE.per,off:0};
+
+/* ====== SEG BUILDERS ====== */
+function seg(id,opts){ // opts:[{k,label,lv}]
+  var el=document.getElementById(id);el.innerHTML='';
+  opts.forEach(function(o){var b=document.createElement('button');b.textContent=o.label;b.dataset.k=o.k;if(o.lv)b.dataset.lv=o.lv;
+    b.onclick=function(){S[id]=o.k;paintSeg(id,opts);calc();};el.appendChild(b);});
+  paintSeg(id,opts);
+}
+function paintSeg(id,opts){var el=document.getElementById(id);[].forEach.call(el.children,function(b){b.classList.toggle('on',b.dataset.k===S[id]);});}
+
+var SEGDEF={
+  spec:[{k:'pre',label:'Premium'},{k:'std',label:'Estándar'},{k:'bas',label:'Básico'}],
+  com:[{k:'full',label:'Incluir',lv:'ok'},{k:'med',label:'Recortar',lv:'med'},{k:'off',label:'Quitar',lv:'off'}],
+  resto:[{k:'pre',label:'Premium'},{k:'std',label:'Estándar'},{k:'aus',label:'Austero'}],
+  fach:[{k:'full',label:'Premium',lv:'ok'},{k:'med',label:'Estándar',lv:'med'},{k:'off',label:'Quitar',lv:'off'}],
+  asc:[{k:'full',label:'Premium',lv:'ok'},{k:'med',label:'Estándar',lv:'med'},{k:'off',label:'Quitar',lv:'off'}],
+  roof:[{k:'full',label:'Completo',lv:'ok'},{k:'med',label:'Reducido',lv:'med'},{k:'off',label:'Quitar',lv:'off'}],
+  ilu:[{k:'full',label:'Full',lv:'ok'},{k:'med',label:'Básica',lv:'med'},{k:'off',label:'Quitar',lv:'off'}],
+  jac:[{k:'full',label:'Incluir',lv:'ok'},{k:'off',label:'Quitar',lv:'off'}],
+  per:[{k:'full',label:'Incluir',lv:'ok'},{k:'off',label:'Quitar',lv:'off'}],
+  gris:[{k:'std',label:'Estándar'},{k:'opt',label:'Optimizado'}]
+};
+
+/* ====== FORMATO ====== */
+function fmt(v){v=Math.round(v||0);return '$'+v.toLocaleString('es-CO');}
+function fmM(v){return '$'+(Math.round(v/1e5)/10).toLocaleString('es-CO')+'M';}
+
+/* ====== CÁLCULO ====== */
+function computeInd(imp){var imprev=BASE.imprev*(imp/4);var raw=BASE.admin+imprev;return Math.max(BASE.indSpent,raw);}
+function compute(s){
+  var blanca=BASE.restoBlanca*RESTO[s.resto]+FACH[s.fach]+ASC[s.asc]+ROOF[s.roof]+ILU[s.ilu]+JAC[s.jac]+PER[s.per];
+  var gris=BASE.gris*GRIS[s.gris];
+  var ind=computeInd(s.imp);
+  var obra=BASE.lote+BASE.negra+gris+blanca+ind;
+  var dot=BASE.dotApto*s.apts*SPEC[s.spec]+BASE.dotComun*COM[s.com];
+  return {blanca:blanca,gris:gris,ind:ind,obra:obra,dot:dot,gran:obra+dot};
+}
+
+function calc(){
+  S.apts=+document.getElementById('apts').value;
+  S.imp=+document.getElementById('imp').value;
+  document.getElementById('aptsV').textContent=S.apts;
+  document.getElementById('impV').textContent=S.imp+'%';
+  var r=compute(S);
+  document.getElementById('hGran').textContent=fmt(r.gran);
+  var delta=r.gran-META;
+  var chip=document.getElementById('hDelta');
+  if(delta<=0){chip.innerHTML='<span class="chip ok">✓ '+fmt(-delta)+' bajo la meta</span>';}
+  else{chip.innerHTML='<span class="chip bad">falta recortar '+fmt(delta)+'</span>';}
+  document.getElementById('hGranN').textContent='obra '+fmM(r.obra)+' + dotación '+fmM(r.dot);
+  drawStack(r);
+  drawTable(r);
+  // nota indirectos floor
+  var raw=BASE.admin+BASE.imprev*(S.imp/4);
+  var iN=document.getElementById('indNote');
+  if(raw<BASE.indSpent){iN.style.display='block';iN.textContent='⚠ Ya se consumieron $148.9M de indirectos: por debajo de eso no hay ahorro real (queda en el piso).';}
+  else iN.style.display='none';
+}
+
+function drawStack(r){
+  var parts=[['Lote',BASE.lote,'#334155'],['Estructura',BASE.negra,'#111827'],['Redes',r.gris,'#0ea5a3'],['Acabados',r.blanca,'#7c3aed'],['Indirectos',r.ind,'#d97706'],['Dotación',r.dot,'#16a34a']];
+  var tot=r.gran;var st=document.getElementById('stack');var lg=document.getElementById('legend');st.innerHTML='';lg.innerHTML='';
+  parts.forEach(function(p){var s=document.createElement('span');s.style.width=(p[1]/tot*100)+'%';s.style.background=p[2];s.title=p[0]+' '+fmt(p[1]);st.appendChild(s);
+    var li=document.createElement('span');li.innerHTML='<i style="background:'+p[2]+'"></i>'+p[0]+' '+fmM(p[1]);lg.appendChild(li);});
+}
+
+function drawTable(r){
+  var rows=[
+    ['Lote y legales',BASE.lote,BASE.lote,'fix'],
+    ['Estructura (obra negra)',BASE.negra,BASE.negra,'fix'],
+    ['Redes (obra gris)',BASE.gris,r.gris],
+    ['Acabados (obra blanca)',blancaTotalBase,r.blanca],
+    ['Indirectos (admin+imprev)',indTotalBase,r.ind],
+    ['— — —',null,null],
+    ['Dotación mueble (20 aptos)',dotBase,r.dot]
+  ];
+  var tb=document.getElementById('tb');tb.innerHTML='';
+  rows.forEach(function(x){
+    if(x[1]===null){var sp=document.createElement('tr');sp.innerHTML='<td colspan="4" style="border:none;padding:2px"></td>';tb.appendChild(sp);return;}
+    var tr=document.createElement('tr');var ah=x[1]-x[2];
+    var ahtxt=x[3]==='fix'?'<span class="zero">fijo</span>':(ah>0?'<span class="pos">−'+fmt(ah)+'</span>':(ah<0?fmt(ah):'<span class="zero">—</span>'));
+    tr.innerHTML='<td>'+x[0]+'</td><td>'+fmt(x[1])+'</td><td>'+fmt(x[2])+'</td><td>'+ahtxt+'</td>';
+    tb.appendChild(tr);
+  });
+  var trT=document.createElement('tr');trT.className='tot';
+  var ahT=granBase-r.gran;
+  trT.innerHTML='<td>GRAN TOTAL</td><td>'+fmt(granBase)+'</td><td>'+fmt(r.gran)+'</td><td class="'+(ahT>0?'pos':'zero')+'">'+(ahT>0?'−'+fmt(ahT):'—')+'</td>';
+  tb.appendChild(trT);
+}
+
+/* ====== PRESETS ====== */
+function setState(o){for(var k in o)S[k]=o[k];
+  document.getElementById('apts').value=S.apts;document.getElementById('imp').value=S.imp;
+  ['spec','com','resto','fach','asc','roof','ilu','jac','per','gris'].forEach(function(id){paintSeg(id,SEGDEF[id]);});
+  calc();
+}
+function preset(p){
+  if(p==='base')setState({apts:20,spec:'pre',com:'full',resto:'pre',fach:'full',asc:'full',roof:'full',ilu:'full',jac:'full',per:'full',gris:'std',imp:4});
+  else if(p==='eq')setState({apts:20,spec:'std',com:'full',resto:'std',fach:'med',asc:'full',roof:'full',ilu:'med',jac:'full',per:'full',gris:'std',imp:3});
+  else if(p==='meta')setState({apts:20,spec:'bas',com:'med',resto:'std',fach:'med',asc:'full',roof:'med',ilu:'med',jac:'off',per:'off',gris:'opt',imp:3});
+}
+
+/* ====== LIVE REFRESH (opcional, no escribe) ====== */
+var SB_URL='https://dghmgaaprlzpfnpsqzav.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaG1nYWFwcmx6cGZucHNxemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzcyMDQsImV4cCI6MjA5NzIxMzIwNH0.kPTDqFX1AaXlxI2G9V9S46KDMWb6Y6tHoMwe0Fujk7k';
+function g(u){return fetch(SB_URL+'/rest/v1/'+u,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},cache:'no-store'}).then(function(r){return r.json();});}
+function refresh(){
+  Promise.all([g('presupuesto_caps?obra_id=eq.weliving&select=num,nombre,ppto&limit=200'),g('dotacion_airbnb?select=cant_apto,es_comun,precio&limit=500')])
+  .then(function(a){
+    var caps=a[0]||[],dot=a[1]||[];if(!caps.length)return;
+    var by={};caps.forEach(function(c){by[String(c.num)]=+c.ppto||0;});
+    function grp(pfx){return caps.filter(function(c){return (c.nombre||'').indexOf(pfx+' · ')===0;}).reduce(function(x,c){return x+(+c.ppto||0);},0);}
+    var neg=grp('NEGRA'),gri=grp('GRIS'),bla=grp('BLANCA'),pro=grp('PROYECTO');
+    var fach=by['23']||0,asc=by['17']||0,roof=by['28']||0,ilu=by['25']||0,jac=by['29']||0,per=by['30']||0;
+    var restoB=bla-(fach+asc+roof+ilu+jac+per);
+    var apU=0,com=0;dot.forEach(function(d){var v=(+d.precio||0)*(+d.cant_apto||0);if(d.es_comun)com+=v;else apU+=v;});
+    BASE.lote=pro||BASE.lote;BASE.negra=neg||BASE.negra;BASE.gris=gri||BASE.gris;
+    BASE.restoBlanca=restoB>0?restoB:BASE.restoBlanca;
+    if(fach)BASE.fachada=fach;if(asc)BASE.ascensor=asc;if(roof)BASE.roof=roof;if(ilu)BASE.ilu=ilu;if(jac)BASE.jac=jac;if(per)BASE.per=per;
+    if(apU)BASE.dotApto=apU;if(com)BASE.dotComun=com;
+    FACH.full=BASE.fachada;ASC.full=BASE.ascensor;ROOF.full=BASE.roof;ILU.full=BASE.ilu;JAC.full=BASE.jac;JAC.med=BASE.jac;PER.full=BASE.per;PER.med=BASE.per;
+    blancaTotalBase=BASE.restoBlanca+BASE.fachada+BASE.ascensor+BASE.roof+BASE.ilu+BASE.jac+BASE.per;
+    indTotalBase=BASE.admin+BASE.imprev;obraBase=BASE.lote+BASE.negra+BASE.gris+blancaTotalBase+indTotalBase;
+    dotBase=BASE.dotApto*20+BASE.dotComun;granBase=obraBase+dotBase;
+    document.getElementById('fLote').textContent=fmt(BASE.lote);
+    document.getElementById('fNeg').textContent=fmt(BASE.negra);
+    document.getElementById('src').textContent='Datos en vivo desde la plataforma · base $'+granBase.toLocaleString('es-CO');
+    calc();
+  }).catch(function(){document.getElementById('src').textContent='Sin conexión — usando snapshot de la base.';});
+}
+
+/* init */
+['spec','com','resto','fach','asc','roof','ilu','jac','per','gris'].forEach(function(id){seg(id,SEGDEF[id]);});
+calc();refresh();
+</script>
+</body>
+</html>
