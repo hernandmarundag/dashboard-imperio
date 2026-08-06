@@ -147,7 +147,7 @@ function confirmarRecibido(id){
  toast('Registrando…');
  var marcar=function(ci){if(r){r.recibido_almacen=true;patch('requisiciones?id=eq.'+id,{recibido_almacen:true,clase_item:ci}).catch(function(){});}};
  if(clase==='HERRAMIENTA'){
-  post('almacen_herramientas',{obra:OBRA,nombre:mat,cantidad:cant,estado:'en_obra',asignada_a:resp,valor:r?r.valor:null,notas:(prov?('Recibido de '+prov):null)}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])HER.push(rows[0]);marcar('HERRAMIENTA');RECV=null;TAB='herram';toast('Herramienta registrada ✓');render();}).catch(function(){toast('Error al registrar herramienta',true);});
+  post('almacen_herramientas',{obra:OBRA,nombre:mat,cantidad:cant,estado:'en_obra',asignada_a:resp,valor:r?r.valor:null,notas:(prov?('Recibido de '+prov):null)}).then(function(x){if(!x.ok)throw 0;return x.json();}).then(function(rows){if(rows&&rows[0])HER.push(rows[0]);marcar('HERRAMIENTA');RECV=null;TAB='herram';toast('Herramienta registrada ✓');render();}).catch(function(){toast('Error al registrar herramienta',true);});
   return;
  }
  if(destino==='consumo'){
@@ -155,7 +155,7 @@ function confirmarRecibido(id){
   return;
  }
  crearMaterialSiFalta(mat,und);
- post('almacen_movimientos',{obra:OBRA,material:mat,tipo:'entrada',clase:clase,cantidad:cant,unidad:und,proveedor:prov,fecha:fecha,responsable:resp,requisicion_id:(id||null),referencia:(id?('Req #'+id):'Entrada manual')}).then(function(x){return x.json();}).then(function(rows){if(rows&&rows[0])MOV.unshift(rows[0]);marcar(clase);RECV=null;TAB='stock';toast('Recibido ✓ · en el almacén');render();}).catch(function(){toast('Error al registrar entrada',true);});
+ post('almacen_movimientos',{obra:OBRA,material:mat,tipo:'entrada',clase:clase,cantidad:cant,unidad:und,proveedor:prov,fecha:fecha,responsable:resp,requisicion_id:(id||null),referencia:(id?('Req #'+id):'Entrada manual')}).then(function(x){if(!x.ok)throw 0;return x.json();}).then(function(rows){if(rows&&rows[0])MOV.unshift(rows[0]);marcar(clase);RECV=null;TAB='stock';toast('Recibido ✓ · en el almacén');render();}).catch(function(){toast('Error al registrar entrada',true);});
 }
 function crearMaterialSiFalta(nombre,unidad){var existe=MAT.find(function(x){return x.nombre===nombre;});if(existe)return;post('almacen_materiales',{obra:OBRA,nombre:nombre,unidad:unidad||'un'}).then(function(r){return r.json();}).then(function(rows){if(rows&&rows[0])MAT.push(rows[0]);}).catch(function(){});}
 // ---- STOCK ----
