@@ -36,6 +36,14 @@ canvas,#syn{position:fixed;inset:0;width:100%;height:100%;z-index:1}
 .tip{position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:7;background:rgba(16,18,42,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 18px;min-width:220px;text-align:center;display:none;backdrop-filter:blur(10px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .tip b{font-size:15px;letter-spacing:1px}.tip .s{font-size:12px;color:var(--mut);margin-top:5px}
 @media(max-width:680px){.title h1{font-size:26px}.dept .lb{font-size:12px;letter-spacing:2px}.dept .sb{display:none}}
+
+.acts{position:fixed;top:108px;left:0;right:0;z-index:7;display:flex;gap:9px;justify-content:center;flex-wrap:wrap;padding:0 16px;pointer-events:none}
+.acts a{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13px;font-weight:800;padding:10px 16px;border-radius:12px;background:var(--gold,#4f46e5);color:#fff;box-shadow:0 6px 18px rgba(79,70,229,.35)}
+.acts a.sec{background:rgba(255,255,255,.10);color:#dfe4ff;border:1px solid rgba(255,255,255,.20);box-shadow:none}
+.acts a .bdg{background:#fff;color:#4f46e5;border-radius:999px;font-size:11px;font-weight:800;padding:1px 8px;min-width:18px;text-align:center}
+.foot a{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:9px 13px}
+.foot a.main{background:var(--gold,#4f46e5);color:#fff;border-color:transparent}
+@media(max-width:680px){.acts{top:104px;gap:8px}.acts a{font-size:13.5px;padding:11px 15px}.foot{padding:12px 12px 20px;gap:8px}.foot a{font-size:13px;padding:11px 14px}.coreLbl{top:52%}}
 </style></head>
 <body>
 <div id="bg"></div><div id="grid"></div>
@@ -46,12 +54,17 @@ canvas,#syn{position:fixed;inset:0;width:100%;height:100%;z-index:1}
   <div class="pill" id="pill"><span class="d"></span><span id="pilltx">leyendo…</span></div>
 </div>
 <div class="title"><div class="k">MENTE MAESTRA</div><h1>El estado de tu imperio</h1></div>
+<div class="acts" id="acts">
+  <a href="requisiciones.html?rol=hernan">✅ Aprobar <span class="bdg" id="apbdg">·</span></a>
+  <a class="sec" href="presupuesto.html">💰 Presupuesto</a>
+  <a class="sec" href="simulador.html">🎯 Meta</a>
+</div>
 <div class="coreLbl"><div class="n">IMPERIO</div><div class="s" id="coreStat">· en vivo ·</div></div>
 <div id="depts"></div>
 <div class="tip" id="tip"></div>
 <div class="foot">
   <a class="main" href="panel.html">Panel completo</a>
-  <a href="flujo.html">Flujo</a><a href="requisiciones.html">Requisiciones</a>
+  <a href="flujo.html">Flujo</a><a href="requisiciones.html?rol=hernan">Requisiciones</a>
   <a href="nomina.html">Nómina</a><a href="bitacora.html">Bitácora</a><a href="sst.html">SST</a>
 </div>
 <script>
@@ -170,5 +183,6 @@ function load(){
 }
 window.addEventListener('resize',function(){cv.width=window.innerWidth;cv.height=window.innerHeight;initCore();build();});
 initCore();build();tick();load();
+q('requisiciones','select=id,estado,pagado').then(function(rq){var n=(rq||[]).filter(function(r){return !r.pagado&&(r.estado||'pendiente')==='pendiente';}).length;var b=document.getElementById('apbdg');if(b)b.textContent=n;});
 </script>
 </body></html>
