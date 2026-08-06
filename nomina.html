@@ -366,20 +366,44 @@ function cerrarRecibo(){document.getElementById("ov-recibo").className="ov";}
 
 // ── LIQUIDACIÓN ──
 function calcLiq(e,hasta){
-  var base=(+e.salario_basico||0)+(+e.bonificacion||0);
   if(!e.fecha_ingreso)return null;
+  var baseCes=SMLMV+AUX_TRANSPORTE, baseVac=SMLMV; /* liquidacion por el minimo: cesantias/prima sobre minimo+auxilio; vacaciones sobre el minimo */
   var ing=new Date(e.fecha_ingreso+'T12:00:00');var fin=new Date((hasta||new Date().toISOString().slice(0,10))+'T12:00:00');
   var dias=Math.max(0,Math.round((fin-ing)/86400000));
   var iniPrima=new Date(Math.max(ing.getTime(),new Date('2026-07-01T12:00:00').getTime()));var diasPrima=Math.max(0,Math.round((fin-iniPrima)/86400000));
-  var ces=Math.round(base*dias/360),intc=Math.round(ces*0.12*dias/360),prima=Math.round(base*diasPrima/360),vac=Math.round(base*dias/720);
-  return {base:base,dias:dias,ces:ces,intc:intc,prima:prima,vac:vac,total:ces+intc+prima+vac};
+  var finJun=new Date('2026-06-30T12:00:00');var diasPrimaPagada=Math.max(0,Math.round((Math.min(fin.getTime(),finJun.getTime())-ing.getTime())/86400000));
+  var ces=Math.round(baseCes*dias/360),intc=Math.round(ces*0.12*dias/360),prima=Math.round(baseCes*diasPrima/360),vac=Math.round(baseVac*dias/720);
+  var primaPagada=Math.round(baseCes*diasPrimaPagada/360);
+  return {base:baseCes,baseVac:baseVac,dias:dias,diasPrima:diasPrima,ces:ces,intc:intc,prima:prima,vac:vac,primaPagada:primaPagada,total:ces+intc+prima+vac};
+}
+function liquidar(id){
+  var e=empsAll.find(function(x){return x.id===id;});if(!e)return;
+  var hasta=e.fecha_retiro||new Date().toISOString().slice(0,10);
+  var c=calcLiq(e,hasta);if(!c){alert('Falta la fecha de ingreso del empleado');return;}
+  var f=function(n){return '$'+Math.round(n||0).toLocaleString('es-CO');};
+  var w=window.open('','_blank');if(!w){alert('Permite las ventanas emergentes para ver el comprobante');return;}
+  var h=''
+   +'<html><head><meta charset="utf-8"><title>Liquidacion '+esc(e.nombre_completo)+'</title>'
+   +'<style>body{font-family:-apple-system,Arial,sans-serif;color:#1b2030;max-width:640px;margin:18px auto;padding:0 20px}h1{font-size:19px;margin:0}.mut{color:#667;font-size:12px}table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}td,th{padding:9px 8px;border-bottom:1px solid #e6e8f0}th{text-align:left;color:#889;font-size:11px}.r{text-align:right}.tot td{font-weight:800;font-size:16px;border-top:2px solid #333}.box{border:1px solid #e6e8f0;border-radius:10px;padding:14px;margin:12px 0}.note{background:#eef7ff;border:1px solid #cfe4fb;border-radius:8px;padding:11px;font-size:12.5px;color:#234}.firma{margin-top:46px;display:flex;justify-content:space-between}.firma div{border-top:1px solid #333;width:44%;text-align:center;padding-top:6px;font-size:12px}@media print{.noprint{display:none}}</style></head><body>'
+   +'<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Liquidacion de prestaciones sociales</h1><div class="mut">Imperio Constructora - Imperio de Libertad SAS - NIT 901.343.964-5</div></div><button class="noprint" onclick="window.print()" style="padding:9px 14px;border:0;background:#4f46e5;color:#fff;border-radius:8px;font-weight:700;cursor:pointer">Imprimir / PDF</button></div>'
+   +'<div class="box"><b style="font-size:15px">'+esc(e.nombre_completo)+'</b> - '+esc(e.cargo||'')+'<br><span class="mut">C.C. '+esc(e.cedula||'')+' - Ingreso '+esc(e.fecha_ingreso)+' - Retiro '+esc(hasta)+' - '+c.dias+' dias laborados</span><br><span class="mut">Liquidado sobre el salario minimo ('+f(SMLMV)+' + auxilio de transporte '+f(AUX_TRANSPORTE)+')</span></div>'
+   +'<table><tr><th>Concepto</th><th class="r">Valor</th></tr>'
+   +'<tr><td>Cesantias ('+c.dias+' dias)</td><td class="r">'+f(c.ces)+'</td></tr>'
+   +'<tr><td>Intereses a las cesantias (12% anual)</td><td class="r">'+f(c.intc)+'</td></tr>'
+   +'<tr><td>Prima de servicios ('+c.diasPrima+' dias, del 1-jul al retiro)</td><td class="r">'+f(c.prima)+'</td></tr>'
+   +'<tr><td>Vacaciones ('+c.dias+' dias)</td><td class="r">'+f(c.vac)+'</td></tr>'
+   +'<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">'+f(c.total)+'</td></tr></table>'
+   +'<div class="note"><b>Nota sobre la prima:</b> la prima del primer semestre (del '+esc(e.fecha_ingreso)+' al 30-jun-2026 = '+f(c.primaPagada)+') <b>ya fue pagada</b> el 30 de junio de 2026. Por eso esta liquidacion solo incluye la prima causada desde el 1 de julio ('+f(c.prima)+').</div>'
+   +'<div class="firma"><div>Firma empleador</div><div>Recibi a satisfaccion<br>'+esc(e.nombre_completo)+'</div></div>'
+   +'</body></html>';
+  w.document.write(h);w.document.close();
 }
 function liqRow(e,hasta,retObj){
   var c=calcLiq(e,hasta);
   if(!c)return '<tr><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+'</div><div class="cargo">'+esc(e.cargo||'')+'</div></div></div></td><td colspan="5" style="color:var(--amb);font-size:12px">Falta fecha de ingreso — edítala en la ficha</td></tr>';
   var sub='desde '+esc(e.fecha_ingreso)+(retObj?' → '+(e.fecha_retiro?esc(e.fecha_retiro):'sin fecha retiro'):'')+' · '+c.dias+' días';
   return '<tr'+(retObj?' style="background:#fff7f6"':'')+'><td><div class="emprow">'+avatar(e,34)+'<div><div class="nm">'+esc(e.nombre_completo)+(retObj?' <span class="badge" style="background:#fde8e6;color:#c2372f;font-size:9px">retirado</span>':'')+'</div><div class="cargo">'+sub+'</div></div></div></td>'
-    +'<td class="r">'+fmt(c.ces)+'</td><td class="r">'+fmt(c.intc)+'</td><td class="r">'+fmt(c.prima)+'</td><td class="r">'+fmt(c.vac)+'</td><td class="r tot">'+fmt(c.total)+(retObj?' <button class="btn s" style="padding:3px 8px;font-size:11px;margin-left:4px" onclick="fixRetiro(\''+e.id+'\')">✎ fecha</button>':'')+'</td></tr>';
+    +'<td class="r">'+fmt(c.ces)+'</td><td class="r">'+fmt(c.intc)+'</td><td class="r">'+fmt(c.prima)+'</td><td class="r">'+fmt(c.vac)+'</td><td class="r tot">'+fmt(c.total)+(retObj?' <button class="btn s" style="padding:3px 8px;font-size:11px;margin-left:4px;background:#16a34a;color:#fff;border-color:#16a34a" onclick="liquidar(\''+e.id+'\')">🧾 Liquidar</button> <button class="btn s" style="padding:3px 8px;font-size:11px" onclick="fixRetiro(\''+e.id+'\')">✎</button>':'')+'</td></tr>';
 }
 function renderLiq(v){
   var hoy=new Date().toISOString().slice(0,10);
@@ -395,7 +419,7 @@ function renderLiq(v){
       +'<div class="card" style="overflow-x:auto"><table>'+thead+'<tbody>'+rets.map(function(e){return liqRow(e,e.fecha_retiro||hoy,true);}).join('')+'</tbody></table></div>';
   }
   sec+='<div class="kpis" style="margin-top:14px"><div class="kpi"><div class="l">Prestaciones acumuladas (activos)</div><div class="v" style="color:var(--amb)">'+fmt(totAcc)+'</div><div style="font-size:10px;color:var(--mut)">si se liquidara hoy</div></div></div>'
-    +'<div class="hint">Prestaciones por empleado según fecha de ingreso. No se paga cada quincena; se acumula hasta la liquidación. Base = básico + bonificación. La prima acumula desde el 1-jul (la anterior se pagó el 30-jun-2026).</div>'
+    +'<div class="hint">Prestaciones por empleado según fecha de ingreso. No se paga cada quincena; se acumula hasta la liquidación. Liquidación por el mínimo (mínimo + auxilio en cesantías y prima; vacaciones sobre el mínimo). La prima acumula desde el 1-jul (la anterior se pagó el 30-jun-2026). Usa 🧾 Liquidar para el comprobante que se le envía al empleado.</div>'
     +'<div class="card" style="overflow-x:auto"><table>'+thead+'<tbody>'+acts.map(function(e){return liqRow(e,hoy,false);}).join('')+'</tbody></table></div>';
   v.innerHTML=sec;
 }
