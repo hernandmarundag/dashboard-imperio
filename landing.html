@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="description" content="Imperio Constructora — construimos tu proyecto a precio cerrado en Medellín. Lo que cotizamos es lo que pagas, y lo ves en vivo con cámaras 24/7. Casas, edificios, remodelaciones y locales llave en mano.">
 <title>Imperio Constructora · Construimos a precio cerrado</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -773,6 +775,15 @@ addEventListener('scroll',function(){nav.classList.toggle('scrolled',scrollY>80)
 /* reveal */
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -8% 0px'});
 document.querySelectorAll('.reveal').forEach(function(e,i){e.style.transitionDelay=(Math.min(i%4,3)*70)+'ms';io.observe(e);});
+
+/* scroll interno robusto (funciona en vista previa/iframe y en móvil) */
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var id=a.getAttribute('href').slice(1);if(!id)return;
+    var t=document.getElementById(id);if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+});
+
 showStep(1);
 </script>
 </body>
