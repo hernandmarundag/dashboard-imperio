@@ -3,599 +3,772 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Imperio Constructora — construimos tu proyecto llave en mano con precio cerrado por m², cámaras 24/7, informes en línea con IA y respaldo de seguros SURA. Cotiza en 2 minutos.">
-<title>Imperio Constructora · Construimos el proyecto de tu vida</title>
+<meta name="description" content="Imperio Constructora — construimos tu proyecto a precio cerrado en Medellín. Lo que cotizamos es lo que pagas, y lo ves en vivo con cámaras 24/7. Casas, edificios, remodelaciones y locales llave en mano.">
+<title>Imperio Constructora · Construimos a precio cerrado</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
- --gold:#c6a15b;--gold2:#e7cd92;--goldsoft:#f3e9d4;
- --black:#0d0d0f;--ink:#17171b;--ink2:#2a2a30;
- --cream:#f8f5ef;--white:#fff;--mut:#8a8a93;--line:rgba(198,161,91,.22);
+ --ink-900:#0B0B0C;--ink-800:#131315;--ink-700:#1E1E21;--ink-600:#2A2A2E;
+ --ivory-50:#F7F4EF;--ivory-100:#EFEAE1;--paper:#FBFAF7;--white:#fff;
+ --gold-500:#B89765;--gold-400:#C9AC81;--gold-600:#9C7C4E;--gold-tint:rgba(184,151,101,.14);
+ --gold-metal:linear-gradient(135deg,#C9AC81 0%,#B89765 42%,#8A6B41 100%);
+ --tod:#E9E4DB;--tmd:#8B857B;--tol:#1A1A1C;--tml:#6E685E;
+ --hd:rgba(184,151,101,.28);--hl:rgba(26,26,28,.12);
+ --ease:cubic-bezier(.16,1,.3,1);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--ink);background:var(--white);font-size:16px;line-height:1.55;overflow-x:hidden}
-h1,h2,h3,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;line-height:1.08;letter-spacing:.2px}
-.wrap{max-width:1160px;margin:0 auto;padding:0 22px}
-.gold{color:var(--gold)}
-.btn{display:inline-flex;align-items:center;gap:9px;border:none;cursor:pointer;font-family:'Manrope';font-weight:700;font-size:15px;padding:15px 26px;border-radius:60px;text-decoration:none;transition:transform .15s,box-shadow .15s}
-.btn.pri{background:linear-gradient(120deg,var(--gold),var(--gold2));color:#231a06;box-shadow:0 10px 30px rgba(198,161,91,.35)}
-.btn.pri:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(198,161,91,.5)}
-.btn.ghost{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.35)}
-.btn.dark{background:var(--black);color:#fff}
-.eyebrow{font-family:'Manrope';font-weight:800;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:var(--gold)}
+body{font-family:'Archivo',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--tol);background:var(--ivory-50);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;font-weight:400;line-height:1.05;letter-spacing:-.015em}
+em{font-style:italic}
+.mono{font-family:'Space Mono',monospace}
+.wrap{max-width:1280px;margin:0 auto;padding:0 clamp(20px,5vw,80px)}
+.kicker{font:600 12px/1 'Archivo';letter-spacing:.22em;text-transform:uppercase;color:var(--gold-600);display:inline-flex;align-items:center;gap:11px}
+.kicker::before{content:"";width:7px;height:7px;border:1px solid var(--gold-500);transform:rotate(45deg);flex-shrink:0}
+.on-dark .kicker,.kicker.od{color:var(--gold-400)}
+.enum{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.1em;color:var(--gold-600)}
+.on-dark .enum{color:var(--gold-500)}
+svg.ic{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;display:block}
 
-nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:rgba(13,13,15,.72);backdrop-filter:blur(12px);border-bottom:1px solid rgba(198,161,91,.14)}
-nav .logo{display:flex;align-items:center;gap:10px;color:#fff;font-family:'Cormorant Garamond';font-size:23px;font-weight:700;letter-spacing:1px}
-nav .logo .mk{width:30px;height:30px;border:2px solid var(--gold);border-radius:7px;display:grid;place-items:center;color:var(--gold);font-size:15px;transform:rotate(45deg)}
-nav .logo .mk span{transform:rotate(-45deg)}
-nav .nlinks{display:flex;gap:24px;align-items:center}
-nav .nlinks a{color:#e8e8ea;text-decoration:none;font-size:14px;font-weight:600;opacity:.85}
-nav .nlinks a:hover{opacity:1;color:var(--gold)}
-nav .navcta{padding:11px 20px;font-size:14px}
-@media(max-width:920px){nav .nlinks a:not(.navcta){display:none}}
+/* buttons */
+.btn{font:600 12.5px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;padding:18px 30px;border:1px solid transparent;border-radius:2px;display:inline-flex;align-items:center;gap:12px;cursor:pointer;text-decoration:none;transition:all .4s var(--ease);background:none}
+.btn .ar{transition:transform .4s var(--ease)}
+.btn:hover .ar{transform:translateX(5px)}
+.btn--primary{background:var(--ink-900);color:var(--ivory-50);border-color:var(--ink-900)}
+.btn--primary:hover{background:transparent;color:var(--ink-900);border-color:var(--gold-500);box-shadow:inset 0 0 0 1px var(--gold-500)}
+.btn--onDark{background:transparent;color:var(--ivory-50);border-color:var(--gold-500)}
+.btn--onDark:hover{background:var(--gold-tint);color:var(--gold-400)}
+.link-u{display:inline-flex;align-items:center;gap:9px;font:600 12.5px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;color:inherit;text-decoration:none;border-bottom:1px solid var(--hd);padding-bottom:4px;transition:border-color .3s}
+.link-u:hover{border-color:var(--gold-500)}
 
-.hero{position:relative;background:radial-gradient(1200px 700px at 70% -10%,#26210f,transparent 60%),linear-gradient(180deg,#0d0d0f,#111013 70%,#161318);color:#fff;padding:150px 0 84px;overflow:hidden}
-.hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(198,161,91,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(198,161,91,.05) 1px,transparent 1px);background-size:54px 54px;mask-image:radial-gradient(700px 500px at 75% 20%,#000,transparent 75%);opacity:.6}
-.hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center}
-.hero h1{font-size:62px;margin:16px 0 18px}
-.hero h1 em{font-style:normal;color:var(--gold)}
-.hero p.lead{font-size:18px;color:#cfcfd6;max-width:520px;margin-bottom:26px}
-.hero .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-.hero .microtrust{display:flex;gap:20px;margin-top:32px;flex-wrap:wrap}
-.hero .microtrust .mt{display:flex;flex-direction:column}
-.hero .microtrust .mt b{font-family:'Cormorant Garamond';font-size:27px;color:var(--gold);font-weight:700;line-height:1}
-.hero .microtrust .mt span{font-size:11.5px;color:#a9a9b2;letter-spacing:.3px;margin-top:3px}
-.qcard{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(198,161,91,.28);border-radius:20px;padding:24px;backdrop-filter:blur(6px);box-shadow:0 30px 70px rgba(0,0,0,.45)}
-.qcard h3{font-size:24px;color:#fff;margin-bottom:3px}
-.qcard .qh{font-size:12.5px;color:#b7b7c0;margin-bottom:14px}
-.qcard label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#9a9aa4;margin:11px 0 6px}
-.qcard input,.qcard select{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:11px;color:#fff;padding:12px 13px;font-family:'Manrope';font-size:15px;font-weight:600}
-.qcard input::placeholder{color:#7d7d87}
-.seg{display:flex;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:4px}
-.seg button{flex:1;background:transparent;border:none;color:#c9c9d2;font-family:'Manrope';font-weight:700;font-size:12.5px;padding:9px 6px;border-radius:8px;cursor:pointer}
-.seg button.on{background:linear-gradient(120deg,var(--gold),var(--gold2));color:#231a06}
-.lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:6px}
-.lvls .lv{border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:9px 6px;text-align:center;cursor:pointer;transition:.15s}
-.lvls .lv b{display:block;font-size:13px;color:#fff;font-weight:700}
-.lvls .lv small{font-size:10px;color:#a9a9b2}
-.lvls .lv.on{border-color:var(--gold);background:rgba(198,161,91,.14)}
-.lvls .lv.on b{color:var(--gold)}
-.qout{margin-top:14px;background:rgba(198,161,91,.1);border:1px solid rgba(198,161,91,.3);border-radius:13px;padding:13px 15px;text-align:center}
-.qout .ql{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
-.qout .qv{font-family:'Cormorant Garamond';font-size:33px;font-weight:700;color:#fff;line-height:1.1}
-.qout .qn{font-size:11px;color:#a9a9b2}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:26px clamp(20px,5vw,80px);transition:all .4s var(--ease)}
+nav.scrolled{padding:14px clamp(20px,5vw,80px);background:rgba(11,11,12,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--hd)}
+.brand{display:flex;align-items:center;gap:12px;color:var(--ivory-50);text-decoration:none}
+.brand .mono-mk{width:34px;height:34px;border:1px solid var(--gold-500);display:grid;place-items:center;font-family:'Fraunces';font-size:16px;color:var(--gold-400);background:linear-gradient(135deg,rgba(201,172,129,.14),transparent)}
+.brand .wm{font-family:'Fraunces';font-weight:400;font-size:22px;letter-spacing:.08em;color:#fff}
+.nav-r{display:flex;align-items:center;gap:34px}
+.nav-r a.nl{color:#cbc7bf;text-decoration:none;font:600 12px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;transition:color .3s}
+.nav-r a.nl:hover{color:var(--gold-400)}
+.nav-r .btn{padding:13px 22px}
+@media(max-width:900px){.nav-r a.nl{display:none}}
 
-.trust{background:var(--black);border-top:1px solid rgba(198,161,91,.16);padding:24px 0}
-.trust .row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
-.trust .ti{display:flex;align-items:center;gap:11px;color:#e8e8ea}
-.trust .ti .ic{color:var(--gold);font-size:20px}
-.trust .ti b{font-size:13.5px;font-weight:700;display:block}
-.trust .ti span{font-size:11.5px;color:#9a9aa4}
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;align-items:flex-end;background:var(--ink-900);color:var(--tod);overflow:hidden;padding-bottom:clamp(48px,7vh,90px)}
+.hero .bg{position:absolute;inset:0;z-index:0}
+.hero .bg::before{content:"IMPERIO · OBRA";position:absolute;inset:0;display:grid;place-items:center;font:600 13px/1 'Archivo';letter-spacing:.4em;color:rgba(184,151,101,.35)}
+.hero .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,12,.55) 0%,rgba(11,11,12,.2) 30%,rgba(11,11,12,.75) 100%),radial-gradient(120% 90% at 78% 12%,rgba(184,151,101,.10),transparent 60%)}
+.hero .bg .frame{position:absolute;inset:clamp(14px,2vw,26px);border:1px solid rgba(184,151,101,.16)}
+.hero .wrap{position:relative;z-index:2;width:100%}
+.hero .htop{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;flex-wrap:wrap}
+.hero h1{font-weight:300;font-size:clamp(2.6rem,6.5vw,6rem);color:#fff;max-width:16ch;margin:18px 0 22px}
+.hero h1 em{color:var(--gold-400)}
+.hero .lead{font-size:clamp(1.05rem,1.4vw,1.3rem);color:var(--tod);max-width:46ch;margin-bottom:34px;font-weight:400}
+.hero .cta-row{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+.hero .anchor{border-left:1px solid var(--hd);padding-left:20px;max-width:230px}
+.hero .anchor .big{font-family:'Fraunces';font-weight:300;font-size:clamp(1.6rem,2.6vw,2.4rem);color:#fff;line-height:1}
+.hero .anchor .big span{font-family:'Space Mono';font-size:.5em;color:var(--gold-400);vertical-align:middle}
+.hero .anchor .sm{font-size:12.5px;color:var(--tmd);margin-top:8px;line-height:1.4}
+@media(max-width:820px){.hero .htop{flex-direction:column;align-items:flex-start}.hero .anchor{border-left:0;border-top:1px solid var(--hd);padding-left:0;padding-top:16px;margin-top:6px}}
 
-section{padding:84px 0}
-.sec-head{text-align:center;max-width:730px;margin:0 auto 46px}
-.sec-head h2{font-size:44px;margin:12px 0 12px}
-.sec-head p{color:#5a5a64;font-size:17px}
-.center{text-align:center}
+/* TRUST STRIP */
+.strip{background:var(--ivory-50);border-top:1px solid var(--hl);border-bottom:1px solid var(--hl)}
+.strip .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;padding:0}
+.strip .s{flex:1;min-width:180px;display:flex;align-items:center;gap:12px;padding:26px 24px;border-right:1px solid var(--hl);color:var(--tol)}
+.strip .s:last-child{border-right:0}
+.strip .s svg{width:22px;height:22px;color:var(--gold-600);flex-shrink:0}
+.strip .s b{font:600 13px/1.2 'Archivo';letter-spacing:.02em}
+@media(max-width:820px){.strip .s{flex-basis:50%;border-bottom:1px solid var(--hl)}.strip .s:nth-child(2){border-right:0}}
 
-/* SERVICIOS / ETAPAS */
-.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.svc{background:#fff;border:1px solid #ececec;border-radius:16px;padding:24px 20px;transition:.2s}
-.svc:hover{transform:translateY(-4px);box-shadow:0 20px 44px rgba(0,0,0,.08);border-color:var(--line)}
-.svc .si{width:50px;height:50px;border-radius:13px;background:var(--black);color:var(--gold);display:grid;place-items:center;font-size:23px;margin-bottom:14px}
-.svc h3{font-size:22px;margin-bottom:6px}
-.svc p{font-size:13.5px;color:#6a6a74}
-.svc .en{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:1px}
-@media(max-width:900px){.svc-grid{grid-template-columns:1fr 1fr}}
+section{padding:clamp(84px,12vh,180px) 0}
+.sec-head{max-width:640px;margin-bottom:clamp(48px,6vw,80px)}
+.sec-head h2{font-size:clamp(2rem,3.6vw,3.4rem);margin:16px 0 0}
+.sec-head h2 em{color:var(--gold-600)}
+.on-dark .sec-head h2 em{color:var(--gold-400)}
+.sec-head p{color:var(--tml);font-size:1.1rem;margin-top:18px;max-width:52ch}
+.on-dark{background:var(--ink-900);color:var(--tod)}
+.on-dark .sec-head p{color:var(--tmd)}
 
-.niveles{background:var(--cream)}
+/* SERVICIOS */
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.svc{border-top:1px solid var(--hd);padding-top:22px}
+.svc .fig{aspect-ratio:3/4;background:linear-gradient(135deg,#131315,#0B0B0C);position:relative;margin-bottom:20px;overflow:hidden;border:1px solid var(--ink-700)}
+.svc .fig::before{content:"";position:absolute;inset:14px;border:1px solid var(--hd)}
+.svc .fig::after{content:attr(data-l);position:absolute;left:0;right:0;bottom:22px;text-align:center;font:600 11px/1 'Archivo';letter-spacing:.28em;color:var(--gold-500)}
+.svc .en{display:block;margin-bottom:8px}
+.svc h3{font-size:1.5rem;font-weight:500;color:#fff;margin-bottom:7px}
+.svc p{font-size:14px;color:var(--tmd)}
+@media(max-width:900px){.svc-grid{grid-template-columns:1fr 1fr;gap:26px}}
+@media(max-width:520px){.svc-grid{grid-template-columns:1fr}}
+
+/* ETAPAS timeline horizontal */
+.etapas{margin-top:clamp(56px,7vw,96px);border-top:1px solid var(--hd);padding-top:44px}
+.etapas .row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.etapa{position:relative;padding-right:20px}
+.etapa .node{display:flex;align-items:center;gap:14px;margin-bottom:16px;color:var(--gold-400)}
+.etapa .node .dot{width:9px;height:9px;border:1px solid var(--gold-500);transform:rotate(45deg);flex-shrink:0}
+.etapa .node .ln{flex:1;height:1px;background:var(--hd)}
+.etapa svg.ic{color:var(--gold-400);margin-bottom:14px}
+.etapa h4{font-family:'Fraunces';font-weight:500;font-size:1.15rem;color:#fff;margin-bottom:6px}
+.etapa p{font-size:13.5px;color:var(--tmd)}
+@media(max-width:820px){.etapas .row{grid-template-columns:1fr 1fr;gap:34px}}
+
+/* MODALIDADES */
+.mods{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:clamp(48px,6vw,72px)}
+.mod{padding:38px;border:1px solid var(--hl);border-radius:3px;position:relative;overflow:hidden}
+.mod.dark{background:var(--ink-900);color:var(--tod);border-color:var(--ink-800)}
+.mod .en{margin-bottom:14px;display:block}
+.mod h3{font-size:1.9rem;font-weight:500;margin-bottom:10px}
+.mod.dark h3{color:#fff}
+.mod p{font-size:15px;color:var(--tml);max-width:40ch}
+.mod.dark p{color:var(--tmd)}
+.mod .pr{margin-top:18px;font-family:'Fraunces';font-weight:300;font-size:1.5rem;color:var(--gold-600)}
+.mod.dark .pr{color:var(--gold-400)}
+@media(max-width:760px){.mods{grid-template-columns:1fr}}
+
+/* NIVELES */
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
-.plan{background:#fff;border:1px solid #ececec;border-radius:20px;padding:30px 26px;display:flex;flex-direction:column;position:relative;transition:.2s}
-.plan:hover{transform:translateY(-4px);box-shadow:0 24px 50px rgba(0,0,0,.09)}
-.plan.feat{background:linear-gradient(180deg,#141317,#1d1a12);border:1px solid var(--gold);color:#fff;box-shadow:0 30px 60px rgba(0,0,0,.28)}
-.plan .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(120deg,var(--gold),var(--gold2));color:#231a06;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:6px 16px;border-radius:30px}
-.plan .pname{font-family:'Cormorant Garamond';font-size:30px;font-weight:700}
-.plan.feat .pname{color:var(--gold)}
-.plan .ptag{font-size:13px;color:#8a8a93;min-height:38px;margin:4px 0 14px}
-.plan.feat .ptag{color:#bcbcc6}
-.plan .price{font-family:'Cormorant Garamond';font-size:40px;font-weight:700;line-height:1}
-.plan .price small{font-size:15px;color:#8a8a93;font-family:'Manrope';font-weight:600}
-.plan .pu{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:6px}
-.plan .pblanca{font-size:12px;color:#8a8a93;margin-bottom:16px}
-.plan.feat .pblanca{color:#9a9aa4}
-.plan ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:22px;flex:1}
-.plan li{font-size:13.5px;display:flex;gap:9px;align-items:flex-start;line-height:1.4}
-.plan li .ck{color:var(--gold);font-weight:800;flex-shrink:0}
-.plan.feat li{color:#e4e4ea}
-.plan .btn{width:100%;justify-content:center}
-.plan .incluye{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#b8b8bf;margin-bottom:10px}
+.plan{background:var(--paper);border:1px solid var(--hl);border-radius:3px;padding:34px 30px;display:flex;flex-direction:column;position:relative}
+.plan.feat{border-color:var(--gold-500);box-shadow:0 30px 80px -40px rgba(184,151,101,.5)}
+.plan .badge{position:absolute;top:-11px;left:30px;background:var(--ink-900);color:var(--gold-400);font:600 10.5px/1 'Archivo';letter-spacing:.18em;text-transform:uppercase;padding:7px 14px}
+.plan .pn{font-family:'Fraunces';font-weight:500;font-size:1.7rem;margin-bottom:4px}
+.plan .tl{font-size:13.5px;color:var(--tml);min-height:40px;margin-bottom:20px}
+.plan .price{font-family:'Fraunces';font-weight:300;font-size:2.6rem;line-height:1;color:var(--tol)}
+.plan .price .u{font-family:'Space Mono';font-size:.85rem;color:var(--tml)}
+.plan .bl{font-size:12px;color:var(--gold-600);margin:6px 0 22px;font-family:'Space Mono'}
+.plan .inc{font:600 11px/1 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:var(--tml);margin-bottom:14px;padding-top:18px;border-top:1px solid var(--hl)}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:11px;flex:1;margin-bottom:26px}
+.plan li{font-size:13.5px;display:flex;gap:11px;align-items:flex-start;line-height:1.4;color:var(--tol)}
+.plan li svg{width:15px;height:15px;color:var(--gold-500);flex-shrink:0;margin-top:3px}
+.plan .btn{justify-content:center}
+.legal-note{margin-top:26px;font-size:12.5px;color:var(--tml);text-align:center}
+@media(max-width:900px){.plans{grid-template-columns:1fr;max-width:440px;margin:0 auto}}
 
-.diff{background:var(--black);color:#fff}
-.diff .grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
-.diff h2{font-size:42px;margin-bottom:16px}
-.diff p{color:#bcbcc6;margin-bottom:16px;font-size:16px}
-.diff .feats{display:flex;flex-direction:column;gap:16px;margin-top:22px}
-.diff .f{display:flex;gap:14px}
-.diff .f .fi{width:44px;height:44px;flex-shrink:0;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;color:var(--gold);font-size:20px}
-.diff .f b{font-size:16px}
-.diff .f span{font-size:13.5px;color:#a9a9b2}
-.mock{background:linear-gradient(180deg,#17151a,#111);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 30px 70px rgba(0,0,0,.5)}
-.mock .mrow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)}
-.mock .mrow:last-child{border:none}
-.mock .mrow .ml{font-size:13px;color:#c9c9d2}
-.mock .mrow .mv{font-family:'Cormorant Garamond';font-size:20px;color:var(--gold);font-weight:700}
-.mock .mbar{height:7px;background:rgba(255,255,255,.08);border-radius:5px;margin-top:5px;overflow:hidden}
-.mock .mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+/* DIFERENCIADOR */
+.diff .grid{display:grid;grid-template-columns:5fr 7fr;gap:clamp(40px,6vw,80px);align-items:center}
+.diff h2{font-size:clamp(2rem,3.6vw,3.4rem);margin:16px 0 14px;color:#fff}
+.diff h2 em{color:var(--gold-400)}
+.diff .sub{color:var(--tmd);font-size:1.1rem;margin-bottom:34px}
+.diff .fl{display:flex;flex-direction:column;gap:26px}
+.diff .f{display:flex;gap:18px}
+.diff .f svg.ic{color:var(--gold-400);flex-shrink:0}
+.diff .f b{font-family:'Fraunces';font-weight:500;font-size:1.15rem;color:#fff;display:block;margin-bottom:4px}
+.diff .f span{font-size:14px;color:var(--tmd)}
+/* mock */
+.panel{background:var(--ink-800);border:1px solid var(--ink-700);border-radius:6px;overflow:hidden;box-shadow:0 40px 90px -40px rgba(0,0,0,.7)}
+.panel .pbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--ink-700)}
+.panel .live{display:flex;align-items:center;gap:8px;font:700 11px/1 'Archivo';letter-spacing:.14em;color:#e9e4db}
+.panel .live .dot{width:8px;height:8px;border-radius:50%;background:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,.5);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.5)}70%{box-shadow:0 0 0 7px rgba(229,72,77,0)}100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+.panel .ts{margin-left:auto;font-family:'Space Mono';font-size:11px;color:var(--tmd)}
+.panel .pbody{padding:18px}
+.panel .cam{aspect-ratio:16/9;background:linear-gradient(135deg,#17171a,#0b0b0c);border:1px solid var(--ink-700);position:relative;display:grid;place-items:center;margin-bottom:16px}
+.panel .cam svg{width:34px;height:34px;color:var(--gold-500)}
+.panel .cam .cl{position:absolute;left:12px;bottom:10px;font-family:'Space Mono';font-size:10.5px;letter-spacing:.1em;color:var(--tmd)}
+.panel .cam .rec{position:absolute;right:12px;top:10px;font-family:'Space Mono';font-size:10px;color:#e5484d;display:flex;align-items:center;gap:5px}
+.panel .cam .rec::before{content:"";width:6px;height:6px;border-radius:50%;background:#e5484d}
+.prog{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.prog .p{display:grid;grid-template-columns:120px 1fr 44px;align-items:center;gap:12px}
+.prog .p .l{font-size:12.5px;color:var(--tod)}
+.prog .p .tr{height:5px;background:var(--ink-700);border-radius:3px;overflow:hidden}
+.prog .p .tr i{display:block;height:100%;background:var(--gold-metal)}
+.prog .p .v{font-family:'Space Mono';font-size:12px;color:var(--gold-400);text-align:right}
+.iacard{border:1px solid var(--ink-700);border-radius:4px;padding:14px 16px}
+.iacard .h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.iacard .h b{font:600 12px/1 'Archivo';letter-spacing:.06em;color:#fff}
+.iacard .chip{font-family:'Space Mono';font-size:10px;color:var(--gold-400);border:1px solid var(--hd);padding:3px 8px;border-radius:2px}
+.iacard .sk{height:8px;background:var(--ink-700);border-radius:3px;margin-bottom:7px}
+.iacard .sk.s2{width:82%}.iacard .sk.s3{width:64%;margin-bottom:0}
+@media(max-width:860px){.diff .grid{grid-template-columns:1fr;gap:44px}}
 
-/* VALOR AGREGADO */
-.va{background:var(--cream)}
-.va-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.vac{background:#fff;border:1px solid #ececec;border-radius:18px;padding:26px 22px;text-align:center;transition:.2s}
-.vac:hover{transform:translateY(-4px);box-shadow:0 22px 46px rgba(0,0,0,.08);border-color:var(--line)}
-.vac .vi{width:58px;height:58px;margin:0 auto 14px;border-radius:16px;background:linear-gradient(135deg,#141317,#2a2418);color:var(--gold);display:grid;place-items:center;font-size:26px}
-.vac h3{font-size:21px;margin-bottom:7px}
-.vac p{font-size:13px;color:#6a6a74}
-@media(max-width:900px){.va-grid{grid-template-columns:1fr 1fr}}
+/* VALOR */
+.va-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.vac{padding:34px 26px 34px 0;border-top:1px solid var(--hl)}
+.vac svg.ic{color:var(--gold-600);margin-bottom:18px}
+.vac h4{font-family:'Fraunces';font-weight:500;font-size:1.25rem;margin-bottom:8px}
+.vac p{font-size:13.5px;color:var(--tml)}
+@media(max-width:860px){.va-grid{grid-template-columns:1fr 1fr;gap:0 26px}}
+@media(max-width:520px){.va-grid{grid-template-columns:1fr}}
 
-.proceso .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
-.step{text-align:center;position:relative}
-.step .n{width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:var(--black);color:var(--gold);display:grid;place-items:center;font-family:'Cormorant Garamond';font-size:24px;font-weight:700;border:1px solid var(--gold)}
-.step b{display:block;font-size:15px;margin-bottom:4px}
-.step p{font-size:12.5px;color:#7a7a84}
-@media(max-width:820px){.proceso .steps{grid-template-columns:repeat(2,1fr);gap:26px}}
+/* PROCESO */
+.proc{max-width:820px}
+.pstep{display:grid;grid-template-columns:auto 1fr;gap:28px;padding:28px 0;border-top:1px solid var(--hl);align-items:baseline}
+.pstep:last-child{border-bottom:1px solid var(--hl)}
+.pstep .num{font-family:'Fraunces';font-weight:300;font-size:2.4rem;color:var(--gold-600);line-height:1}
+.pstep h4{font-family:'Fraunces';font-weight:500;font-size:1.4rem;margin-bottom:4px}
+.pstep p{color:var(--tml);font-size:14.5px;max-width:52ch}
 
-.calc{background:linear-gradient(180deg,#0d0d0f,#161318);color:#fff}
-.calc .box{max-width:940px;margin:0 auto;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:24px;padding:34px;box-shadow:0 40px 90px rgba(0,0,0,.5)}
-.calc .frow{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.calc label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#9a9aa4;margin:14px 0 7px}
-.calc input,.calc select{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:12px;color:#fff;padding:14px;font-family:'Manrope';font-size:15px;font-weight:600}
-.calc input::placeholder{color:#7d7d87}
-.calc .seg button{font-size:13px;padding:11px 6px}
-.calc .lvls{grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
-.calc .lvls .lv{padding:13px 8px}
-.calc .lvls .lv b{font-size:15px}
-.calc .lvls .lv small{font-size:11px}
-.bigout{margin-top:22px;display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:center;background:rgba(198,161,91,.1);border:1px solid rgba(198,161,91,.32);border-radius:18px;padding:22px 24px}
-.bigout .bl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
-.bigout .bv{font-family:'Cormorant Garamond';font-size:46px;font-weight:700;line-height:1.05}
-.bigout .bn{font-size:12px;color:#a9a9b2;margin-top:4px}
-.bigout .btime{font-size:12.5px;color:#e7cd92;margin-top:6px;font-weight:600}
-.bigout .btn{width:100%;justify-content:center;font-size:16px;padding:17px}
-.disc{font-size:11.5px;color:#8a8a93;text-align:center;margin-top:16px}
+/* CALCULADORA */
+.calc{background:var(--ink-900)}
+.calc .box{max-width:960px;margin:0 auto;background:var(--paper);border-top:2px solid var(--gold-500);border-radius:0 0 4px 4px;padding:clamp(30px,4vw,54px);box-shadow:0 50px 120px -50px rgba(0,0,0,.6)}
+.calc .box .kicker{margin-bottom:14px}
+.calc .box h3{font-size:clamp(1.6rem,2.6vw,2.4rem);font-weight:400;color:var(--tol);margin-bottom:8px}
+.calc .box .csub{color:var(--tml);font-size:15px;margin-bottom:36px}
+.field-label{display:block;font:600 11px/1 'Archivo';letter-spacing:.18em;text-transform:uppercase;color:var(--tml);margin:0 0 12px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:30px}
+.field{width:100%;border:0;border-bottom:1px solid var(--hl);background:transparent;font:400 1.05rem 'Archivo';color:var(--tol);padding:10px 0}
+.field:focus{outline:none;border-color:var(--gold-600)}
+select.field{cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{border:1px solid var(--hl);border-radius:2px;padding:11px 17px;font:500 13px/1 'Archivo';letter-spacing:.02em;color:var(--tml);background:transparent;cursor:pointer;transition:all .25s}
+.chip[aria-pressed="true"]{border-color:var(--gold-500);background:var(--gold-tint);color:var(--gold-600)}
+.seg{display:inline-flex;border:1px solid var(--hl);border-radius:2px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:11px 18px;font:600 13px/1 'Archivo';color:var(--tml);cursor:pointer;transition:.2s;border-right:1px solid var(--hl)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--gold-tint);color:var(--gold-600)}
+.result{margin-top:38px;padding-top:30px;border-top:1px solid var(--hl);display:grid;grid-template-columns:1.4fr 1fr;gap:26px;align-items:center}
+.result .rl{font:600 11px/1 'Archivo';letter-spacing:.18em;text-transform:uppercase;color:var(--tml)}
+.result .rv{font-family:'Fraunces';font-weight:300;font-size:clamp(2.4rem,5vw,3.6rem);color:var(--tol);line-height:1.02;margin-top:8px}
+.result .rn{font-size:12.5px;color:var(--tml);margin-top:8px}
+.result .rt{font-family:'Space Mono';font-size:13px;color:var(--gold-600);margin-top:6px}
+.result .btn{justify-content:center;width:100%}
+.disc{font-size:12px;color:var(--tml);margin-top:24px;line-height:1.5}
+@media(max-width:720px){.frow{grid-template-columns:1fr;gap:26px}.result{grid-template-columns:1fr;gap:20px}}
 
-.insignia{background:var(--white)}
-.insignia .grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
-.insignia .ph{background:linear-gradient(135deg,#1a1a1f,#2a2418);border-radius:20px;min-height:340px;display:grid;place-items:center;color:var(--gold);position:relative;overflow:hidden;border:1px solid var(--line)}
-.insignia .ph .lbl{text-align:center;z-index:2}
-.insignia .ph .lbl .k{font-size:12px;letter-spacing:4px;color:var(--gold)}
-.insignia .ph .lbl .t{font-family:'Cormorant Garamond';font-size:52px;color:#fff;font-weight:700}
-.insignia .ph:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(198,161,91,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(198,161,91,.06) 1px,transparent 1px);background-size:40px 40px}
-.insignia h2{font-size:40px;margin-bottom:14px}
-.insignia p{color:#5a5a64;margin-bottom:14px}
-.istats{display:flex;gap:30px;margin-top:20px}
-.istats .is b{font-family:'Cormorant Garamond';font-size:34px;color:var(--gold);font-weight:700;display:block;line-height:1}
-.istats .is span{font-size:12px;color:#7a7a84}
+/* WELIVING */
+.insignia{padding:0;background:var(--ink-900);color:var(--tod)}
+.insignia .cine{position:relative;aspect-ratio:21/9;background:linear-gradient(135deg,#17151a,#0b0b0c);display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--ink-700)}
+.insignia .cine::before{content:"";position:absolute;inset:20px;border:1px solid var(--hd)}
+.insignia .cine .wl{text-align:center;z-index:2}
+.insignia .cine .wl .k{font:600 12px/1 'Archivo';letter-spacing:.4em;color:var(--gold-500)}
+.insignia .cine .wl .t{font-family:'Fraunces';font-weight:300;font-size:clamp(3rem,8vw,6rem);color:#fff;margin-top:14px}
+.insignia .body{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,80px);align-items:center;padding:clamp(64px,9vh,120px) 0}
+.insignia h2{font-size:clamp(1.9rem,3.2vw,3rem);color:#fff;margin:14px 0 16px}
+.insignia p{color:var(--tmd);font-size:1.05rem;max-width:48ch}
+.idata{display:flex;gap:34px;flex-wrap:wrap;margin-top:28px;padding-top:26px;border-top:1px solid var(--hd)}
+.idata .d b{font-family:'Fraunces';font-weight:300;font-size:2.2rem;color:var(--gold-400);display:block;line-height:1}
+.idata .d span{font-size:12px;color:var(--tmd);letter-spacing:.04em}
+.insignia .body .fig2{aspect-ratio:4/5;background:linear-gradient(135deg,#131315,#0b0b0c);border:1px solid var(--ink-700);position:relative}
+.insignia .body .fig2::before{content:"— 01 / Weliving, Medellín";position:absolute;left:16px;bottom:14px;font-family:'Space Mono';font-size:11px;color:var(--gold-500)}
+.insignia .body .fig2::after{content:"";position:absolute;inset:14px;border:1px solid var(--hd)}
+@media(max-width:820px){.insignia .body{grid-template-columns:1fr;gap:40px}.insignia .body .fig2{order:-1;aspect-ratio:16/10}}
 
-.final{background:linear-gradient(120deg,#0d0d0f,#211b0d);color:#fff;text-align:center}
-.final h2{font-size:50px;margin-bottom:16px}
-.final p{color:#c9c9d2;max-width:560px;margin:0 auto 28px;font-size:17px}
+/* FINAL */
+.final{background:var(--ink-900);color:var(--tod);text-align:center;border-top:1px solid var(--hd)}
+.final h2{font-size:clamp(2.4rem,5vw,4.4rem);font-weight:300;color:#fff;max-width:16ch;margin:20px auto 18px}
+.final h2 em{color:var(--gold-400)}
+.final p{color:var(--tmd);font-size:1.1rem;max-width:44ch;margin:0 auto 34px}
+.final .cta-row{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
 
-footer{background:var(--black);color:#9a9aa4;padding:40px 0 30px;border-top:1px solid rgba(198,161,91,.14)}
-footer .row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
-footer .logo{display:flex;align-items:center;gap:10px;color:#fff;font-family:'Cormorant Garamond';font-size:21px;font-weight:700}
-footer a{color:#9a9aa4;text-decoration:none;font-size:13px}
-footer a:hover{color:var(--gold)}
-footer .fnote{font-size:11.5px;color:#666;margin-top:16px;text-align:center}
+/* FOOTER */
+footer{background:var(--ink-900);color:var(--tmd);padding:64px 0 40px;border-top:1px solid var(--hd)}
+footer .top{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;padding-bottom:40px;border-bottom:1px solid var(--ink-700)}
+footer .brand .wm{font-size:26px}
+footer .tag{margin-top:16px;font-size:14px;max-width:34ch;color:var(--tmd)}
+footer h5{font:600 11px/1 'Archivo';letter-spacing:.18em;text-transform:uppercase;color:var(--gold-500);margin-bottom:16px}
+footer a{color:#cbc7bf;text-decoration:none;font-size:14px;display:block;margin-bottom:9px;transition:color .3s}
+footer a:hover{color:var(--gold-400)}
+footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-width:80ch}
+@media(max-width:760px){footer .top{grid-template-columns:1fr}}
 
-/* WhatsApp float */
-.wafab{position:fixed;right:18px;bottom:18px;z-index:60;background:#25d366;color:#fff;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:28px;box-shadow:0 10px 26px rgba(37,211,102,.5);text-decoration:none;cursor:pointer}
+/* CTA llamativo (dorado con brillo) */
+.btn--cta{background:var(--gold-metal);color:#231a06;border:none;padding:20px 34px;font-size:13px;box-shadow:0 14px 44px -10px rgba(184,151,101,.6);position:relative;overflow:hidden}
+.btn--cta:hover{color:#231a06;transform:translateY(-2px);box-shadow:0 20px 54px -10px rgba(184,151,101,.8)}
+.btn--cta::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:sheen 4.5s ease-in-out infinite}
+@keyframes sheen{0%,58%{left:-70%}100%{left:150%}}
+@media(prefers-reduced-motion:reduce){.btn--cta::after{display:none}}
 
-@media(max-width:900px){
- .hero .wrap{grid-template-columns:1fr;gap:34px}
- .hero h1{font-size:44px}
- .diff .grid,.insignia .grid{grid-template-columns:1fr;gap:30px}
- .plans{grid-template-columns:1fr}
- .calc .frow,.bigout{grid-template-columns:1fr}
- .sec-head h2{font-size:34px}
- section{padding:60px 0}
-}
+/* TEST INTERACTIVO (wizard) */
+.wiz{margin-top:14px}
+.wiz .pbar{height:3px;background:var(--hl);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.wiz .pbar i{display:block;height:100%;width:14%;background:var(--gold-metal);transition:width .55s var(--ease)}
+.wiz .stepwrap{position:relative;min-height:300px}
+.step-q{display:none}
+.step-q.active{display:block;animation:fadeStep .5s var(--ease)}
+@keyframes fadeStep{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.step-meta{font-family:'Space Mono';font-size:12px;letter-spacing:.06em;color:var(--gold-600);margin-bottom:12px}
+.step-q h4{font-family:'Fraunces';font-weight:400;font-size:clamp(1.5rem,2.8vw,2.2rem);color:var(--tol);margin-bottom:26px;letter-spacing:-.01em}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.opt{border:1px solid var(--hl);border-radius:3px;padding:20px;cursor:pointer;transition:.2s;background:transparent;text-align:left;display:flex;flex-direction:column;gap:4px}
+.opt:hover{border-color:var(--gold-500);background:var(--gold-tint)}
+.opt[aria-pressed="true"]{border-color:var(--gold-500);background:var(--gold-tint);box-shadow:inset 0 0 0 1px var(--gold-500)}
+.opt .ot{font-family:'Fraunces';font-weight:500;font-size:1.2rem;color:var(--tol)}
+.opt .op{font-family:'Space Mono';font-size:12px;color:var(--gold-600)}
+.opt .od{font-size:12.5px;color:var(--tml);line-height:1.4}
+.area-row{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--hl);padding-bottom:8px;max-width:300px}
+.area-row input{border:0;background:transparent;font-family:'Fraunces';font-weight:300;font-size:clamp(2.6rem,7vw,3.4rem);color:var(--tol);width:210px}
+.area-row input:focus{outline:none}
+.area-row .u{font-family:'Space Mono';font-size:1.1rem;color:var(--tml)}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:560px}
+.wiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:34px;gap:16px}
+.wiz-back{background:none;border:0;color:var(--tml);font:600 12px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;cursor:pointer;padding:12px 0}
+.wiz-back:hover{color:var(--tol)}
+.wiz-back.hide{visibility:hidden}
+.wiz-result{text-align:center;padding:14px 0}
+.wiz-result .rv{margin:10px 0}
+.wsum{margin-top:26px;padding-top:20px;border-top:1px solid var(--hl);display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;font-size:12.5px;color:var(--tml)}
+.wsum b{color:var(--tol);font-weight:600}
+@media(max-width:600px){.opts,.opts.three,.dgrid{grid-template-columns:1fr}}
+
+/* WhatsApp float (ink + gold, no green) */
+.wafab{position:fixed;right:20px;bottom:20px;z-index:70;width:56px;height:56px;border-radius:50%;background:var(--ink-900);border:1px solid var(--gold-500);color:var(--gold-400);display:grid;place-items:center;text-decoration:none;box-shadow:0 14px 34px -10px rgba(0,0,0,.6);transition:transform .3s var(--ease)}
+.wafab:hover{transform:translateY(-3px)}
+.wafab svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.4}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.hero .bg,*{animation:none!important}}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo"><div class="mk"><span>I</span></div> IMPERIO</div>
-  <div class="nlinks">
-    <a href="#servicios">Servicios</a>
-    <a href="#niveles">Niveles</a>
-    <a href="#valor">Respaldo</a>
-    <a href="#cotizar" class="btn pri navcta">Cotiza tu proyecto</a>
+<!-- ICON SPRITE -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="ic-price" viewBox="0 0 24 24"><path d="M13.5 3H20a1 1 0 0 1 1 1v6.5L11 20.5 3.5 13Z"/><circle cx="16.8" cy="7.2" r="1.3"/></symbol>
+<symbol id="ic-cam" viewBox="0 0 24 24"><path d="M3 8.5 15.5 5l1.2 4.2L4.2 12.7Z"/><path d="M6 12l1 3.5"/><path d="M5 20h5l-1.5-4.5"/><circle cx="12.6" cy="7.4" r="1"/><path d="M18 9a4 4 0 0 1 3.5 4.2"/><path d="M18.6 11.4a2 2 0 0 1 1.6 2"/></symbol>
+<symbol id="ic-ia" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M8.5 14q1.5-3 3 0t3 0"/><circle cx="8.5" cy="17.6" r=".7"/></symbol>
+<symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 2.5 20 5.2V11c0 5.2-3.6 8.4-8 10.5C7.6 19.4 4 16.2 4 11V5.2Z"/><path d="M12 5.6 17 7.3V11c0 3.6-2.4 5.9-5 7.4"/></symbol>
+<symbol id="ic-soil" viewBox="0 0 24 24"><path d="M4 7h16v13H4Z"/><path d="M4 11.5h16"/><path d="M4 16h16"/><path d="M12 3v4"/><path d="M10.3 5.3 12 7l1.7-1.7"/></symbol>
+<symbol id="ic-arch" viewBox="0 0 24 24"><path d="M12 3.5 7 20"/><path d="M12 3.5 17 20"/><circle cx="12" cy="4" r="1.1"/><path d="M9.4 12.5h5.2"/><path d="M5 20h14"/></symbol>
+<symbol id="ic-struct" viewBox="0 0 24 24"><path d="M3 18h18"/><path d="M3 18 7 8l5 10 5-10 4 10"/><path d="M7 8h10"/></symbol>
+<symbol id="ic-key" viewBox="0 0 24 24"><circle cx="8.5" cy="8.5" r="4.5"/><path d="M11.7 11.7 20 20"/><path d="M17.5 17.5l2.2-2.2"/><path d="M14.8 14.8l1.8-1.8"/></symbol>
+<symbol id="ic-live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><path d="M8.6 8.6a5 5 0 0 0 0 6.8"/><path d="M15.4 8.6a5 5 0 0 1 0 6.8"/><path d="M6 6a9 9 0 0 0 0 12"/><path d="M18 6a9 9 0 0 1 0 12"/></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></symbol>
+<symbol id="ic-wa" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3Z"/><path d="M8.6 8.9c.2-.5.4-.5.7-.5h.5c.2 0 .4 0 .6.5l.7 1.6c0 .2 0 .3-.1.5l-.4.5c-.2.2-.3.3-.1.6.5.9 1.3 1.6 2.2 2 .3.2.4.1.6-.1l.5-.6c.2-.2.3-.2.5-.1l1.6.7c.2.1.3.4.3.6 0 .8-.7 1.4-1.3 1.5-.6.1-1.3.2-3.3-.7-2.4-1-3.9-3.5-4-3.7-.2-.2-.9-1.2-.9-2.3 0-1.1.6-1.6.8-1.8Z"/></symbol>
+</defs></svg>
+
+<nav id="nav">
+  <a class="brand" href="#top"><span class="mono-mk">IC</span><span class="wm">IMPERIO</span></a>
+  <div class="nav-r">
+    <a class="nl" href="#servicios">Obra</a>
+    <a class="nl" href="#niveles">Niveles</a>
+    <a class="nl" href="#control">En vivo</a>
+    <a class="nl" href="#weliving">Weliving</a>
+    <a class="btn btn--onDark" href="#cotizar">Cotiza tu obra</a>
   </div>
 </nav>
 
 <!-- HERO -->
-<header class="hero">
+<header class="hero" id="top">
+  <div class="bg"><div class="frame"></div></div>
   <div class="wrap">
-    <div>
-      <div class="eyebrow">Constructora integral · Medellín, Colombia</div>
-      <h1>Construimos el<br>proyecto de tu <em>vida</em></h1>
-      <p class="lead">Casas, edificios, remodelaciones y locales <b>llave en mano</b> — o solo la obra blanca de tus aptos. Precio cerrado por m², cámaras 24/7 e informes en línea. Tú ves cada avance y cada peso.</p>
-      <div class="cta-row">
-        <a href="#cotizar" class="btn pri">Cotiza en 2 minutos →</a>
-        <a href="#servicios" class="btn ghost">Ver qué hacemos</a>
+    <div class="htop">
+      <div>
+        <div class="kicker od">Constructora integral · Medellín</div>
+        <h1>Construimos tu proyecto a <em>precio cerrado</em>.</h1>
+        <p class="lead">Lo que cotizamos es lo que pagas. Y lo ves en vivo.</p>
+        <div class="cta-row">
+          <a href="#cotizar" class="btn btn--cta">Cotiza en 2 minutos tu sueño <span class="ar">→</span></a>
+          <a href="#weliving" class="link-u">Ver Weliving</a>
+        </div>
       </div>
-      <div class="microtrust">
-        <div class="mt"><b>NSR-10</b><span>Sismorresistente</span></div>
-        <div class="mt"><b>24/7</b><span>Cámaras en vivo</span></div>
-        <div class="mt"><b>SURA</b><span>Contratos asegurados</span></div>
-        <div class="mt"><b>100%</b><span>Precio cerrado</span></div>
+      <div class="anchor">
+        <div class="big">Desde $3.100.000<span> /m²</span></div>
+        <div class="sm">Llave en mano · acabados por encima del estándar del mercado.</div>
       </div>
-    </div>
-    <div class="qcard" id="qcard">
-      <h3>Cotiza tu proyecto</h3>
-      <div class="qh">Estima tu inversión en segundos</div>
-      <label>Modalidad</label>
-      <div class="seg" id="qmod">
-        <button class="on" data-mod="llave" onclick="pickMod('llave')">Llave en mano</button>
-        <button data-mod="blanca" onclick="pickMod('blanca')">Obra blanca</button>
-      </div>
-      <label>Área a construir (m²)</label>
-      <input id="qm2" type="number" inputmode="numeric" placeholder="Ej: 120" oninput="calcAll()">
-      <label>Nivel de acabados</label>
-      <div class="lvls" id="qlvls"></div>
-      <div class="qout">
-        <div class="ql">Inversión estimada</div>
-        <div class="qv" id="qv">—</div>
-        <div class="qn" id="qn">Ingresa los m² de tu proyecto</div>
-      </div>
-      <a href="#cotizar" class="btn pri" style="width:100%;justify-content:center;margin-top:13px">Cotización completa →</a>
     </div>
   </div>
 </header>
 
 <!-- TRUST STRIP -->
-<div class="trust">
-  <div class="wrap row">
-    <div class="ti"><div class="ic">🛡️</div><div><b>Contratos con seguro SURA</b><span>Respaldo real de tu inversión</span></div></div>
-    <div class="ti"><div class="ic">📹</div><div><b>Cámaras 24/7</b><span>Ve tu obra cuando quieras</span></div></div>
-    <div class="ti"><div class="ic">🤖</div><div><b>Informes en línea con IA</b><span>Trazabilidad total</span></div></div>
-    <div class="ti"><div class="ic">📅</div><div><b>Cronograma cumplido</b><span>Interventoría propia</span></div></div>
+<div class="strip">
+  <div class="wrap">
+    <div class="s"><svg><use href="#ic-price"/></svg><b>Precio cerrado</b></div>
+    <div class="s"><svg><use href="#ic-cam"/></svg><b>Cámaras 24/7</b></div>
+    <div class="s"><svg><use href="#ic-ia"/></svg><b>Informes con IA</b></div>
+    <div class="s"><svg><use href="#ic-shield"/></svg><b>Respaldo SURA</b></div>
+    <div class="s"><svg><use href="#ic-key"/></svg><b>Un solo responsable</b></div>
   </div>
 </div>
 
-<!-- SERVICIOS / ETAPAS DE OBRA -->
-<section id="servicios">
+<!-- SERVICIOS / ETAPAS -->
+<section class="on-dark" id="servicios">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">De principio a fin</div>
-      <h2>Un solo equipo para todas las etapas</h2>
-      <p>No contratas cinco proveedores: contratas a Imperio. Nos hacemos cargo de todo el ciclo, con un solo responsable y un solo contrato.</p>
+    <div class="sec-head reveal">
+      <div class="kicker od">Qué construimos</div>
+      <h2>Cuatro tipos de obra.<br>Un mismo <em>estándar</em>.</h2>
+      <p>Casa, edificio, remodelación o local. Sistema tradicional o estructura metálica: tú eliges, nosotros respondemos.</p>
     </div>
     <div class="svc-grid">
-      <div class="svc"><div class="si">⛏️</div><div class="en">Etapa 01</div><h3>Estudio de suelos</h3><p>Análisis geotécnico del lote para cimentar seguro y sin sorpresas.</p></div>
-      <div class="svc"><div class="si">📐</div><div class="en">Etapa 02</div><h3>Diseño arquitectónico</h3><p>Tu proyecto a la medida: espacios, licencias y renders.</p></div>
-      <div class="svc"><div class="si">🏗️</div><div class="en">Etapa 03</div><h3>Diseño estructural</h3><p>Cálculo sismorresistente NSR-10 en concreto o estructura metálica.</p></div>
-      <div class="svc"><div class="si">🔑</div><div class="en">Etapa 04</div><h3>Ejecución llave en mano</h3><p>Construimos de la cimentación a la entrega, con control en vivo.</p></div>
+      <div class="svc reveal"><div class="fig" data-l="CASAS"></div><span class="en">01</span><h3>Casas</h3><p>Vivienda a la medida del lote, del presupuesto y de cómo vives.</p></div>
+      <div class="svc reveal"><div class="fig" data-l="EDIFICIOS"></div><span class="en">02</span><h3>Edificios</h3><p>Proyectos de renta o vivienda multifamiliar, listos para ocupar.</p></div>
+      <div class="svc reveal"><div class="fig" data-l="REMODELACIÓN"></div><span class="en">03</span><h3>Remodelaciones</h3><p>Intervenimos lo que ya tienes y le subimos el nivel.</p></div>
+      <div class="svc reveal"><div class="fig" data-l="COMERCIAL"></div><span class="en">04</span><h3>Locales</h3><p>Espacios que trabajan tan duro como tu negocio.</p></div>
+    </div>
+    <div class="etapas reveal">
+      <div class="row">
+        <div class="etapa"><div class="node"><span class="dot"></span><span class="ln"></span></div><svg class="ic"><use href="#ic-soil"/></svg><h4>Estudio de suelos</h4><p>Sabemos sobre qué construimos antes de mover un bulto.</p></div>
+        <div class="etapa"><div class="node"><span class="dot"></span><span class="ln"></span></div><svg class="ic"><use href="#ic-arch"/></svg><h4>Diseño arquitectónico</h4><p>Planos que resuelven la vida, no solo el metraje.</p></div>
+        <div class="etapa"><div class="node"><span class="dot"></span><span class="ln"></span></div><svg class="ic"><use href="#ic-struct"/></svg><h4>Diseño estructural</h4><p>Cálculo que aguanta, respaldado y firmado.</p></div>
+        <div class="etapa"><div class="node"><span class="dot"></span></div><svg class="ic"><use href="#ic-key"/></svg><h4>Ejecución</h4><p>Obra en tiempo real, con avance y presupuesto peso por peso.</p></div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- NIVELES -->
-<section class="niveles" id="niveles">
+<!-- MODALIDADES + NIVELES -->
+<section id="niveles">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">Tres formas de construir</div>
-      <h2>Elige el nivel. Nosotros lo entregamos completo.</h2>
-      <p>Todos son <b>llave en mano</b>: de la cimentación a la entrega. ¿Solo necesitas acabados? También hacemos <b>obra blanca desde $850.000/m²</b>. Cambia la calidad de acabados, nunca la de la estructura.</p>
+    <div class="sec-head reveal">
+      <div class="kicker">Modalidades y niveles</div>
+      <h2>Elige cómo entramos a tu obra.</h2>
+    </div>
+    <div class="mods">
+      <div class="mod dark reveal"><span class="en od">Modalidad 01</span><h3>Llave en mano</h3><p>De la excavación a la entrega. Recibes las llaves, entras a vivir. Un solo contrato, un solo responsable.</p><div class="pr">Desde $3.100.000/m²</div></div>
+      <div class="mod reveal"><span class="en">Modalidad 02</span><h3>Obra blanca</h3><p>¿Ya tienes la estructura? Ponemos los acabados con el mismo estándar.</p><div class="pr">Desde $850.000/m²</div></div>
     </div>
     <div class="plans">
-      <div class="plan">
-        <div class="pname">Básico</div>
-        <div class="ptag">Sólido, funcional y por encima del promedio del mercado.</div>
-        <div class="price">$3.100.000<small> /m²</small></div>
-        <div class="pu">llave en mano · IVA no incluido</div>
-        <div class="pblanca">Obra blanca desde $850.000/m²</div>
-        <div class="incluye">Incluye</div>
+      <div class="plan reveal">
+        <div class="pn">Básico</div>
+        <div class="tl">El punto de partida que ya está por encima del promedio.</div>
+        <div class="price">$3.100.000 <span class="u">/m²</span></div>
+        <div class="bl">Obra blanca desde $850.000/m²</div>
+        <div class="inc">Qué incluye</div>
         <ul>
-          <li><span class="ck">✓</span>Estructura sismorresistente en concreto reforzado (NSR-10)</li>
-          <li><span class="ck">✓</span>Mampostería, pañetes y cubierta</li>
-          <li><span class="ck">✓</span>Redes hidrosanitarias, eléctricas y de gas certificadas (RETIE)</li>
-          <li><span class="ck">✓</span>Pisos en porcelanato nacional</li>
-          <li><span class="ck">✓</span>Baños y cocina enchapados · mesón en granito</li>
-          <li><span class="ck">✓</span>Carpintería en madecor · puertas y closets</li>
-          <li><span class="ck">✓</span>Ventanería en aluminio · pintura tipo 1</li>
-          <li><span class="ck">✓</span>Diseño arquitectónico y licencia de construcción</li>
+          <li><svg><use href="#ic-check"/></svg>Estructura sismorresistente NSR-10, mampostería y pañete</li>
+          <li><svg><use href="#ic-check"/></svg>Pisos en porcelanato nacional</li>
+          <li><svg><use href="#ic-check"/></svg>Enchape de baños y cocina · mesón en granito</li>
+          <li><svg><use href="#ic-check"/></svg>Carpintería en madera para cocina y clósets</li>
+          <li><svg><use href="#ic-check"/></svg>Aparatos sanitarios y grifería estándar</li>
+          <li><svg><use href="#ic-check"/></svg>Instalaciones eléctricas e hidrosanitarias (RETIE)</li>
+          <li><svg><use href="#ic-check"/></svg>Pintura y ventanería en aluminio</li>
+          <li><svg><use href="#ic-check"/></svg>Diseño arquitectónico y licencia</li>
         </ul>
-        <a href="#cotizar" class="btn dark" onclick="preselect('basico')">Cotizar Básico</a>
+        <a href="#cotizar" class="btn btn--primary" onclick="preselect('basico')">Cotizar en Básico</a>
       </div>
-      <div class="plan feat">
-        <div class="badge">El más elegido</div>
-        <div class="pname">Premium</div>
-        <div class="ptag">Acabados de alto nivel y detalles que se sienten al entrar.</div>
-        <div class="price">$3.800.000<small> /m²</small></div>
-        <div class="pu">llave en mano · IVA no incluido</div>
-        <div class="pblanca">Obra blanca desde $1.200.000/m²</div>
-        <div class="incluye">Todo lo del Básico, más</div>
+      <div class="plan feat reveal">
+        <div class="badge">Más elegido</div>
+        <div class="pn">Premium</div>
+        <div class="tl">El equilibrio exacto entre acabado fino y decisión inteligente.</div>
+        <div class="price">$3.800.000 <span class="u">/m²</span></div>
+        <div class="bl">Obra blanca desde $1.200.000/m²</div>
+        <div class="inc">Todo lo del Básico, más</div>
         <ul>
-          <li><span class="ck">✓</span>Porcelanato importado y formatos grandes</li>
-          <li><span class="ck">✓</span>Mesones en cuarzo · cocina integral tipo</li>
-          <li><span class="ck">✓</span>Carpintería lacada y closets modulares a medida</li>
-          <li><span class="ck">✓</span>Iluminación arquitectónica LED</li>
-          <li><span class="ck">✓</span>Griferías y aparatos línea premium</li>
-          <li><span class="ck">✓</span>Cielos en drywall con diseño</li>
-          <li><span class="ck">✓</span>Ventanería premium con cristal de seguridad</li>
-          <li><span class="ck">✓</span>Preinstalación de domótica</li>
+          <li><svg><use href="#ic-check"/></svg>Porcelanato importado de formato grande</li>
+          <li><svg><use href="#ic-check"/></svg>Mesones en cuarzo para cocina y baños</li>
+          <li><svg><use href="#ic-check"/></svg>Carpintería con herrajes de cierre suave</li>
+          <li><svg><use href="#ic-check"/></svg>Grifería y sanitarios de gama media-alta</li>
+          <li><svg><use href="#ic-check"/></svg>Ventanería con vidrio de seguridad</li>
+          <li><svg><use href="#ic-check"/></svg>Iluminación LED empotrada por ambiente</li>
+          <li><svg><use href="#ic-check"/></svg>Detalles en drywall: cielos, nichos y perfilería</li>
+          <li><svg><use href="#ic-check"/></svg>Preinstalación de domótica</li>
         </ul>
-        <a href="#cotizar" class="btn pri" onclick="preselect('premium')">Cotizar Premium</a>
+        <a href="#cotizar" class="btn btn--primary" onclick="preselect('premium')">Cotizar en Premium</a>
       </div>
-      <div class="plan">
-        <div class="pname">Luxury</div>
-        <div class="ptag">Espacios de lujo, materiales importados y diseño a la medida.</div>
-        <div class="price">$4.500.000<small> /m² +</small></div>
-        <div class="pu">llave en mano · IVA no incluido</div>
-        <div class="pblanca">Obra blanca desde $1.800.000/m²</div>
-        <div class="incluye">Todo lo del Premium, más</div>
+      <div class="plan reveal">
+        <div class="pn">Luxury</div>
+        <div class="tl">Cuando el acabado no admite "más o menos".</div>
+        <div class="price">$4.500.000 <span class="u">/m² +</span></div>
+        <div class="bl">Obra blanca desde $1.800.000/m²</div>
+        <div class="inc">Todo lo del Premium, más</div>
         <ul>
-          <li><span class="ck">✓</span>Mármol, maderas nobles y materiales importados de lujo</li>
-          <li><span class="ck">✓</span>Cocina y closets a medida · diseño exclusivo</li>
-          <li><span class="ck">✓</span>Domótica integral: iluminación, clima y acceso</li>
-          <li><span class="ck">✓</span>Ventanería piso-techo con control solar</li>
-          <li><span class="ck">✓</span>Baños tipo spa · ducha lluvia e hidromasaje</li>
-          <li><span class="ck">✓</span>Ascensor y fachada premium (en edificios)</li>
-          <li><span class="ck">✓</span>Paisajismo, rooftop y amenidades</li>
-          <li><span class="ck">✓</span>Dirección de diseño interior incluida</li>
+          <li><svg><use href="#ic-check"/></svg>Piedra natural o gran formato importado a elección</li>
+          <li><svg><use href="#ic-check"/></svg>Cocina integral de diseño con empotrados</li>
+          <li><svg><use href="#ic-check"/></svg>Griferías y sanitarios de línea premium</li>
+          <li><svg><use href="#ic-check"/></svg>Domótica: iluminación, cortinas y clima</li>
+          <li><svg><use href="#ic-check"/></svg>Ventanería piso a techo con control solar</li>
+          <li><svg><use href="#ic-check"/></svg>Carpintería a medida en enchapes finos</li>
+          <li><svg><use href="#ic-check"/></svg>Microcemento, madera e iluminación arquitectónica</li>
+          <li><svg><use href="#ic-check"/></svg>Ascensor y fachada premium (en edificios)</li>
         </ul>
-        <a href="#cotizar" class="btn dark" onclick="preselect('luxury')">Cotizar Luxury</a>
+        <a href="#cotizar" class="btn btn--primary" onclick="preselect('luxury')">Cotizar en Luxury</a>
       </div>
     </div>
-    <p class="center" style="margin-top:26px;color:#8a8a93;font-size:13.5px">El valor por m² varía según diseño, ubicación, sistema constructivo y complejidad del lote. La cotización final se confirma con el proyecto arquitectónico.</p>
+    <p class="legal-note reveal">Valores referenciales por m², IVA no incluido. El precio final se cierra por contrato, con estudios y diseño.</p>
   </div>
 </section>
 
 <!-- DIFERENCIADOR -->
-<section class="diff" id="diferencia">
+<section class="on-dark diff" id="control">
   <div class="wrap grid">
-    <div>
-      <div class="eyebrow">Lo que nadie más te da</div>
-      <h2>Ve tu obra en vivo,<br>peso por peso.</h2>
-      <p>La mayor angustia de construir es no saber en qué se va la plata ni cómo avanza la obra. En Imperio eso se acabó: tienes <b>cámaras 24/7</b> y una <b>plataforma de control en tiempo real</b> — presupuesto, avance y proveedores — abierta para ti todos los días.</p>
-      <div class="feats">
-        <div class="f"><div class="fi">📹</div><div><b>Cámaras 24/7 para el cliente</b><span>Entra cuando quieras y mira cómo avanza tu proyecto.</span></div></div>
-        <div class="f"><div class="fi">🤖</div><div><b>Informes en línea con IA</b><span>Ejecución, cronograma y tiempos con respaldo y trazabilidad.</span></div></div>
-        <div class="f"><div class="fi">💰</div><div><b>Precio cerrado por contrato</b><span>Lo cotizado es lo que pagas. Sin sobrecostos ocultos.</span></div></div>
-        <div class="f"><div class="fi">🤝</div><div><b>Un solo responsable</b><span>Suelos, diseño, estructura y construcción bajo un mismo techo.</span></div></div>
+    <div class="reveal">
+      <div class="kicker od">Lo que nadie más te da</div>
+      <h2>Tu obra, en el <em>bolsillo</em>.</h2>
+      <div class="sub">Desde el celular, cuando quieras, sin llamar a nadie.</div>
+      <div class="fl">
+        <div class="f"><svg class="ic"><use href="#ic-cam"/></svg><div><b>Cámaras 24/7</b><span>Entra a ver tu obra en vivo a la hora que sea. Sin avisar, sin permiso.</span></div></div>
+        <div class="f"><svg class="ic"><use href="#ic-ia"/></svg><div><b>Informes con IA</b><span>Ejecución, cronograma y tiempos con trazabilidad total. Sabes en qué va todo.</span></div></div>
+        <div class="f"><svg class="ic"><use href="#ic-price"/></svg><div><b>Precio cerrado</b><span>Lo firmado es lo que pagas. Los sobrecostos son problema nuestro, no tuyo.</span></div></div>
       </div>
     </div>
-    <div class="mock">
-      <div style="font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:14px">CONTROL DE OBRA · EN VIVO</div>
-      <div class="mrow"><div><div class="ml">Estructura</div><div class="mbar"><i style="width:92%"></i></div></div><div class="mv">92%</div></div>
-      <div class="mrow"><div><div class="ml">Redes y obra gris</div><div class="mbar"><i style="width:64%"></i></div></div><div class="mv">64%</div></div>
-      <div class="mrow"><div><div class="ml">Acabados</div><div class="mbar"><i style="width:38%"></i></div></div><div class="mv">38%</div></div>
-      <div class="mrow"><div class="ml">Cronograma</div><div class="mv" style="color:#5fd08a">Al día</div></div>
-      <div class="mrow"><div class="ml">Sobrecostos</div><div class="mv" style="color:#5fd08a">$0</div></div>
+    <div class="reveal">
+      <div class="panel">
+        <div class="pbar"><span class="live"><span class="dot"></span>EN VIVO</span><span class="ts" id="pts">08:42 · hoy</span></div>
+        <div class="pbody">
+          <div class="cam"><svg><use href="#ic-cam"/></svg><span class="cl">CÁMARA 01 · FACHADA</span><span class="rec">REC</span></div>
+          <div class="prog">
+            <div class="p"><span class="l">Cimentación</span><span class="tr"><i style="width:100%"></i></span><span class="v">100%</span></div>
+            <div class="p"><span class="l">Estructura</span><span class="tr"><i style="width:72%"></i></span><span class="v">72%</span></div>
+            <div class="p"><span class="l">Acabados</span><span class="tr"><i style="width:18%"></i></span><span class="v">18%</span></div>
+          </div>
+          <div class="iacard"><div class="h"><b>Informe IA · avance semanal</b><span class="chip">Generado hoy</span></div><div class="sk"></div><div class="sk s2"></div><div class="sk s3"></div></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- VALOR AGREGADO -->
-<section class="va" id="valor">
+<section id="valor">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">Respaldo y valor agregado</div>
-      <h2>Construir con Imperio es construir tranquilo</h2>
-      <p>No solo construimos: te damos seguridad, transparencia y respaldo en cada etapa.</p>
+    <div class="sec-head reveal">
+      <div class="kicker">Respaldo</div>
+      <h2>Por qué se construye <em>tranquilo</em> con nosotros.</h2>
     </div>
     <div class="va-grid">
-      <div class="vac"><div class="vi">📹</div><h3>Cámaras 24/7</h3><p>Acceso permanente a las cámaras de tu obra para verla en tiempo real, desde donde estés.</p></div>
-      <div class="vac"><div class="vi">🤖</div><h3>Informes con IA</h3><p>Reportes de ejecución, cronograma y tiempos en línea, con IA que garantiza respaldo y trazabilidad.</p></div>
-      <div class="vac"><div class="vi">🛡️</div><h3>Seguros SURA</h3><p>Tus contratos respaldados con pólizas SURA: cumplimiento y estabilidad asegurados.</p></div>
-      <div class="vac"><div class="vi">📊</div><h3>Precio cerrado</h3><p>Presupuesto transparente y precio fijo por contrato. Cada peso, con su comprobante.</p></div>
+      <div class="vac reveal"><svg class="ic"><use href="#ic-price"/></svg><h4>Precio cerrado</h4><p>Cotizamos una vez. Ese número no se mueve.</p></div>
+      <div class="vac reveal"><svg class="ic"><use href="#ic-shield"/></svg><h4>Respaldo SURA</h4><p>Cumplimiento y estabilidad de la obra, asegurados por contrato.</p></div>
+      <div class="vac reveal"><svg class="ic"><use href="#ic-key"/></svg><h4>Un solo responsable</h4><p>Suelos, arquitectura, estructura y obra bajo la misma firma.</p></div>
+      <div class="vac reveal"><svg class="ic"><use href="#ic-live"/></svg><h4>Trazabilidad total</h4><p>Presupuesto y avance en tiempo real. Peso por peso, día por día.</p></div>
     </div>
   </div>
 </section>
 
 <!-- PROCESO -->
-<section class="proceso" id="proceso">
+<section class="on-dark" id="proceso">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">Así trabajamos</div>
-      <h2>De la idea a las llaves, en 5 pasos</h2>
+    <div class="sec-head reveal">
+      <div class="kicker od">Cómo trabajamos</div>
+      <h2>Cinco pasos, <em>cero</em> incertidumbre.</h2>
     </div>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><b>Cotiza</b><p>Nos cuentas tu proyecto. Recibes un estimado el mismo día.</p></div>
-      <div class="step"><div class="n">2</div><b>Estudios y diseño</b><p>Suelos, arquitectónico y estructural con licencias.</p></div>
-      <div class="step"><div class="n">3</div><b>Contrato</b><p>Precio cerrado, cronograma y póliza SURA firmados.</p></div>
-      <div class="step"><div class="n">4</div><b>Construcción</b><p>Obra con cámaras 24/7 e informes en línea con IA.</p></div>
-      <div class="step"><div class="n">5</div><b>Entrega</b><p>Recibes tu proyecto listo, con garantía de estabilidad.</p></div>
+    <div class="proc">
+      <div class="pstep reveal"><div class="num">01</div><div><h4>Asesoría y cotización</h4><p>Nos cuentas tu idea; te devolvemos un número claro con la calculadora.</p></div></div>
+      <div class="pstep reveal"><div class="num">02</div><div><h4>Estudios y diseño</h4><p>Suelos, arquitectura y estructura. Todo resuelto antes de empezar.</p></div></div>
+      <div class="pstep reveal"><div class="num">03</div><div><h4>Contrato a precio cerrado</h4><p>Firmamos alcance, valor y tiempos. Con respaldo SURA.</p></div></div>
+      <div class="pstep reveal"><div class="num">04</div><div><h4>Ejecución con cámaras</h4><p>Arrancamos. Tú vigilas en vivo y recibes informes con IA.</p></div></div>
+      <div class="pstep reveal"><div class="num">05</div><div><h4>Entrega</h4><p>Recibes tu obra terminada, en el tiempo pactado y sin cuentas por fuera.</p></div></div>
     </div>
   </div>
 </section>
 
-<!-- CALCULADORA COMPLETA -->
+<!-- CALCULADORA · TEST INTERACTIVO -->
 <section class="calc" id="cotizar">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow" style="color:var(--gold)">Calculadora de inversión</div>
-      <h2 style="color:#fff">Tu cotización en 2 minutos</h2>
-      <p style="color:#bcbcc6">Llena estos datos y te llega el estimado a WhatsApp, listo para hablar con un asesor.</p>
-    </div>
-    <div class="box">
-      <div class="frow">
-        <div><label>Tu nombre</label><input id="fNombre" placeholder="Nombre y apellido"></div>
-        <div><label>Tu WhatsApp</label><input id="fTel" inputmode="tel" placeholder="Ej: 300 123 4567"></div>
-      </div>
-      <div class="frow">
-        <div><label>Tipo de proyecto</label>
-          <select id="fTipo">
-            <option>Casa / vivienda</option>
-            <option>Edificio / multifamiliar</option>
-            <option>Remodelación / reforma</option>
-            <option>Local / comercial</option>
-          </select>
-        </div>
-        <div><label>Ciudad / ubicación</label><input id="fCiudad" placeholder="Ej: Medellín, El Poblado"></div>
-      </div>
-      <div class="frow">
-        <div><label>Modalidad</label>
-          <div class="seg" id="fmod">
-            <button class="on" data-mod="llave" onclick="pickMod('llave')">Llave en mano</button>
-            <button data-mod="blanca" onclick="pickMod('blanca')">Obra blanca (acabados)</button>
+    <div class="box reveal">
+      <div class="kicker">Cotiza en 2 minutos</div>
+      <h3>Diseña tu cotización, paso a paso.</h3>
+      <div class="csub">Responde y al final te armamos el estimado, listo para WhatsApp.</div>
+
+      <div class="wiz">
+        <div class="pbar"><i id="wbar"></i></div>
+        <div class="stepwrap">
+
+          <div class="step-q active" data-step="1">
+            <div class="step-meta">Paso 01 / 06</div>
+            <h4>¿Qué quieres construir?</h4>
+            <div class="opts">
+              <button class="opt" data-k="tipo" data-v="Casa"><span class="ot">Casa</span><span class="od">Vivienda a la medida de tu lote.</span></button>
+              <button class="opt" data-k="tipo" data-v="Edificio"><span class="ot">Edificio</span><span class="od">Renta o vivienda multifamiliar.</span></button>
+              <button class="opt" data-k="tipo" data-v="Remodelación"><span class="ot">Remodelación</span><span class="od">Renovar o ampliar lo que ya tienes.</span></button>
+              <button class="opt" data-k="tipo" data-v="Local comercial"><span class="ot">Local</span><span class="od">Espacios comerciales u oficinas.</span></button>
+            </div>
           </div>
-        </div>
-        <div><label>Sistema constructivo</label>
-          <div class="seg" id="fsis">
-            <button class="on" data-sis="tradicional" onclick="pickSis('tradicional')">Tradicional (concreto+hierro)</button>
-            <button data-sis="metalica" onclick="pickSis('metalica')">Estructura metálica</button>
+
+          <div class="step-q" data-step="2">
+            <div class="step-meta">Paso 02 / 06</div>
+            <h4>¿Cómo entramos a tu obra?</h4>
+            <div class="opts">
+              <button class="opt" data-k="mod" data-v="llave"><span class="ot">Llave en mano</span><span class="od">De cimientos a entrega, lista para habitar.</span></button>
+              <button class="opt" data-k="mod" data-v="blanca"><span class="ot">Obra blanca</span><span class="od">Solo acabados. Desde $850.000/m².</span></button>
+            </div>
           </div>
+
+          <div class="step-q" data-step="3">
+            <div class="step-meta">Paso 03 / 06</div>
+            <h4>¿Sistema constructivo?</h4>
+            <div class="opts">
+              <button class="opt" data-k="sis" data-v="tradicional"><span class="ot">Tradicional</span><span class="od">Concreto y hierro. El clásico probado.</span></button>
+              <button class="opt" data-k="sis" data-v="metalica"><span class="ot">Estructura metálica</span><span class="od">Más rápida de montar.</span></button>
+            </div>
+          </div>
+
+          <div class="step-q" data-step="4">
+            <div class="step-meta">Paso 04 / 06</div>
+            <h4>¿Nivel de acabado?</h4>
+            <div class="opts three" id="optNivel">
+              <button class="opt" data-k="lv" data-v="basico"><span class="ot">Básico</span><span class="op"></span><span class="od">Por encima del promedio.</span></button>
+              <button class="opt" data-k="lv" data-v="premium"><span class="ot">Premium</span><span class="op"></span><span class="od">El más elegido.</span></button>
+              <button class="opt" data-k="lv" data-v="luxury"><span class="ot">Luxury</span><span class="op"></span><span class="od">Sin "más o menos".</span></button>
+            </div>
+          </div>
+
+          <div class="step-q" data-step="5">
+            <div class="step-meta">Paso 05 / 06</div>
+            <h4>¿Cuántos m² aproximados?</h4>
+            <div class="area-row"><input id="wArea" type="number" inputmode="numeric" placeholder="120" oninput="liveArea()"><span class="u">m²</span></div>
+            <div class="rt" id="areaHint" style="margin-top:16px;min-height:20px"></div>
+            <div class="wiz-nav"><button class="wiz-back" onclick="prev()">← Atrás</button><button class="btn btn--primary" onclick="next()">Siguiente <span class="ar">→</span></button></div>
+          </div>
+
+          <div class="step-q" data-step="6">
+            <div class="step-meta">Paso 06 / 06</div>
+            <h4>¿A dónde te enviamos la cotización?</h4>
+            <div class="dgrid">
+              <div><span class="field-label">Nombre</span><input class="field" id="wNombre" placeholder="Nombre y apellido"></div>
+              <div><span class="field-label">Celular</span><input class="field" id="wTel" inputmode="tel" placeholder="300 123 4567"></div>
+              <div><span class="field-label">Ciudad o municipio</span><input class="field" id="wCiudad" placeholder="Medellín, El Poblado"></div>
+            </div>
+            <div class="wiz-nav"><button class="wiz-back" onclick="prev()">← Atrás</button><button class="btn btn--primary" onclick="finish()">Ver mi cotización <span class="ar">→</span></button></div>
+          </div>
+
+          <div class="step-q" data-step="7">
+            <div class="wiz-result">
+              <div class="rl">Tu inversión estimada</div>
+              <div class="rv" id="rv">—</div>
+              <div class="rn" id="rn"></div>
+              <div class="rt" id="rt"></div>
+              <div style="margin-top:26px;display:flex;gap:18px;justify-content:center;flex-wrap:wrap;align-items:center">
+                <a href="#" class="btn btn--cta" onclick="return sendWA()"><svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.4"><use href="#ic-wa"/></svg> Recibir por WhatsApp</a>
+                <button class="wiz-back" onclick="restart()">↺ Empezar de nuevo</button>
+              </div>
+              <div class="wsum" id="wsum"></div>
+            </div>
+          </div>
+
         </div>
+        <div class="disc">Valores de referencia por m², IVA no incluido. El precio final se define con estudios, diseño y contrato firmado. La cotización estimada no constituye oferta comercial.</div>
       </div>
-      <div class="frow">
-        <div><label>Área a construir (m²)</label><input id="fM2" type="number" inputmode="numeric" placeholder="Ej: 120" oninput="calcAll()"></div>
-        <div><label>Nivel de acabados</label>
-          <div class="lvls" id="flvls"></div>
-        </div>
-      </div>
-      <div class="bigout">
-        <div>
-          <div class="bl">Inversión estimada</div>
-          <div class="bv" id="bv">—</div>
-          <div class="bn" id="bn">Ingresa el área de tu proyecto</div>
-          <div class="btime" id="btime"></div>
-        </div>
-        <a href="#" class="btn pri" id="waBtn" onclick="return sendWA()">Enviar a WhatsApp</a>
-      </div>
-      <div class="disc">Estimación referencial según $/m² del nivel y modalidad. El valor y el tiempo finales se confirman con el diseño. No incluye lote ni IVA.</div>
     </div>
   </div>
 </section>
 
-<!-- PROYECTO INSIGNIA -->
-<section class="insignia">
-  <div class="wrap grid">
-    <div class="ph"><div class="lbl"><div class="k">PROYECTO INSIGNIA</div><div class="t">Weliving</div></div></div>
-    <div>
-      <div class="eyebrow">Obra en ejecución</div>
-      <h2>Weliving: renta corta, estándar hotelero</h2>
-      <p>Un edificio de apartamentos diseñado para renta tipo Airbnb, con acabados premium, rooftop social y dotación completa. La prueba viva de cómo Imperio lleva un proyecto de inversión de principio a fin — con su presupuesto controlado peso por peso.</p>
-      <div class="istats">
-        <div class="is"><b>20</b><span>Apartamentos</span></div>
-        <div class="is"><b>7</b><span>Niveles</span></div>
-        <div class="is"><b>Rooftop</b><span>Social y amenidades</span></div>
+<!-- WELIVING -->
+<section class="insignia" id="weliving">
+  <div class="cine reveal"><div class="wl"><div class="k">PROYECTO INSIGNIA</div><div class="t">Weliving</div></div></div>
+  <div class="wrap body">
+    <div class="reveal">
+      <div class="kicker">Caso real</div>
+      <h2>Weliving: renta que trabaja sola.</h2>
+      <p>Un edificio pensado para rentar. 20 apartamentos, 7 niveles y un rooftop social diseñado para el modelo Airbnb. De la idea al último acabado, lo construimos nosotros — con cámaras, informes y precio cerrado incluidos.</p>
+      <div class="idata">
+        <div class="d"><b>20</b><span>Apartamentos</span></div>
+        <div class="d"><b>7</b><span>Niveles</span></div>
+        <div class="d"><b>1</b><span>Rooftop social</span></div>
       </div>
+      <div style="margin-top:30px"><a href="#cotizar" class="link-u" style="color:var(--gold-400)">Quiero un proyecto así</a></div>
     </div>
+    <div class="fig2 reveal"></div>
   </div>
 </section>
 
-<!-- FINAL CTA -->
+<!-- FINAL -->
 <section class="final">
-  <div class="wrap">
-    <div class="eyebrow" style="color:var(--gold)">Empieza hoy</div>
-    <h2>Tu proyecto merece un imperio.</h2>
-    <p>Recibe tu cotización sin costo y habla con un asesor que sí te muestra los números.</p>
-    <a href="#cotizar" class="btn pri">Cotiza tu proyecto →</a>
+  <div class="wrap reveal">
+    <div class="kicker od" style="justify-content:center">Empieza hoy</div>
+    <h2>Tu próxima obra empieza <em>hoy</em>.</h2>
+    <p>Cotización clara, precio cerrado y tu obra en vivo desde el primer día.</p>
+    <div class="cta-row">
+      <a href="#cotizar" class="btn btn--onDark">Cotiza tu obra <span class="ar">→</span></a>
+      <a href="#" class="link-u" style="color:var(--gold-400)" onclick="return waFloat()">Hablar por WhatsApp</a>
+    </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <div class="row">
-      <div class="logo"><div class="mk" style="width:28px;height:28px;border:2px solid var(--gold);border-radius:6px;display:grid;place-items:center;color:var(--gold);transform:rotate(45deg)"><span style="transform:rotate(-45deg)">I</span></div> IMPERIO CONSTRUCTORA</div>
-      <div style="display:flex;gap:22px">
-        <a href="#servicios">Servicios</a>
-        <a href="#niveles">Niveles</a>
-        <a href="#valor">Respaldo</a>
-        <a href="#cotizar">Cotizar</a>
+    <div class="top">
+      <div>
+        <a class="brand" href="#top"><span class="mono-mk">IC</span><span class="wm">IMPERIO</span></a>
+        <div class="tag">Construimos a precio cerrado, tú lo ves en vivo. Constructora integral · Medellín, Colombia.</div>
+      </div>
+      <div>
+        <h5>Navegación</h5>
+        <a href="#servicios">Qué construimos</a>
+        <a href="#niveles">Modalidades y niveles</a>
+        <a href="#control">Control en vivo</a>
+        <a href="#weliving">Weliving</a>
+      </div>
+      <div>
+        <h5>Contacto</h5>
+        <a href="#cotizar">Cotiza tu obra</a>
+        <a href="#" onclick="return waFloat()">WhatsApp</a>
+        <a href="#">Medellín, Colombia</a>
       </div>
     </div>
-    <div class="fnote">© 2026 Imperio Constructora · Medellín, Colombia · Construimos con transparencia. Cámaras 24/7, informes en línea y contratos con respaldo SURA. Valores referenciales, se confirman con el proyecto arquitectónico.</div>
+    <div class="legal">Los valores por m² son referenciales, no incluyen IVA y pueden variar según diseño, estudios técnicos y condiciones del lote. El precio definitivo se establece en el contrato firmado, con respaldo de Seguros SURA. Imágenes de referencia. © 2026 Imperio Constructora.</div>
   </div>
 </footer>
 
-<a class="wafab" id="wafab" href="#" onclick="return waFloat()" title="Escríbenos por WhatsApp">🟢</a>
+<a class="wafab" href="#" onclick="return waFloat()" aria-label="WhatsApp"><svg><use href="#ic-wa"/></svg></a>
 
 <script>
-/* ====== CONFIG ====== */
-var WA_NUMBER='57XXXXXXXXXX'; /* <-- PON AQUÍ el WhatsApp de Imperio, formato 57 + número, ej: 573001234567 */
+/* ===== CONFIG ===== */
+var WA_NUMBER='57XXXXXXXXXX'; /* <-- WhatsApp de Imperio: 57 + número, ej 573001234567 */
 
-var RATES={
-  llave:{basico:3100000,premium:3800000,luxury:4500000},
-  blanca:{basico:850000,premium:1200000,luxury:1800000}
-};
-var LVNAME={basico:'Básico',premium:'Premium',luxury:'Luxury'};
-var MODNAME={llave:'Llave en mano',blanca:'Obra blanca'};
-var SISNAME={tradicional:'Obra tradicional (concreto+hierro)',metalica:'Estructura metálica'};
-var lv='basico', mod='llave', sis='tradicional';
+var RATES={llave:{basico:3100000,premium:3800000,luxury:4500000},blanca:{basico:850000,premium:1200000,luxury:1800000}};
+var LVN={basico:'Básico',premium:'Premium',luxury:'Luxury'};
+var MODN={llave:'Llave en mano',blanca:'Obra blanca'};
+var SISN={tradicional:'Tradicional (concreto+hierro)',metalica:'Estructura metálica'};
+var st={tipo:'Casa',mod:'llave',sis:'tradicional',lv:'basico',area:0,nombre:'',tel:'',ciudad:''};
+var step=1;
 
 function fmt(v){return '$'+Math.round(v).toLocaleString('es-CO');}
+function val(id){return (document.getElementById(id).value||'').trim();}
+function tiempo(a){if(!a)return null;var m;if(st.mod==='blanca'){m=2+a/160;}else{var per=(st.sis==='metalica')?(1/58):(1/40);m=3+a*per;}return{lo:Math.max(2,Math.round(m*0.9)),hi:Math.round(m*1.18)};}
 
-function buildLvls(id){
-  var host=document.getElementById(id);if(!host)return;
-  var r=RATES[mod];
-  host.innerHTML=['basico','premium','luxury'].map(function(k){
-    var suf=(k==='luxury')?'+':'';
-    var val=(id==='qlvls')?('$'+(r[k]/1e6).toLocaleString('es-CO',{maximumFractionDigits:1})+'M'+suf):(fmt(r[k])+suf);
-    return '<div class="lv'+(k===lv?' on':'')+'" data-lv="'+k+'" onclick="pickLv(\''+k+'\')"><b>'+LVNAME[k]+'</b><small>'+val+'/m²</small></div>';
-  }).join('');
-}
-function refreshLvls(){buildLvls('qlvls');buildLvls('flvls');}
+/* opciones tipo test — avanzan solas */
+document.querySelectorAll('.opt').forEach(function(o){
+  o.addEventListener('click',function(){
+    var k=o.dataset.k;st[k]=o.dataset.v;
+    o.parentNode.querySelectorAll('.opt').forEach(function(x){x.setAttribute('aria-pressed','false');});
+    o.setAttribute('aria-pressed','true');
+    setTimeout(function(){next();},240);
+  });
+});
 
-function pickLv(x){lv=x;document.querySelectorAll('.lvls .lv').forEach(function(e){e.classList.toggle('on',e.dataset.lv===x);});calcAll();}
-function preselect(x){pickLv(x);}
-function pickMod(x){mod=x;document.querySelectorAll('#qmod button,#fmod button').forEach(function(b){b.classList.toggle('on',b.dataset.mod===x);});refreshLvls();calcAll();}
-function pickSis(x){sis=x;document.querySelectorAll('#fsis button').forEach(function(b){b.classList.toggle('on',b.dataset.sis===x);});calcAll();}
+function showStep(n){
+  step=n;
+  document.querySelectorAll('.step-q').forEach(function(s){s.classList.toggle('active',+s.dataset.step===n);});
+  document.getElementById('wbar').style.width=Math.round((Math.min(n,7)/7)*100)+'%';
+  if(n===4)paintNivel();
+  if(n===7)renderResult();
+  var box=document.getElementById('cotizar');if(box&&n>1){var r=document.querySelector('.calc .box');}
+}
+function paintNivel(){
+  document.querySelectorAll('#optNivel .opt').forEach(function(o){
+    var lv=o.dataset.v;o.querySelector('.op').textContent=fmt(RATES[st.mod][lv])+'/m²'+(lv==='luxury'?'+':'');
+    o.setAttribute('aria-pressed',st.lv===lv?'true':'false');
+  });
+}
+function liveArea(){var a=parseFloat(val('wArea'));document.getElementById('areaHint').textContent=(a>0)?('≈ '+fmt(a*RATES[st.mod][st.lv])+(st.lv==='luxury'?'+':'')+' estimado'):'';}
+function next(){
+  if(step===5){var a=parseFloat(val('wArea'));if(!a||a<=0){document.getElementById('wArea').focus();return;}st.area=a;}
+  showStep(Math.min(7,step+1));
+}
+function prev(){showStep(Math.max(1,step-1));}
+function finish(){st.nombre=val('wNombre');st.tel=val('wTel');st.ciudad=val('wCiudad');showStep(7);}
+function restart(){st.area=0;var w=document.getElementById('wArea');if(w)w.value='';document.getElementById('areaHint').textContent='';showStep(1);}
+function preselect(x){st.lv=x;st.tipo=st.tipo||'Casa';showStep(5);setTimeout(function(){var w=document.getElementById('wArea');if(w)w.focus();},80);}
 
-function readM2(){
-  var a=parseFloat((document.getElementById('fM2')||{}).value||'');
-  var b=parseFloat((document.getElementById('qm2')||{}).value||'');
-  return {f:isNaN(a)?0:a,q:isNaN(b)?0:b};
+var rvEl=document.getElementById('rv');
+function animateTo(target,suf){var start=0,dur=800,t0=null;function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur);var e=1-Math.pow(1-p,3);rvEl.textContent=fmt(start+(target-start)*e)+suf;if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+function renderResult(){
+  var a=st.area,rate=RATES[st.mod][st.lv],total=a*rate,tm=tiempo(a);
+  animateTo(total,st.lv==='luxury'?'+':'');
+  document.getElementById('rn').textContent=a+' m² × '+fmt(rate)+'/m²';
+  document.getElementById('rt').textContent=tm?('Entrega estimada '+tm.lo+'–'+tm.hi+' meses'):'';
+  document.getElementById('wsum').innerHTML='<span><b>'+st.tipo+'</b></span><span><b>'+MODN[st.mod]+'</b></span><span><b>'+SISN[st.sis].split(' (')[0]+'</b></span><span>Nivel <b>'+LVN[st.lv]+'</b></span>';
 }
-function tiempo(area){
-  if(!area)return null;
-  var m;
-  if(mod==='blanca'){m=2+area/160;}
-  else{var per=(sis==='metalica')?(1/58):(1/40);m=3+area*per;}
-  return {lo:Math.max(2,Math.round(m*0.9)),hi:Math.round(m*1.18)};
-}
-function calcAll(){
-  var m=readM2();var rate=RATES[mod][lv];
-  if(m.q>0){var t=m.q*rate;document.getElementById('qv').textContent=fmt(t)+(lv==='luxury'?'+':'');document.getElementById('qn').textContent=m.q+' m² · '+MODNAME[mod]+' · '+LVNAME[lv];}
-  else{document.getElementById('qv').textContent='—';document.getElementById('qn').textContent='Ingresa los m² de tu proyecto';}
-  if(m.f>0){
-    var tf=m.f*rate;document.getElementById('bv').textContent=fmt(tf)+(lv==='luxury'?'+':'');
-    document.getElementById('bn').textContent=m.f+' m² × '+fmt(rate)+'/m² · '+MODNAME[mod]+' · '+LVNAME[lv];
-    var tm=tiempo(m.f);document.getElementById('btime').textContent=tm?('⏱️ Entrega estimada: '+tm.lo+'–'+tm.hi+' meses'):'';
-  } else {document.getElementById('bv').textContent='—';document.getElementById('bn').textContent='Ingresa el área de tu proyecto';document.getElementById('btime').textContent='';}
-}
-function waNum(){var n=WA_NUMBER.replace(/[^0-9]/g,'');return n;}
-function waOpen(msg){var n=waNum();if(n.indexOf('X')>=0||n.length<10){alert('El WhatsApp de la constructora aún no está configurado (config: WA_NUMBER).');return;}window.open('https://wa.me/'+n+'?text='+msg,'_blank');}
+function waNum(){return WA_NUMBER.replace(/[^0-9]/g,'');}
+function waOpen(msg){var n=waNum();if(n.indexOf('X')>=0||n.length<10){alert('Estamos configurando el WhatsApp. (config: WA_NUMBER)');return;}window.open('https://wa.me/'+n+'?text='+msg,'_blank');}
 function sendWA(){
-  var m=readM2();var area=m.f||m.q||0;var rate=RATES[mod][lv];
-  var nombre=(document.getElementById('fNombre').value||'').trim();
-  var tel=(document.getElementById('fTel').value||'').trim();
-  var tipo=document.getElementById('fTipo').value;
-  var ciudad=(document.getElementById('fCiudad').value||'').trim();
-  if(!area){document.getElementById('fM2').focus();alert('Cuéntanos cuántos m² quieres construir para darte el estimado.');return false;}
-  var total=area*rate;var tm=tiempo(area);
-  var msg='Hola Imperio Constructora 👋 Quiero cotizar mi proyecto:%0A%0A';
-  msg+='• Nombre: '+(nombre||'(por confirmar)')+'%0A';
-  msg+='• Tipo: '+tipo+'%0A';
-  msg+='• Modalidad: '+MODNAME[mod]+'%0A';
-  msg+='• Sistema: '+SISNAME[sis]+'%0A';
-  msg+='• Ubicación: '+(ciudad||'(por confirmar)')+'%0A';
-  msg+='• Área: '+area+' m²%0A';
-  msg+='• Nivel: '+LVNAME[lv]+' ('+fmt(rate)+'/m²)%0A';
-  msg+='• Inversión estimada: '+fmt(total)+(lv==='luxury'?'+':'')+'%0A';
-  if(tm)msg+='• Entrega estimada: '+tm.lo+'–'+tm.hi+' meses%0A';
-  if(tel)msg+='• Mi WhatsApp: '+tel+'%0A';
-  msg+='%0AQuiero hablar con un asesor.';
-  waOpen(msg);return false;
+  if(!st.area){showStep(5);document.getElementById('wArea').focus();return false;}
+  var rate=RATES[st.mod][st.lv],total=st.area*rate,tm=tiempo(st.area);
+  var m='Hola, Imperio Constructora 👋%0A%0AQuiero cotizar mi proyecto:%0A%0A';
+  m+='• Tipo: '+st.tipo+'%0A';
+  m+='• Modalidad: '+MODN[st.mod]+'%0A';
+  m+='• Sistema: '+SISN[st.sis]+'%0A';
+  m+='• Nivel de acabado: '+LVN[st.lv]+'%0A';
+  m+='• Área aproximada: '+st.area+' m²%0A';
+  m+='• Ciudad: '+(st.ciudad||'(por confirmar)')+'%0A%0A';
+  m+='Estimado según la calculadora: '+fmt(total)+(st.lv==='luxury'?'+':'')+'%0A';
+  if(tm)m+='Entrega estimada: '+tm.lo+'–'+tm.hi+' meses%0A';
+  m+='%0AMi nombre es '+(st.nombre||'(por confirmar)')+(st.tel?' y este es mi número: '+st.tel:'')+'.%0AQuedo atento para afinar la cotización. Gracias.';
+  waOpen(m);return false;
 }
-function waFloat(){waOpen('Hola Imperio Constructora 👋 Quiero información para construir mi proyecto.');return false;}
+function waFloat(){waOpen('Hola, Imperio Constructora 👋 Quiero información para construir mi proyecto.');return false;}
 
-refreshLvls();calcAll();
+/* nav shrink */
+var nav=document.getElementById('nav');
+addEventListener('scroll',function(){nav.classList.toggle('scrolled',scrollY>80);},{passive:true});
+/* reveal */
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach(function(e,i){e.style.transitionDelay=(Math.min(i%4,3)*70)+'ms';io.observe(e);});
+showStep(1);
 </script>
 </body>
 </html>
