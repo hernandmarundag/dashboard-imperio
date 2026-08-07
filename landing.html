@@ -555,7 +555,7 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
         <div class="stepwrap">
 
           <div class="step-q active" data-step="1">
-            <div class="step-meta">Paso 01 / 06</div>
+            <div class="step-meta">Paso 01 / 07</div>
             <h4>¿Qué quieres construir?</h4>
             <div class="opts">
               <button class="opt" data-k="tipo" data-v="Casa"><span class="ot">Casa</span><span class="od">Vivienda a la medida de tu lote.</span></button>
@@ -566,7 +566,18 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
           </div>
 
           <div class="step-q" data-step="2">
-            <div class="step-meta">Paso 02 / 06</div>
+            <div class="step-meta">Paso 02 / 07</div>
+            <h4>¿En qué etapa está tu proyecto?</h4>
+            <div class="opts">
+              <button class="opt" data-k="etapa" data-v="desde0"><span class="ot">Desde cero</span><span class="od">Apenas la idea. Hacemos suelos, diseño y licencia.</span></button>
+              <button class="opt" data-k="etapa" data-v="lote"><span class="ot">Ya tengo el lote</span><span class="od">Falta diseño y licencia.</span></button>
+              <button class="opt" data-k="etapa" data-v="disenos"><span class="ot">Ya tengo diseños</span><span class="od">Planos listos, falta licencia o ejecución.</span></button>
+              <button class="opt" data-k="etapa" data-v="licencia"><span class="ot">Ya tengo licencia</span><span class="od">Listo para arrancar la obra.</span></button>
+            </div>
+          </div>
+
+          <div class="step-q" data-step="3">
+            <div class="step-meta">Paso 03 / 07</div>
             <h4>¿Cómo entramos a tu obra?</h4>
             <div class="opts">
               <button class="opt" data-k="mod" data-v="llave"><span class="ot">Llave en mano</span><span class="od">De cimientos a entrega, lista para habitar.</span></button>
@@ -574,8 +585,8 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
             </div>
           </div>
 
-          <div class="step-q" data-step="3">
-            <div class="step-meta">Paso 03 / 06</div>
+          <div class="step-q" data-step="4">
+            <div class="step-meta">Paso 04 / 07</div>
             <h4>¿Sistema constructivo?</h4>
             <div class="opts">
               <button class="opt" data-k="sis" data-v="tradicional"><span class="ot">Tradicional</span><span class="od">Concreto y hierro. El clásico probado.</span></button>
@@ -583,8 +594,8 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
             </div>
           </div>
 
-          <div class="step-q" data-step="4">
-            <div class="step-meta">Paso 04 / 06</div>
+          <div class="step-q" data-step="5">
+            <div class="step-meta">Paso 05 / 07</div>
             <h4>¿Nivel de acabado?</h4>
             <div class="opts three" id="optNivel">
               <button class="opt" data-k="lv" data-v="basico"><span class="ot">Básico</span><span class="op"></span><span class="od">Por encima del promedio.</span></button>
@@ -593,26 +604,29 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
             </div>
           </div>
 
-          <div class="step-q" data-step="5">
-            <div class="step-meta">Paso 05 / 06</div>
-            <h4>¿Cuántos m² aproximados?</h4>
+          <div class="step-q" data-step="6">
+            <div class="step-meta">Paso 06 / 07</div>
+            <h4>¿Cuántos m² y dónde?</h4>
             <div class="area-row"><input id="wArea" type="number" inputmode="numeric" placeholder="120" oninput="liveArea()"><span class="u">m²</span></div>
-            <div class="rt" id="areaHint" style="margin-top:16px;min-height:20px"></div>
+            <div class="rt" id="areaHint" style="margin-top:14px;min-height:20px"></div>
+            <div style="margin-top:24px;max-width:440px">
+              <span class="field-label">Lugar donde vas a construir</span>
+              <input class="field" id="wLugar" placeholder="Ciudad, municipio o barrio">
+            </div>
             <div class="wiz-nav"><button class="wiz-back" onclick="prev()">← Atrás</button><button class="btn btn--primary" onclick="next()">Siguiente <span class="ar">→</span></button></div>
           </div>
 
-          <div class="step-q" data-step="6">
-            <div class="step-meta">Paso 06 / 06</div>
+          <div class="step-q" data-step="7">
+            <div class="step-meta">Paso 07 / 07</div>
             <h4>¿A dónde te enviamos la cotización?</h4>
             <div class="dgrid">
               <div><span class="field-label">Nombre</span><input class="field" id="wNombre" placeholder="Nombre y apellido"></div>
               <div><span class="field-label">Celular</span><input class="field" id="wTel" inputmode="tel" placeholder="300 123 4567"></div>
-              <div><span class="field-label">Ciudad o municipio</span><input class="field" id="wCiudad" placeholder="Medellín, El Poblado"></div>
             </div>
             <div class="wiz-nav"><button class="wiz-back" onclick="prev()">← Atrás</button><button class="btn btn--primary" onclick="finish()">Ver mi cotización <span class="ar">→</span></button></div>
           </div>
 
-          <div class="step-q" data-step="7">
+          <div class="step-q" data-step="8">
             <div class="wiz-result">
               <div class="rl">Tu inversión estimada</div>
               <div class="rv" id="rv">—</div>
@@ -700,7 +714,8 @@ var RATES={llave:{basico:3100000,premium:3800000,luxury:4500000},blanca:{basico:
 var LVN={basico:'Básico',premium:'Premium',luxury:'Luxury'};
 var MODN={llave:'Llave en mano',blanca:'Obra blanca'};
 var SISN={tradicional:'Tradicional (concreto+hierro)',metalica:'Estructura metálica'};
-var st={tipo:'Casa',mod:'llave',sis:'tradicional',lv:'basico',area:0,nombre:'',tel:'',ciudad:''};
+var ETAPAN={desde0:'Desde cero (idea)',lote:'Ya tiene el lote',disenos:'Ya tiene diseños',licencia:'Ya tiene licencia'};
+var st={tipo:'Casa',etapa:'desde0',mod:'llave',sis:'tradicional',lv:'basico',area:0,lugar:'',nombre:'',tel:''};
 var step=1;
 
 function fmt(v){return '$'+Math.round(v).toLocaleString('es-CO');}
@@ -720,10 +735,9 @@ document.querySelectorAll('.opt').forEach(function(o){
 function showStep(n){
   step=n;
   document.querySelectorAll('.step-q').forEach(function(s){s.classList.toggle('active',+s.dataset.step===n);});
-  document.getElementById('wbar').style.width=Math.round((Math.min(n,7)/7)*100)+'%';
-  if(n===4)paintNivel();
-  if(n===7)renderResult();
-  var box=document.getElementById('cotizar');if(box&&n>1){var r=document.querySelector('.calc .box');}
+  document.getElementById('wbar').style.width=Math.round((Math.min(n,8)/8)*100)+'%';
+  if(n===5)paintNivel();
+  if(n===8)renderResult();
 }
 function paintNivel(){
   document.querySelectorAll('#optNivel .opt').forEach(function(o){
@@ -733,13 +747,13 @@ function paintNivel(){
 }
 function liveArea(){var a=parseFloat(val('wArea'));document.getElementById('areaHint').textContent=(a>0)?('≈ '+fmt(a*RATES[st.mod][st.lv])+(st.lv==='luxury'?'+':'')+' estimado'):'';}
 function next(){
-  if(step===5){var a=parseFloat(val('wArea'));if(!a||a<=0){document.getElementById('wArea').focus();return;}st.area=a;}
-  showStep(Math.min(7,step+1));
+  if(step===6){var a=parseFloat(val('wArea'));if(!a||a<=0){document.getElementById('wArea').focus();return;}st.area=a;st.lugar=val('wLugar');}
+  showStep(Math.min(8,step+1));
 }
 function prev(){showStep(Math.max(1,step-1));}
-function finish(){st.nombre=val('wNombre');st.tel=val('wTel');st.ciudad=val('wCiudad');showStep(7);}
+function finish(){st.nombre=val('wNombre');st.tel=val('wTel');showStep(8);}
 function restart(){st.area=0;var w=document.getElementById('wArea');if(w)w.value='';document.getElementById('areaHint').textContent='';showStep(1);}
-function preselect(x){st.lv=x;st.tipo=st.tipo||'Casa';showStep(5);setTimeout(function(){var w=document.getElementById('wArea');if(w)w.focus();},80);}
+function preselect(x){st.lv=x;st.tipo=st.tipo||'Casa';showStep(6);setTimeout(function(){var w=document.getElementById('wArea');if(w)w.focus();},80);}
 
 var rvEl=document.getElementById('rv');
 function animateTo(target,suf){var start=0,dur=800,t0=null;function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur);var e=1-Math.pow(1-p,3);rvEl.textContent=fmt(start+(target-start)*e)+suf;if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
@@ -748,7 +762,7 @@ function renderResult(){
   animateTo(total,st.lv==='luxury'?'+':'');
   document.getElementById('rn').textContent=a+' m² × '+fmt(rate)+'/m²';
   document.getElementById('rt').textContent=tm?('Entrega estimada '+tm.lo+'–'+tm.hi+' meses'):'';
-  document.getElementById('wsum').innerHTML='<span><b>'+st.tipo+'</b></span><span><b>'+MODN[st.mod]+'</b></span><span><b>'+SISN[st.sis].split(' (')[0]+'</b></span><span>Nivel <b>'+LVN[st.lv]+'</b></span>';
+  document.getElementById('wsum').innerHTML='<span><b>'+st.tipo+'</b></span><span>'+ETAPAN[st.etapa]+'</span><span><b>'+MODN[st.mod]+'</b></span><span><b>'+SISN[st.sis].split(' (')[0]+'</b></span><span>Nivel <b>'+LVN[st.lv]+'</b></span>'+(st.lugar?'<span>Lugar <b>'+st.lugar+'</b></span>':'');
 }
 function waNum(){return WA_NUMBER.replace(/[^0-9]/g,'');}
 function waOpen(msg){var n=waNum();if(n.indexOf('X')>=0||n.length<10){alert('Estamos configurando el WhatsApp. (config: WA_NUMBER)');return;}window.open('https://wa.me/'+n+'?text='+msg,'_blank');}
@@ -757,11 +771,12 @@ function sendWA(){
   var rate=RATES[st.mod][st.lv],total=st.area*rate,tm=tiempo(st.area);
   var m='Hola, Imperio Constructora 👋%0A%0AQuiero cotizar mi proyecto:%0A%0A';
   m+='• Tipo: '+st.tipo+'%0A';
+  m+='• Etapa: '+ETAPAN[st.etapa]+'%0A';
   m+='• Modalidad: '+MODN[st.mod]+'%0A';
   m+='• Sistema: '+SISN[st.sis]+'%0A';
   m+='• Nivel de acabado: '+LVN[st.lv]+'%0A';
   m+='• Área aproximada: '+st.area+' m²%0A';
-  m+='• Ciudad: '+(st.ciudad||'(por confirmar)')+'%0A%0A';
+  m+='• Lugar de la obra: '+(st.lugar||'(por confirmar)')+'%0A%0A';
   m+='Estimado según la calculadora: '+fmt(total)+(st.lv==='luxury'?'+':'')+'%0A';
   if(tm)m+='Entrega estimada: '+tm.lo+'–'+tm.hi+' meses%0A';
   m+='%0AMi nombre es '+(st.nombre||'(por confirmar)')+(st.tel?' y este es mi número: '+st.tel:'')+'.%0AQuedo atento para afinar la cotización. Gracias.';
