@@ -268,7 +268,11 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
 .btn--cta:hover{color:#231a06;transform:translateY(-2px);box-shadow:0 20px 54px -10px rgba(184,151,101,.8)}
 .btn--cta::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:sheen 4.5s ease-in-out infinite}
 @keyframes sheen{0%,58%{left:-70%}100%{left:150%}}
-@media(prefers-reduced-motion:reduce){.btn--cta::after{display:none}}
+.btn--cta .bti{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.4}
+.cta-hint{display:flex;align-items:center;gap:9px;margin-top:16px;font-size:13px;color:var(--tmd);letter-spacing:.01em}
+.cta-hint .pulse{width:8px;height:8px;border-radius:50%;background:var(--gold-400);box-shadow:0 0 0 0 rgba(201,172,129,.6);animation:hpulse 2s infinite;flex-shrink:0}
+@keyframes hpulse{0%{box-shadow:0 0 0 0 rgba(201,172,129,.55)}70%{box-shadow:0 0 0 9px rgba(201,172,129,0)}100%{box-shadow:0 0 0 0 rgba(201,172,129,0)}}
+@media(prefers-reduced-motion:reduce){.btn--cta::after{display:none}.cta-hint .pulse{animation:none}}
 
 /* TEST INTERACTIVO (wizard) */
 .wiz{margin-top:14px}
@@ -328,6 +332,7 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
 <symbol id="ic-key" viewBox="0 0 24 24"><circle cx="8.5" cy="8.5" r="4.5"/><path d="M11.7 11.7 20 20"/><path d="M17.5 17.5l2.2-2.2"/><path d="M14.8 14.8l1.8-1.8"/></symbol>
 <symbol id="ic-live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><path d="M8.6 8.6a5 5 0 0 0 0 6.8"/><path d="M15.4 8.6a5 5 0 0 1 0 6.8"/><path d="M6 6a9 9 0 0 0 0 12"/><path d="M18 6a9 9 0 0 1 0 12"/></symbol>
 <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></symbol>
+<symbol id="ic-calc" viewBox="0 0 24 24"><path d="M6.5 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M8.5 7h7"/><path d="M9 11h.01"/><path d="M12 11h.01"/><path d="M15 11h.01"/><path d="M9 14h.01"/><path d="M12 14h.01"/><path d="M15 14v3.6"/></symbol>
 <symbol id="ic-wa" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3Z"/><path d="M8.6 8.9c.2-.5.4-.5.7-.5h.5c.2 0 .4 0 .6.5l.7 1.6c0 .2 0 .3-.1.5l-.4.5c-.2.2-.3.3-.1.6.5.9 1.3 1.6 2.2 2 .3.2.4.1.6-.1l.5-.6c.2-.2.3-.2.5-.1l1.6.7c.2.1.3.4.3.6 0 .8-.7 1.4-1.3 1.5-.6.1-1.3.2-3.3-.7-2.4-1-3.9-3.5-4-3.7-.2-.2-.9-1.2-.9-2.3 0-1.1.6-1.6.8-1.8Z"/></symbol>
 </defs></svg>
 
@@ -352,9 +357,9 @@ footer .legal{padding-top:26px;font-size:12px;color:#6a655c;line-height:1.6;max-
         <h1>Construimos tu proyecto a <em>precio cerrado</em>.</h1>
         <p class="lead">Lo que cotizamos es lo que pagas. Y lo ves en vivo.</p>
         <div class="cta-row">
-          <a href="#cotizar" class="btn btn--cta">Cotiza en 2 minutos tu sueño <span class="ar">→</span></a>
-          <a href="#weliving" class="link-u">Ver Weliving</a>
+          <a href="#cotizar" class="btn btn--cta"><svg class="bti"><use href="#ic-calc"/></svg> Cotiza en 2 minutos tu sueño <span class="ar">→</span></a>
         </div>
+        <div class="cta-hint"><span class="pulse"></span> Toca aquí: responde 6 preguntas y recibe tu estimado al instante.</div>
       </div>
       <div class="anchor">
         <div class="big">Desde $3.100.000<span> /m²</span></div>
