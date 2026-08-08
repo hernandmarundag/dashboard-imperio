@@ -55,6 +55,8 @@ nav.scrolled{padding:14px clamp(20px,5vw,80px);background:rgba(11,11,12,.85);bac
 .brand{display:flex;align-items:center;gap:12px;color:var(--ivory-50);text-decoration:none}
 .brand .mono-mk{width:34px;height:34px;border:1px solid var(--gold-500);display:grid;place-items:center;font-family:'Fraunces';font-size:16px;color:var(--gold-400);background:linear-gradient(135deg,rgba(201,172,129,.14),transparent)}
 .brand .wm{font-family:'Fraunces';font-weight:400;font-size:22px;letter-spacing:.08em;color:#fff}
+.brand .brand-mark{height:38px;width:auto;display:block}
+footer .brand .brand-mark{height:46px}
 .nav-r{display:flex;align-items:center;gap:34px}
 .nav-r a.nl{color:#cbc7bf;text-decoration:none;font:600 12px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;transition:color .3s}
 .nav-r a.nl:hover{color:var(--gold-400)}
@@ -247,7 +249,7 @@ select.field{cursor:pointer}
 .idata .d b{font-family:'Fraunces';font-weight:300;font-size:2.2rem;color:var(--gold-400);display:block;line-height:1}
 .idata .d span{font-size:12px;color:var(--tmd);letter-spacing:.04em}
 .insignia .body .fig2{aspect-ratio:4/5;background:linear-gradient(135deg,#131315,#0b0b0c);border:1px solid var(--ink-700);position:relative}
-.insignia .body .fig2::before{content:"— Obra en ejecución";position:absolute;left:16px;bottom:14px;font-family:'Space Mono';font-size:11px;color:var(--gold-500);z-index:3}
+.insignia .body .fig2::before{content:"— Render del proyecto";position:absolute;left:16px;bottom:14px;font-family:'Space Mono';font-size:11px;color:var(--gold-500);z-index:3}
 .insignia .body .fig2::after{content:"";position:absolute;inset:14px;border:1px solid var(--hd)}
 @media(max-width:820px){.insignia .body{grid-template-columns:1fr;gap:40px}.insignia .body .fig2{order:-1;aspect-ratio:16/10}}
 
@@ -396,7 +398,7 @@ img.ph.loaded{opacity:1}
 </defs></svg>
 
 <nav id="nav">
-  <a class="brand" href="#top"><span class="mono-mk">IC</span><span class="wm">IMPERIO</span></a>
+  <a class="brand" href="#top"><img class="brand-mark" src="https://dashboard-imperio.vercel.app/img/logo-mark.png?v=20260808r" alt="Imperio Constructora"><span class="wm">IMPERIO</span></a>
   <div class="nav-r">
     <a class="nl" href="#servicios">Obra</a>
     <a class="nl" href="#niveles">Niveles</a>
@@ -754,7 +756,7 @@ img.ph.loaded{opacity:1}
       </div>
       <div style="margin-top:30px"><a href="#cotizar" class="link-u" style="color:var(--gold-400)">Quiero un proyecto así</a></div>
     </div>
-    <div class="fig2 reveal"><img class="ph figimg" data-src="weldet" alt="Weliving detalle"></div>
+    <div class="fig2 reveal"><img class="ph figimg" data-src="wel-render" alt="Render del proyecto Weliving"></div>
   </div>
 </section>
 
@@ -775,11 +777,11 @@ img.ph.loaded{opacity:1}
 <section class="welpromo">
   <div class="wrap">
     <a id="welLink" class="welpromo-card reveal" href="#weliving" target="_blank" rel="noopener">
-      <div class="welpromo-img"><img class="ph" data-src="wel-render" alt="Proyecto Weliving terminado"></div>
+      <div class="welpromo-img"><img class="ph" data-src="wel-obra" alt="Weliving en obra"></div>
       <div class="welpromo-txt">
         <div class="kicker od">Proyecto en marcha</div>
-        <h3>Así se ve un sueño terminado.</h3>
-        <p>Weliving — nuestro edificio de renta corta, de la obra al render final. Conoce el proyecto por dentro.</p>
+        <h3>Weliving, hoy en obra.</h3>
+        <p>Nuestro edificio insignia de renta corta, avanzando en construcción. Arriba ves el render de cómo va a quedar — conoce el proyecto por dentro.</p>
         <span class="welpromo-cta">Ver Weliving <span class="ar">→</span></span>
       </div>
     </a>
@@ -790,7 +792,7 @@ img.ph.loaded{opacity:1}
   <div class="wrap">
     <div class="top">
       <div>
-        <a class="brand" href="#top"><span class="mono-mk">IC</span><span class="wm">IMPERIO</span></a>
+        <a class="brand" href="#top"><img class="brand-mark" src="https://dashboard-imperio.vercel.app/img/logo-mark.png?v=20260808r" alt="Imperio Constructora"><span class="wm">IMPERIO</span></a>
         <div class="tag">Construimos a precio cerrado, tú lo ves en vivo. Constructora integral · Medellín, Colombia.</div>
       </div>
       <div>
@@ -821,7 +823,7 @@ var WEL_URL=''; /* <-- URL de la landing de Weliving. Si queda vacío, el botón
 
 /* ===== FOTOS (inyectadas en build) ===== */
 var IMGBASE='https://dashboard-imperio.vercel.app/img/';
-var IMGV='20260808r';
+var IMGV='20260808v2';
 document.querySelectorAll('img[data-src]').forEach(function(im){var k=im.getAttribute('data-src');im.onload=function(){im.classList.add('loaded');};im.onerror=function(){im.classList.add('loaded');};im.src=IMGBASE+k+'.jpg?v='+IMGV;if(im.complete)im.classList.add('loaded');});
 setTimeout(function(){document.querySelectorAll('img.ph').forEach(function(im){im.classList.add('loaded');});},1200);
 
