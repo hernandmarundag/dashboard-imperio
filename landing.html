@@ -334,6 +334,17 @@ img.ph.loaded{opacity:1}
 .insignia .cine .wl{position:relative;z-index:3}
 .insignia .body .fig2 .figimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
 .insignia .body .fig2::before,.insignia .body .fig2::after{z-index:2}
+.welpromo{background:var(--ink-900);padding:clamp(48px,7vh,84px) 0;border-top:1px solid var(--ink-700)}
+.welpromo-card{display:grid;grid-template-columns:200px 1fr;gap:clamp(24px,4vw,48px);align-items:center;text-decoration:none;color:var(--tod);border:1px solid var(--ink-700);border-radius:4px;padding:clamp(18px,2.4vw,26px);transition:border-color .5s var(--ease),transform .5s var(--ease)}
+.welpromo-card:hover{border-color:var(--gold-600);transform:translateY(-2px)}
+.welpromo-img{aspect-ratio:4/5;overflow:hidden;border:1px solid var(--ink-700);background:linear-gradient(135deg,#131315,#0b0b0c)}
+.welpromo-img img{width:100%;height:100%;object-fit:cover;filter:contrast(1.03)}
+.welpromo-txt h3{font-family:'Fraunces';font-weight:300;font-size:clamp(1.5rem,2.6vw,2.2rem);color:#fff;margin:12px 0 10px}
+.welpromo-txt p{color:var(--tmd);font-size:1rem;max-width:52ch}
+.welpromo-cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font:600 13px/1 'Archivo';letter-spacing:.06em;color:var(--gold-400)}
+.welpromo-card:hover .welpromo-cta .ar{transform:translateX(5px)}
+.welpromo-cta .ar{transition:transform .4s var(--ease)}
+@media(max-width:720px){.welpromo-card{grid-template-columns:1fr}.welpromo-img{max-width:220px}}
 .galeria{background:var(--ink-900);color:var(--tod)}
 .gal-grid{columns:3;column-gap:14px}
 .gal-grid .gi{break-inside:avoid;margin-bottom:14px;position:relative;overflow:hidden;border:1px solid var(--ink-700);background:var(--ink-800)}
@@ -427,7 +438,7 @@ img.ph.loaded{opacity:1}
     </div>
     <div class="svc-grid">
       <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcCasas" alt="Casa Imperio"></div><span class="en">01</span><h3>Casas</h3><p>Vivienda a la medida del lote, del presupuesto y de cómo vives.</p></div>
-      <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcEdificios" alt="Edificio en obra"></div><span class="en">02</span><h3>Edificios</h3><p>Apartamentos para renta o vivienda, de la estructura a la entrega.</p></div>
+      <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcExterior" alt="Piscina y exteriores"></div><span class="en">02</span><h3>Piscinas y exteriores</h3><p>Piscinas, terrazas y zonas sociales hechas para disfrutar el exterior.</p></div>
       <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcRemo" alt="Remodelación"></div><span class="en">03</span><h3>Remodelaciones</h3><p>Intervenimos lo que ya tienes y le subimos el nivel.</p></div>
       <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcInterior" alt="Interiores"></div><span class="en">04</span><h3>Interiores</h3><p>Cocinas, baños y detalles que se sienten de lujo.</p></div>
     </div>
@@ -733,6 +744,21 @@ img.ph.loaded{opacity:1}
   </div>
 </section>
 
+<!-- PROMO WELIVING (sutil) -->
+<section class="welpromo">
+  <div class="wrap">
+    <a id="welLink" class="welpromo-card reveal" href="#weliving" target="_blank" rel="noopener">
+      <div class="welpromo-img"><img class="ph" data-src="wel-render" alt="Proyecto Weliving terminado"></div>
+      <div class="welpromo-txt">
+        <div class="kicker od">Proyecto en marcha</div>
+        <h3>Así se ve un sueño terminado.</h3>
+        <p>Weliving — nuestro edificio de renta corta, de la obra al render final. Conoce el proyecto por dentro.</p>
+        <span class="welpromo-cta">Ver Weliving <span class="ar">→</span></span>
+      </div>
+    </a>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <div class="top">
@@ -763,6 +789,8 @@ img.ph.loaded{opacity:1}
 <script>
 /* ===== CONFIG ===== */
 var WA_NUMBER='57XXXXXXXXXX'; /* <-- WhatsApp de Imperio: 57 + número, ej 573001234567 */
+var WEL_URL=''; /* <-- URL de la landing de Weliving. Si queda vacío, el botón lleva a la sección Weliving de esta página */
+(function(){var wl=document.getElementById('welLink');if(wl){if(WEL_URL){wl.href=WEL_URL;}else{wl.href='#weliving';wl.removeAttribute('target');}}})();
 
 /* ===== FOTOS (inyectadas en build) ===== */
 var IMGBASE='https://dashboard-imperio.vercel.app/img/';
