@@ -345,6 +345,17 @@ img.ph.loaded{opacity:1}
 .welpromo-card:hover .welpromo-cta .ar{transform:translateX(5px)}
 .welpromo-cta .ar{transition:transform .4s var(--ease)}
 @media(max-width:720px){.welpromo-card{grid-template-columns:1fr}.welpromo-img{max-width:220px}}
+.svc-link{display:inline-block;margin-top:10px;font:600 12px/1 'Archivo';letter-spacing:.06em;color:var(--gold-400);text-decoration:none;border-bottom:1px solid var(--hd);padding-bottom:3px}
+#remodelaciones{padding:clamp(64px,9vh,120px) 0;background:var(--paper)}
+.rem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,26px);margin-top:clamp(28px,4vh,48px)}
+.rem{margin:0}
+.rem-img{aspect-ratio:4/5;overflow:hidden;border:1px solid var(--hl);background:linear-gradient(135deg,#ece7df,#ddd6ca);position:relative}
+.rem-img img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.rem:hover .rem-img img.loaded{transform:scale(1.04)}
+.rem-arrow{position:absolute;right:-13px;top:50%;transform:translateY(-50%);z-index:3;width:26px;height:26px;border-radius:50%;background:var(--ink-900);color:var(--gold-400);display:grid;place-items:center;font-size:13px}
+.rem figcaption{font-family:'Archivo';font-size:.98rem;color:var(--tml);margin-top:15px;line-height:1.45}
+.rem figcaption .st{display:block;font:600 12px/1 'Space Mono';letter-spacing:.09em;color:var(--gold-600);margin-bottom:7px}
+@media(max-width:720px){.rem-grid{grid-template-columns:1fr;gap:22px;max-width:430px;margin-left:auto;margin-right:auto}.rem-arrow{display:none}}
 .galeria{background:var(--ink-900);color:var(--tod)}
 .gal-grid{columns:3;column-gap:14px}
 .gal-grid .gi{break-inside:avoid;margin-bottom:14px;position:relative;overflow:hidden;border:1px solid var(--ink-700);background:var(--ink-800)}
@@ -439,7 +450,7 @@ img.ph.loaded{opacity:1}
     <div class="svc-grid">
       <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcCasas" alt="Casa Imperio"></div><span class="en">01</span><h3>Casas</h3><p>Vivienda a la medida del lote, del presupuesto y de cómo vives.</p></div>
       <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcExterior" alt="Piscina y exteriores"></div><span class="en">02</span><h3>Piscinas y exteriores</h3><p>Piscinas, terrazas y zonas sociales hechas para disfrutar el exterior.</p></div>
-      <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcRemo" alt="Remodelación"></div><span class="en">03</span><h3>Remodelaciones</h3><p>Intervenimos lo que ya tienes y le subimos el nivel.</p></div>
+      <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcRemo" alt="Remodelación en obra"></div><span class="en">03</span><h3>Remodelaciones</h3><p>Intervenimos lo que ya tienes y le subimos el nivel.</p><a href="#remodelaciones" class="svc-link">Ver antes y después →</a></div>
       <div class="svc reveal"><div class="fig"><img class="ph figimg" data-src="svcInterior" alt="Interiores"></div><span class="en">04</span><h3>Interiores</h3><p>Cocinas, baños y detalles que se sienten de lujo.</p></div>
     </div>
     <div class="etapas reveal">
@@ -449,6 +460,22 @@ img.ph.loaded{opacity:1}
         <div class="etapa"><div class="node"><span class="dot"></span><span class="ln"></span></div><svg class="ic"><use href="#ic-struct"/></svg><h4>Diseño estructural</h4><p>Cálculo que aguanta, respaldado y firmado.</p></div>
         <div class="etapa"><div class="node"><span class="dot"></span></div><svg class="ic"><use href="#ic-key"/></svg><h4>Ejecución</h4><p>Obra en tiempo real, con avance y presupuesto peso por peso.</p></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- REMODELACIONES: ANTES Y DESPUES -->
+<section id="remodelaciones">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Caso real · remodelación</div>
+      <h2>De cómo estaba<br>a cómo <em>quedó</em>.</h2>
+      <p>La misma sala, tres momentos. Así intervenimos un espacio existente hasta entregarlo listo para vivir.</p>
+    </div>
+    <div class="rem-grid">
+      <figure class="rem reveal"><div class="rem-img"><img class="ph" data-src="remIni" alt="Antes de la remodelación"><span class="rem-arrow">→</span></div><figcaption><span class="st">01 · Antes</span>Demolición y apertura de espacios.</figcaption></figure>
+      <figure class="rem reveal"><div class="rem-img"><img class="ph" data-src="remPro" alt="Durante la remodelación"><span class="rem-arrow">→</span></div><figcaption><span class="st">02 · Durante</span>Pisos, redes y preparación de acabados.</figcaption></figure>
+      <figure class="rem reveal"><div class="rem-img"><img class="ph" data-src="remFin" alt="Después de la remodelación"></div><figcaption><span class="st">03 · Después</span>Entregada, lista para vivir.</figcaption></figure>
     </div>
   </div>
 </section>
@@ -794,7 +821,8 @@ var WEL_URL=''; /* <-- URL de la landing de Weliving. Si queda vacío, el botón
 
 /* ===== FOTOS (inyectadas en build) ===== */
 var IMGBASE='https://dashboard-imperio.vercel.app/img/';
-document.querySelectorAll('img[data-src]').forEach(function(im){var k=im.getAttribute('data-src');im.onload=function(){im.classList.add('loaded');};im.onerror=function(){im.classList.add('loaded');};im.src=IMGBASE+k+'.jpg';if(im.complete)im.classList.add('loaded');});
+var IMGV='20260808r';
+document.querySelectorAll('img[data-src]').forEach(function(im){var k=im.getAttribute('data-src');im.onload=function(){im.classList.add('loaded');};im.onerror=function(){im.classList.add('loaded');};im.src=IMGBASE+k+'.jpg?v='+IMGV;if(im.complete)im.classList.add('loaded');});
 setTimeout(function(){document.querySelectorAll('img.ph').forEach(function(im){im.classList.add('loaded');});},1200);
 
 var RATES={llave:{basico:3100000,premium:3800000,luxury:4500000},blanca:{basico:850000,premium:1200000,luxury:1800000}};
